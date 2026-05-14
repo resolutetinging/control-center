@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control Center</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(135deg,#0f0c1a 0%,#1a1130 40%,#0d1a2e 100%);font-family:'Segoe UI',system-ui,sans-serif;color:#e8e0f0;overflow-x:hidden}
+/* ---- Layout ---- */
+.cc-wrap{display:flex;gap:16px;padding:20px;min-height:100vh;align-items:flex-start}
+.col{flex:1;display:flex;flex-direction:column;gap:14px}
+.col-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9b8dbc;padding:0 4px 6px;border-bottom:1px solid rgba(155,141,188,.25)}
+/* ---- Glass card ---- */
+.glass{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px}
+/* ---- Icon grid ---- */
+.icon-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.icon-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 8px;cursor:pointer;transition:all .2s;user-select:none}
+.icon-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(200,170,255,.4);transform:translateY(-2px)}
+.icon-btn .emoji{font-size:26px;line-height:1}
+.icon-btn .lbl{font-size:11px;color:#c4b8dd}
+/* ---- Tooltip ---- */
+.tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);min-width:160px;background:rgba(20,14,36,.95);border:1px solid rgba(180,150,255,.3);border-radius:10px;padding:10px 12px;font-size:11.5px;line-height:1.7;color:#e8e0f0;pointer-events:none;opacity:0;transition:opacity .18s;z-index:8000;white-space:nowrap}
+.tooltip .t-title{font-weight:700;font-size:12px;color:#c9b8ff;margin-bottom:4px}
+.icon-btn:hover .tooltip{opacity:1}
+/* ---- Buttons ---- */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .18s}
+.btn-purple{background:rgba(155,100,255,.35);color:#d9c9ff;border:1px solid rgba(155,100,255,.5)}
+.btn-purple:hover{background:rgba(155,100,255,.55)}
+.btn-red{background:rgba(255,80,80,.28);color:#ffc9c9;border:1px solid rgba(255,100,100,.4)}
+.btn-red:hover{background:rgba(255,80,80,.48)}
+.btn-green{background:rgba(60,200,120,.28);color:#b0ffcc;border:1px solid rgba(60,200,120,.4)}
+.btn-green:hover{background:rgba(60,200,120,.48)}
+.btn-gray{background:rgba(180,180,200,.15);color:#c8c0d8;border:1px solid rgba(180,180,200,.25)}
+.btn-gray:hover{background:rgba(180,180,200,.28)}
+/* ---- Guard banner (floating, bottom-right) ---- */
+#guard-banner{position:fixed;bottom:24px;right:24px;z-index:9100;width:280px;background:rgba(25,15,45,.92);border:1px solid rgba(255,180,100,.45);border-radius:18px;backdrop-filter:blur(20px);padding:16px 18px;display:none;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+#guard-banner .ban-cat{font-size:28px;line-height:1}
+#guard-banner .ban-title{font-size:13px;font-weight:700;color:#ffd98a}
+#guard-banner .ban-sub{font-size:11px;color:#c0a870;margin-top:2px}
+#guard-banner .ban-btns{display:flex;gap:8px;margin-top:12px}
+/* ---- Wandering cat ---- */
+#cat-outer{position:fixed;z-index:9000;pointer-events:none;transition:opacity .8s;transform:translateX(0) translateY(0)}
+#cat-outer.skipped{opacity:.28}
+.cat-wrap{position:relative;width:72px;height:72px}
+/* cat SVG container — flips horizontally based on direction */
+.cat-body-wrap{position:absolute;bottom:0;left:0;width:72px;height:72px;transition:transform .3s}
+.cat-body-wrap.flip{transform:scaleX(-1)}
+/* walking bob */
+@keyframes catBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.cat-body-wrap.walking{animation:catBob .45s ease-in-out infinite}
+/* tail wag */
+@keyframes tailWag{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(20deg)}}
+.cat-tail{transform-origin:bottom left;animation:tailWag 1.2s ease-in-out infinite}
+/* leg animations */
+@keyframes legSwingF{0%,100%{transform:rotate(0deg)}50%{transform:rotate(25deg)}}
+@keyframes legSwingB{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-25deg)}}
+.cat-leg-fl,.cat-leg-br{transform-origin:top center;animation:legSwingF .45s ease-in-out infinite}
+.cat-leg-fr,.cat-leg-bl{transform-origin:top center;animation:legSwingB .45s ease-in-out infinite}
+/* sit — stop animations */
+.cat-body-wrap.sitting .cat-tail{animation:tailWag 3s ease-in-out infinite}
+.cat-body-wrap.sitting .cat-leg-fl,
+.cat-body-wrap.sitting .cat-leg-fr,
+.cat-body-wrap.sitting .cat-leg-bl,
+.cat-body-wrap.sitting .cat-leg-br{animation:none;transform:rotate(0deg)}
+.cat-body-wrap.sitting{animation:none}
+/* ---- Refueler modal ---- */
+#refueler-modal,#sas-modal,#guard-modal{display:none;position:fixed;inset:0;z-index:8500;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+#refueler-modal.open,#sas-modal.open,#guard-modal.open{display:flex}
+.modal-card{background:rgba(20,14,36,.97);border:1px solid rgba(180,150,255,.3);border-radius:20px;padding:28px;min-width:360px;max-width:92vw;max-height:88vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-header h2{font-size:16px;font-weight:700;color:#d5c5ff}
+.close-btn{background:none;border:none;color:#888;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+.close-btn:hover{color:#fff;background:rgba(255,255,255,.1)}
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;color:#9b8dbc;transition:all .18s}
+.tab.active{background:rgba(155,100,255,.3);border-color:rgba(155,100,255,.5);color:#d9c9ff}
+/* Intake rows */
+.intake-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.intake-row label{font-size:12px;color:#b0a0cc;width:56px}
+.count-ctrl{display:flex;align-items:center;gap:8px}
+.count-ctrl button{width:28px;height:28px;border-radius:7px;border:1px solid rgba(180,150,255,.3);background:rgba(155,100,255,.2);color:#d9c9ff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.count-ctrl span{width:28px;text-align:center;font-weight:700;font-size:15px;color:#fff}
+.photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.photo-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid rgba(180,150,255,.3)}
+.photo-add{width:56px;height:56px;border-radius:8px;border:2px dashed rgba(180,150,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;color:#9b8dbc}
+.photo-add:hover{border-color:rgba(180,150,255,.7);color:#d9c9ff}
+/* Calendar mini */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:11px}
+.cal-grid .ch{color:#888;padding:2px 0}
+.cal-grid .cd{padding:4px 2px;border-radius:5px;cursor:pointer;color:#bbb}
+.cal-grid .cd:hover{background:rgba(155,100,255,.25);color:#fff}
+.cal-grid .cd.today{background:rgba(155,100,255,.5);color:#fff;font-weight:700}
+.cal-grid .cd.has-data{position:relative}
+.cal-grid .cd.has-data::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#9bddff}
+/* AI analysis box */
+.ai-box{background:rgba(0,0,0,.25);border:1px solid rgba(155,100,255,.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#c0b0e0;min-height:60px;white-space:pre-wrap}
+/* Input / Textarea */
+input[type=text],input[type=number],input[type=password],textarea,select{background:rgba(255,255,255,.07);border:1px solid rgba(180,150,255,.25);border-radius:8px;color:#e8e0f0;padding:8px 10px;font-size:13px;width:100%;outline:none;font-family:inherit}
+input:focus,textarea:focus,select:focus{border-color:rgba(155,100,255,.6)}
+textarea{resize:vertical;min-height:70px}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:11px;color:#9b8dbc;margin-bottom:4px}
+/* SAS cross */
+.sas-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sas-cell{background:rgba(0,0,0,.25);border:1px solid rgba(180,150,255,.18);border-radius:10px;padding:12px}
+.sas-cell h4{font-size:11px;color:#9b8dbc;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-wrap label{font-size:11px;color:#c0b0e0;width:52px}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.bar-wrap span{font-size:11px;color:#b0a0cc;width:28px;text-align:right}
+/* Guard settings */
+.setting-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.setting-row label{font-size:13px;color:#c4b8dd}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+input[type=range]{accent-color:#9b64ff;width:120px}
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(155,100,255,.3);border-radius:3px}
+/* Status row */
+.status-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#8a7daa;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);margin-top:8px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.dot-green{background:#3dc87a}.dot-yellow{background:#f5c842}.dot-red{background:#ff5858}
+/* Chip */
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#b0a0cc;cursor:pointer;margin:2px}
+.chip:hover{background:rgba(155,100,255,.25)}
+/* section divider */
+.sec-divider{font-size:11px;color:#8a7daa;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px}
+</style>
+</head>
+<body>
+
+<!-- ===================== WANDERING CAT ===================== -->
+<div id="cat-outer">
+  <div class="cat-wrap">
+    <div class="cat-body-wrap walking" id="cat-body">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- tail -->
+        <g class="cat-tail" transform="translate(8,42)">
+          <path d="M0 12 Q-10 0 -8 -12 Q-6 -22 0 -18" stroke="#c87941" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- body -->
+        <ellipse cx="36" cy="46" rx="17" ry="13" fill="#e09050"/>
+        <!-- stripes body -->
+        <path d="M24 40 Q28 36 32 40" stroke="#b86a28" stroke-width="1.5" fill="none" opacity=".6"/>
+        <path d="M40 40 Q44 36 48 40" stroke="#b86a28" stroke-width="1.5" fill="none" opacity=".6"/>
+        <!-- legs -->
+        <g class="cat-leg-fl" transform="translate(26,55)"><rect x="-4" y="0" width="7" height="12" rx="3.5" fill="#e09050"/></g>
+        <g class="cat-leg-fr" transform="translate(37,55)"><rect x="-3" y="0" width="7" height="12" rx="3.5" fill="#d07840"/></g>
+        <g class="cat-leg-bl" transform="translate(20,55)"><rect x="-3" y="0" width="6" height="11" rx="3" fill="#d07840"/></g>
+        <g class="cat-leg-br" transform="translate(46,55)"><rect x="-3" y="0" width="6" height="11" rx="3" fill="#e09050"/></g>
+        <!-- head -->
+        <ellipse cx="36" cy="28" rx="14" ry="13" fill="#e09050"/>
+        <!-- ears -->
+        <polygon points="24,18 20,8 30,16" fill="#e09050"/>
+        <polygon points="22,17 20,10 28,15" fill="#f0b0a0"/>
+        <polygon points="48,18 52,8 42,16" fill="#e09050"/>
+        <polygon points="50,17 52,10 44,15" fill="#f0b0a0"/>
+        <!-- forehead stripe -->
+        <path d="M33 18 Q36 14 39 18" stroke="#b86a28" stroke-width="1.3" fill="none" opacity=".7"/>
+        <!-- eyes -->
+        <ellipse cx="31" cy="27" rx="3.5" ry="3.8" fill="#1a1a1a"/>
+        <ellipse cx="41" cy="27" rx="3.5" ry="3.8" fill="#1a1a1a"/>
+        <ellipse cx="32.2" cy="26" rx="1.2" ry="1.5" fill="#fff" opacity=".8"/>
+        <ellipse cx="42.2" cy="26" rx="1.2" ry="1.5" fill="#fff" opacity=".8"/>
+        <!-- nose -->
+        <polygon points="36,31 34.5,33 37.5,33" fill="#e87090"/>
+        <!-- mouth -->
+        <path d="M34.5 33 Q36 35.5 37.5 33" stroke="#c05070" stroke-width="1" fill="none"/>
+        <!-- whiskers left -->
+        <line x1="23" y1="31" x2="33" y2="32" stroke="#fff" stroke-width=".9" opacity=".7"/>
+        <line x1="22" y1="33" x2="33" y2="33" stroke="#fff" stroke-width=".9" opacity=".7"/>
+        <line x1="23" y1="35" x2="33" y2="34" stroke="#fff" stroke-width=".9" opacity=".7"/>
+        <!-- whiskers right -->
+        <line x1="49" y1="31" x2="39" y2="32" stroke="#fff" stroke-width=".9" opacity=".7"/>
+        <line x1="50" y1="33" x2="39" y2="33" stroke="#fff" stroke-width=".9" opacity=".7"/>
+        <line x1="49" y1="35" x2="39" y2="34" stroke="#fff" stroke-width=".9" opacity=".7"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GUARD BANNER ===================== -->
+<div id="guard-banner">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <span class="ban-cat">🐱</span>
+    <div>
+      <div class="ban-title" id="ban-title">Guard Cat 提醒</div>
+      <div class="ban-sub" id="ban-sub">你已連續工作 <span id="ban-mins">90</span> 分鐘</div>
+    </div>
+  </div>
+  <div class="ban-btns">
+    <button class="btn btn-green" onclick="takeBreak()">先去休息 15min 🌿</button>
+    <button class="btn btn-gray" onclick="skipHour()">跳過 1 小時 ⏭</button>
+  </div>
+</div>
+
+<!-- ===================== MAIN UI ===================== -->
+<div class="cc-wrap" id="cc-wrap">
+
+  <!-- ===== COL 1: SAS Hub ===== -->
+  <div class="col">
+    <div class="glass">
+      <div class="col-title">SAS Hub</div>
+      <div style="margin-top:10px" class="icon-grid">
+
+        <div class="icon-btn" onclick="goUrl('../sleep-dashboard/index.html')">
+          <span class="emoji">😴</span>
+          <span class="lbl">Sleep</span>
+          <div class="tooltip">
+            <div class="t-title">😴 Sleep</div>
+            <div>時長：7h 12m</div>
+            <div>品質：78 / 100</div>
+            <div>深睡：1h 45m</div>
+            <div>REM：2h 08m</div>
+            <div>趨勢：↑ 好眠</div>
+          </div>
+        </div>
+
+        <div class="icon-btn" onclick="goUrl('../wellness-tracker/mental-dashboard.html')">
+          <span class="emoji">💭</span>
+          <span class="lbl">Mental</span>
+          <div class="tooltip">
+            <div class="t-title">💭 Mental</div>
+            <div>今日心情：7.2 / 10</div>
+            <div>趨勢：↑ 較昨日好</div>
+            <div>上次記錄：3 小時前</div>
+            <div>連續天數：5 天</div>
+          </div>
+        </div>
+
+        <div class="icon-btn" onclick="goUrl('../Daily Optimization/daily_optimizer.html')">
+          <span class="emoji">⚡</span>
+          <span class="lbl">Optimizer</span>
+          <div class="tooltip">
+            <div class="t-title">⚡ Optimizer</div>
+            <div>精力指數：62%</div>
+            <div>高效至：18:30</div>
+            <div>任務：4 / 7 完成</div>
+            <div>專注時長：3.5h</div>
+          </div>
+        </div>
+
+        <div class="icon-btn" onclick="openRefueler()">
+          <span class="emoji">☕</span>
+          <span class="lbl">Refueler</span>
+          <div class="tooltip">
+            <div class="t-title">☕ Refueler</div>
+            <div>咖啡：<span id="tip-coffee">0</span> 杯</div>
+            <div>水：<span id="tip-water">0</span> 杯</div>
+            <div>點擊開啟詳細記錄</div>
+          </div>
+        </div>
+
+      </div>
+      <!-- SAS Cross Analysis -->
+      <div style="margin-top:12px;text-align:center">
+        <button class="btn btn-purple" style="width:100%;justify-content:center" onclick="openSAS()">
+          🔗 攝取 ↔ 睡眠 ↔ 情緒 交叉分析
+        </button>
+      </div>
+      <!-- Guard settings shortcut -->
+      <div class="status-row">
+        <span><span class="dot dot-green"></span>Guard Cat 運行中</span>
+        <span style="cursor:pointer;color:#9b8dbc" onclick="openGuard()">⚙ 設定</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COL 2: World Info ===== -->
+  <div class="col">
+    <div class="glass">
+      <div class="col-title">World Info</div>
+      <div style="margin-top:10px" class="icon-grid">
+
+        <div class="icon-btn" onclick="goUrl('#')">
+          <span class="emoji">🤖</span>
+          <span class="lbl">AI Tracker</span>
+          <div class="tooltip">
+            <div class="t-title">🤖 AI Tracker</div>
+            <div>新模型：2 個</div>
+            <div>熱門：Multimodal Reasoning</div>
+            <div>未讀新聞：8 則</div>
+          </div>
+        </div>
+
+        <div class="icon-btn" onclick="goUrl('#')">
+          <span class="emoji">💼</span>
+          <span class="lbl">LinkedIn</span>
+          <div class="tooltip">
+            <div class="t-title">💼 LinkedIn</div>
+            <div>已申請：3</div>
+            <div>待回音：2</div>
+            <div>婉拒：0</div>
+            <div>已收藏：5</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COL 3: Learning ===== -->
+  <div class="col">
+    <div class="glass">
+      <div class="col-title">Learning</div>
+      <div style="margin-top:10px" class="icon-grid">
+
+        <div class="icon-btn" onclick="goUrl('../WordVault/WordVault.html')">
+          <span class="emoji">📖</span>
+          <span class="lbl">WordVault</span>
+          <div class="tooltip">
+            <div class="t-title">📖 WordVault</div>
+            <div>總單字：234</div>
+            <div>已精熟：89</div>
+            <div>今日新增：5</div>
+            <div>連續：12 天</div>
+          </div>
+        </div>
+
+        <div class="icon-btn" onclick="goUrl('notion://www.notion.so')">
+          <span class="emoji">🧘</span>
+          <span class="lbl">Mental Tool</span>
+          <div class="tooltip">
+            <div class="t-title">🧘 Mental Tool</div>
+            <div>上次：昨天</div>
+            <div>連續：7 天</div>
+            <div>未讀提示：2</div>
+          </div>
+        </div>
+
+        <div class="icon-btn" onclick="goUrl('notion://www.notion.so')">
+          <span class="emoji">🎧</span>
+          <span class="lbl">Podcast</span>
+          <div class="tooltip">
+            <div class="t-title">🎧 Podcast</div>
+            <div>未聽：3</div>
+            <div>總集數：28</div>
+            <div>最近：The Knowledge Project</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== REFUELER MODAL ===================== -->
+<div id="refueler-modal">
+  <div class="modal-card" style="min-width:420px">
+    <div class="modal-header">
+      <h2>☕ Refueler</h2>
+      <button class="close-btn" onclick="closeModal('refueler-modal')">✕</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('ref-log','refueler-modal',this)">今日記錄</div>
+      <div class="tab" onclick="showTab('ref-cal','refueler-modal',this)">日曆</div>
+      <div class="tab" onclick="showTab('ref-ai','refueler-modal',this)">AI 分析</div>
+    </div>
+
+    <!-- Log Tab -->
+    <div id="ref-log">
+      <div class="intake-row">
+        <label>☕ 咖啡</label>
+        <div class="count-ctrl">
+          <button onclick="adjustIntake('coffee',-1)">−</button>
+          <span id="coffee-count">0</span>
+          <button onclick="adjustIntake('coffee',1)">+</button>
+        </div>
+        <span style="font-size:11px;color:#8a7daa;margin-left:8px">杯</span>
+      </div>
+      <div class="intake-row">
+        <label>💧 水</label>
+        <div class="count-ctrl">
+          <button onclick="adjustIntake('water',-1)">−</button>
+          <span id="water-count">0</span>
+          <button onclick="adjustIntake('water',1)">+</button>
+        </div>
+        <span style="font-size:11px;color:#8a7daa;margin-left:8px">杯 (250ml)</span>
+      </div>
+      <div class="form-row" style="margin-top:12px">
+        <label>備註 (飲食/感受)</label>
+        <textarea id="ref-notes" placeholder="例如：午餐吃沙拉，下午有點頭痛…"></textarea>
+      </div>
+      <div class="sec-divider">📷 今日照片</div>
+      <div class="photo-strip" id="photo-strip">
+        <div class="photo-add" onclick="addPhoto()">＋</div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      <button class="btn btn-purple" style="margin-top:14px;width:100%;justify-content:center" onclick="saveRefueler()">
+        💾 儲存今日記錄
+      </button>
+    </div>
+
+    <!-- Calendar Tab -->
+    <div id="ref-cal" style="display:none">
+      <div class="cal-grid" id="ref-cal-grid"></div>
+      <div id="ref-day-detail" style="margin-top:14px;font-size:12px;color:#c0b0e0;min-height:40px"></div>
+    </div>
+
+    <!-- AI Tab -->
+    <div id="ref-ai" style="display:none">
+      <div class="form-row">
+        <label>Groq API Key</label>
+        <input type="password" id="groq-key-ref" placeholder="gsk_…">
+      </div>
+      <div class="form-row">
+        <label>分析範圍</label>
+        <select id="ref-ai-scope">
+          <option value="7">最近 7 天</option>
+          <option value="14">最近 14 天</option>
+          <option value="30">最近 30 天</option>
+        </select>
+      </div>
+      <button class="btn btn-purple" style="margin-bottom:10px;width:100%;justify-content:center" onclick="runRefuelerAI()">
+        🤖 分析攝取模式
+      </button>
+      <div class="ai-box" id="ref-ai-result">AI 分析結果將顯示在這裡…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SAS MODAL ===================== -->
+<div id="sas-modal">
+  <div class="modal-card" style="min-width:500px">
+    <div class="modal-header">
+      <h2>🔗 SAS 交叉分析</h2>
+      <button class="close-btn" onclick="closeModal('sas-modal')">✕</button>
+    </div>
+    <div class="sas-grid">
+      <div class="sas-cell">
+        <h4>攝取 → 睡眠</h4>
+        <div class="bar-wrap"><label>高咖啡日</label><div class="bar-track"><div class="bar-fill" style="width:45%;background:#ff9060"></div></div><span>6.2h</span></div>
+        <div class="bar-wrap"><label>低咖啡日</label><div class="bar-track"><div class="bar-fill" style="width:72%;background:#60d4ff"></div></div><span>7.5h</span></div>
+        <div style="font-size:11px;color:#8a7daa;margin-top:6px">咖啡 ≥ 3杯 睡眠短 1.3h</div>
+      </div>
+      <div class="sas-cell">
+        <h4>睡眠 → 情緒</h4>
+        <div class="bar-wrap"><label>睡眠 &lt;6h</label><div class="bar-track"><div class="bar-fill" style="width:38%;background:#ff6060"></div><br></div><span>5.2</span></div>
+        <div class="bar-wrap"><label>睡眠 &gt;7h</label><div class="bar-track"><div class="bar-fill" style="width:78%;background:#60d47a"></div></div><span>7.8</span></div>
+        <div style="font-size:11px;color:#8a7daa;margin-top:6px">足眠日心情分高 2.6 分</div>
+      </div>
+      <div class="sas-cell">
+        <h4>水分 → 精力</h4>
+        <div class="bar-wrap"><label>&lt; 4 杯水</label><div class="bar-track"><div class="bar-fill" style="width:42%;background:#f5c842"></div></div><span>54%</span></div>
+        <div class="bar-wrap"><label>≥ 6 杯水</label><div class="bar-track"><div class="bar-fill" style="width:76%;background:#60d4ff"></div></div><span>78%</span></div>
+        <div style="font-size:11px;color:#8a7daa;margin-top:6px">充足水分提升精力 24%</div>
+      </div>
+      <div class="sas-cell">
+        <h4>行為 → 情緒</h4>
+        <div class="bar-wrap"><label>有運動</label><div class="bar-track"><div class="bar-fill" style="width:80%;background:#a090ff"></div></div><span>8.0</span></div>
+        <div class="bar-wrap"><label>無運動</label><div class="bar-track"><div class="bar-fill" style="width:58%;background:#8070aa"></div></div><span>6.1</span></div>
+        <div style="font-size:11px;color:#8a7daa;margin-top:6px">運動日情緒分高 1.9 分</div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="form-row">
+        <label>Groq API Key</label>
+        <input type="password" id="groq-key-sas" placeholder="gsk_…">
+      </div>
+      <button class="btn btn-purple" style="width:100%;justify-content:center" onclick="runSASAI()">
+        🤖 深度 AI 分析建議
+      </button>
+      <div class="ai-box" style="margin-top:10px" id="sas-ai-result">點擊分析取得個人化建議…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GUARD MODAL ===================== -->
+<div id="guard-modal">
+  <div class="modal-card" style="min-width:360px">
+    <div class="modal-header">
+      <h2>⚙ Guard Cat 設定</h2>
+      <button class="close-btn" onclick="closeModal('guard-modal')">✕</button>
+    </div>
+    <div class="setting-row">
+      <label>連續工作上限 (分鐘)</label>
+      <div class="toggle-wrap">
+        <input type="range" id="g-threshold" min="30" max="180" step="10" value="90" oninput="document.getElementById('g-threshold-val').textContent=this.value">
+        <span id="g-threshold-val" style="font-size:13px;color:#c4b8dd;width:32px">90</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <label>休息提醒間隔 (分鐘)</label>
+      <div class="toggle-wrap">
+        <input type="range" id="g-interval" min="10" max="60" step="5" value="15" oninput="document.getElementById('g-interval-val').textContent=this.value">
+        <span id="g-interval-val" style="font-size:13px;color:#c4b8dd;width:32px">15</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <label>貓咪開關</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="g-cat-on" checked style="width:auto;accent-color:#9b64ff"> 顯示貓咪
+      </label>
+    </div>
+    <div class="setting-row">
+      <label>貓咪速度</label>
+      <div class="toggle-wrap">
+        <input type="range" id="g-cat-speed" min="1" max="5" step="1" value="2" oninput="document.getElementById('g-speed-val').textContent=['很慢','慢','普通','快','極快'][this.value-1]">
+        <span id="g-speed-val" style="font-size:13px;color:#c4b8dd;width:32px">慢</span>
+      </div>
+    </div>
+    <button class="btn btn-purple" style="width:100%;justify-content:center;margin-top:8px" onclick="saveGuard()">
+      💾 儲存設定
+    </button>
+    <div style="margin-top:10px;text-align:center">
+      <button class="btn btn-red" onclick="resetGuardTimer()">🔄 重置計時器</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== JS ===================== -->
+<script>
+// ---- Data ----
+let refData = JSON.parse(localStorage.getItem('refueler_v1') || '{}');
+let guardSettings = JSON.parse(localStorage.getItem('guard_settings_v1') || '{"threshold":90,"interval":15,"catOn":true,"catSpeed":2}');
+const todayKey = () => new Date().toISOString().slice(0,10);
+
+// ---- Navigation ----
+function goUrl(url){ if(url&&url!='#') window.open(url,'_blank'); }
+
+// ---- Refueler ----
+function openRefueler(){
+  loadRefuelerDay();
+  document.getElementById('groq-key-ref').value = localStorage.getItem('groq_key')||'';
+  document.getElementById('refueler-modal').classList.add('open');
+}
+function loadRefuelerDay(){
+  const d = refData[todayKey()]||{coffee:0,water:0,notes:'',photos:[]};
+  document.getElementById('coffee-count').textContent = d.coffee||0;
+  document.getElementById('water-count').textContent = d.water||0;
+  document.getElementById('ref-notes').value = d.notes||'';
+  renderPhotoStrip(d.photos||[]);
+  updateTips();
+}
+function adjustIntake(type, delta){
+  const el = document.getElementById(type+'-count');
+  const v = Math.max(0, parseInt(el.textContent)+delta);
+  el.textContent = v;
+  updateTips();
+}
+function updateTips(){
+  document.getElementById('tip-coffee').textContent = document.getElementById('coffee-count')?.textContent||0;
+  document.getElementById('tip-water').textContent = document.getElementById('water-count')?.textContent||0;
+}
+function saveRefueler(){
+  const key = todayKey();
+  const existing = refData[key]||{};
+  refData[key] = {
+    ...existing,
+    coffee: parseInt(document.getElementById('coffee-count').textContent),
+    water: parseInt(document.getElementById('water-count').textContent),
+    notes: document.getElementById('ref-notes').value
+  };
+  localStorage.setItem('refueler_v1', JSON.stringify(refData));
+  alert('已儲存 ✓');
+}
+function addPhoto(){ document.getElementById('photo-input').click(); }
+function handlePhoto(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const key = todayKey();
+    if(!refData[key]) refData[key]={coffee:0,water:0,notes:'',photos:[]};
+    if(!refData[key].photos) refData[key].photos=[];
+    refData[key].photos.push(ev.target.result);
+    localStorage.setItem('refueler_v1',JSON.stringify(refData));
+    renderPhotoStrip(refData[key].photos);
+  };
+  reader.readAsDataURL(file);
+}
+function renderPhotoStrip(photos){
+  const strip = document.getElementById('photo-strip');
+  strip.innerHTML = photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')
+    + `<div class="photo-add" onclick="addPhoto()">＋</div>`;
+}
+
+// ---- Calendar ----
+function buildCal(){
+  const now = new Date();
+  const y=now.getFullYear(), m=now.getMonth();
+  const first = new Date(y,m,1).getDay();
+  const days = new Date(y,m+1,0).getDate();
+  const grid = document.getElementById('ref-cal-grid');
+  const dayNames = ['日','一','二','三','四','五','六'];
+  let html = dayNames.map(d=>`<div class="ch">${d}</div>`).join('');
+  for(let i=0;i<first;i++) html+=`<div></div>`;
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = key===todayKey();
+    const hasData = !!refData[key];
+    html+=`<div class="cd${isToday?' today':''}${hasData?' has-data':''}" onclick="showDayDetail('${key}')">${d}</div>`;
+  }
+  grid.innerHTML=html;
+}
+function showDayDetail(key){
+  const d = refData[key];
+  const el = document.getElementById('ref-day-detail');
+  if(!d){ el.textContent='無記錄'; return; }
+  el.innerHTML=`<b>${key}</b><br>☕ ${d.coffee||0} 杯 &nbsp;💧 ${d.water||0} 杯<br>${d.notes?`備註：${d.notes}`:''}`;
+}
+
+// ---- AI ----
+async function callGroq(key, prompt){
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:400})
+  });
+  const j = await res.json();
+  return j.choices?.[0]?.message?.content||'（API 錯誤）';
+}
+async function runRefuelerAI(){
+  const key = document.getElementById('groq-key-ref').value.trim();
+  if(!key){alert('請輸入 Groq API Key');return;}
+  localStorage.setItem('groq_key',key);
+  const scope = parseInt(document.getElementById('ref-ai-scope').value);
+  const el = document.getElementById('ref-ai-result');
+  el.textContent='分析中…';
+  const entries = [];
+  for(let i=0;i<scope;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    if(refData[k]) entries.push({date:k,...refData[k]});
+  }
+  const prompt = `以下是最近${scope}天的飲食紀錄（JSON）：\n${JSON.stringify(entries,null,2)}\n\n請用繁體中文分析：1. 咖啡與水分攝取模式  2. 可能對睡眠/情緒的影響  3. 具體建議（3點）。`;
+  const res = await callGroq(key, prompt);
+  el.textContent = res;
+}
+async function runSASAI(){
+  const key = document.getElementById('groq-key-sas').value.trim();
+  if(!key){alert('請輸入 Groq API Key');return;}
+  localStorage.setItem('groq_key',key);
+  const el = document.getElementById('sas-ai-result');
+  el.textContent='分析中…';
+  const prompt = `根據以下模擬數據：
+- 高咖啡日(≥3杯)平均睡眠6.2h，低咖啡日7.5h
+- 睡眠不足6h日情緒5.2分，睡眠≥7h日情緒7.8分
+- 水分不足(<4杯)精力54%，充足(≥6杯)精力78%
+- 有運動日情緒8.0分，無運動日6.1分
+
+請用繁體中文給出3個最高優先級的生活優化建議，每點不超過2行。`;
+  const res = await callGroq(key, prompt);
+  el.textContent = res;
+}
+
+// ---- Modal helpers ----
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openSAS(){ document.getElementById('groq-key-sas').value=localStorage.getItem('groq_key')||''; document.getElementById('sas-modal').classList.add('open'); }
+function openGuard(){
+  document.getElementById('g-threshold').value=guardSettings.threshold;
+  document.getElementById('g-threshold-val').textContent=guardSettings.threshold;
+  document.getElementById('g-interval').value=guardSettings.interval;
+  document.getElementById('g-interval-val').textContent=guardSettings.interval;
+  document.getElementById('g-cat-on').checked=guardSettings.catOn;
+  document.getElementById('g-cat-speed').value=guardSettings.catSpeed;
+  document.getElementById('g-speed-val').textContent=['很慢','慢','普通','快','極快'][guardSettings.catSpeed-1];
+  document.getElementById('guard-modal').classList.add('open');
+}
+function saveGuard(){
+  guardSettings.threshold = parseInt(document.getElementById('g-threshold').value);
+  guardSettings.interval = parseInt(document.getElementById('g-interval').value);
+  guardSettings.catOn = document.getElementById('g-cat-on').checked;
+  guardSettings.catSpeed = parseInt(document.getElementById('g-cat-speed').value);
+  localStorage.setItem('guard_settings_v1',JSON.stringify(guardSettings));
+  closeModal('guard-modal');
+  updateCatVisibility();
+}
+function showTab(tabId, modalId, el){
+  const modal = document.getElementById(modalId);
+  modal.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const tabs = [document.getElementById('ref-log'),document.getElementById('ref-cal'),document.getElementById('ref-ai')];
+  tabs.forEach(t=>{ if(t) t.style.display='none'; });
+  const target = document.getElementById(tabId);
+  if(target){ target.style.display=''; if(tabId==='ref-cal') buildCal(); }
+}
+// Close modal on backdrop click
+document.querySelectorAll('#refueler-modal,#sas-modal,#guard-modal').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ---- Guard Cat logic ----
+let sessionStart = Date.now();
+let gState = 'monitoring'; // monitoring | alerting | resting | skipped
+let skipEnd = 0;
+let lastBreakEnd = 0;
+let guardCheckInterval;
+
+function startGuardTimer(){
+  clearInterval(guardCheckInterval);
+  guardCheckInterval = setInterval(checkGuard, 30000); // check every 30s
+}
+function checkGuard(){
+  if(gState==='skipped'){
+    if(Date.now()>=skipEnd){ gState='monitoring'; document.getElementById('cat-outer').classList.remove('skipped'); }
+    return;
+  }
+  if(gState==='resting') return;
+  const elapsedMin = (Date.now()-sessionStart)/60000;
+  const thresh = guardSettings.threshold||90;
+  if(elapsedMin>=thresh && gState==='monitoring'){
+    gState='alerting';
+    showBanner(Math.round(elapsedMin));
+  }
+}
+function showBanner(mins){
+  document.getElementById('ban-mins').textContent = mins;
+  document.getElementById('guard-banner').style.display='block';
+  // make cat look alert (faster tail)
+  document.querySelector('.cat-tail').style.animationDuration='0.5s';
+}
+function hideBanner(){
+  document.getElementById('guard-banner').style.display='none';
+  document.querySelector('.cat-tail').style.animationDuration='1.2s';
+}
+function takeBreak(){
+  gState='resting';
+  hideBanner();
+  const breakMs = (guardSettings.interval||15)*60*1000;
+  // Schedule return after rest
+  setTimeout(()=>{ gState='monitoring'; sessionStart=Date.now(); }, breakMs);
+  alert(`好！去休息 ${guardSettings.interval} 分鐘。休息完後系統會重置計時。🌿`);
+}
+function skipHour(){
+  gState='skipped';
+  skipEnd = Date.now()+60*60*1000;
+  hideBanner();
+  document.getElementById('cat-outer').classList.add('skipped');
+  // After 1 hour, reset
+  setTimeout(()=>{ gState='monitoring'; sessionStart=Date.now(); document.getElementById('cat-outer').classList.remove('skipped'); }, 60*60*1000);
+}
+function resetGuardTimer(){
+  sessionStart=Date.now();
+  gState='monitoring';
+  hideBanner();
+  document.getElementById('cat-outer').classList.remove('skipped');
+  closeModal('guard-modal');
+}
+function updateCatVisibility(){
+  document.getElementById('cat-outer').style.display = guardSettings.catOn ? '' : 'none';
+}
+
+// ---- Wandering Cat ----
+const catOuter = document.getElementById('cat-outer');
+const catBody = document.getElementById('cat-body');
+const CAT_W=72, CAT_H=72;
+let catX=120, catY=120;
+let targetX=200, targetY=200;
+let catDX=0, catDY=0;
+let catSitting=false, sitTimer=0;
+// speed map: 1=very slow … 5=very fast
+const SPEED_MAP=[0.4,0.7,1.1,1.6,2.2];
+
+function pickTarget(){
+  const margin=40;
+  targetX = margin + Math.random()*(window.innerWidth-CAT_W-margin*2);
+  targetY = margin + Math.random()*(window.innerHeight-CAT_H-margin*2);
+}
+function catStep(){
+  if(!guardSettings.catOn){ catOuter.style.display='none'; return; }
+  catOuter.style.display='';
+  const speed = SPEED_MAP[(guardSettings.catSpeed||2)-1];
+  if(catSitting){
+    sitTimer--;
+    if(sitTimer<=0){ catSitting=false; catBody.classList.remove('sitting'); catBody.classList.add('walking'); pickTarget(); }
+    return;
+  }
+  const dx=targetX-catX, dy=targetY-catY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<4){
+    // arrived — sit for a bit
+    if(Math.random()<0.35){
+      catSitting=true;
+      sitTimer=60+Math.floor(Math.random()*120); // ~1-3s at 60fps
+      catBody.classList.add('sitting');
+      catBody.classList.remove('walking');
+    } else {
+      pickTarget();
+    }
+    return;
+  }
+  catDX=dx/dist; catDY=dy/dist;
+  catX+=catDX*speed;
+  catY+=catDY*speed;
+  catOuter.style.transform=`translate(${catX}px,${catY}px)`;
+  // flip direction
+  if(catDX>0) catBody.classList.remove('flip'); else catBody.classList.add('flip');
+}
+
+// Run cat at ~60fps
+setInterval(catStep, 16);
+// Occasionally change target even while walking
+setInterval(()=>{ if(!catSitting && Math.random()<0.3) pickTarget(); }, 3000);
+
+// ---- Init ----
+pickTarget();
+updateCatVisibility();
+loadRefuelerDay();
+startGuardTimer();
+
+// For demo: trigger banner after 5s (comment out in production)
+// setTimeout(()=>{ gState='alerting'; showBanner(90); }, 5000);
+</script>
+</body>
+</html>
