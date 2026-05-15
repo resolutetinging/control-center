@@ -1220,8 +1220,9 @@ async function syncDownload(){
     let content=fileData.content;
     if(fileData.truncated){
       let rawR;
-      try{rawR=await fetch(fileData.raw_url,{headers:{'Authorization':'Bearer '+pat}});}
+      try{rawR=await fetch(fileData.raw_url);}
       catch(fe){throw new Error('讀取完整內容失敗 '+fe.message);}
+      if(!rawR.ok)throw new Error('raw 內容取得失敗 '+rawR.status);
       content=await rawR.text();
     }
     let snap;
