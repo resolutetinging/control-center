@@ -452,6 +452,7 @@ async function fetchNotionLinkedIn(){
     if(!r.ok){console.error('[LinkedIn] Notion API',r.status,await r.text().catch(()=>''));return;}
     const j=await r.json();
     if(!j.results){console.error('[LinkedIn] no results',j);return;}
+    if(j.results.length>0)console.log('[LinkedIn] first page props keys:',Object.keys(j.results[0].properties||{}));
     const counts={saved:0,applied:0,declined:0,contacted:0};
     for(const pg of j.results){
       // Try property named "Status" first, then any status/select type
@@ -708,12 +709,16 @@ function buildTT(id){
       return h('AI 追蹤')+`<div style="font-size:11px;color:var(--ok);padding:3px 0;">✅ 今日筆記已記錄</div>`;
     }
     case 'linkedin':{
+      loadLinkedInData();
+      fetchNotionLinkedIn();
       const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0};
+      const hasData=li.saved||li.applied||li.declined||li.contacted;
       return h('LinkedIn 求職進度')
         +row('⭐ Saved',li.saved+'個')
         +row('📨 Applied',li.applied+'個','g')
         +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
-        +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'');
+        +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'')
+        +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
     }
     default:return'';
   }
