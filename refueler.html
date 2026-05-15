@@ -145,6 +145,20 @@ body{
 .cal-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--faint);}
 .cal-leg-dot{width:7px;height:7px;border-radius:2px;}
 
+/* ── Cost Analysis Card ── */
+.cost-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.cost-stat{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:10px 13px;}
+.cost-lbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:5px;}
+.cost-val{font-size:21px;font-weight:300;color:var(--ink);letter-spacing:-.5px;}
+.cost-val-unit{font-size:11px;color:var(--faint);margin-left:1px;}
+.cost-sub{font-size:10.5px;color:var(--faint);margin-top:3px;}
+.cost-bar-section{display:flex;flex-direction:column;gap:9px;}
+.cost-cat-row{display:grid;grid-template-columns:64px 1fr 100px;align-items:center;gap:10px;}
+.cost-cat-lbl{font-size:12px;color:var(--sub);font-weight:600;}
+.cost-bar-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.cost-bar{height:100%;border-radius:3px;transition:width .4s ease;}
+.cost-cat-amt{font-size:11.5px;font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;}
+
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
 .ai-title{font-size:15px;font-weight:700;color:var(--ink);}
@@ -177,6 +191,8 @@ body{
   .ai-grid{grid-template-columns:1fr;}
   #topbar{padding:0 16px;}
   .today-pill{display:none;}
+  .cost-grid{grid-template-columns:1fr 1fr;}
+  .cost-cat-row{grid-template-columns:50px 1fr 80px;}
 }
 </style>
 </head>
@@ -224,9 +240,14 @@ body{
             <input class="f-inp" id="c-dessert" placeholder="馬卡龍、司康…"/>
           </div>
           <div>
-            <label class="f-lbl">價格 Price (NT$)</label>
+            <label class="f-lbl">甜點價格 (NT$)</label>
+            <input class="f-inp" id="c-dprice" type="number" min="0" placeholder="65"/>
+          </div>
+          <div>
+            <label class="f-lbl">咖啡價格 (NT$)</label>
             <input class="f-inp" id="c-price" type="number" min="0" placeholder="120"/>
           </div>
+          <div></div>
         </div>
         <button class="add-btn add-btn-coffee" onclick="addCoffee()">+ 記錄咖啡</button>
       </div>
@@ -303,6 +324,16 @@ body{
         <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(230,126,34,.1);"></div>1000–1999ml</div>
         <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(192,57,43,.08);"></div>&lt;1000ml</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ⑤ Cost Analysis (full width) -->
+  <div class="card" style="grid-column:1/-1;">
+    <div class="card-header">
+      <div class="sec-title"><span class="sec-emoji">💰</span>消費分析</div>
+    </div>
+    <div class="card-body" id="cost-analysis">
+      <div style="font-size:12px;color:var(--faint);text-align:center;padding:8px 0;">載入中…</div>
     </div>
   </div>
 
@@ -433,11 +464,12 @@ function addCoffee(){
   const cafe=(document.getElementById('c-cafe').value||'').trim();
   const item=(document.getElementById('c-item').value||'').trim();
   const dessert=(document.getElementById('c-dessert').value||'').trim();
-  const price=parseFloat(document.getElementById('c-price').value)||0;
+  const coffeePrice=parseFloat(document.getElementById('c-price').value)||0;
+  const dessertPrice=parseFloat(document.getElementById('c-dprice').value)||0;
   const d=loadRF();
-  d.entries.push({id:'rf_'+Date.now(),type:'coffee',cafe,item,dessert,price,photo:pendingPhoto||null,timestamp:new Date().toISOString()});
+  d.entries.push({id:'rf_'+Date.now(),type:'coffee',cafe,item,dessert,coffeePrice,dessertPrice,photo:pendingPhoto||null,timestamp:new Date().toISOString()});
   saveRF(d);
-  ['c-cafe','c-item','c-dessert','c-price'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['c-cafe','c-item','c-dessert','c-price','c-dprice'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   pendingPhoto=null;
   document.getElementById('photo-box').innerHTML='📷';
   document.getElementById('photo-inp').value='';
@@ -476,7 +508,8 @@ function renderCoffeeLog(){
     const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
     const desc=[e.cafe,e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
     const photoHtml=e.photo?`<img src="${e.photo}" class="log-thumb"/>`:'';
-    const priceHtml=e.price?`<span class="log-price">NT$${e.price}</span>`:'';
+    const cp=e.coffeePrice??e.price??0;const dp=e.dessertPrice??0;
+    const priceHtml=[cp?`<span class="log-price" title="咖啡">☕$${cp}</span>`:'',dp?`<span class="log-price" title="甜點">🍰$${dp}</span>`:''].filter(Boolean).join('');
     return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${desc}</span>${priceHtml}<button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
   }).join('');
 }
@@ -517,9 +550,11 @@ function renderCoffeeCalendar(){
     const es=map[key]||[];const n=es.length;
     const isT=today.getFullYear()===cCalY&&today.getMonth()===cCalM&&today.getDate()===d;
     const cls=n===0?'':n===1?'c1':n===2?'c2':n===3?'c3':'c4';
+    const dayCost=es.reduce((s,e)=>s+(e.coffeePrice??e.price??0)+(e.dessertPrice??0),0);
     const badge=n?`<span class="cal-badge cal-badge-c">${n}☕</span>`:'';
+    const costBadge=dayCost>0?`<span class="cal-badge" style="color:var(--faint);font-size:7px;">$${dayCost}</span>`:'';
     const clickFn=n?`onclick="showDayDetail('${key}','coffee')"`:'' ;
-    return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}</div>`;
+    return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}${costBadge}</div>`;
   }).join('');
   document.getElementById('c-cal-grid').innerHTML=blanks+cells;
 }
@@ -580,6 +615,65 @@ function showDayDetail(key,type){
   document.getElementById('day-detail').style.display='flex';
 }
 function closeDayDetail(){document.getElementById('day-detail').style.display='none';}
+
+// ── COST ANALYSIS ──
+function renderCostAnalysis(){
+  const d=loadRF();const all=d.entries||[];
+  const now=new Date();const todayStr=now.toDateString();
+  const thisM=now.getMonth(),thisY=now.getFullYear();
+
+  const coffeeEntriesToday=all.filter(e=>e.type==='coffee'&&new Date(e.timestamp).toDateString()===todayStr);
+  const todayCoffee=coffeeEntriesToday.reduce((s,e)=>s+(e.coffeePrice??e.price??0),0);
+  const todayDessert=coffeeEntriesToday.reduce((s,e)=>s+(e.dessertPrice??0),0);
+
+  const monthEntries=all.filter(e=>{if(e.type!=='coffee')return false;const dt=new Date(e.timestamp);return dt.getMonth()===thisM&&dt.getFullYear()===thisY;});
+  const monthCoffee=monthEntries.reduce((s,e)=>s+(e.coffeePrice??e.price??0),0);
+  const monthDessert=monthEntries.reduce((s,e)=>s+(e.dessertPrice??0),0);
+  const monthTotal=monthCoffee+monthDessert;
+  const daysElapsed=now.getDate();
+  const dailyAvg=daysElapsed>0?Math.round(monthTotal/daysElapsed):0;
+  const coffeeP=monthTotal>0?Math.round(monthCoffee/monthTotal*100):0;
+  const dessertP=monthTotal>0?100-coffeeP:0;
+
+  const el=document.getElementById('cost-analysis');if(!el)return;
+  el.innerHTML=`
+    <div class="cost-grid">
+      <div class="cost-stat" style="border-left:2.5px solid var(--coffee-l);">
+        <div class="cost-lbl">今日 ☕ 咖啡</div>
+        <div class="cost-val">NT$${todayCoffee}<span class="cost-val-unit"></span></div>
+        <div class="cost-sub">${coffeeEntriesToday.length} 杯</div>
+      </div>
+      <div class="cost-stat" style="border-left:2.5px solid #c4aa7c;">
+        <div class="cost-lbl">今日 🍰 甜點</div>
+        <div class="cost-val">NT$${todayDessert}</div>
+        <div class="cost-sub">${coffeeEntriesToday.filter(e=>(e.dessertPrice??0)>0||e.dessert).length} 項</div>
+      </div>
+      <div class="cost-stat" style="border-left:2.5px solid var(--ink);">
+        <div class="cost-lbl">本月總計</div>
+        <div class="cost-val" style="color:${monthTotal>3000?'var(--danger)':monthTotal>1500?'var(--warn)':'var(--ink)'};">NT$${monthTotal}</div>
+        <div class="cost-sub">${monthEntries.length} 筆</div>
+      </div>
+      <div class="cost-stat">
+        <div class="cost-lbl">本月日均</div>
+        <div class="cost-val">NT$${dailyAvg}</div>
+        <div class="cost-sub">前 ${daysElapsed} 天</div>
+      </div>
+    </div>
+    ${monthTotal>0?`
+    <div class="cost-bar-section">
+      <div class="cost-cat-row">
+        <span class="cost-cat-lbl">☕ 咖啡</span>
+        <div class="cost-bar-wrap"><div class="cost-bar" style="width:${coffeeP}%;background:var(--coffee-l);"></div></div>
+        <span class="cost-cat-amt">NT$${monthCoffee} <span style="color:var(--faint);font-weight:400;">(${coffeeP}%)</span></span>
+      </div>
+      <div class="cost-cat-row">
+        <span class="cost-cat-lbl">🍰 甜點</span>
+        <div class="cost-bar-wrap"><div class="cost-bar" style="width:${dessertP}%;background:#c4aa7c;"></div></div>
+        <span class="cost-cat-amt">NT$${monthDessert} <span style="color:var(--faint);font-weight:400;">(${dessertP}%)</span></span>
+      </div>
+    </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
+  `;
+}
 
 // ── AI STATS ──
 function renderAIStats(){
@@ -649,6 +743,7 @@ function refresh(){
   updatePills();
   renderCoffeeLog();renderWaterLog();
   renderCoffeeCalendar();renderWaterCalendar();
+  renderCostAnalysis();
   renderAIStats();
 }
 
