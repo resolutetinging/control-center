@@ -256,7 +256,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 .btn-pr:hover{background:#4e6a84;transform:translateY(-1px);}
 
 /* ── Debug ── */
-#dbg-btn{position:fixed;bottom:110px;right:20px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:100px;padding:8px 16px;font-size:11px;color:var(--danger);cursor:pointer;font-family:inherit;backdrop-filter:blur(16px);}
+#dbg-btn{position:fixed;bottom:110px;right:20px;z-index:6000;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:100px;padding:8px 16px;font-size:11px;color:var(--danger);cursor:pointer;font-family:inherit;backdrop-filter:blur(16px);}
 #dbg-btn:hover{background:rgba(192,57,43,.14);}
 
 @keyframes pulse-r{0%,100%{opacity:1;}50%{opacity:.2;}}
@@ -333,7 +333,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     </div>
     <div class="d-icon" data-id="mentaltool" onclick="dClick(this,'mentaltool')">
       <div class="d-box">🧘</div>
-      <span class="d-lbl">Fortune-telling</span>
+      <span class="d-lbl">Ziwei</span>
     </div>
     <div class="d-icon" data-id="podcast" onclick="dClick(this,'podcast')">
       <div class="d-box">🎧</div>
@@ -580,11 +580,11 @@ function tick(){
   const s=String(n.getSeconds()).padStart(2,'0');
   document.getElementById('clock').textContent=h+':'+m;
   document.getElementById('clock-sec').textContent=':'+s;
-  const MN=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
-  const WD=['日','一','二','三','四','五','六'];
-  document.getElementById('date-line').textContent=n.getFullYear()+' · '+MN[n.getMonth()]+'月 · 星期'+WD[n.getDay()];
+  const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('date-line').textContent=n.getFullYear()+' · '+MN[n.getMonth()]+' · '+WD[n.getDay()];
   const hr=n.getHours();
-  document.getElementById('greeting').textContent=hr<5?'深夜了，注意休息 🌙':hr<12?'早安 ☀️':hr<17?'午安 🌤':hr<21?'晚上好 🌆':'夜深了 🌙';
+  document.getElementById('greeting').textContent=hr<5?'Late night, get some rest 🌙':hr<12?'Good morning ☀️':hr<17?'Good afternoon 🌤':hr<21?'Good evening 🌆':'Late night 🌙';
 }
 
 // ── DOCK MAGNIFICATION ──
@@ -643,7 +643,7 @@ function buildTT(id){
     case 'sas-hub':{
       const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
       const pace=LIVE.sleep?.pace??'請先訪問 SAS Hub';
-      return h('SAS Hub')+row('今日戰力',cp+(cp==='—'?'':'%'),cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
+      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
     }
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
@@ -679,7 +679,7 @@ function buildTT(id){
       const o=LIVE.optimizer;
       if(!o)return h('優化器')+`<div style="font-size:11px;color:var(--faint);">讀取中…</div>`;
       const status=o.rest?'🌿 休假中':'工作中';
-      let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+hr();
+      let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a')+hr();
       if(o.tasks&&o.tasks.length){
         const show=o.tasks.slice(0,6);
         out+=`<div style="display:flex;flex-direction:column;gap:4px;padding:2px 0;">`;
@@ -853,18 +853,7 @@ function renderTab(tab){
         <div class="s-lbl">Notion Database ID</div>
         <input class="s-inp" id="li-ndb" value="${nd}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="font-family:monospace;font-size:12px;margin-bottom:4px;"/>
         <div style="font-size:10.5px;color:var(--faint);margin-bottom:16px;">資料庫需有 Select 類型欄位，值包含 Saved / Applied / Declined / Contacted</div>
-        <button class="s-btn s-btn-pr" onclick="saveLinkedIn()" style="margin-bottom:20px;">儲存並同步 Notion</button>
-        <div style="height:.5px;background:var(--border);margin-bottom:16px;"></div>
-        <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;">✏ 手動備用數字</div>
-        <div class="s-lbl">⭐ Saved</div>
-        <input class="s-inp" type="number" id="li-saved" min="0" value="${li.saved}" style="margin-bottom:10px;"/>
-        <div class="s-lbl">📨 Applied</div>
-        <input class="s-inp" type="number" id="li-applied" min="0" value="${li.applied}" style="margin-bottom:10px;"/>
-        <div class="s-lbl">🚫 Declined</div>
-        <input class="s-inp" type="number" id="li-declined" min="0" value="${li.declined}" style="margin-bottom:10px;"/>
-        <div class="s-lbl">💬 Contacted</div>
-        <input class="s-inp" type="number" id="li-contacted" min="0" value="${li.contacted}" style="margin-bottom:16px;"/>
-        <button class="s-btn" onclick="saveManualLinkedIn()">手動儲存</button>
+        <button class="s-btn s-btn-pr" onclick="saveLinkedIn()">儲存並同步 Notion</button>
       </div>
     `;
   } else if(tab==='api'){
@@ -946,9 +935,10 @@ function checkGuard(){
   const now=new Date();
   const[eh,em]=endTime.split(':').map(Number);
   const end=new Date();end.setHours(eh,em,0,0);
+  const end2=new Date(end.getTime()+2*60*60*1000);
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
-  if(stamina<40||now>end){triggerGuard();}
+  if(stamina<40||now>end2){triggerGuard();}
   else if(stamina<60){dot.className='warn';txt.textContent='Guard Cat · 注意';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard Cat · 監控中';gState='monitoring';}
 }
@@ -1009,6 +999,7 @@ function endBreak(){
 // ── DEBUG TRIGGER (bypasses state guard) ──
 function debugTrigger(){
   gState='monitoring';
+  cooldownEnd=null;
   triggerGuard();
 }
 
