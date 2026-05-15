@@ -1168,13 +1168,19 @@ async function syncUpload(){
       headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
       body:JSON.stringify({files:{'cc_sync.json':{content:JSON.stringify(snap)}}})
     });
-    if(!r.ok)throw new Error('GitHub '+r.status);
+    if(!r.ok){
+      let msg='GitHub '+r.status;
+      if(r.status===403){let b={};try{b=await r.json();}catch(_){}msg='403：PAT 請使用 Classic token 並勾選 gist scope（不支援 fine-grained token）。'+(b.message?b.message:'');}
+      else if(r.status===404){msg='404：Gist ID 不存在或不屬於此帳號';}
+      else if(r.status===401){msg='401：PAT 無效或已過期';}
+      throw new Error(msg);
+    }
     showSyncMsg('✓ 上傳完成（共 '+Object.keys(snap).length+' 個 key）');
     hideSyncMsg();
     if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='↑';},1500);}
   }catch(e){
     console.error('[Sync] upload error',e);
-    showSyncMsg('✗ 上傳失敗：'+e.message,true);
+    showSyncMsg('✗ '+e.message,true);
     hideSyncMsg(3500);
     if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↑';},1500);}
   }
