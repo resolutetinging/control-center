@@ -1161,7 +1161,7 @@ async function syncUpload(){
   if(btn)btn.textContent='…';
   showSyncMsg('上傳中…');
   try{
-    const SKIP_KEYS=['gh_pat','gist_id','tina_groq','groq_key','groq_api_key','wordvault_groq_key'];
+    const SKIP_KEYS=['gh_pat','gist_id','tina_groq','groq_key','groq_api_key','wordvault_groq_key','notion_token'];
     const snap={};
     for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!SKIP_KEYS.includes(k)&&!k.startsWith('gsk_'))snap[k]=localStorage.getItem(k);}
     const r=await fetch('https://api.github.com/gists/'+gid,{
@@ -1199,10 +1199,16 @@ async function syncDownload(){
     });
     if(!r.ok)throw new Error('GitHub '+r.status);
     const j=await r.json();
-    const content=j.files?.['cc_sync.json']?.content;
-    if(!content)throw new Error('Gist 內找不到 cc_sync.json');
+    const fileData=j.files?.['cc_sync.json'];
+    if(!fileData)throw new Error('Gist 內找不到 cc_sync.json');
     showSyncMsg('還原資料中…');
-    const snap=JSON.parse(content);
+    let content=fileData.content;
+    if(fileData.truncated){
+      const rawR=await fetch(fileData.raw_url,{headers:{'Authorization':'Bearer '+pat}});
+      content=await rawR.text();
+    }
+    let snap;
+    try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤，請重新 Upload 後再試');}
     for(const[k,v] of Object.entries(snap)){if(v!=null)localStorage.setItem(k,v);}
     showSyncMsg('✓ 下載完成，重新載入中…');
     if(btn)btn.textContent='✓';
