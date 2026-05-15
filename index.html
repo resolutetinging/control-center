@@ -1201,28 +1201,32 @@ async function syncUpload(){
   }
 }
 async function syncDownload(){
-  const pat=localStorage.getItem('gh_pat')||'';
-  const gid=localStorage.getItem('gist_id')||'';
+  const pat=(localStorage.getItem('gh_pat')||'').trim();
+  const gid=(localStorage.getItem('gist_id')||'').replace(/\s/g,'');
   if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
+  if(!/^[a-f0-9]{20,}$/i.test(gid)){showSyncMsg('Gist ID 格式錯誤（'+gid.slice(0,8)+'…），請重新貼上',true);hideSyncMsg(4000);return;}
   const btn=document.getElementById('sync-dn');
   if(btn)btn.textContent='…';
   showSyncMsg('連線 Gist 中…');
   try{
-    const r=await fetch('https://api.github.com/gists/'+gid,{
-      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json'}
-    });
-    if(!r.ok)throw new Error('GitHub '+r.status);
+    let r;
+    try{r=await fetch('https://api.github.com/gists/'+gid,{headers:{'Authorization':'Bearer '+pat}});}
+    catch(fe){throw new Error('網路錯誤 '+fe.message);}
+    if(!r.ok)throw new Error('GitHub '+r.status+(r.status===401?' (PAT無效)':r.status===404?' (Gist ID錯誤)':''));
     const j=await r.json();
     const fileData=j.files?.['cc_sync.json'];
     if(!fileData)throw new Error('Gist 內找不到 cc_sync.json');
     showSyncMsg('還原資料中…');
     let content=fileData.content;
     if(fileData.truncated){
-      const rawR=await fetch(fileData.raw_url,{headers:{'Authorization':'Bearer '+pat}});
+      let rawR;
+      try{rawR=await fetch(fileData.raw_url,{headers:{'Authorization':'Bearer '+pat}});}
+      catch(fe){throw new Error('讀取完整內容失敗 '+fe.message);}
       content=await rawR.text();
     }
     let snap;
-    try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤，請重新 Upload 後再試');}
+    try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤：'+e.message);}
+    if(!snap||typeof snap!=='object'||Array.isArray(snap))throw new Error('資料結構錯誤，請重新 Upload');
     for(const[k,v] of Object.entries(snap)){if(v!=null)localStorage.setItem(k,v);}
     showSyncMsg('✓ 下載完成，重新載入中…');
     if(btn)btn.textContent='✓';
