@@ -585,7 +585,7 @@ function tick(){
   const s=String(n.getSeconds()).padStart(2,'0');
   document.getElementById('clock').textContent=h+':'+m;
   document.getElementById('clock-sec').textContent=':'+s;
-  const WD=['週日','週一','週二','週三','週四','週五','週六'];
+  const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const yyyy=n.getFullYear(),mm=String(n.getMonth()+1).padStart(2,'0'),dd=String(n.getDate()).padStart(2,'0');
   document.getElementById('date-line').textContent=yyyy+'/'+mm+'/'+dd+' · '+WD[n.getDay()];
   const hr=n.getHours();
@@ -688,19 +688,12 @@ function buildTT(id){
       let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a')+hr();
       if(o.tasks&&o.tasks.length){
         const show=o.tasks.slice(0,6);
-        out+=`<div style="display:flex;flex-direction:column;gap:4px;padding:2px 0;">`;
         for(const t of show){
           const dn=t.done||false;
-          const lbl=(t.text||t.title||t.content||t.name||'').slice(0,24)||'—';
-          out+=`<div style="display:flex;align-items:center;gap:6px;font-size:10.5px;">
-            <span style="flex-shrink:0;width:12px;text-align:center;color:${dn?'#7d9e85':'#bbb'};font-size:11px;line-height:1;">${dn?'✓':'○'}</span>
-            <span style="color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lbl}</span>
-          </div>`;
+          const lbl=(t.text||t.title||t.label||t.content||t.name||'').slice(0,22)||'—';
+          out+=`<div class="tt-row" style="justify-content:flex-start;gap:8px;"><span style="flex-shrink:0;width:13px;text-align:center;font-size:10px;color:${dn?'#7d9e85':'#bbb'};">${dn?'✓':'○'}</span><span style="font-size:10.5px;color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lbl}</span></div>`;
         }
-        out+='</div>';
-        if(o.tasks.length>6)out+=`<div style="font-size:10px;color:var(--faint);padding-top:2px;text-align:right;">…另有 ${o.tasks.length-6} 項</div>`;
-      } else {
-        out+=row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a');
+        if(o.tasks.length>6)out+=`<div style="font-size:10px;color:var(--faint);padding:2px 0 0;text-align:right;">…另有 ${o.tasks.length-6} 項</div>`;
       }
       return out;
     }
