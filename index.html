@@ -1222,7 +1222,7 @@ async function syncDownload(){
     setTimeout(()=>window.location.reload(),800);
   }catch(e){
     console.error('[Sync] download error',e);
-    showSyncMsg('✗ 下載失敗：'+e.message,true);
+    showSyncMsg('✗ 下載失敗：'+e.message+(e.name?'['+e.name+']':''),true);
     hideSyncMsg(3500);
     if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↓';},1500);}
   }
