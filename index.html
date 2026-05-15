@@ -32,7 +32,7 @@ body{position:relative;}
   background-size:cover;background-position:center;background-repeat:no-repeat;
   opacity:0;transition:opacity .5s;
 }
-#bg-wallpaper.active{opacity:1;}
+#bg-wallpaper.active{opacity:0.9;}
 #noise{position:fixed;inset:0;z-index:2;opacity:.018;pointer-events:none;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
   background-size:128px;}
@@ -52,9 +52,12 @@ body{position:relative;}
 #date-line{font-size:13px;color:var(--faint);margin-top:10px;letter-spacing:.05em;}
 #greeting{font-size:13.5px;font-weight:400;color:var(--sub);margin-top:4px;letter-spacing:.12em;text-transform:uppercase;}
 
-/* ── Guard Pill ── */
+/* ── Guard Group ── */
+#guard-group{
+  position:fixed;bottom:55px;right:18px;z-index:50;
+  display:flex;align-items:center;gap:8px;
+}
 #guard-pill{
-  position:fixed;bottom:18px;right:18px;z-index:50;
   display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:100px;
   background:rgba(244,241,236,.82);border:1px solid var(--bstr);
   backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
@@ -63,6 +66,15 @@ body{position:relative;}
   cursor:pointer;user-select:none;transition:background .2s;
 }
 #guard-pill:hover{background:rgba(255,255,255,.9);}
+#guard-stop-btn{
+  display:none;align-items:center;gap:5px;padding:7px 13px;border-radius:100px;
+  background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.25);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  font-size:11px;font-weight:600;color:var(--danger);
+  box-shadow:0 2px 10px rgba(40,38,32,.08);
+  cursor:pointer;font-family:inherit;transition:background .2s;
+}
+#guard-stop-btn:hover{background:rgba(192,57,43,.18);}
 #guard-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);transition:background .5s;flex-shrink:0;}
 #guard-dot.warn{background:var(--warn);}
 #guard-dot.alert{background:var(--danger);animation:pulse-r 1s infinite;}
@@ -134,11 +146,11 @@ body{position:relative;}
 #tooltip.tt-hide{opacity:0;transform:translateY(8px);}
 .tt-head{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:9px;}
 .tt-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:2px 0;}
-.tt-k{font-size:11px;color:var(--faint);}
+.tt-k{font-size:11px;color:var(--faint);font-weight:600;}
 .tt-v{font-size:12px;font-weight:600;color:var(--ink);}
 .tt-v.g{color:#7d9e85;}.tt-v.a{color:#b09870;}.tt-v.r{color:#a87868;}
 .tt-hr{height:.5px;background:var(--border);margin:7px 0;}
-.tt-spark{font-size:11px;letter-spacing:1.5px;}
+.tt-spark{font-size:11px;letter-spacing:1.5px;font-weight:600;}
 
 /* ── Settings Modal ── */
 #settings-overlay{
@@ -249,7 +261,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 /* ── Sync Pill ── */
 #sync-pill{
-  position:fixed;bottom:18px;left:18px;z-index:50;
+  position:fixed;bottom:54px;left:18px;z-index:50;
   display:flex;align-items:center;gap:2px;padding:6px 10px;
   border-radius:100px;
   background:rgba(244,241,236,.82);border:1px solid var(--bstr);
@@ -266,7 +278,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 #sync-pill button:hover{background:rgba(40,38,32,.08);color:var(--ink);}
 #sync-sep{width:.5px;height:14px;background:var(--bstr);margin:0 2px;flex-shrink:0;}
 #sync-msg{
-  position:fixed;bottom:90px;left:18px;z-index:51;
+  position:fixed;bottom:100px;left:18px;z-index:51;
   padding:8px 14px;border-radius:10px;font-size:12px;font-weight:500;
   background:rgba(40,38,32,.82);color:rgba(255,255,255,.92);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
@@ -291,10 +303,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   html,body{height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;}
 
   /* Performance: kill backdrop-filter (GPU-heavy on mobile) */
-  #dock,#guard-pill,#settings-btn,#sync-pill{
+  #dock,#guard-pill,#guard-stop-btn,#settings-btn,#sync-pill{
     backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
-    background:rgba(244,241,236,.96)!important;
   }
+  #guard-pill,#settings-btn,#sync-pill{background:rgba(244,241,236,.96)!important;}
 
   /* Header: in document flow */
   #header{
@@ -339,9 +351,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div id="greeting"></div>
 </div>
 
-<div id="guard-pill" onclick="openSettings('guard')">
-  <span id="guard-dot"></span>
-  <span id="guard-txt">Guard · 監控中</span>
+<div id="guard-group">
+  <button id="guard-stop-btn" onclick="forceStopGuard()">⛔ 強制中止</button>
+  <div id="guard-pill" onclick="openSettings('guard')">
+    <span id="guard-dot"></span>
+    <span id="guard-txt">Guard · 監控中</span>
+  </div>
 </div>
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
@@ -1092,6 +1107,7 @@ function triggerGuard(){
   document.getElementById('guard-overlay').style.display='block';
   document.getElementById('guard-dot').className='alert';
   document.getElementById('guard-txt').textContent='執法中';
+  document.getElementById('guard-stop-btn').style.display='flex';
 }
 function startBreak(){
   gState='resting';
@@ -1108,7 +1124,16 @@ function endBreak(){
   document.getElementById('guard-overlay').style.display='none';
   document.getElementById('guard-dot').className='warn';
   document.getElementById('guard-txt').textContent=`Guard · ${skipDur}m cooldown`;
+  document.getElementById('guard-stop-btn').style.display='none';
   setTimeout(()=>{gState='monitoring';checkGuard();},skipMs);
+}
+function forceStopGuard(){
+  if(cdIv){clearInterval(cdIv);cdIv=null;}
+  gState='monitoring';cooldownEnd=null;
+  document.getElementById('guard-overlay').style.display='none';
+  document.getElementById('guard-dot').className='';
+  document.getElementById('guard-txt').textContent='Guard · 監控中';
+  document.getElementById('guard-stop-btn').style.display='none';
 }
 
 // ── DEBUG TRIGGER (bypasses state guard) ──
