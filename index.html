@@ -972,9 +972,15 @@ function renderTab(tab){
       <div class="s-title">API 設定</div>
       <div class="s-sec">
         <div class="s-lbl">Groq API Key</div>
-        <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;margin-bottom:22px;"/>
+        <div style="display:flex;gap:6px;margin-bottom:22px;">
+          <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <button onclick="toggleVis('gs-k',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
+        </div>
         <div class="s-lbl">GitHub PAT（↑↓ 同步用，需 gist 權限）</div>
-        <input class="s-inp" type="password" id="gs-pat" value="${pat}" placeholder="ghp_…" style="font-family:monospace;font-size:12px;margin-bottom:12px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <input class="s-inp" type="password" id="gs-pat" value="${pat}" placeholder="ghp_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <button onclick="toggleVis('gs-pat',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
+        </div>
         <div class="s-lbl">Gist ID</div>
         <input class="s-inp" id="gs-gid" value="${gid}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
         <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步時所有 localStorage 會存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>。</div>
@@ -1026,6 +1032,7 @@ function saveManualLinkedIn(){
   localStorage.setItem(LI_KEY,JSON.stringify(li));
   LIVE.linkedin=li;closeSettings();
 }
+function toggleVis(id,btn){const el=document.getElementById(id);if(!el)return;el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁':'🙈';}
 function saveAPI(){
   const k=(document.getElementById('gs-k')?.value||'').trim();
   const pat=(document.getElementById('gs-pat')?.value||'').trim();
