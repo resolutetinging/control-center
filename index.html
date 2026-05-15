@@ -265,6 +265,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 }
 #sync-pill button:hover{background:rgba(40,38,32,.08);color:var(--ink);}
 #sync-sep{width:.5px;height:14px;background:var(--bstr);margin:0 2px;flex-shrink:0;}
+#sync-msg{
+  position:fixed;bottom:60px;left:18px;z-index:51;
+  padding:8px 14px;border-radius:10px;font-size:12px;font-weight:500;
+  background:rgba(40,38,32,.82);color:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 4px 16px rgba(40,38,32,.2);
+  white-space:nowrap;pointer-events:none;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .18s,transform .18s;
+}
+#sync-msg.show{opacity:1;transform:translateY(0);}
 
 @keyframes pulse-r{0%,100%{opacity:1;}50%{opacity:.2;}}
 @keyframes pulse-s{0%,100%{opacity:1;}50%{opacity:.35;}}
@@ -437,6 +448,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div id="sync-sep"></div>
   <button id="sync-dn" onclick="syncDownload()" title="Download from Gist → restore">↓</button>
 </div>
+<div id="sync-msg"></div>
 
 <script>
 'use strict';
@@ -1126,12 +1138,28 @@ async function runSAS(){
 }
 
 // ── GIST SYNC ──
+let _syncMsgT=null;
+function showSyncMsg(txt,isErr=false){
+  const el=document.getElementById('sync-msg');
+  if(!el)return;
+  if(_syncMsgT)clearTimeout(_syncMsgT);
+  el.textContent=txt;
+  el.style.background=isErr?'rgba(168,120,104,.92)':'rgba(40,38,32,.82)';
+  el.classList.add('show');
+}
+function hideSyncMsg(delay=2800){
+  _syncMsgT=setTimeout(()=>{
+    const el=document.getElementById('sync-msg');
+    if(el)el.classList.remove('show');
+  },delay);
+}
 async function syncUpload(){
   const pat=localStorage.getItem('gh_pat')||'';
   const gid=localStorage.getItem('gist_id')||'';
-  if(!pat||!gid){openSettings('api');return;}
+  if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
   const btn=document.getElementById('sync-up');
   if(btn)btn.textContent='…';
+  showSyncMsg('上傳中…');
   try{
     const snap={};
     for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);snap[k]=localStorage.getItem(k);}
@@ -1140,33 +1168,42 @@ async function syncUpload(){
       headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
       body:JSON.stringify({files:{'cc_sync.json':{content:JSON.stringify(snap)}}})
     });
-    if(!r.ok)throw new Error(r.status);
+    if(!r.ok)throw new Error('GitHub '+r.status);
+    showSyncMsg('✓ 上傳完成（共 '+Object.keys(snap).length+' 個 key）');
+    hideSyncMsg();
     if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='↑';},1500);}
   }catch(e){
     console.error('[Sync] upload error',e);
+    showSyncMsg('✗ 上傳失敗：'+e.message,true);
+    hideSyncMsg(3500);
     if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↑';},1500);}
   }
 }
 async function syncDownload(){
   const pat=localStorage.getItem('gh_pat')||'';
   const gid=localStorage.getItem('gist_id')||'';
-  if(!pat||!gid){openSettings('api');return;}
+  if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
   const btn=document.getElementById('sync-dn');
   if(btn)btn.textContent='…';
+  showSyncMsg('連線 Gist 中…');
   try{
     const r=await fetch('https://api.github.com/gists/'+gid,{
       headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json'}
     });
-    if(!r.ok)throw new Error(r.status);
+    if(!r.ok)throw new Error('GitHub '+r.status);
     const j=await r.json();
     const content=j.files?.['cc_sync.json']?.content;
-    if(!content)throw new Error('cc_sync.json not found');
+    if(!content)throw new Error('Gist 內找不到 cc_sync.json');
+    showSyncMsg('還原資料中…');
     const snap=JSON.parse(content);
     for(const[k,v] of Object.entries(snap)){if(v!=null)localStorage.setItem(k,v);}
+    showSyncMsg('✓ 下載完成，重新載入中…');
     if(btn)btn.textContent='✓';
-    setTimeout(()=>window.location.reload(),600);
+    setTimeout(()=>window.location.reload(),800);
   }catch(e){
     console.error('[Sync] download error',e);
+    showSyncMsg('✗ 下載失敗：'+e.message,true);
+    hideSyncMsg(3500);
     if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↓';},1500);}
   }
 }
