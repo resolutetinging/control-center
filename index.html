@@ -721,11 +721,14 @@ function buildTT(id){
       let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a')+hr();
       if(o.tasks&&o.tasks.length){
         const show=o.tasks.slice(0,6);
+        out+=`<div style="display:grid;grid-template-columns:14px 1fr;row-gap:5px;column-gap:7px;padding:2px 0;">`;
         for(const t of show){
           const dn=t.done||false;
-          const lbl=(t.text||t.title||t.label||t.content||t.name||'').slice(0,22)||'—';
-          out+=`<div class="tt-row" style="justify-content:flex-start;gap:8px;"><span style="flex-shrink:0;width:13px;text-align:center;font-size:10px;color:${dn?'#7d9e85':'#bbb'};">${dn?'✓':'○'}</span><span style="font-size:10.5px;color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lbl}</span></div>`;
+          const lbl=(t.text||t.title||t.label||t.content||t.name||'').slice(0,24)||'—';
+          out+=`<span style="font-size:10px;color:${dn?'#7d9e85':'#bbb'};text-align:center;line-height:1.5;">${dn?'✓':'○'}</span>`
+             +`<span style="font-size:10.5px;color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">${lbl}</span>`;
         }
+        out+=`</div>`;
         if(o.tasks.length>6)out+=`<div style="font-size:10px;color:var(--faint);padding:2px 0 0;text-align:right;">…另有 ${o.tasks.length-6} 項</div>`;
       }
       return out;
