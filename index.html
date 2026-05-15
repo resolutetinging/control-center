@@ -840,7 +840,7 @@ function renderTab(tab){
     const skipDur=gs.skipDur||60;
     const workTime=gs.workTime||15;
     const catUrl=localStorage.getItem('cc_cat_gif')||'';
-    const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower+'%':(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower+'%':'—');
+    const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower:(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower:'—');
     el.innerHTML=`
       <div class="s-title">Guard 設定</div>
       <div class="s-sec">
@@ -851,19 +851,18 @@ function renderTab(tab){
         <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
       </div>
       <div class="s-sec">
-        <div class="s-lbl">貓貓介入時長（Guard Working Time）</div>
+        <div class="s-lbl">介入時長（Guard Working Time）</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <input class="s-inp" type="number" id="gs-work" min="1" max="60" value="${workTime}" style="width:80px;"/>
           <span style="font-size:13px;color:var(--faint);">分鐘</span>
         </div>
-        <div class="s-lbl">跳過後冷卻時間（Duration for Skip Guard）</div>
+        <div class="s-lbl">跳過後冷卻時間（Cooldown）</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <input class="s-inp" type="number" id="gs-skip" min="5" max="240" value="${skipDur}" style="width:80px;"/>
           <span style="font-size:13px;color:var(--faint);">分鐘</span>
         </div>
-        <div class="s-lbl">貓咪 GIF / 圖片 URL</div>
-        <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址（空白則使用預設貓咪）" style="margin-bottom:8px;"/>
-        <div style="font-size:11px;color:var(--faint);margin-bottom:16px;">💡 可從 Giphy、Tenor 或本地圖片上傳取得 URL</div>
+        <div class="s-lbl">GIF / 圖片 URL</div>
+        <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址" style="margin-bottom:18px;"/>
         <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
       </div>
     `;
