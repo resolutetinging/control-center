@@ -136,8 +136,9 @@ body{position:relative;}
 .tt-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:2px 0;}
 .tt-k{font-size:11px;color:var(--faint);}
 .tt-v{font-size:12px;font-weight:600;color:var(--ink);}
-.tt-v.g{color:var(--ok);}.tt-v.a{color:var(--warn);}.tt-v.r{color:var(--danger);}
+.tt-v.g{color:#7d9e85;}.tt-v.a{color:#b09870;}.tt-v.r{color:#a87868;}
 .tt-hr{height:.5px;background:var(--border);margin:7px 0;}
+.tt-spark{font-size:11px;letter-spacing:1.5px;}
 
 /* ── Settings Modal ── */
 #settings-overlay{
@@ -390,6 +391,32 @@ const TODAY=new Date().toISOString().slice(0,10);
 const SLEEP_URL='https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard.html';
 const PROXIES=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`];
 
+const CAT_SVG=`<svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="width:min(52vw,290px);filter:drop-shadow(0 18px 55px rgba(0,0,0,.45))"><style>.pl{animation:pawL 1.1s ease-in-out infinite}.pr{animation:pawR 1.1s ease-in-out infinite .28s}.tl{animation:tailSw 2.2s ease-in-out infinite;transform-origin:108px 157px}.el{animation:eyeBl 5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}.er{animation:eyeBl 5s ease-in-out infinite .15s;transform-box:fill-box;transform-origin:center}.cur{animation:curBl .85s step-end infinite}@keyframes pawL{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes pawR{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes tailSw{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(9deg)}}@keyframes eyeBl{0%,88%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}}@keyframes curBl{0%,49%{opacity:1}50%,100%{opacity:0}}</style>
+<rect x="68" y="22" width="152" height="114" rx="8" fill="#2d2d2d"/><rect x="76" y="30" width="136" height="98" rx="4" fill="#0a0a0a"/>
+<text x="83" y="50" font-family="monospace" font-size="7.5" fill="#22c55e">$ sudo takeover --force</text>
+<text x="83" y="63" font-family="monospace" font-size="7.5" fill="#60a5fa">▶ loading PURRFECT.exe…</text>
+<text x="83" y="76" font-family="monospace" font-size="7.5" fill="#f59e0b">✓ keyboard: MINE</text>
+<text x="83" y="89" font-family="monospace" font-size="7.5" fill="#e879f9">✓ mouse: captured 🐾</text>
+<text x="83" y="102" font-family="monospace" font-size="7.5" fill="#22c55e">✓ world: dominated</text>
+<text x="83" y="117" font-family="monospace" font-size="7.5" fill="#fff"><tspan class="cur">█</tspan></text>
+<rect x="136" y="136" width="14" height="14" rx="2" fill="#3d3d3d"/><rect x="118" y="148" width="50" height="6" rx="3" fill="#3d3d3d"/>
+<rect x="73" y="163" width="140" height="22" rx="4" fill="#3d3d3d"/>
+<rect x="80" y="168" width="18" height="9" rx="2" fill="#555"/><rect x="103" y="168" width="18" height="9" rx="2" fill="#555"/><rect x="126" y="168" width="18" height="9" rx="2" fill="#555"/><rect x="149" y="168" width="18" height="9" rx="2" fill="#555"/><rect x="172" y="168" width="18" height="9" rx="2" fill="#555"/>
+<path d="M108,157 Q58,128 53,92 Q48,62 73,70" stroke="#f97316" stroke-width="11" stroke-linecap="round" fill="none" class="tl"/><path d="M108,157 Q58,128 53,92 Q48,62 73,70" stroke="#fb923c" stroke-width="5" stroke-linecap="round" fill="none" class="tl"/>
+<ellipse cx="144" cy="153" rx="41" ry="25" fill="#f97316"/>
+<circle cx="144" cy="116" r="33" fill="#f97316"/>
+<polygon points="123,96 112,71 137,90" fill="#f97316"/><polygon points="165,96 176,71 151,90" fill="#f97316"/>
+<polygon points="124,94 116,76 135,89" fill="#fca5a5" opacity=".85"/><polygon points="164,94 172,76 153,89" fill="#fca5a5" opacity=".85"/>
+<ellipse cx="133" cy="115" rx="6" ry="6" fill="#1a1209" class="el"/><ellipse cx="155" cy="115" rx="6" ry="6" fill="#1a1209" class="er"/>
+<circle cx="135" cy="113" r="1.8" fill="#fff"/><circle cx="157" cy="113" r="1.8" fill="#fff"/>
+<polygon points="144,122 140,118 148,118" fill="#fca5a5"/>
+<path d="M136,126 Q144,133 152,126" stroke="#7a3a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+<line x1="104" y1="119" x2="130" y2="122" stroke="#ccc" stroke-width=".9" opacity=".7"/><line x1="102" y1="125" x2="130" y2="126" stroke="#ccc" stroke-width=".9" opacity=".7"/>
+<line x1="184" y1="119" x2="158" y2="122" stroke="#ccc" stroke-width=".9" opacity=".7"/><line x1="186" y1="125" x2="158" y2="126" stroke="#ccc" stroke-width=".9" opacity=".7"/>
+<g class="pl"><ellipse cx="108" cy="172" rx="17" ry="11" fill="#f97316"/><circle cx="96" cy="166" r="5" fill="#f97316"/><circle cx="107" cy="163" r="5" fill="#f97316"/><circle cx="118" cy="166" r="5" fill="#f97316"/></g>
+<g class="pr"><ellipse cx="180" cy="172" rx="17" ry="11" fill="#f97316"/><circle cx="168" cy="166" r="5" fill="#f97316"/><circle cx="179" cy="163" r="5" fill="#f97316"/><circle cx="190" cy="166" r="5" fill="#f97316"/></g>
+</svg>`;
+
 // ── LIVE DATA (populated async on load) ──
 let LIVE={sleep:null,mental:null,optimizer:null,aitracker:null,linkedin:null};
 
@@ -414,6 +441,27 @@ function loadAITrackerData(){
 }
 function loadLinkedInData(){
   try{LIVE.linkedin=JSON.parse(localStorage.getItem(LI_KEY)||'null');}catch{}
+}
+async function fetchNotionLinkedIn(){
+  const token=localStorage.getItem('notion_token')||'';
+  const dbId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
+  if(!token||!dbId)return;
+  try{
+    const proxy=`https://corsproxy.io/?${encodeURIComponent('https://api.notion.com/v1/databases/'+dbId+'/query')}`;
+    const r=await fetch(proxy,{method:'POST',headers:{'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'},body:JSON.stringify({page_size:100})});
+    if(!r.ok)return;
+    const j=await r.json();
+    const counts={saved:0,applied:0,declined:0,contacted:0};
+    for(const pg of j.results||[]){
+      const status=(Object.values(pg.properties||{}).find(p=>p.type==='select')?.select?.name||'').toLowerCase();
+      if(status.includes('save'))counts.saved++;
+      else if(status.includes('appl'))counts.applied++;
+      else if(status.includes('declin')||status.includes('reject'))counts.declined++;
+      else if(status.includes('contact')||status.includes('reach'))counts.contacted++;
+    }
+    LIVE.linkedin=counts;
+    localStorage.setItem(LI_KEY,JSON.stringify(counts));
+  }catch{}
 }
 async function fetchSleepData(){
   try{
@@ -452,9 +500,8 @@ async function fetchSleepData(){
     const remP=Math.round((d.rem_min||0)/t*100);
     const coreP=Math.round((d.core_min||0)/t*100);
     const awakeP=Math.round((d.awake_min||0)/t*100);
-    const effRaw=d.efficiency!=null?d.efficiency:80;
-    const eff=effRaw>1?effRaw/100:effRaw; // handle % vs decimal
-    const cp=Math.round(Math.min(deepP/100/0.25,1)*35+Math.min(remP/100/0.22,1)*25+eff*40);
+    // Formula from sleep-dashboard: Deep×0.7 + REM×0.3 (in minutes), capped at 100
+    const cp=Math.min(100,Math.round((d.deep_min||0)*0.7+(d.rem_min||0)*0.3));
     // 7-day trend
     const last7=summary.slice(-7);
     const trend7=last7.map(n=>{
@@ -478,7 +525,7 @@ async function fetchSleepData(){
 async function initLiveData(){
   loadMentalData();loadOptimizerData();loadAITrackerData();loadLinkedInData();
   await fetchSleepData();
-  // After sleep loaded, update guard pill if needed
+  fetchNotionLinkedIn(); // async, updates LIVE.linkedin in background
   checkGuard();
 }
 
@@ -615,6 +662,12 @@ const ttp=document.getElementById('tooltip');
 let ttT;
 function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
 function hr(){return`<div class="tt-hr"></div>`;}
+function spark(vals){
+  const B='▁▂▃▄▅▆▇█';
+  if(!vals||!vals.length)return'';
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  return vals.map(v=>B[Math.round((v-mn)/rng*7)]).join('');
+}
 function buildTT(id){
   const h=(t)=>`<div class="tt-head">${t}</div>`;
   const rf=rfToday();
@@ -632,11 +685,17 @@ function buildTT(id){
         +row('🟣 REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')
         +row('🟢 Core',s.coreP+'%')
         +row('🟡 Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
-      if(s.avg7&&s.avg7.n>1){
-        out+=hr()+`<div style="font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">近${s.avg7.n}日平均</div>`
-          +row('時長',s.avg7.dur+'h')
-          +row('深層',s.avg7.deepP+'%',s.avg7.deepP>=18?'g':s.avg7.deepP>=12?'a':'r')
-          +row('REM',s.avg7.remP+'%',s.avg7.remP>=18?'g':s.avg7.remP>=12?'a':'r');
+      if(s.trend7&&s.trend7.length>2){
+        const deepVals=s.trend7.map(n=>n.deepP);
+        const remVals=s.trend7.map(n=>n.remP);
+        const latestDeep=deepVals[deepVals.length-1],prevDeep=deepVals[deepVals.length-2];
+        const latestRem=remVals[remVals.length-1],prevRem=remVals[remVals.length-2];
+        const dArr=latestDeep>prevDeep?'↑':latestDeep<prevDeep?'↓':'→';
+        const rArr=latestRem>prevRem?'↑':latestRem<prevRem?'↓':'→';
+        out+=hr()
+          +`<div style="font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;">近${s.trend7.length}日趨勢</div>`
+          +`<div class="tt-row"><span class="tt-k">🔵 Deep</span><span class="tt-v tt-spark" style="color:#8aabcc;">${spark(deepVals)}</span><span class="tt-v ${latestDeep>=18?'g':latestDeep>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${dArr}</span></div>`
+          +`<div class="tt-row"><span class="tt-k">🟣 REM</span><span class="tt-v tt-spark" style="color:#a898b8;">${spark(remVals)}</span><span class="tt-v ${latestRem>=18?'g':latestRem>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${rArr}</span></div>`;
       }
       return out;
     }
@@ -796,19 +855,30 @@ function renderTab(tab){
     `;
   } else if(tab==='linkedin'){
     const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0};
+    const nt=localStorage.getItem('notion_token')||'';
+    const nd=localStorage.getItem('notion_li_db')||'';
     el.innerHTML=`
-      <div class="s-title">LinkedIn 追蹤</div>
+      <div class="s-title">LinkedIn 求職進度</div>
       <div class="s-sec">
-        <div style="font-size:12px;color:var(--faint);margin-bottom:16px;line-height:1.6;">手動記錄求職進度，hover LinkedIn 圖示時顯示。</div>
-        <div class="s-lbl">⭐ Saved Only（儲存待投）</div>
-        <input class="s-inp" type="number" id="li-saved" min="0" value="${li.saved}" style="margin-bottom:12px;"/>
-        <div class="s-lbl">📨 Applied（已投遞）</div>
-        <input class="s-inp" type="number" id="li-applied" min="0" value="${li.applied}" style="margin-bottom:12px;"/>
-        <div class="s-lbl">🚫 Declined（已回絕）</div>
-        <input class="s-inp" type="number" id="li-declined" min="0" value="${li.declined}" style="margin-bottom:12px;"/>
-        <div class="s-lbl">💬 Contacted（已聯繫）</div>
-        <input class="s-inp" type="number" id="li-contacted" min="0" value="${li.contacted}" style="margin-bottom:18px;"/>
-        <button class="s-btn s-btn-pr" onclick="saveLinkedIn()">儲存進度</button>
+        <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;">☁ Notion 自動同步</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:12px;line-height:1.6;">填入 Notion Integration Token 和 LinkedIn 職缺資料庫 ID，頁面載入時自動從 Notion 讀取各狀態數量。</div>
+        <div class="s-lbl">Notion Integration Token</div>
+        <input class="s-inp" type="password" id="li-ntoken" value="${nt}" placeholder="secret_…" style="font-family:monospace;font-size:12px;margin-bottom:12px;"/>
+        <div class="s-lbl">Notion Database ID</div>
+        <input class="s-inp" id="li-ndb" value="${nd}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="font-family:monospace;font-size:12px;margin-bottom:4px;"/>
+        <div style="font-size:10.5px;color:var(--faint);margin-bottom:16px;">資料庫需有 Select 類型欄位，值包含 Saved / Applied / Declined / Contacted</div>
+        <button class="s-btn s-btn-pr" onclick="saveLinkedIn()" style="margin-bottom:20px;">儲存並同步 Notion</button>
+        <div style="height:.5px;background:var(--border);margin-bottom:16px;"></div>
+        <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;">✏ 手動備用數字</div>
+        <div class="s-lbl">⭐ Saved</div>
+        <input class="s-inp" type="number" id="li-saved" min="0" value="${li.saved}" style="margin-bottom:10px;"/>
+        <div class="s-lbl">📨 Applied</div>
+        <input class="s-inp" type="number" id="li-applied" min="0" value="${li.applied}" style="margin-bottom:10px;"/>
+        <div class="s-lbl">🚫 Declined</div>
+        <input class="s-inp" type="number" id="li-declined" min="0" value="${li.declined}" style="margin-bottom:10px;"/>
+        <div class="s-lbl">💬 Contacted</div>
+        <input class="s-inp" type="number" id="li-contacted" min="0" value="${li.contacted}" style="margin-bottom:16px;"/>
+        <button class="s-btn" onclick="saveManualLinkedIn()">手動儲存</button>
       </div>
     `;
   } else if(tab==='api'){
@@ -849,6 +919,14 @@ function saveGS(){
   closeSettings();checkGuard();
 }
 function saveLinkedIn(){
+  const nt=(document.getElementById('li-ntoken')?.value||'').trim();
+  const nd=(document.getElementById('li-ndb')?.value||'').trim();
+  if(nt)localStorage.setItem('notion_token',nt);else localStorage.removeItem('notion_token');
+  if(nd)localStorage.setItem('notion_li_db',nd);else localStorage.removeItem('notion_li_db');
+  closeSettings();
+  if(nt&&nd)fetchNotionLinkedIn();
+}
+function saveManualLinkedIn(){
   const li={
     saved:parseInt(document.getElementById('li-saved')?.value)||0,
     applied:parseInt(document.getElementById('li-applied')?.value)||0,
@@ -893,10 +971,10 @@ function renderCatDisplay(){
   const el=document.getElementById('big-cat');
   if(url){
     el.style.fontSize='';
-    el.innerHTML=`<img src="${url}" alt="🐱" onerror="this.outerHTML='<span style=font-size:min(34vw,260px)>🐱</span>'"/>`;
+    el.innerHTML=`<img src="${url}" alt="🐱" onerror="this.innerHTML=CAT_SVG"/>`;
   } else {
-    el.style.fontSize='min(34vw,300px)';
-    el.innerHTML='🐱';
+    el.style.fontSize='';
+    el.innerHTML=CAT_SVG;
   }
 }
 function triggerGuard(){
