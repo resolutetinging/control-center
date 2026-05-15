@@ -442,20 +442,39 @@ function loadAITrackerData(){
 function loadLinkedInData(){
   try{LIVE.linkedin=JSON.parse(localStorage.getItem(LI_KEY)||'null');}catch{}
 }
+async function notionQueryDb(token,dbId){
+  const notionHdr={'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'};
+  const proxy='https://corsproxy.io/?https://api.notion.com/v1/databases/'+dbId+'/query';
+  const r=await fetch(proxy,{method:'POST',headers:notionHdr,body:JSON.stringify({page_size:100})});
+  if(!r.ok){
+    const err=await r.json().catch(()=>({}));
+    if(err.code==='validation_error'&&(err.message||'').includes('page, not a database')){
+      // ID is a page — find the child_database inside it
+      const pr=await fetch('https://corsproxy.io/?https://api.notion.com/v1/blocks/'+dbId+'/children',{headers:notionHdr});
+      if(!pr.ok)return null;
+      const pj=await pr.json();
+      const db=(pj.results||[]).find(b=>b.type==='child_database');
+      if(!db){console.error('[LinkedIn] no child_database inside page');return null;}
+      const realId=db.id.replace(/-/g,'');
+      console.log('[LinkedIn] auto-resolved database ID:',realId);
+      localStorage.setItem('notion_li_db',realId);
+      return notionQueryDb(token,realId);
+    }
+    console.error('[LinkedIn] API error',r.status,err);
+    return null;
+  }
+  return r.json();
+}
 async function fetchNotionLinkedIn(){
   const token=localStorage.getItem('notion_token')||'';
   const dbId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
   if(!token||!dbId)return;
   try{
-    const proxy='https://corsproxy.io/?https://api.notion.com/v1/databases/'+dbId+'/query';
-    const r=await fetch(proxy,{method:'POST',headers:{'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'},body:JSON.stringify({page_size:100})});
-    if(!r.ok){console.error('[LinkedIn] Notion API',r.status,await r.text().catch(()=>''));return;}
-    const j=await r.json();
-    if(!j.results){console.error('[LinkedIn] no results',j);return;}
-    if(j.results.length>0)console.log('[LinkedIn] first page props keys:',Object.keys(j.results[0].properties||{}));
+    const j=await notionQueryDb(token,dbId);
+    if(!j?.results){return;}
+    if(j.results.length>0)console.log('[LinkedIn] props keys:',Object.keys(j.results[0].properties||{}));
     const counts={saved:0,applied:0,declined:0,contacted:0};
     for(const pg of j.results){
-      // Try property named "Status" first, then any status/select type
       const sp=pg.properties?.Status||pg.properties?.status||Object.values(pg.properties||{}).find(p=>p.type==='status'||p.type==='select');
       const name=(sp?.status?.name||sp?.select?.name||'').trim();
       const s=name.toLowerCase();
