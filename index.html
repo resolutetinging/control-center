@@ -333,7 +333,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     </div>
     <div class="d-icon" data-id="mentaltool" onclick="dClick(this,'mentaltool')">
       <div class="d-box">🧘</div>
-      <span class="d-lbl">Mindful</span>
+      <span class="d-lbl">Fortune-telling</span>
     </div>
     <div class="d-icon" data-id="podcast" onclick="dClick(this,'podcast')">
       <div class="d-box">🎧</div>
@@ -433,7 +433,7 @@ function loadOptimizerData(){
     const rev=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');
     const tasks=JSON.parse(localStorage.getItem('tina_tasks')||'[]');
     const done=tasks.filter(t=>t.done).length;
-    LIVE.optimizer={total:tasks.length,done,rest:rev.restMode||false,combatPower:rev.combatPower!=null?+rev.combatPower:null,endTime:rev.endTime||null};
+    LIVE.optimizer={total:tasks.length,done,rest:rev.restMode||false,combatPower:rev.combatPower!=null?+rev.combatPower:null,endTime:rev.endTime||null,tasks};
   }catch{}
 }
 function loadAITrackerData(){
@@ -453,7 +453,8 @@ async function fetchNotionLinkedIn(){
     const j=await r.json();
     const counts={saved:0,applied:0,declined:0,contacted:0};
     for(const pg of j.results||[]){
-      const status=(Object.values(pg.properties||{}).find(p=>p.type==='select')?.select?.name||'').toLowerCase();
+      const sp=Object.values(pg.properties||{}).find(p=>p.type==='status'||p.type==='select');
+      const status=(sp?.status?.name||sp?.select?.name||'').toLowerCase();
       if(status.includes('save'))counts.saved++;
       else if(status.includes('appl'))counts.applied++;
       else if(status.includes('declin')||status.includes('reject'))counts.declined++;
@@ -647,11 +648,12 @@ function buildTT(id){
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
       const s=LIVE.sleep;
+      const dot=(c)=>`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c};margin-right:4px;vertical-align:middle;opacity:.85;"></span>`;
       let out=h('睡眠分期 · '+s.date)
-        +row('🔵 Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')
-        +row('🟣 REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')
-        +row('🟢 Core',s.coreP+'%')
-        +row('🟡 Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+        +row(dot('#8aabcc')+'Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')
+        +row(dot('#a898b8')+'REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')
+        +row(dot('#8fac94')+'Core',s.coreP+'%')
+        +row(dot('#c4aa7c')+'Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
       if(s.trend7&&s.trend7.length>2){
         const deepVals=s.trend7.map(n=>n.deepP);
         const remVals=s.trend7.map(n=>n.remP);
@@ -661,8 +663,8 @@ function buildTT(id){
         const rArr=latestRem>prevRem?'↑':latestRem<prevRem?'↓':'→';
         out+=hr()
           +`<div style="font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;">近${s.trend7.length}日趨勢</div>`
-          +`<div class="tt-row"><span class="tt-k">🔵 Deep</span><span class="tt-v tt-spark" style="color:#8aabcc;">${spark(deepVals)}</span><span class="tt-v ${latestDeep>=18?'g':latestDeep>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${dArr}</span></div>`
-          +`<div class="tt-row"><span class="tt-k">🟣 REM</span><span class="tt-v tt-spark" style="color:#a898b8;">${spark(remVals)}</span><span class="tt-v ${latestRem>=18?'g':latestRem>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${rArr}</span></div>`;
+          +`<div class="tt-row"><span class="tt-k">${dot('#8aabcc')}Deep</span><span class="tt-v tt-spark" style="color:#8aabcc;">${spark(deepVals)}</span><span class="tt-v ${latestDeep>=18?'g':latestDeep>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${dArr}</span></div>`
+          +`<div class="tt-row"><span class="tt-k">${dot('#a898b8')}REM</span><span class="tt-v tt-spark" style="color:#a898b8;">${spark(remVals)}</span><span class="tt-v ${latestRem>=18?'g':latestRem>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${rArr}</span></div>`;
       }
       return out;
     }
@@ -677,7 +679,24 @@ function buildTT(id){
       const o=LIVE.optimizer;
       if(!o)return h('優化器')+`<div style="font-size:11px;color:var(--faint);">讀取中…</div>`;
       const status=o.rest?'🌿 休假中':'工作中';
-      return h('優化器')+row('狀態',status,o.rest?'a':'g')+hr()+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a');
+      let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+hr();
+      if(o.tasks&&o.tasks.length){
+        const show=o.tasks.slice(0,6);
+        out+=`<div style="display:flex;flex-direction:column;gap:4px;padding:2px 0;">`;
+        for(const t of show){
+          const dn=t.done||false;
+          const lbl=(t.text||t.title||t.content||t.name||'').slice(0,24)||'—';
+          out+=`<div style="display:flex;align-items:center;gap:6px;font-size:10.5px;">
+            <span style="flex-shrink:0;width:12px;text-align:center;color:${dn?'#7d9e85':'#bbb'};font-size:11px;line-height:1;">${dn?'✓':'○'}</span>
+            <span style="color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lbl}</span>
+          </div>`;
+        }
+        out+='</div>';
+        if(o.tasks.length>6)out+=`<div style="font-size:10px;color:var(--faint);padding-top:2px;text-align:right;">…另有 ${o.tasks.length-6} 項</div>`;
+      } else {
+        out+=row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a');
+      }
+      return out;
     }
     case 'refueler':
       return h('今日攝取')+row('☕ 咖啡',rf.coffee+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',rf.water+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
