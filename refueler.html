@@ -60,12 +60,12 @@ body{
   padding:20px 24px;
   max-width:1200px;
   margin:0 auto;
-  align-items:start;
+  align-items:stretch;
 }
 #ai-wrap{padding:0 24px 32px;max-width:1200px;margin:0 auto;}
 
 /* ── Cards ── */
-.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;position:relative;}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;position:relative;display:flex;flex-direction:column;}
 .card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,transparent 55%);pointer-events:none;border-radius:inherit;}
 .card-header{padding:15px 18px 0;}
 .card-body{padding:13px 18px 17px;}
@@ -135,7 +135,7 @@ body{
 .cal-cell.w-warn{background:rgba(230,126,34,.1);}
 .cal-cell.w-low{background:rgba(192,57,43,.08);}
 .cal-cell.w-none{background:var(--bg);}
-.cal-badge{font-size:8px;font-weight:700;line-height:1;margin-top:1px;}
+.cal-badge{font-size:10px;font-weight:700;line-height:1;margin-top:1px;}
 .cal-badge-c{color:var(--coffee);}
 .cal-badge-w{color:var(--water);}
 .cal-badge-ok{color:var(--ok);}
@@ -551,10 +551,9 @@ function renderCoffeeCalendar(){
     const isT=today.getFullYear()===cCalY&&today.getMonth()===cCalM&&today.getDate()===d;
     const cls=n===0?'':n===1?'c1':n===2?'c2':n===3?'c3':'c4';
     const dayCost=es.reduce((s,e)=>s+(e.coffeePrice??e.price??0)+(e.dessertPrice??0),0);
-    const badge=n?`<span class="cal-badge cal-badge-c">${n}☕</span>`:'';
-    const costBadge=dayCost>0?`<span class="cal-badge" style="color:var(--faint);font-size:7px;">$${dayCost}</span>`:'';
+    const badge=n?`<span class="cal-badge cal-badge-c" style="font-size:7.5px;">${n}杯${dayCost?` · $${dayCost}`:''}</span>`:'';
     const clickFn=n?`onclick="showDayDetail('${key}','coffee')"`:'' ;
-    return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}${costBadge}</div>`;
+    return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}</div>`;
   }).join('');
   document.getElementById('c-cal-grid').innerHTML=blanks+cells;
 }
