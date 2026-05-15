@@ -1,808 +1,777 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control Center</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Control Center ✦</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;background:linear-gradient(135deg,#0f0c1a 0%,#1a1130 40%,#0d1a2e 100%);font-family:'Segoe UI',system-ui,sans-serif;color:#e8e0f0;overflow-x:hidden}
-/* ---- Layout ---- */
-.cc-wrap{display:flex;gap:16px;padding:20px;min-height:100vh;align-items:flex-start}
-.col{flex:1;display:flex;flex-direction:column;gap:14px}
-.col-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9b8dbc;padding:0 4px 6px;border-bottom:1px solid rgba(155,141,188,.25)}
-/* ---- Glass card ---- */
-.glass{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px}
-/* ---- Icon grid ---- */
-.icon-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.icon-btn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 8px;cursor:pointer;transition:all .2s;user-select:none}
-.icon-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(200,170,255,.4);transform:translateY(-2px)}
-.icon-btn .emoji{font-size:26px;line-height:1}
-.icon-btn .lbl{font-size:11px;color:#c4b8dd}
-/* ---- Tooltip ---- */
-.tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);min-width:160px;background:rgba(20,14,36,.95);border:1px solid rgba(180,150,255,.3);border-radius:10px;padding:10px 12px;font-size:11.5px;line-height:1.7;color:#e8e0f0;pointer-events:none;opacity:0;transition:opacity .18s;z-index:8000;white-space:nowrap}
-.tooltip .t-title{font-weight:700;font-size:12px;color:#c9b8ff;margin-bottom:4px}
-.icon-btn:hover .tooltip{opacity:1}
-/* ---- Buttons ---- */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .18s}
-.btn-purple{background:rgba(155,100,255,.35);color:#d9c9ff;border:1px solid rgba(155,100,255,.5)}
-.btn-purple:hover{background:rgba(155,100,255,.55)}
-.btn-red{background:rgba(255,80,80,.28);color:#ffc9c9;border:1px solid rgba(255,100,100,.4)}
-.btn-red:hover{background:rgba(255,80,80,.48)}
-.btn-green{background:rgba(60,200,120,.28);color:#b0ffcc;border:1px solid rgba(60,200,120,.4)}
-.btn-green:hover{background:rgba(60,200,120,.48)}
-.btn-gray{background:rgba(180,180,200,.15);color:#c8c0d8;border:1px solid rgba(180,180,200,.25)}
-.btn-gray:hover{background:rgba(180,180,200,.28)}
-/* ---- Guard banner (floating, bottom-right) ---- */
-#guard-banner{position:fixed;bottom:24px;right:24px;z-index:9100;width:280px;background:rgba(25,15,45,.92);border:1px solid rgba(255,180,100,.45);border-radius:18px;backdrop-filter:blur(20px);padding:16px 18px;display:none;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-#guard-banner .ban-cat{font-size:28px;line-height:1}
-#guard-banner .ban-title{font-size:13px;font-weight:700;color:#ffd98a}
-#guard-banner .ban-sub{font-size:11px;color:#c0a870;margin-top:2px}
-#guard-banner .ban-btns{display:flex;gap:8px;margin-top:12px}
-/* ---- Wandering cat ---- */
-#cat-outer{position:fixed;z-index:9000;pointer-events:none;transition:opacity .8s;transform:translateX(0) translateY(0)}
-#cat-outer.skipped{opacity:.28}
-.cat-wrap{position:relative;width:72px;height:72px}
-/* cat SVG container — flips horizontally based on direction */
-.cat-body-wrap{position:absolute;bottom:0;left:0;width:72px;height:72px;transition:transform .3s}
-.cat-body-wrap.flip{transform:scaleX(-1)}
-/* walking bob */
-@keyframes catBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-.cat-body-wrap.walking{animation:catBob .45s ease-in-out infinite}
-/* tail wag */
-@keyframes tailWag{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(20deg)}}
-.cat-tail{transform-origin:bottom left;animation:tailWag 1.2s ease-in-out infinite}
-/* leg animations */
-@keyframes legSwingF{0%,100%{transform:rotate(0deg)}50%{transform:rotate(25deg)}}
-@keyframes legSwingB{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-25deg)}}
-.cat-leg-fl,.cat-leg-br{transform-origin:top center;animation:legSwingF .45s ease-in-out infinite}
-.cat-leg-fr,.cat-leg-bl{transform-origin:top center;animation:legSwingB .45s ease-in-out infinite}
-/* sit — stop animations */
-.cat-body-wrap.sitting .cat-tail{animation:tailWag 3s ease-in-out infinite}
-.cat-body-wrap.sitting .cat-leg-fl,
-.cat-body-wrap.sitting .cat-leg-fr,
-.cat-body-wrap.sitting .cat-leg-bl,
-.cat-body-wrap.sitting .cat-leg-br{animation:none;transform:rotate(0deg)}
-.cat-body-wrap.sitting{animation:none}
-/* ---- Refueler modal ---- */
-#refueler-modal,#sas-modal,#guard-modal{display:none;position:fixed;inset:0;z-index:8500;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
-#refueler-modal.open,#sas-modal.open,#guard-modal.open{display:flex}
-.modal-card{background:rgba(20,14,36,.97);border:1px solid rgba(180,150,255,.3);border-radius:20px;padding:28px;min-width:360px;max-width:92vw;max-height:88vh;overflow-y:auto}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.modal-header h2{font-size:16px;font-weight:700;color:#d5c5ff}
-.close-btn{background:none;border:none;color:#888;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
-.close-btn:hover{color:#fff;background:rgba(255,255,255,.1)}
-/* Tabs */
-.tabs{display:flex;gap:6px;margin-bottom:16px}
-.tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;color:#9b8dbc;transition:all .18s}
-.tab.active{background:rgba(155,100,255,.3);border-color:rgba(155,100,255,.5);color:#d9c9ff}
-/* Intake rows */
-.intake-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.intake-row label{font-size:12px;color:#b0a0cc;width:56px}
-.count-ctrl{display:flex;align-items:center;gap:8px}
-.count-ctrl button{width:28px;height:28px;border-radius:7px;border:1px solid rgba(180,150,255,.3);background:rgba(155,100,255,.2);color:#d9c9ff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.count-ctrl span{width:28px;text-align:center;font-weight:700;font-size:15px;color:#fff}
-.photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.photo-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid rgba(180,150,255,.3)}
-.photo-add{width:56px;height:56px;border-radius:8px;border:2px dashed rgba(180,150,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;color:#9b8dbc}
-.photo-add:hover{border-color:rgba(180,150,255,.7);color:#d9c9ff}
-/* Calendar mini */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:11px}
-.cal-grid .ch{color:#888;padding:2px 0}
-.cal-grid .cd{padding:4px 2px;border-radius:5px;cursor:pointer;color:#bbb}
-.cal-grid .cd:hover{background:rgba(155,100,255,.25);color:#fff}
-.cal-grid .cd.today{background:rgba(155,100,255,.5);color:#fff;font-weight:700}
-.cal-grid .cd.has-data{position:relative}
-.cal-grid .cd.has-data::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#9bddff}
-/* AI analysis box */
-.ai-box{background:rgba(0,0,0,.25);border:1px solid rgba(155,100,255,.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#c0b0e0;min-height:60px;white-space:pre-wrap}
-/* Input / Textarea */
-input[type=text],input[type=number],input[type=password],textarea,select{background:rgba(255,255,255,.07);border:1px solid rgba(180,150,255,.25);border-radius:8px;color:#e8e0f0;padding:8px 10px;font-size:13px;width:100%;outline:none;font-family:inherit}
-input:focus,textarea:focus,select:focus{border-color:rgba(155,100,255,.6)}
-textarea{resize:vertical;min-height:70px}
-.form-row{margin-bottom:12px}
-.form-row label{display:block;font-size:11px;color:#9b8dbc;margin-bottom:4px}
-/* SAS cross */
-.sas-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.sas-cell{background:rgba(0,0,0,.25);border:1px solid rgba(180,150,255,.18);border-radius:10px;padding:12px}
-.sas-cell h4{font-size:11px;color:#9b8dbc;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
-.bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.bar-wrap label{font-size:11px;color:#c0b0e0;width:52px}
-.bar-track{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
-.bar-fill{height:100%;border-radius:3px;transition:width .4s}
-.bar-wrap span{font-size:11px;color:#b0a0cc;width:28px;text-align:right}
-/* Guard settings */
-.setting-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.setting-row label{font-size:13px;color:#c4b8dd}
-.toggle-wrap{display:flex;align-items:center;gap:8px}
-input[type=range]{accent-color:#9b64ff;width:120px}
-/* Scrollbar */
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(155,100,255,.3);border-radius:3px}
-/* Status row */
-.status-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#8a7daa;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);margin-top:8px}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
-.dot-green{background:#3dc87a}.dot-yellow{background:#f5c842}.dot-red{background:#ff5858}
-/* Chip */
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#b0a0cc;cursor:pointer;margin:2px}
-.chip:hover{background:rgba(155,100,255,.25)}
-/* section divider */
-.sec-divider{font-size:11px;color:#8a7daa;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#5ED47A;--amber:#F5C542;--red:#FF6B6B;
+  --glass:rgba(255,255,255,.16);--glass-b:rgba(255,255,255,.28);
+  --blur:blur(40px) saturate(180%);
+  --shadow:0 8px 40px rgba(0,0,0,.28);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;}
+body{position:relative;}
+
+/* ── BG Layer ── */
+#bg-default{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse at 20% 20%,rgba(120,80,200,.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 80% 75%,rgba(40,130,200,.4) 0%,transparent 55%),
+    radial-gradient(ellipse at 55% 50%,rgba(200,80,120,.2) 0%,transparent 45%),
+    linear-gradient(150deg,#0d0d1a 0%,#141428 50%,#0a1a2e 100%);
+}
+#bg-wallpaper{
+  position:fixed;inset:0;z-index:1;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  opacity:0;transition:opacity .5s;
+}
+#bg-wallpaper.active{opacity:1;}
+#noise{position:fixed;inset:0;z-index:2;opacity:.025;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size:128px;}
+
+/* ── Clock & Header ── */
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:15vh;pointer-events:none;
+}
+#clock{
+  font-size:min(14vw,110px);font-weight:100;letter-spacing:-4px;
+  color:#fff;line-height:1;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 40px rgba(0,0,0,.4);
+}
+#clock-sec{font-size:min(5vw,38px);font-weight:200;color:rgba(255,255,255,.35);margin-left:3px;vertical-align:super;margin-top:10px;display:inline-block;}
+#date-line{font-size:14px;color:rgba(255,255,255,.45);margin-top:8px;letter-spacing:.08em;}
+#greeting{font-size:22px;font-weight:300;color:rgba(255,255,255,.75);margin-top:5px;}
+
+/* ── Guard Pill ── */
+#guard-pill{
+  position:fixed;top:22px;right:22px;z-index:50;
+  display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:100px;
+  background:var(--glass);border:1px solid var(--glass-b);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  font-size:12px;color:rgba(255,255,255,.7);
+  box-shadow:0 4px 20px rgba(0,0,0,.25);cursor:pointer;user-select:none;
+  transition:background .2s;
+}
+#guard-pill:hover{background:rgba(255,255,255,.22);}
+#guard-dot{width:7px;height:7px;border-radius:50%;background:var(--green);transition:background .5s;flex-shrink:0;}
+#guard-dot.warn{background:var(--amber);}
+#guard-dot.alert{background:var(--red);animation:pulse-r 1s infinite;}
+
+/* ── Settings Btn ── */
+#settings-btn{
+  position:fixed;top:22px;left:22px;z-index:50;
+  width:36px;height:36px;border-radius:50%;
+  background:var(--glass);border:1px solid var(--glass-b);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  color:rgba(255,255,255,.65);font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.2);transition:background .2s;
+}
+#settings-btn:hover{background:rgba(255,255,255,.25);}
+
+/* ── Dock ── */
+#dock-outer{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  z-index:100;display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+#dock{
+  display:flex;align-items:flex-end;gap:5px;
+  padding:10px 16px 10px;
+  background:rgba(255,255,255,.16);
+  backdrop-filter:blur(60px) saturate(200%);
+  -webkit-backdrop-filter:blur(60px) saturate(200%);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.3);
+  box-shadow:0 12px 50px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.2) inset;
+}
+.d-sep{
+  width:1px;height:38px;align-self:center;
+  background:rgba(255,255,255,.2);margin:0 5px;flex-shrink:0;
+}
+.d-icon{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;position:relative;width:60px;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1);
+  will-change:transform;
+}
+.d-box{
+  width:52px;height:52px;border-radius:13px;
+  background:rgba(255,255,255,.52);
+  border:1px solid rgba(255,255,255,.72);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;line-height:1;
+  box-shadow:0 2px 14px rgba(0,0,0,.18),0 1px 0 rgba(255,255,255,.7) inset;
+  transition:inherit;
+}
+.d-icon:active .d-box{transform:scale(.92);}
+.d-lbl{
+  font-size:9.5px;color:rgba(255,255,255,.78);font-weight:500;
+  text-shadow:0 1px 5px rgba(0,0,0,.6);
+  white-space:nowrap;letter-spacing:.02em;
+}
+.d-dot{
+  width:4px;height:4px;border-radius:50%;
+  background:rgba(255,255,255,.55);
+  position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);
+  display:none;
+}
+
+/* ── Lean Tooltip ── */
+#tooltip{
+  position:fixed;z-index:5000;pointer-events:none;
+  background:rgba(12,12,20,.88);
+  backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:13px;
+  padding:11px 14px;
+  box-shadow:0 16px 48px rgba(0,0,0,.4);
+  min-width:150px;
+  transition:opacity .12s,transform .12s;
+}
+#tooltip.tt-hide{opacity:0;transform:translateY(8px);}
+.tt-head{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:9px;}
+.tt-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:2px 0;}
+.tt-k{font-size:11px;color:rgba(255,255,255,.38);}
+.tt-v{font-size:12px;font-weight:600;color:#fff;}
+.tt-v.g{color:#7be08a;}.tt-v.a{color:#f5d078;}.tt-v.r{color:#ff8888;}
+.tt-hr{height:1px;background:rgba(255,255,255,.07);margin:7px 0;}
+
+/* ── Settings Modal ── */
+#settings-overlay{
+  position:fixed;inset:0;z-index:800;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+}
+#settings-panel{
+  background:rgba(22,22,32,.94);
+  backdrop-filter:blur(50px) saturate(200%);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:18px;
+  width:min(93vw,600px);max-height:88vh;
+  overflow:hidden;display:flex;
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+  animation:panel-in .25s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes panel-in{from{opacity:0;transform:scale(.94);}to{opacity:1;transform:scale(1);}}
+
+/* Settings sidebar */
+#s-sidebar{
+  width:152px;flex-shrink:0;padding:22px 10px;
+  border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:2px;
+}
+#s-sidebar .s-cat{font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:0 8px;margin-bottom:5px;margin-top:14px;}
+#s-sidebar .s-cat:first-child{margin-top:0;}
+.s-tab{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;
+  border:none;background:none;width:100%;text-align:left;font-family:inherit;
+  transition:all .15s;
+}
+.s-tab:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
+.s-tab.on{background:rgba(255,255,255,.11);color:#fff;}
+.s-tab-ic{font-size:15px;width:20px;text-align:center;}
+
+/* Settings content */
+#s-content{
+  flex:1;padding:26px;overflow-y:auto;color:#fff;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;
+}
+#s-content::-webkit-scrollbar{width:4px;}
+#s-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px;}
+.s-title{font-size:19px;font-weight:600;margin-bottom:22px;}
+.s-sec{margin-bottom:22px;}
+.s-lbl{font-size:10px;color:rgba(255,255,255,.36);text-transform:uppercase;letter-spacing:.09em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.s-inp{
+  width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:10px 13px;font-size:13px;color:#fff;
+  font-family:inherit;outline:none;transition:border-color .2s;
+}
+.s-inp:focus{border-color:rgba(255,255,255,.3);}
+.s-inp::placeholder{color:rgba(255,255,255,.2);}
+.s-btn{padding:10px 18px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;}
+.s-btn-pr{background:rgba(90,120,255,.85);color:#fff;}
+.s-btn-pr:hover{background:rgba(90,120,255,1);transform:translateY(-1px);}
+.s-btn-g{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1);}
+.s-btn-g:hover{background:rgba(255,255,255,.14);}
+.s-row{display:flex;gap:8px;margin-bottom:10px;}
+
+/* Wallpaper picker */
+.wp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.wp-card{
+  aspect-ratio:16/9;border-radius:10px;cursor:pointer;overflow:hidden;
+  border:2px solid transparent;transition:all .2s;position:relative;
+}
+.wp-card:hover{border-color:rgba(255,255,255,.45);transform:scale(1.03);}
+.wp-card.active{border-color:#fff;}
+.wp-card-name{position:absolute;bottom:0;left:0;right:0;padding:4px 7px;font-size:10px;color:rgba(255,255,255,.7);background:linear-gradient(transparent,rgba(0,0,0,.4));}
+.wp-upload{
+  aspect-ratio:16/9;border-radius:10px;border:2px dashed rgba(255,255,255,.18);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  cursor:pointer;color:rgba(255,255,255,.35);font-size:11px;
+  background:rgba(255,255,255,.03);transition:all .2s;
+}
+.wp-upload:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.65);background:rgba(255,255,255,.07);}
+.wp-upload-ic{font-size:22px;}
+
+/* Slider */
+input[type=range]{width:100%;height:4px;border-radius:3px;background:rgba(255,255,255,.2);-webkit-appearance:none;cursor:pointer;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid rgba(90,120,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.3);}
+
+/* ── Guard Cat ── */
+#guard-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.9);backdrop-filter:blur(10px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#cat-stage{position:relative;display:flex;align-items:center;justify-content:center;width:100%;}
+#big-cat{font-size:min(34vw,300px);line-height:1;filter:drop-shadow(0 0 60px rgba(255,200,100,.35));animation:catRise 1.3s cubic-bezier(.175,.885,.32,1.275) forwards,catFloat 4s ease-in-out 1.3s infinite;}
+@keyframes catRise{from{transform:translateY(110vh) scale(.5);}to{transform:translateY(0) scale(1);}}
+@keyframes catFloat{0%,100%{transform:translateY(0) rotate(-1.5deg);}50%{transform:translateY(-18px) rotate(1.5deg);}}
+#cat-speech{position:absolute;top:5%;right:10%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:12px 18px;font-size:15px;color:rgba(255,255,255,.88);line-height:1.6;animation:fadeUp .5s 1.4s both;max-width:200px;}
+@keyframes fadeUp{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
+#guard-ctrl{display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 20px;animation:fadeUp .5s 1.9s both;}
+#guard-msg{font-size:18px;font-weight:500;color:rgba(255,255,255,.82);text-align:center;max-width:340px;line-height:1.5;}
+#rest-btn{background:linear-gradient(135deg,#E8A87C,#C07050);border:none;border-radius:100px;padding:16px 52px;font-family:inherit;font-size:17px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 8px 32px rgba(200,100,60,.35);transition:transform .2s;}
+#rest-btn:hover{transform:scale(1.06);}
+#break-cd{font-size:66px;font-weight:200;color:rgba(255,255,255,.88);letter-spacing:-2px;text-align:center;display:none;}
+#break-lbl{font-size:13px;color:rgba(255,255,255,.42);text-align:center;margin-top:-6px;display:none;}
+#resume-btn{display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:12px 36px;font-family:inherit;font-size:15px;color:rgba(255,255,255,.7);cursor:pointer;}
+#resume-btn:hover{background:rgba(255,255,255,.18);}
+
+/* ── SAS Modal ── */
+.m-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);z-index:800;display:flex;align-items:center;justify-content:center;}
+.m-pn{background:rgba(20,20,30,.96);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,.09);border-radius:20px;width:min(92vw,620px);max-height:88vh;overflow-y:auto;padding:26px;box-shadow:0 24px 80px rgba(0,0,0,.6);color:#fff;}
+.m-ttl{font-size:19px;font-weight:700;margin-bottom:16px;}
+.m-cls{float:right;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.45);font-size:14px;width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.m-cls:hover{background:rgba(255,255,255,.18);color:#fff;}
+.glass-sm{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 16px;}
+.btn-pr{display:block;width:100%;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;background:rgba(90,120,255,.85);color:#fff;transition:all .18s;}
+.btn-pr:hover{background:rgba(90,120,255,1);transform:translateY(-1px);}
+
+/* ── Debug ── */
+#dbg-btn{position:fixed;bottom:110px;right:20px;background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.25);border-radius:100px;padding:8px 16px;font-size:11px;color:#ff8888;cursor:pointer;font-family:inherit;backdrop-filter:blur(20px);}
+#dbg-btn:hover{background:rgba(255,100,100,.2);}
+
+@keyframes pulse-r{0%,100%{opacity:1;}50%{opacity:.2;}}
+@keyframes pulse-s{0%,100%{opacity:1;}50%{opacity:.35;}}
+@keyframes bounce{0%{transform:translateY(0) scale(1);}30%{transform:translateY(-28px) scale(1.08);}60%{transform:translateY(-8px) scale(1.03);}100%{transform:translateY(0) scale(1);}}
+.bouncing{animation:bounce .5s cubic-bezier(.34,1.56,.64,1)!important;}
+
+/* LinkedIn not-set indicator */
+.d-icon[data-unset="1"] .d-box{border:2px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.22);}
 </style>
 </head>
 <body>
 
-<!-- ===================== WANDERING CAT ===================== -->
-<div id="cat-outer">
-  <div class="cat-wrap">
-    <div class="cat-body-wrap walking" id="cat-body">
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- tail -->
-        <g class="cat-tail" transform="translate(8,42)">
-          <path d="M0 12 Q-10 0 -8 -12 Q-6 -22 0 -18" stroke="#c87941" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-        </g>
-        <!-- body -->
-        <ellipse cx="36" cy="46" rx="17" ry="13" fill="#e09050"/>
-        <!-- stripes body -->
-        <path d="M24 40 Q28 36 32 40" stroke="#b86a28" stroke-width="1.5" fill="none" opacity=".6"/>
-        <path d="M40 40 Q44 36 48 40" stroke="#b86a28" stroke-width="1.5" fill="none" opacity=".6"/>
-        <!-- legs -->
-        <g class="cat-leg-fl" transform="translate(26,55)"><rect x="-4" y="0" width="7" height="12" rx="3.5" fill="#e09050"/></g>
-        <g class="cat-leg-fr" transform="translate(37,55)"><rect x="-3" y="0" width="7" height="12" rx="3.5" fill="#d07840"/></g>
-        <g class="cat-leg-bl" transform="translate(20,55)"><rect x="-3" y="0" width="6" height="11" rx="3" fill="#d07840"/></g>
-        <g class="cat-leg-br" transform="translate(46,55)"><rect x="-3" y="0" width="6" height="11" rx="3" fill="#e09050"/></g>
-        <!-- head -->
-        <ellipse cx="36" cy="28" rx="14" ry="13" fill="#e09050"/>
-        <!-- ears -->
-        <polygon points="24,18 20,8 30,16" fill="#e09050"/>
-        <polygon points="22,17 20,10 28,15" fill="#f0b0a0"/>
-        <polygon points="48,18 52,8 42,16" fill="#e09050"/>
-        <polygon points="50,17 52,10 44,15" fill="#f0b0a0"/>
-        <!-- forehead stripe -->
-        <path d="M33 18 Q36 14 39 18" stroke="#b86a28" stroke-width="1.3" fill="none" opacity=".7"/>
-        <!-- eyes -->
-        <ellipse cx="31" cy="27" rx="3.5" ry="3.8" fill="#1a1a1a"/>
-        <ellipse cx="41" cy="27" rx="3.5" ry="3.8" fill="#1a1a1a"/>
-        <ellipse cx="32.2" cy="26" rx="1.2" ry="1.5" fill="#fff" opacity=".8"/>
-        <ellipse cx="42.2" cy="26" rx="1.2" ry="1.5" fill="#fff" opacity=".8"/>
-        <!-- nose -->
-        <polygon points="36,31 34.5,33 37.5,33" fill="#e87090"/>
-        <!-- mouth -->
-        <path d="M34.5 33 Q36 35.5 37.5 33" stroke="#c05070" stroke-width="1" fill="none"/>
-        <!-- whiskers left -->
-        <line x1="23" y1="31" x2="33" y2="32" stroke="#fff" stroke-width=".9" opacity=".7"/>
-        <line x1="22" y1="33" x2="33" y2="33" stroke="#fff" stroke-width=".9" opacity=".7"/>
-        <line x1="23" y1="35" x2="33" y2="34" stroke="#fff" stroke-width=".9" opacity=".7"/>
-        <!-- whiskers right -->
-        <line x1="49" y1="31" x2="39" y2="32" stroke="#fff" stroke-width=".9" opacity=".7"/>
-        <line x1="50" y1="33" x2="39" y2="33" stroke="#fff" stroke-width=".9" opacity=".7"/>
-        <line x1="49" y1="35" x2="39" y2="34" stroke="#fff" stroke-width=".9" opacity=".7"/>
-      </svg>
+<div id="bg-default"></div>
+<div id="bg-wallpaper"></div>
+<div id="noise"></div>
+
+<div id="header">
+  <div><span id="clock">00:00</span><span id="clock-sec">:00</span></div>
+  <div id="date-line"></div>
+  <div id="greeting"></div>
+</div>
+
+<div id="guard-pill" onclick="openSettings('guard')">
+  <span id="guard-dot"></span>
+  <span id="guard-txt">Guard Cat 監控中</span>
+</div>
+
+<button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
+
+<!-- DOCK -->
+<div id="dock-outer">
+  <div id="dock">
+    <!-- SAS Group -->
+    <div class="d-icon" data-id="sas-hub" onclick="dClick(this,'sas-hub')">
+      <div class="d-box">🧬</div>
+      <span class="d-lbl">SAS Hub</span>
+    </div>
+    <div class="d-icon" data-id="sleep" onclick="dClick(this,'sleep')">
+      <div class="d-box">😴</div>
+      <span class="d-lbl">Sleep</span>
+    </div>
+    <div class="d-icon" data-id="mental" onclick="dClick(this,'mental')">
+      <div class="d-box">💭</div>
+      <span class="d-lbl">Mental</span>
+    </div>
+    <div class="d-icon" data-id="optimizer" onclick="dClick(this,'optimizer')">
+      <div class="d-box">⚡</div>
+      <span class="d-lbl">Optimizer</span>
+    </div>
+    <div class="d-icon" data-id="refueler" onclick="dClick(this,'refueler')">
+      <div class="d-box">☕</div>
+      <span class="d-lbl">Refueler</span>
+    </div>
+    <div class="d-icon" data-id="report" onclick="openSASAnalysis()">
+      <div class="d-box">✨</div>
+      <span class="d-lbl">綜觀</span>
+    </div>
+    <div class="d-sep"></div>
+    <!-- World Group -->
+    <div class="d-icon" data-id="aitracker" onclick="dClick(this,'aitracker')">
+      <div class="d-box">🤖</div>
+      <span class="d-lbl">AI Tracker</span>
+    </div>
+    <div class="d-icon" data-id="linkedin" onclick="dClick(this,'linkedin')">
+      <div class="d-box">💼</div>
+      <span class="d-lbl">LinkedIn</span>
+    </div>
+    <div class="d-sep"></div>
+    <!-- Learn Group -->
+    <div class="d-icon" data-id="wordvault" onclick="dClick(this,'wordvault')">
+      <div class="d-box">📖</div>
+      <span class="d-lbl">WordVault</span>
+    </div>
+    <div class="d-icon" data-id="mentaltool" onclick="dClick(this,'mentaltool')">
+      <div class="d-box">🧘</div>
+      <span class="d-lbl">Mindful</span>
+    </div>
+    <div class="d-icon" data-id="podcast" onclick="dClick(this,'podcast')">
+      <div class="d-box">🎧</div>
+      <span class="d-lbl">Podcast</span>
     </div>
   </div>
 </div>
 
-<!-- ===================== GUARD BANNER ===================== -->
-<div id="guard-banner">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-    <span class="ban-cat">🐱</span>
-    <div>
-      <div class="ban-title" id="ban-title">Guard Cat 提醒</div>
-      <div class="ban-sub" id="ban-sub">你已連續工作 <span id="ban-mins">90</span> 分鐘</div>
+<!-- Tooltip -->
+<div id="tooltip" class="tt-hide" style="display:none;"></div>
+
+<!-- Settings Overlay -->
+<div id="settings-overlay" style="display:none;" onclick="if(event.target===this)closeSettings()">
+  <div id="settings-panel">
+    <div id="s-sidebar">
+      <div class="s-cat">偏好設定</div>
+      <button class="s-tab on" data-tab="appearance" onclick="switchTab('appearance')"><span class="s-tab-ic">🖼</span>外觀</button>
+      <button class="s-tab" data-tab="links" onclick="switchTab('links')"><span class="s-tab-ic">🔗</span>連結管理</button>
+      <div class="s-cat">系統</div>
+      <button class="s-tab" data-tab="guard" onclick="switchTab('guard')"><span class="s-tab-ic">🐱</span>Guard Cat</button>
+      <button class="s-tab" data-tab="api" onclick="switchTab('api')"><span class="s-tab-ic">🔑</span>API 設定</button>
     </div>
-  </div>
-  <div class="ban-btns">
-    <button class="btn btn-green" onclick="takeBreak()">先去休息 15min 🌿</button>
-    <button class="btn btn-gray" onclick="skipHour()">跳過 1 小時 ⏭</button>
-  </div>
-</div>
-
-<!-- ===================== MAIN UI ===================== -->
-<div class="cc-wrap" id="cc-wrap">
-
-  <!-- ===== COL 1: SAS Hub ===== -->
-  <div class="col">
-    <div class="glass">
-      <div class="col-title">SAS Hub</div>
-      <div style="margin-top:10px" class="icon-grid">
-
-        <div class="icon-btn" onclick="goUrl('../sleep-dashboard/index.html')">
-          <span class="emoji">😴</span>
-          <span class="lbl">Sleep</span>
-          <div class="tooltip">
-            <div class="t-title">😴 Sleep</div>
-            <div>時長：7h 12m</div>
-            <div>品質：78 / 100</div>
-            <div>深睡：1h 45m</div>
-            <div>REM：2h 08m</div>
-            <div>趨勢：↑ 好眠</div>
-          </div>
-        </div>
-
-        <div class="icon-btn" onclick="goUrl('../wellness-tracker/mental-dashboard.html')">
-          <span class="emoji">💭</span>
-          <span class="lbl">Mental</span>
-          <div class="tooltip">
-            <div class="t-title">💭 Mental</div>
-            <div>今日心情：7.2 / 10</div>
-            <div>趨勢：↑ 較昨日好</div>
-            <div>上次記錄：3 小時前</div>
-            <div>連續天數：5 天</div>
-          </div>
-        </div>
-
-        <div class="icon-btn" onclick="goUrl('../Daily Optimization/daily_optimizer.html')">
-          <span class="emoji">⚡</span>
-          <span class="lbl">Optimizer</span>
-          <div class="tooltip">
-            <div class="t-title">⚡ Optimizer</div>
-            <div>精力指數：62%</div>
-            <div>高效至：18:30</div>
-            <div>任務：4 / 7 完成</div>
-            <div>專注時長：3.5h</div>
-          </div>
-        </div>
-
-        <div class="icon-btn" onclick="openRefueler()">
-          <span class="emoji">☕</span>
-          <span class="lbl">Refueler</span>
-          <div class="tooltip">
-            <div class="t-title">☕ Refueler</div>
-            <div>咖啡：<span id="tip-coffee">0</span> 杯</div>
-            <div>水：<span id="tip-water">0</span> 杯</div>
-            <div>點擊開啟詳細記錄</div>
-          </div>
-        </div>
-
-      </div>
-      <!-- SAS Cross Analysis -->
-      <div style="margin-top:12px;text-align:center">
-        <button class="btn btn-purple" style="width:100%;justify-content:center" onclick="openSAS()">
-          🔗 攝取 ↔ 睡眠 ↔ 情緒 交叉分析
-        </button>
-      </div>
-      <!-- Guard settings shortcut -->
-      <div class="status-row">
-        <span><span class="dot dot-green"></span>Guard Cat 運行中</span>
-        <span style="cursor:pointer;color:#9b8dbc" onclick="openGuard()">⚙ 設定</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== COL 2: World Info ===== -->
-  <div class="col">
-    <div class="glass">
-      <div class="col-title">World Info</div>
-      <div style="margin-top:10px" class="icon-grid">
-
-        <div class="icon-btn" onclick="goUrl('#')">
-          <span class="emoji">🤖</span>
-          <span class="lbl">AI Tracker</span>
-          <div class="tooltip">
-            <div class="t-title">🤖 AI Tracker</div>
-            <div>新模型：2 個</div>
-            <div>熱門：Multimodal Reasoning</div>
-            <div>未讀新聞：8 則</div>
-          </div>
-        </div>
-
-        <div class="icon-btn" onclick="goUrl('#')">
-          <span class="emoji">💼</span>
-          <span class="lbl">LinkedIn</span>
-          <div class="tooltip">
-            <div class="t-title">💼 LinkedIn</div>
-            <div>已申請：3</div>
-            <div>待回音：2</div>
-            <div>婉拒：0</div>
-            <div>已收藏：5</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== COL 3: Learning ===== -->
-  <div class="col">
-    <div class="glass">
-      <div class="col-title">Learning</div>
-      <div style="margin-top:10px" class="icon-grid">
-
-        <div class="icon-btn" onclick="goUrl('../WordVault/WordVault.html')">
-          <span class="emoji">📖</span>
-          <span class="lbl">WordVault</span>
-          <div class="tooltip">
-            <div class="t-title">📖 WordVault</div>
-            <div>總單字：234</div>
-            <div>已精熟：89</div>
-            <div>今日新增：5</div>
-            <div>連續：12 天</div>
-          </div>
-        </div>
-
-        <div class="icon-btn" onclick="goUrl('notion://www.notion.so')">
-          <span class="emoji">🧘</span>
-          <span class="lbl">Mental Tool</span>
-          <div class="tooltip">
-            <div class="t-title">🧘 Mental Tool</div>
-            <div>上次：昨天</div>
-            <div>連續：7 天</div>
-            <div>未讀提示：2</div>
-          </div>
-        </div>
-
-        <div class="icon-btn" onclick="goUrl('notion://www.notion.so')">
-          <span class="emoji">🎧</span>
-          <span class="lbl">Podcast</span>
-          <div class="tooltip">
-            <div class="t-title">🎧 Podcast</div>
-            <div>未聽：3</div>
-            <div>總集數：28</div>
-            <div>最近：The Knowledge Project</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ===================== REFUELER MODAL ===================== -->
-<div id="refueler-modal">
-  <div class="modal-card" style="min-width:420px">
-    <div class="modal-header">
-      <h2>☕ Refueler</h2>
-      <button class="close-btn" onclick="closeModal('refueler-modal')">✕</button>
-    </div>
-    <div class="tabs">
-      <div class="tab active" onclick="showTab('ref-log','refueler-modal',this)">今日記錄</div>
-      <div class="tab" onclick="showTab('ref-cal','refueler-modal',this)">日曆</div>
-      <div class="tab" onclick="showTab('ref-ai','refueler-modal',this)">AI 分析</div>
-    </div>
-
-    <!-- Log Tab -->
-    <div id="ref-log">
-      <div class="intake-row">
-        <label>☕ 咖啡</label>
-        <div class="count-ctrl">
-          <button onclick="adjustIntake('coffee',-1)">−</button>
-          <span id="coffee-count">0</span>
-          <button onclick="adjustIntake('coffee',1)">+</button>
-        </div>
-        <span style="font-size:11px;color:#8a7daa;margin-left:8px">杯</span>
-      </div>
-      <div class="intake-row">
-        <label>💧 水</label>
-        <div class="count-ctrl">
-          <button onclick="adjustIntake('water',-1)">−</button>
-          <span id="water-count">0</span>
-          <button onclick="adjustIntake('water',1)">+</button>
-        </div>
-        <span style="font-size:11px;color:#8a7daa;margin-left:8px">杯 (250ml)</span>
-      </div>
-      <div class="form-row" style="margin-top:12px">
-        <label>備註 (飲食/感受)</label>
-        <textarea id="ref-notes" placeholder="例如：午餐吃沙拉，下午有點頭痛…"></textarea>
-      </div>
-      <div class="sec-divider">📷 今日照片</div>
-      <div class="photo-strip" id="photo-strip">
-        <div class="photo-add" onclick="addPhoto()">＋</div>
-      </div>
-      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
-      <button class="btn btn-purple" style="margin-top:14px;width:100%;justify-content:center" onclick="saveRefueler()">
-        💾 儲存今日記錄
-      </button>
-    </div>
-
-    <!-- Calendar Tab -->
-    <div id="ref-cal" style="display:none">
-      <div class="cal-grid" id="ref-cal-grid"></div>
-      <div id="ref-day-detail" style="margin-top:14px;font-size:12px;color:#c0b0e0;min-height:40px"></div>
-    </div>
-
-    <!-- AI Tab -->
-    <div id="ref-ai" style="display:none">
-      <div class="form-row">
-        <label>Groq API Key</label>
-        <input type="password" id="groq-key-ref" placeholder="gsk_…">
-      </div>
-      <div class="form-row">
-        <label>分析範圍</label>
-        <select id="ref-ai-scope">
-          <option value="7">最近 7 天</option>
-          <option value="14">最近 14 天</option>
-          <option value="30">最近 30 天</option>
-        </select>
-      </div>
-      <button class="btn btn-purple" style="margin-bottom:10px;width:100%;justify-content:center" onclick="runRefuelerAI()">
-        🤖 分析攝取模式
-      </button>
-      <div class="ai-box" id="ref-ai-result">AI 分析結果將顯示在這裡…</div>
-    </div>
+    <div id="s-content"></div>
   </div>
 </div>
 
-<!-- ===================== SAS MODAL ===================== -->
-<div id="sas-modal">
-  <div class="modal-card" style="min-width:500px">
-    <div class="modal-header">
-      <h2>🔗 SAS 交叉分析</h2>
-      <button class="close-btn" onclick="closeModal('sas-modal')">✕</button>
-    </div>
-    <div class="sas-grid">
-      <div class="sas-cell">
-        <h4>攝取 → 睡眠</h4>
-        <div class="bar-wrap"><label>高咖啡日</label><div class="bar-track"><div class="bar-fill" style="width:45%;background:#ff9060"></div></div><span>6.2h</span></div>
-        <div class="bar-wrap"><label>低咖啡日</label><div class="bar-track"><div class="bar-fill" style="width:72%;background:#60d4ff"></div></div><span>7.5h</span></div>
-        <div style="font-size:11px;color:#8a7daa;margin-top:6px">咖啡 ≥ 3杯 睡眠短 1.3h</div>
-      </div>
-      <div class="sas-cell">
-        <h4>睡眠 → 情緒</h4>
-        <div class="bar-wrap"><label>睡眠 &lt;6h</label><div class="bar-track"><div class="bar-fill" style="width:38%;background:#ff6060"></div><br></div><span>5.2</span></div>
-        <div class="bar-wrap"><label>睡眠 &gt;7h</label><div class="bar-track"><div class="bar-fill" style="width:78%;background:#60d47a"></div></div><span>7.8</span></div>
-        <div style="font-size:11px;color:#8a7daa;margin-top:6px">足眠日心情分高 2.6 分</div>
-      </div>
-      <div class="sas-cell">
-        <h4>水分 → 精力</h4>
-        <div class="bar-wrap"><label>&lt; 4 杯水</label><div class="bar-track"><div class="bar-fill" style="width:42%;background:#f5c842"></div></div><span>54%</span></div>
-        <div class="bar-wrap"><label>≥ 6 杯水</label><div class="bar-track"><div class="bar-fill" style="width:76%;background:#60d4ff"></div></div><span>78%</span></div>
-        <div style="font-size:11px;color:#8a7daa;margin-top:6px">充足水分提升精力 24%</div>
-      </div>
-      <div class="sas-cell">
-        <h4>行為 → 情緒</h4>
-        <div class="bar-wrap"><label>有運動</label><div class="bar-track"><div class="bar-fill" style="width:80%;background:#a090ff"></div></div><span>8.0</span></div>
-        <div class="bar-wrap"><label>無運動</label><div class="bar-track"><div class="bar-fill" style="width:58%;background:#8070aa"></div></div><span>6.1</span></div>
-        <div style="font-size:11px;color:#8a7daa;margin-top:6px">運動日情緒分高 1.9 分</div>
-      </div>
-    </div>
-    <div style="margin-top:16px">
-      <div class="form-row">
-        <label>Groq API Key</label>
-        <input type="password" id="groq-key-sas" placeholder="gsk_…">
-      </div>
-      <button class="btn btn-purple" style="width:100%;justify-content:center" onclick="runSASAI()">
-        🤖 深度 AI 分析建議
-      </button>
-      <div class="ai-box" style="margin-top:10px" id="sas-ai-result">點擊分析取得個人化建議…</div>
-    </div>
+<!-- Guard Cat Overlay -->
+<div id="guard-overlay" style="display:none;">
+  <div id="cat-stage">
+    <div id="big-cat">🐱</div>
+    <div id="cat-speech">喵！你已經工作很久了<br>是時候休息一下 🌿</div>
+  </div>
+  <div id="guard-ctrl">
+    <div id="guard-msg"></div>
+    <button id="rest-btn" onclick="startBreak()">先去休息 15 分鐘 🌿</button>
+    <div id="break-cd"></div>
+    <div id="break-lbl"></div>
+    <button id="resume-btn" onclick="endBreak()">我回來了 ✓</button>
   </div>
 </div>
 
-<!-- ===================== GUARD MODAL ===================== -->
-<div id="guard-modal">
-  <div class="modal-card" style="min-width:360px">
-    <div class="modal-header">
-      <h2>⚙ Guard Cat 設定</h2>
-      <button class="close-btn" onclick="closeModal('guard-modal')">✕</button>
-    </div>
-    <div class="setting-row">
-      <label>連續工作上限 (分鐘)</label>
-      <div class="toggle-wrap">
-        <input type="range" id="g-threshold" min="30" max="180" step="10" value="90" oninput="document.getElementById('g-threshold-val').textContent=this.value">
-        <span id="g-threshold-val" style="font-size:13px;color:#c4b8dd;width:32px">90</span>
-      </div>
-    </div>
-    <div class="setting-row">
-      <label>休息提醒間隔 (分鐘)</label>
-      <div class="toggle-wrap">
-        <input type="range" id="g-interval" min="10" max="60" step="5" value="15" oninput="document.getElementById('g-interval-val').textContent=this.value">
-        <span id="g-interval-val" style="font-size:13px;color:#c4b8dd;width:32px">15</span>
-      </div>
-    </div>
-    <div class="setting-row">
-      <label>貓咪開關</label>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" id="g-cat-on" checked style="width:auto;accent-color:#9b64ff"> 顯示貓咪
-      </label>
-    </div>
-    <div class="setting-row">
-      <label>貓咪速度</label>
-      <div class="toggle-wrap">
-        <input type="range" id="g-cat-speed" min="1" max="5" step="1" value="2" oninput="document.getElementById('g-speed-val').textContent=['很慢','慢','普通','快','極快'][this.value-1]">
-        <span id="g-speed-val" style="font-size:13px;color:#c4b8dd;width:32px">慢</span>
-      </div>
-    </div>
-    <button class="btn btn-purple" style="width:100%;justify-content:center;margin-top:8px" onclick="saveGuard()">
-      💾 儲存設定
-    </button>
-    <div style="margin-top:10px;text-align:center">
-      <button class="btn btn-red" onclick="resetGuardTimer()">🔄 重置計時器</button>
-    </div>
-  </div>
+<!-- SAS Analysis Modal -->
+<div class="m-ov" id="sas-ov" style="display:none;" onclick="if(event.target===this)closeSAS()">
+  <div class="m-pn" id="sas-pn"></div>
 </div>
 
-<!-- ===================== JS ===================== -->
+<button id="dbg-btn" onclick="triggerGuard()">🐱 測試貓貓</button>
+
 <script>
-// ---- Data ----
-let refData = JSON.parse(localStorage.getItem('refueler_v1') || '{}');
-let guardSettings = JSON.parse(localStorage.getItem('guard_settings_v1') || '{"threshold":90,"interval":15,"catOn":true,"catSpeed":2}');
-const todayKey = () => new Date().toISOString().slice(0,10);
+'use strict';
+const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1';
 
-// ---- Navigation ----
-function goUrl(url){ if(url&&url!='#') window.open(url,'_blank'); }
+// ── DEFAULT LINKS ──
+const DEFAULT_LINKS={
+  'sas-hub':   '../Sleep Dashboard/index.html',
+  'sleep':     '../Sleep Dashboard/sleep_dashboard.html',
+  'mental':    'https://resolutetinging.github.io/wellness-tracker/mental-dashboard.html',
+  'optimizer': 'https://resolutetinging.github.io/daily-optimizer/daily_optimizer.html',
+  'refueler':  './refueler.html',
+  'aitracker': '../AI Tracker/ai_tracker_v6.html',
+  'linkedin':  '',
+  'wordvault': '../WordVault/WordVault.html',
+  'mentaltool':'notion://www.notion.so',
+  'podcast':   'notion://www.notion.so',
+};
+function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
+function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
 
-// ---- Refueler ----
-function openRefueler(){
-  loadRefuelerDay();
-  document.getElementById('groq-key-ref').value = localStorage.getItem('groq_key')||'';
-  document.getElementById('refueler-modal').classList.add('open');
-}
-function loadRefuelerDay(){
-  const d = refData[todayKey()]||{coffee:0,water:0,notes:'',photos:[]};
-  document.getElementById('coffee-count').textContent = d.coffee||0;
-  document.getElementById('water-count').textContent = d.water||0;
-  document.getElementById('ref-notes').value = d.notes||'';
-  renderPhotoStrip(d.photos||[]);
-  updateTips();
-}
-function adjustIntake(type, delta){
-  const el = document.getElementById(type+'-count');
-  const v = Math.max(0, parseInt(el.textContent)+delta);
-  el.textContent = v;
-  updateTips();
-}
-function updateTips(){
-  document.getElementById('tip-coffee').textContent = document.getElementById('coffee-count')?.textContent||0;
-  document.getElementById('tip-water').textContent = document.getElementById('water-count')?.textContent||0;
-}
-function saveRefueler(){
-  const key = todayKey();
-  const existing = refData[key]||{};
-  refData[key] = {
-    ...existing,
-    coffee: parseInt(document.getElementById('coffee-count').textContent),
-    water: parseInt(document.getElementById('water-count').textContent),
-    notes: document.getElementById('ref-notes').value
-  };
-  localStorage.setItem('refueler_v1', JSON.stringify(refData));
-  alert('已儲存 ✓');
-}
-function addPhoto(){ document.getElementById('photo-input').click(); }
-function handlePhoto(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const key = todayKey();
-    if(!refData[key]) refData[key]={coffee:0,water:0,notes:'',photos:[]};
-    if(!refData[key].photos) refData[key].photos=[];
-    refData[key].photos.push(ev.target.result);
-    localStorage.setItem('refueler_v1',JSON.stringify(refData));
-    renderPhotoStrip(refData[key].photos);
-  };
-  reader.readAsDataURL(file);
-}
-function renderPhotoStrip(photos){
-  const strip = document.getElementById('photo-strip');
-  strip.innerHTML = photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')
-    + `<div class="photo-add" onclick="addPhoto()">＋</div>`;
+// ── MOCK / LIVE DATA ──
+const MOCK={
+  sleep:{dur:'7h 12m',q:78,deep:'1h45m',rem:'2h08m',trend:'↑'},
+  mental:{score:7.2,trend:'↑',streak:5},
+  opt:{stamina:62,endTime:'18:30',done:4,total:7,focus:'3.5h'},
+  ai:{models:2,topic:'Multimodal',news:8},
+  li:{applied:3,pending:2,saved:5},
+  wv:{total:234,today:5,streak:12},
+  mt:{streak:7,unread:2},
+  pc:{unread:3,recent:'The Knowledge Project'}
+};
+function rfToday(){
+  try{
+    const d=JSON.parse(localStorage.getItem(RF_KEY)||'{}');
+    const td=new Date().toDateString();
+    const te=(d.entries||[]).filter(e=>new Date(e.timestamp).toDateString()===td);
+    return{coffee:te.filter(e=>e.type==='coffee').length,water:te.filter(e=>e.type==='water').reduce((s,e)=>s+(e.amount||0),0)};
+  }catch{return{coffee:0,water:0};}
 }
 
-// ---- Calendar ----
-function buildCal(){
-  const now = new Date();
-  const y=now.getFullYear(), m=now.getMonth();
-  const first = new Date(y,m,1).getDay();
-  const days = new Date(y,m+1,0).getDate();
-  const grid = document.getElementById('ref-cal-grid');
-  const dayNames = ['日','一','二','三','四','五','六'];
-  let html = dayNames.map(d=>`<div class="ch">${d}</div>`).join('');
-  for(let i=0;i<first;i++) html+=`<div></div>`;
-  for(let d=1;d<=days;d++){
-    const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday = key===todayKey();
-    const hasData = !!refData[key];
-    html+=`<div class="cd${isToday?' today':''}${hasData?' has-data':''}" onclick="showDayDetail('${key}')">${d}</div>`;
+// ── WALLPAPER ──
+const WP_PRESETS=[
+  {key:'aurora',name:'極光深海',bg:'radial-gradient(ellipse at 20% 20%,rgba(120,80,200,.5) 0%,transparent 55%),radial-gradient(ellipse at 80% 75%,rgba(40,130,200,.45) 0%,transparent 55%),linear-gradient(150deg,#0d0d1a 0%,#141428 50%,#0a1a2e 100%)'},
+  {key:'dusk',name:'暮色玫瑰',bg:'linear-gradient(135deg,#2d1b3d 0%,#4a1942 40%,#c0392b 100%)'},
+  {key:'forest',name:'深林薄霧',bg:'linear-gradient(150deg,#0a1f1a 0%,#134e3c 50%,#1a6b4a 100%)'},
+  {key:'slate',name:'矽谷石板',bg:'linear-gradient(135deg,#1a1a2e 0%,#2d3561 50%,#0f3460 100%)'},
+  {key:'warm',name:'暖色沙丘',bg:'linear-gradient(150deg,#2c1810 0%,#5c3a1e 50%,#8b5a2b 100%)'},
+  {key:'mint',name:'薄荷冰川',bg:'linear-gradient(135deg,#0a2a2a 0%,#1a4a4a 50%,#2a6a6a 100%)'},
+];
+
+function applyBG(preset){
+  const bg=document.getElementById('bg-default');
+  const wp=document.getElementById('bg-wallpaper');
+  bg.style.background=preset.bg;
+  wp.classList.remove('active');
+  localStorage.setItem(WP_KEY,'preset:'+preset.key);
+}
+function applyCustomWP(dataUrl){
+  const wp=document.getElementById('bg-wallpaper');
+  wp.style.backgroundImage='url('+dataUrl+')';
+  wp.classList.add('active');
+  localStorage.setItem(WP_KEY,'custom:'+dataUrl);
+}
+function resetWP(){
+  document.getElementById('bg-wallpaper').classList.remove('active');
+  document.getElementById('bg-default').style.background='';
+  localStorage.removeItem(WP_KEY);
+}
+function loadWP(){
+  const v=localStorage.getItem(WP_KEY)||'';
+  if(v.startsWith('preset:')){
+    const k=v.slice(7);
+    const p=WP_PRESETS.find(x=>x.key===k);
+    if(p)applyBG(p);
+  } else if(v.startsWith('custom:')){
+    applyCustomWP(v.slice(7));
   }
-  grid.innerHTML=html;
-}
-function showDayDetail(key){
-  const d = refData[key];
-  const el = document.getElementById('ref-day-detail');
-  if(!d){ el.textContent='無記錄'; return; }
-  el.innerHTML=`<b>${key}</b><br>☕ ${d.coffee||0} 杯 &nbsp;💧 ${d.water||0} 杯<br>${d.notes?`備註：${d.notes}`:''}`;
 }
 
-// ---- AI ----
-async function callGroq(key, prompt){
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:400})
+// ── CLOCK ──
+function tick(){
+  const n=new Date();
+  const h=String(n.getHours()).padStart(2,'0');
+  const m=String(n.getMinutes()).padStart(2,'0');
+  const s=String(n.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent=h+':'+m;
+  document.getElementById('clock-sec').textContent=':'+s;
+  const MN=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  const WD=['日','一','二','三','四','五','六'];
+  document.getElementById('date-line').textContent=n.getFullYear()+' · '+MN[n.getMonth()]+'月 · 星期'+WD[n.getDay()];
+  const hr=n.getHours();
+  document.getElementById('greeting').textContent=hr<5?'深夜了，注意休息 🌙':hr<12?'早安 ☀️':hr<17?'午安 🌤':hr<21?'晚上好 🌆':'夜深了 🌙';
+}
+
+// ── DOCK MAGNIFICATION ──
+const dock=document.getElementById('dock');
+function dockMag(e){
+  dock.querySelectorAll('.d-icon').forEach(ic=>{
+    const r=ic.getBoundingClientRect();
+    const cx=r.left+r.width/2;
+    const dist=Math.abs(e.clientX-cx);
+    const maxD=120,maxS=0.58,maxY=22;
+    if(dist<maxD){
+      const f=1-dist/maxD;
+      ic.style.transform=`translateY(${-(f*maxY)}px) scale(${1+f*maxS})`;
+    } else {
+      ic.style.transform='';
+    }
   });
-  const j = await res.json();
-  return j.choices?.[0]?.message?.content||'（API 錯誤）';
 }
-async function runRefuelerAI(){
-  const key = document.getElementById('groq-key-ref').value.trim();
-  if(!key){alert('請輸入 Groq API Key');return;}
-  localStorage.setItem('groq_key',key);
-  const scope = parseInt(document.getElementById('ref-ai-scope').value);
-  const el = document.getElementById('ref-ai-result');
-  el.textContent='分析中…';
-  const entries = [];
-  for(let i=0;i<scope;i++){
-    const d=new Date(); d.setDate(d.getDate()-i);
-    const k=d.toISOString().slice(0,10);
-    if(refData[k]) entries.push({date:k,...refData[k]});
+dock.addEventListener('mousemove',dockMag);
+dock.addEventListener('mouseleave',()=>dock.querySelectorAll('.d-icon').forEach(i=>i.style.transform=''));
+
+// ── DOCK CLICK ──
+function dClick(el,id){
+  el.classList.remove('bouncing');void el.offsetWidth;el.classList.add('bouncing');
+  setTimeout(()=>el.classList.remove('bouncing'),500);
+  const links=getLinks();
+  const url=links[id]||'';
+  if(!url){openSettings('links');return;}
+  window.open(url,'_blank');
+}
+// Mark LinkedIn if not set
+function updateUnsetFlags(){
+  const links=getLinks();
+  document.querySelectorAll('.d-icon').forEach(ic=>{
+    const id=ic.dataset.id;
+    if(!id||!links.hasOwnProperty(id))return;
+    ic.dataset.unset=(!links[id])?'1':'0';
+  });
+}
+
+// ── LEAN TOOLTIP ──
+const ttp=document.getElementById('tooltip');
+let ttT;
+function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
+function hr(){return`<div class="tt-hr"></div>`;}
+function buildTT(id){
+  const R=MOCK;
+  const rf=rfToday();
+  const h=(t)=>`<div class="tt-head">${t}</div>`;
+  switch(id){
+    case 'sas-hub': return h('SAS Hub')+row('睡眠',R.sleep.dur,'g')+row('品質',R.sleep.q+'%',R.sleep.q>=70?'g':'a')+hr()+row('情緒',R.mental.score+'/10',R.mental.score>=7?'g':'a')+row('戰力',R.opt.stamina+'%',R.opt.stamina>=60?'g':'a');
+    case 'sleep':   return h('昨夜睡眠')+row('時長',R.sleep.dur,'g')+row('品質',R.sleep.q+'%',R.sleep.q>=70?'g':'a')+hr()+row('深睡',R.sleep.deep)+row('REM',R.sleep.rem)+hr()+row('趨勢',R.sleep.trend,'g');
+    case 'mental':  return h('心情')+row('今日分',R.mental.score+'/10',R.mental.score>=7?'g':'a')+row('趨勢',R.mental.trend,'g')+hr()+row('連續',R.mental.streak+'天','g');
+    case 'optimizer':return h('優化器')+row('戰力',R.opt.stamina+'%',R.opt.stamina>=60?'g':'a')+row('續航至',R.opt.endTime)+hr()+row('任務',R.opt.done+'/'+R.opt.total,R.opt.done===R.opt.total?'g':'a')+row('專注',R.opt.focus,'g');
+    case 'refueler':return h('今日攝取')+row('☕ 咖啡',rf.coffee+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',rf.water+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
+    case 'report':  return h('綜觀分析')+row('整合',`${R.sleep.dur} · ${R.mental.score}分 · ${R.opt.stamina}%`);
+    case 'aitracker':return h('AI 動態')+row('新模型',R.ai.models+'個','a')+row('熱門',R.ai.topic)+row('新聞',R.ai.news+'則');
+    case 'linkedin':{const links=getLinks();return h('LinkedIn')+(links['linkedin']?row('已投遞',R.li.applied+'個','g')+row('待回覆',R.li.pending+'個','a')+hr()+row('待投',R.li.saved+'個'):'<div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:4px 0;">點擊設定連結 →</div>');}
+    case 'wordvault':return h('WordVault')+row('單字',R.wv.total+'個')+row('今日',R.wv.today+'個','a')+hr()+row('連續',R.wv.streak+'天','g');
+    case 'mentaltool':return h('心理工具')+row('連續',R.mt.streak+'天','g')+row('未讀',R.mt.unread+'則',R.mt.unread?'a':'g');
+    case 'podcast':return h('Podcast')+row('未讀',R.pc.unread+'則',R.pc.unread?'a':'g')+row('最近',R.pc.recent);
+    default:return'';
   }
-  const prompt = `以下是最近${scope}天的飲食紀錄（JSON）：\n${JSON.stringify(entries,null,2)}\n\n請用繁體中文分析：1. 咖啡與水分攝取模式  2. 可能對睡眠/情緒的影響  3. 具體建議（3點）。`;
-  const res = await callGroq(key, prompt);
-  el.textContent = res;
 }
-async function runSASAI(){
-  const key = document.getElementById('groq-key-sas').value.trim();
-  if(!key){alert('請輸入 Groq API Key');return;}
-  localStorage.setItem('groq_key',key);
-  const el = document.getElementById('sas-ai-result');
-  el.textContent='分析中…';
-  const prompt = `根據以下模擬數據：
-- 高咖啡日(≥3杯)平均睡眠6.2h，低咖啡日7.5h
-- 睡眠不足6h日情緒5.2分，睡眠≥7h日情緒7.8分
-- 水分不足(<4杯)精力54%，充足(≥6杯)精力78%
-- 有運動日情緒8.0分，無運動日6.1分
-
-請用繁體中文給出3個最高優先級的生活優化建議，每點不超過2行。`;
-  const res = await callGroq(key, prompt);
-  el.textContent = res;
-}
-
-// ---- Modal helpers ----
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-function openSAS(){ document.getElementById('groq-key-sas').value=localStorage.getItem('groq_key')||''; document.getElementById('sas-modal').classList.add('open'); }
-function openGuard(){
-  document.getElementById('g-threshold').value=guardSettings.threshold;
-  document.getElementById('g-threshold-val').textContent=guardSettings.threshold;
-  document.getElementById('g-interval').value=guardSettings.interval;
-  document.getElementById('g-interval-val').textContent=guardSettings.interval;
-  document.getElementById('g-cat-on').checked=guardSettings.catOn;
-  document.getElementById('g-cat-speed').value=guardSettings.catSpeed;
-  document.getElementById('g-speed-val').textContent=['很慢','慢','普通','快','極快'][guardSettings.catSpeed-1];
-  document.getElementById('guard-modal').classList.add('open');
-}
-function saveGuard(){
-  guardSettings.threshold = parseInt(document.getElementById('g-threshold').value);
-  guardSettings.interval = parseInt(document.getElementById('g-interval').value);
-  guardSettings.catOn = document.getElementById('g-cat-on').checked;
-  guardSettings.catSpeed = parseInt(document.getElementById('g-cat-speed').value);
-  localStorage.setItem('guard_settings_v1',JSON.stringify(guardSettings));
-  closeModal('guard-modal');
-  updateCatVisibility();
-}
-function showTab(tabId, modalId, el){
-  const modal = document.getElementById(modalId);
-  modal.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  const tabs = [document.getElementById('ref-log'),document.getElementById('ref-cal'),document.getElementById('ref-ai')];
-  tabs.forEach(t=>{ if(t) t.style.display='none'; });
-  const target = document.getElementById(tabId);
-  if(target){ target.style.display=''; if(tabId==='ref-cal') buildCal(); }
-}
-// Close modal on backdrop click
-document.querySelectorAll('#refueler-modal,#sas-modal,#guard-modal').forEach(m=>{
-  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+document.addEventListener('mouseover',e=>{
+  const ic=e.target.closest('.d-icon');
+  if(!ic)return;
+  clearTimeout(ttT);
+  const c=buildTT(ic.dataset.id);
+  if(!c)return;
+  ttp.innerHTML=c;ttp.style.display='block';ttp.classList.remove('tt-hide');
+  const r=ic.getBoundingClientRect();
+  const tw=ttp.offsetWidth||160,th=ttp.offsetHeight||100;
+  let lx=r.left+r.width/2-tw/2,ty=r.top-th-14;
+  lx=Math.max(8,Math.min(lx,window.innerWidth-tw-8));
+  if(ty<8)ty=r.bottom+14;
+  ttp.style.left=lx+'px';ttp.style.top=ty+'px';
+});
+document.addEventListener('mouseout',e=>{
+  if(!e.target.closest('.d-icon'))return;
+  ttT=setTimeout(()=>{ttp.classList.add('tt-hide');setTimeout(()=>ttp.style.display='none',130);},70);
 });
 
-// ---- Guard Cat logic ----
-let sessionStart = Date.now();
-let gState = 'monitoring'; // monitoring | alerting | resting | skipped
-let skipEnd = 0;
-let lastBreakEnd = 0;
-let guardCheckInterval;
+// ── SETTINGS ──
+let curTab='appearance';
+function openSettings(tab){
+  curTab=tab||'appearance';
+  document.getElementById('settings-overlay').style.display='flex';
+  renderTab(curTab);
+  document.querySelectorAll('.s-tab').forEach(b=>{
+    b.classList.toggle('on',b.dataset.tab===curTab);
+  });
+}
+function closeSettings(){document.getElementById('settings-overlay').style.display='none';}
+function switchTab(tab){
+  curTab=tab;
+  document.querySelectorAll('.s-tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  renderTab(tab);
+}
+function renderTab(tab){
+  const el=document.getElementById('s-content');
+  const links=getLinks();
+  const eff=getEffective();
+  const curWP=localStorage.getItem(WP_KEY)||'';
 
-function startGuardTimer(){
-  clearInterval(guardCheckInterval);
-  guardCheckInterval = setInterval(checkGuard, 30000); // check every 30s
+  if(tab==='appearance'){
+    const presetCards=WP_PRESETS.map(p=>{
+      const isActive=curWP==='preset:'+p.key;
+      return`<div class="wp-card${isActive?' active':''}" onclick="applyBG_ui('${p.key}')" style="background:${p.bg};"><span class="wp-card-name">${p.name}</span></div>`;
+    }).join('');
+    el.innerHTML=`
+      <div class="s-title">外觀</div>
+      <div class="s-sec">
+        <div class="s-lbl">桌布 / Wallpaper</div>
+        <div class="wp-grid">
+          ${presetCards}
+          <label class="wp-upload" for="wp-inp">
+            <span class="wp-upload-ic">📷</span>
+            <span>上傳自訂圖片</span>
+          </label>
+        </div>
+        <input type="file" id="wp-inp" accept="image/*" style="display:none;" onchange="onWPFile(this)"/>
+        <div class="s-row">
+          <button class="s-btn s-btn-g" onclick="resetWP();renderTab('appearance');">重設預設</button>
+        </div>
+      </div>
+    `;
+  } else if(tab==='links'){
+    const linkRows=[
+      {id:'sas-hub',lbl:'🧬 SAS Hub',ph:'../Sleep Dashboard/index.html'},
+      {id:'sleep',lbl:'😴 Sleep Dashboard',ph:'../Sleep Dashboard/sleep_dashboard.html'},
+      {id:'mental',lbl:'💭 Mental Dashboard',ph:'https://…'},
+      {id:'optimizer',lbl:'⚡ Daily Optimizer',ph:'https://…'},
+      {id:'refueler',lbl:'☕ Refueler',ph:'./refueler.html'},
+      {id:'aitracker',lbl:'🤖 AI Tracker',ph:'../AI Tracker/ai_tracker_v6.html'},
+      {id:'linkedin',lbl:'💼 LinkedIn',ph:'https://www.linkedin.com/…',highlight:true},
+      {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
+      {id:'mentaltool',lbl:'🧘 Mental Tool',ph:'notion://…'},
+      {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
+    ];
+    el.innerHTML=`
+      <div class="s-title">連結管理</div>
+      <div class="s-sec">
+        ${linkRows.map(r=>`
+          <div class="s-lbl" style="${r.highlight?'color:#7be08a;':''}">${r.lbl}${r.highlight&&!links[r.id]?' <span style="font-size:9px;background:rgba(123,224,138,.15);padding:2px 7px;border-radius:100px;letter-spacing:0;text-transform:none;">請設定</span>':''}</div>
+          <input class="s-inp" style="margin-bottom:12px;" id="lnk-${r.id}" value="${links[r.id]||''}" placeholder="${r.ph}"/>
+        `).join('')}
+        <button class="s-btn s-btn-pr" onclick="saveAllLinks()">儲存所有連結</button>
+      </div>
+    `;
+  } else if(tab==='guard'){
+    el.innerHTML=`
+      <div class="s-title">Guard Cat 設定</div>
+      <div class="s-sec">
+        <div class="s-lbl">今日戰力</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <input type="range" id="gs-s" min="0" max="100" value="${eff.stamina}" oninput="document.getElementById('gs-sv').textContent=this.value+'%'"/>
+          <span id="gs-sv" style="font-size:14px;font-weight:600;min-width:40px;">${eff.stamina}%</span>
+        </div>
+        <div class="s-lbl">結束時間</div>
+        <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
+        <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
+      </div>
+    `;
+  } else if(tab==='api'){
+    const k=localStorage.getItem(GROQ_KEY)||'';
+    el.innerHTML=`
+      <div class="s-title">API 設定</div>
+      <div class="s-sec">
+        <div class="s-lbl">Groq API Key</div>
+        <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;margin-bottom:18px;"/>
+        <button class="s-btn s-btn-pr" onclick="saveAPI()">儲存</button>
+      </div>
+    `;
+  }
+}
+function applyBG_ui(key){
+  const p=WP_PRESETS.find(x=>x.key===key);
+  if(p){applyBG(p);renderTab('appearance');}
+}
+function onWPFile(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{applyCustomWP(ev.target.result);renderTab('appearance');};
+  r.readAsDataURL(f);
+}
+function saveAllLinks(){
+  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast'];
+  const l={};
+  ids.forEach(id=>{const el=document.getElementById('lnk-'+id);if(el)l[id]=(el.value||'').trim();});
+  saveLinks(l);updateUnsetFlags();closeSettings();
+}
+function saveGS(){
+  const stamina=parseInt(document.getElementById('gs-s')?.value)||60;
+  const endTime=document.getElementById('gs-t')?.value||'18:30';
+  localStorage.setItem(GS_KEY,JSON.stringify({stamina,endTime}));
+  closeSettings();checkGuard();
+}
+function saveAPI(){
+  const k=(document.getElementById('gs-k')?.value||'').trim();
+  if(k)localStorage.setItem(GROQ_KEY,k);
+  closeSettings();
+}
+
+// ── GUARD CAT ──
+let gState='monitoring',cooldownEnd=null,cdIv=null;
+function getGuardData(){try{return JSON.parse(localStorage.getItem(GS_KEY))||{};}catch{return{};}}
+function getEffective(){
+  const s=getGuardData();
+  let stamina=s.stamina!==undefined?+s.stamina:MOCK.opt.stamina;
+  let endTime=s.endTime||MOCK.opt.endTime;
+  try{const t=new Date().toISOString().split('T')[0];const o=JSON.parse(localStorage.getItem('review_'+t)||'{}');if(o.stamina!==undefined)stamina=+o.stamina;if(o.endTime)endTime=o.endTime;}catch{}
+  return{stamina,endTime};
 }
 function checkGuard(){
-  if(gState==='skipped'){
-    if(Date.now()>=skipEnd){ gState='monitoring'; document.getElementById('cat-outer').classList.remove('skipped'); }
-    return;
-  }
-  if(gState==='resting') return;
-  const elapsedMin = (Date.now()-sessionStart)/60000;
-  const thresh = guardSettings.threshold||90;
-  if(elapsedMin>=thresh && gState==='monitoring'){
-    gState='alerting';
-    showBanner(Math.round(elapsedMin));
-  }
+  if(gState==='alerting'||gState==='resting')return;
+  if(gState==='cooldown'&&cooldownEnd&&Date.now()<cooldownEnd)return;
+  const{stamina,endTime}=getEffective();
+  const now=new Date();
+  const[eh,em]=endTime.split(':').map(Number);
+  const end=new Date();end.setHours(eh,em,0,0);
+  const dot=document.getElementById('guard-dot');
+  const txt=document.getElementById('guard-txt');
+  if(stamina<40||now>end){triggerGuard();}
+  else if(stamina<60){dot.className='warn';txt.textContent='戰力 '+stamina+'% · 注意';gState='monitoring';}
+  else{dot.className='';txt.textContent='Guard Cat · '+stamina+'%';gState='monitoring';}
 }
-function showBanner(mins){
-  document.getElementById('ban-mins').textContent = mins;
-  document.getElementById('guard-banner').style.display='block';
-  // make cat look alert (faster tail)
-  document.querySelector('.cat-tail').style.animationDuration='0.5s';
+function triggerGuard(){
+  if(gState==='alerting'||gState==='resting')return;
+  gState='alerting';
+  const{stamina,endTime}=getEffective();
+  const msgs=stamina<40?['戰力剩 '+stamina+'%，需要充電了！']:['已過 '+endTime+'，該歇歇了！'];
+  const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
+  document.getElementById('guard-msg').textContent=msgs[0];
+  document.getElementById('cat-speech').innerHTML=cats[Math.floor(Math.random()*cats.length)];
+  document.getElementById('rest-btn').style.display='block';
+  document.getElementById('break-cd').style.display=document.getElementById('break-lbl').style.display=document.getElementById('resume-btn').style.display='none';
+  const cat=document.getElementById('big-cat');
+  cat.style.animation='none';void cat.offsetWidth;
+  cat.style.animation='catRise 1.3s cubic-bezier(.175,.885,.32,1.275) forwards,catFloat 4s ease-in-out 1.3s infinite';
+  document.getElementById('guard-overlay').style.display='flex';
+  document.getElementById('guard-dot').className='alert';
+  document.getElementById('guard-txt').textContent='執法中 🐱';
 }
-function hideBanner(){
-  document.getElementById('guard-banner').style.display='none';
-  document.querySelector('.cat-tail').style.animationDuration='1.2s';
-}
-function takeBreak(){
+function startBreak(){
   gState='resting';
-  hideBanner();
-  const breakMs = (guardSettings.interval||15)*60*1000;
-  // Schedule return after rest
-  setTimeout(()=>{ gState='monitoring'; sessionStart=Date.now(); }, breakMs);
-  alert(`好！去休息 ${guardSettings.interval} 分鐘。休息完後系統會重置計時。🌿`);
+  document.getElementById('rest-btn').style.display='none';
+  document.getElementById('guard-msg').textContent='好好休息 🌿 15分鐘後回來';
+  const cdEl=document.getElementById('break-cd'),lbEl=document.getElementById('break-lbl');
+  cdEl.style.display=lbEl.style.display='block';
+  let secs=15*60;
+  function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+  cdEl.textContent=fmt(secs);lbEl.textContent='請離開座位休息';
+  if(cdIv)clearInterval(cdIv);
+  cdIv=setInterval(()=>{secs--;cdEl.textContent=fmt(secs);if(secs<=60)lbEl.textContent='快好了，再'+secs+'秒…';if(secs<=0){clearInterval(cdIv);endBreak();}},1000);
 }
-function skipHour(){
-  gState='skipped';
-  skipEnd = Date.now()+60*60*1000;
-  hideBanner();
-  document.getElementById('cat-outer').classList.add('skipped');
-  // After 1 hour, reset
-  setTimeout(()=>{ gState='monitoring'; sessionStart=Date.now(); document.getElementById('cat-outer').classList.remove('skipped'); }, 60*60*1000);
-}
-function resetGuardTimer(){
-  sessionStart=Date.now();
-  gState='monitoring';
-  hideBanner();
-  document.getElementById('cat-outer').classList.remove('skipped');
-  closeModal('guard-modal');
-}
-function updateCatVisibility(){
-  document.getElementById('cat-outer').style.display = guardSettings.catOn ? '' : 'none';
+function endBreak(){
+  if(cdIv){clearInterval(cdIv);cdIv=null;}
+  gState='cooldown';cooldownEnd=Date.now()+3600000;
+  document.getElementById('guard-overlay').style.display='none';
+  document.getElementById('guard-dot').className='warn';
+  document.getElementById('guard-txt').textContent='休息完畢 · 60分鐘後偵測';
+  setTimeout(()=>{gState='monitoring';checkGuard();},3600000);
 }
 
-// ---- Wandering Cat ----
-const catOuter = document.getElementById('cat-outer');
-const catBody = document.getElementById('cat-body');
-const CAT_W=72, CAT_H=72;
-let catX=120, catY=120;
-let targetX=200, targetY=200;
-let catDX=0, catDY=0;
-let catSitting=false, sitTimer=0;
-// speed map: 1=very slow … 5=very fast
-const SPEED_MAP=[0.4,0.7,1.1,1.6,2.2];
-
-function pickTarget(){
-  const margin=40;
-  targetX = margin + Math.random()*(window.innerWidth-CAT_W-margin*2);
-  targetY = margin + Math.random()*(window.innerHeight-CAT_H-margin*2);
+// ── SAS ANALYSIS ──
+function openSASAnalysis(){
+  document.getElementById('sas-pn').innerHTML=`
+    <button class="m-cls" onclick="closeSAS()">✕</button>
+    <div class="m-ttl">✨ SAS 身心綜觀報告</div>
+    <p style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:18px;line-height:1.6;">整合攝取 ↔ 睡眠 ↔ 行為 ↔ 情緒，完整身心洞察。</p>
+    <div id="sas-res"><button class="btn-pr" onclick="runSAS()">🔍 開始分析</button></div>
+  `;
+  document.getElementById('sas-ov').style.display='flex';
 }
-function catStep(){
-  if(!guardSettings.catOn){ catOuter.style.display='none'; return; }
-  catOuter.style.display='';
-  const speed = SPEED_MAP[(guardSettings.catSpeed||2)-1];
-  if(catSitting){
-    sitTimer--;
-    if(sitTimer<=0){ catSitting=false; catBody.classList.remove('sitting'); catBody.classList.add('walking'); pickTarget(); }
-    return;
-  }
-  const dx=targetX-catX, dy=targetY-catY;
-  const dist=Math.sqrt(dx*dx+dy*dy);
-  if(dist<4){
-    // arrived — sit for a bit
-    if(Math.random()<0.35){
-      catSitting=true;
-      sitTimer=60+Math.floor(Math.random()*120); // ~1-3s at 60fps
-      catBody.classList.add('sitting');
-      catBody.classList.remove('walking');
-    } else {
-      pickTarget();
-    }
-    return;
-  }
-  catDX=dx/dist; catDY=dy/dist;
-  catX+=catDX*speed;
-  catY+=catDY*speed;
-  catOuter.style.transform=`translate(${catX}px,${catY}px)`;
-  // flip direction
-  if(catDX>0) catBody.classList.remove('flip'); else catBody.classList.add('flip');
+function closeSAS(){document.getElementById('sas-ov').style.display='none';}
+async function runSAS(){
+  const key=localStorage.getItem(GROQ_KEY)||'';
+  const el=document.getElementById('sas-res');
+  if(!key){el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.35);text-align:center;padding:16px;">請先在 ⚙️ API設定 填入 Groq API Key</div>';return;}
+  el.innerHTML='<div style="text-align:center;padding:24px;"><div style="font-size:28px;animation:pulse-s 1.5s infinite;">✨</div><div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:8px;">分析中…</div></div>';
+  const rf=rfToday();const{stamina,endTime}=getEffective();
+  const prompt=`你是整合健康顧問。分析多維度身心數據：睡眠${MOCK.sleep.dur}（品質${MOCK.sleep.q}%），情緒${MOCK.mental.score}/10（${MOCK.mental.trend}），戰力${stamina}%，任務${MOCK.opt.done}/${MOCK.opt.total}，續航至${endTime}，咖啡${rf.coffee}杯，水${rf.water}ml。\n用繁體中文分析（語氣溫暖，每段2-3句）：\n1. 🔗 數據間的關聯性\n2. ⚡ 能量管理評估\n3. 🎯 三個具體行動建議\n4. 💬 今天一句話`;
+  try{
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
+    if(!resp.ok)throw new Error('API '+resp.status);
+    const result=await resp.json();
+    el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:rgba(255,255,255,.82);">${result.choices?.[0]?.message?.content||'（無回應）'}</div></div>`;
+  }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${e.message}</div>`;}
 }
 
-// Run cat at ~60fps
-setInterval(catStep, 16);
-// Occasionally change target even while walking
-setInterval(()=>{ if(!catSitting && Math.random()<0.3) pickTarget(); }, 3000);
-
-// ---- Init ----
-pickTarget();
-updateCatVisibility();
-loadRefuelerDay();
-startGuardTimer();
-
-// For demo: trigger banner after 5s (comment out in production)
-// setTimeout(()=>{ gState='alerting'; showBanner(90); }, 5000);
+// ── INIT ──
+loadWP();
+tick();setInterval(tick,1000);
+checkGuard();setInterval(checkGuard,30000);
+updateUnsetFlags();
 </script>
 </body>
 </html>
