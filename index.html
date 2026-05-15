@@ -697,8 +697,10 @@ function dockMag(e){
     }
   });
 }
-dock.addEventListener('mousemove',dockMag);
-dock.addEventListener('mouseleave',()=>dock.querySelectorAll('.d-icon').forEach(i=>i.style.transform=''));
+if(!window.matchMedia('(pointer:coarse)').matches){
+  dock.addEventListener('mousemove',dockMag);
+  dock.addEventListener('mouseleave',()=>dock.querySelectorAll('.d-icon').forEach(i=>i.style.transform=''));
+}
 
 // ── DOCK CLICK ──
 function dClick(el,id){
