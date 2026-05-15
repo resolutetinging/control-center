@@ -3,124 +3,137 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#e8e4de"/>
 <title>Refueler ☕💧</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#F3EDE6;--bg2:#EDE5DB;--card:#fff;
-  --coffee:#7B4F2E;--coffee-l:#C47A3A;--coffee-tint:rgba(196,122,58,.1);--coffee-tint2:rgba(196,122,58,.18);
-  --water:#2563EB;--water-l:#60A5FA;--water-tint:rgba(96,165,250,.1);--water-tint2:rgba(96,165,250,.18);
-  --ink:#201A14;--sub:#6B5D52;--faint:#A8998E;--border:rgba(120,90,60,.1);--bstr:rgba(120,90,60,.18);
-  --ok:#22A16A;--warn:#D97706;--danger:#DC2626;
-  --r:16px;--rsm:10px;
-  --shadow:0 2px 16px rgba(100,70,40,.09);
-  --shadow-lg:0 8px 40px rgba(100,70,40,.13);
+  --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
+  --coffee:#7B4F2E;--coffee-l:#C47A3A;--coffee-tint:rgba(196,122,58,.1);--coffee-tint2:rgba(196,122,58,.2);
+  --water:#4a7fa5;--water-l:#7aaec8;--water-tint:rgba(74,127,165,.1);--water-tint2:rgba(74,127,165,.18);
+  --ink:#28261f;--sub:#55514a;--faint:#7a7570;--border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
+  --ok:#27ae60;--warn:#e67e22;--danger:#c0392b;
+  --r:13px;--rsm:9px;
+  --shadow:0 2px 12px rgba(40,38,32,.07);
+  --shadow-lg:0 8px 36px rgba(40,38,32,.14);
 }
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);}
+html,body{height:100%;font-family:'Noto Sans TC',-apple-system,BlinkMacSystemFont,'PingFang TC',sans-serif;background:var(--bg);}
 body{
   background:
-    radial-gradient(ellipse at 10% 10%,rgba(196,122,58,.12) 0%,transparent 50%),
-    radial-gradient(ellipse at 90% 90%,rgba(96,165,250,.1) 0%,transparent 50%),
-    #F3EDE6;
+    radial-gradient(ellipse at 15% 0%,rgba(196,122,58,.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 100%,rgba(74,127,165,.06) 0%,transparent 55%),
+    #e8e4de;
   min-height:100vh;
 }
 
 /* ── Header ── */
 #topbar{
   position:sticky;top:0;z-index:100;
-  background:rgba(243,237,230,.88);
+  background:rgba(232,228,222,.92);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--bstr);
-  padding:0 28px;height:56px;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  border-bottom:.5px solid var(--bstr);
+  padding:0 24px;height:52px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
 }
-.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);text-decoration:none;padding:6px 12px;border-radius:100px;background:rgba(120,90,60,.07);border:1px solid var(--border);transition:all .18s;cursor:pointer;border:none;font-family:inherit;}
-.back-btn:hover{background:rgba(120,90,60,.13);color:var(--ink);}
-#topbar-title{font-size:16px;font-weight:700;color:var(--ink);}
-#today-pills{display:flex;gap:8px;}
-.today-pill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:600;}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);padding:5px 12px;border-radius:100px;background:rgba(40,38,32,.06);border:none;transition:all .18s;cursor:pointer;font-family:inherit;}
+.back-btn:hover{background:rgba(40,38,32,.11);color:var(--ink);}
+#topbar-title{font-size:15px;font-weight:700;color:var(--ink);}
+#topbar-right{display:flex;gap:7px;align-items:center;}
+.today-pill{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:100px;font-size:12px;font-weight:600;}
 .tp-coffee{background:var(--coffee-tint2);color:var(--coffee);}
 .tp-water{background:var(--water-tint2);color:var(--water);}
+.sync-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:500;transition:all .3s;cursor:default;}
+.sync-idle{background:rgba(40,38,32,.06);color:var(--faint);}
+.sync-ing{background:rgba(74,127,165,.13);color:var(--water);}
+.sync-ok{background:rgba(39,174,96,.13);color:var(--ok);}
+.sync-err{background:rgba(192,57,43,.1);color:var(--danger);}
 
 /* ── Layout ── */
-#main{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:24px 28px;max-width:1300px;margin:0 auto;}
-#ai-wrap{padding:0 28px 32px;max-width:1300px;margin:0 auto;}
+#main{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  padding:20px 24px;
+  max-width:1200px;
+  margin:0 auto;
+  align-items:start;
+}
+#ai-wrap{padding:0 24px 32px;max-width:1200px;margin:0 auto;}
 
 /* ── Cards ── */
-.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
-.card-header{padding:16px 20px 0;}
-.card-body{padding:16px 20px 20px;}
-.card-sep{height:.5px;background:var(--border);margin:0 20px;}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;position:relative;}
+.card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,transparent 55%);pointer-events:none;border-radius:inherit;}
+.card-header{padding:15px 18px 0;}
+.card-body{padding:13px 18px 17px;}
+.card-sep{height:.5px;background:var(--border);margin:0 18px;}
 
 /* Section titles */
-.sec-emoji{font-size:20px;margin-right:8px;}
-.sec-title{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;}
-.sec-count{font-size:24px;font-weight:200;margin-right:4px;}
-.sec-unit{font-size:11px;color:var(--faint);}
-.sec-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;}
+.sec-emoji{font-size:17px;margin-right:7px;}
+.sec-title{font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:center;}
 
 /* ── Quick Add Form ── */
-.add-form{margin-top:12px;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.form-full{grid-column:1/-1;}
-.f-lbl{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px;}
-.f-inp{width:100%;background:var(--bg2);border:1.5px solid transparent;border-radius:var(--rsm);padding:9px 12px;font-size:13px;color:var(--ink);font-family:inherit;outline:none;transition:border-color .2s;}
+.add-form{margin-top:11px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;}
+.f-lbl{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:3px;}
+.f-inp{width:100%;background:var(--bg2);border:1.5px solid transparent;border-radius:var(--rsm);padding:8px 11px;font-size:13px;color:var(--ink);font-family:inherit;outline:none;transition:border-color .2s,background .2s;}
 .f-inp:focus{border-color:var(--coffee-l);background:#fff;}
-.f-inp.water-focus:focus{border-color:var(--water-l);}
+.f-inp.water-focus:focus{border-color:var(--water-l);background:#fff;}
 .f-inp::placeholder{color:var(--faint);}
-.preset-row{display:flex;gap:6px;margin-bottom:8px;}
-.preset-btn{flex:1;padding:8px 4px;border-radius:var(--rsm);border:1.5px solid var(--border);background:var(--bg2);font-family:inherit;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .18s;text-align:center;}
+.preset-row{display:flex;gap:5px;margin-bottom:8px;}
+.preset-btn{flex:1;padding:7px 4px;border-radius:var(--rsm);border:1.5px solid var(--border);background:var(--bg2);font-family:inherit;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .18s;text-align:center;}
 .preset-btn:hover,.preset-btn.sel{background:var(--water-tint2);border-color:var(--water-l);color:var(--water);}
-.add-btn{width:100%;padding:11px;border-radius:var(--rsm);border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;}
+.add-btn{width:100%;padding:10px;border-radius:var(--rsm);border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;}
 .add-btn-coffee{background:linear-gradient(135deg,var(--coffee-l),var(--coffee));color:#fff;}
-.add-btn-coffee:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(196,122,58,.3);}
+.add-btn-coffee:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(196,122,58,.28);}
 .add-btn-water{background:linear-gradient(135deg,var(--water-l),var(--water));color:#fff;}
-.add-btn-water:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.25);}
+.add-btn-water:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(74,127,165,.28);}
 
 /* ── Log List ── */
-.log-wrap{max-height:180px;overflow-y:auto;margin-top:12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.log-wrap{max-height:160px;overflow-y:auto;margin-top:11px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 .log-wrap::-webkit-scrollbar{width:3px;}
 .log-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-.log-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border);}
+.log-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:.5px solid var(--border);}
 .log-row:last-child{border-bottom:none;}
-.log-time{font-size:11px;color:var(--faint);min-width:40px;flex-shrink:0;}
+.log-time{font-size:11px;color:var(--faint);min-width:38px;flex-shrink:0;}
 .log-desc{flex:1;font-size:12px;color:var(--sub);line-height:1.4;}
 .log-price{font-size:11px;color:var(--faint);white-space:nowrap;}
-.log-thumb{width:34px;height:34px;border-radius:8px;object-fit:cover;flex-shrink:0;}
-.log-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:6px;flex-shrink:0;}
-.log-del:hover{color:var(--danger);background:rgba(220,38,38,.06);}
+.log-thumb{width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+.log-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:5px;flex-shrink:0;}
+.log-del:hover{color:var(--danger);background:rgba(192,57,43,.07);}
 .log-empty{font-size:12px;color:var(--faint);text-align:center;padding:12px 0;}
 
 /* ── Photo Box ── */
 .photo-wrap{display:flex;gap:10px;align-items:center;margin-bottom:8px;}
-#photo-box{width:60px;height:60px;border-radius:var(--rsm);background:var(--bg2);border:2px dashed rgba(196,122,58,.3);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s;}
+#photo-box{width:54px;height:54px;border-radius:var(--rsm);background:var(--bg2);border:1.5px dashed rgba(196,122,58,.3);display:flex;align-items:center;justify-content:center;font-size:21px;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s;}
 #photo-box:hover{border-color:var(--coffee-l);}
 #photo-box img{width:100%;height:100%;object-fit:cover;border-radius:calc(var(--rsm) - 2px);}
 
 /* ── Calendar Card ── */
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
 .cal-month{font-size:13px;font-weight:700;color:var(--ink);}
-.cal-nav{background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:2px 8px;border-radius:6px;}
+.cal-nav{background:none;border:none;color:var(--sub);cursor:pointer;font-size:15px;padding:2px 7px;border-radius:6px;}
 .cal-nav:hover{background:var(--bg2);}
 .cal-week-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px;}
-.cal-wday{font-size:9.5px;color:var(--faint);text-align:center;padding:2px 0;font-weight:600;}
+.cal-wday{font-size:9px;color:var(--faint);text-align:center;padding:2px 0;font-weight:600;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-cell{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px 1px;cursor:default;position:relative;overflow:hidden;background:var(--bg);transition:background .15s;}
-.cal-cell.today{outline:2px solid var(--coffee-l);}
-.cal-cell.today-w{outline:2px solid var(--water-l);}
+.cal-cell{aspect-ratio:1;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px 1px;cursor:default;position:relative;overflow:hidden;background:var(--bg);transition:background .15s;}
+.cal-cell.today{outline:1.5px solid var(--coffee-l);}
+.cal-cell.today-w{outline:1.5px solid var(--water-l);}
 .cal-cell.has-data{cursor:pointer;}
 .cal-cell:hover.has-data{background:var(--bg2);}
-.cal-num{font-size:10px;color:var(--sub);line-height:1;margin-top:2px;}
+.cal-num{font-size:9.5px;color:var(--sub);line-height:1;margin-top:2px;}
 .cal-cell.today .cal-num,.cal-cell.today-w .cal-num{font-weight:700;color:var(--ink);}
-/* Coffee cell indicators */
-.cal-cell.c1{background:rgba(196,122,58,.08);}
-.cal-cell.c2{background:rgba(196,122,58,.16);}
-.cal-cell.c3{background:rgba(196,122,58,.26);}
-.cal-cell.c4{background:rgba(196,122,58,.36);}
-/* Water cell indicators */
-.cal-cell.w-ok{background:rgba(34,161,106,.1);}
-.cal-cell.w-warn{background:rgba(217,119,6,.1);}
-.cal-cell.w-low{background:rgba(220,38,38,.08);}
+.cal-cell.c1{background:rgba(196,122,58,.09);}
+.cal-cell.c2{background:rgba(196,122,58,.18);}
+.cal-cell.c3{background:rgba(196,122,58,.28);}
+.cal-cell.c4{background:rgba(196,122,58,.38);}
+.cal-cell.w-ok{background:rgba(39,174,96,.1);}
+.cal-cell.w-warn{background:rgba(230,126,34,.1);}
+.cal-cell.w-low{background:rgba(192,57,43,.08);}
 .cal-cell.w-none{background:var(--bg);}
 .cal-badge{font-size:8px;font-weight:700;line-height:1;margin-top:1px;}
 .cal-badge-c{color:var(--coffee);}
@@ -130,49 +143,40 @@ body{
 .cal-badge-r{color:var(--danger);}
 .cal-legend{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
 .cal-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--faint);}
-.cal-leg-dot{width:8px;height:8px;border-radius:2px;}
+.cal-leg-dot{width:7px;height:7px;border-radius:2px;}
 
 /* ── AI Analysis Card ── */
-#ai-card{margin-top:0;}
-.ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:18px 22px 14px;}
-.ai-title{font-size:16px;font-weight:700;color:var(--ink);}
-.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:100px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;transition:all .18s;}
-.ai-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(124,58,237,.3);}
-.ai-btn:disabled{opacity:.5;cursor:default;}
-.ai-body{padding:0 22px 22px;}
-.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.ai-stat-card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:12px 14px;}
+.ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
+.ai-title{font-size:15px;font-weight:700;color:var(--ink);}
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:100px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#8b7898,#5c4a6e);color:#fff;transition:all .18s;}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(92,74,110,.28);}
+.ai-btn:disabled{opacity:.5;cursor:default;transform:none;}
+.ai-body{padding:0 20px 20px;}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.ai-stat-card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:10px 12px;}
 .ai-stat-lbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:4px;}
-.ai-stat-val{font-size:22px;font-weight:200;color:var(--ink);}
+.ai-stat-val{font-size:22px;font-weight:300;color:var(--ink);}
 .ai-stat-unit{font-size:11px;color:var(--faint);margin-left:3px;}
-.ai-result{background:var(--bg);border:.5px solid var(--border);border-radius:var(--r);padding:16px;font-size:13px;line-height:1.85;color:var(--sub);white-space:pre-wrap;}
-.ai-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+.ai-result{background:var(--bg);border:.5px solid var(--border);border-radius:var(--r);padding:14px;font-size:13px;line-height:1.85;color:var(--sub);white-space:pre-wrap;}
+.ai-spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── Day Detail Panel ── */
-#day-detail{
-  position:fixed;inset:0;z-index:500;
-  background:rgba(30,20,10,.4);backdrop-filter:blur(8px);
-  display:flex;align-items:center;justify-content:center;
-}
-.dd-panel{
-  background:#fff;border-radius:var(--r);padding:24px;
-  width:min(92vw,400px);max-height:80vh;overflow-y:auto;
-  box-shadow:var(--shadow-lg);
-}
-.dd-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+#day-detail{position:fixed;inset:0;z-index:500;background:rgba(40,38,32,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;}
+.dd-panel{background:var(--card);border-radius:var(--r);padding:22px;width:min(92vw,380px);max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg);border:.5px solid var(--border);}
+.dd-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;color:var(--ink);}
 .dd-cls{background:none;border:none;color:var(--faint);cursor:pointer;font-size:18px;}
-.dd-entry{padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px;color:var(--sub);}
+.dd-entry{padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px;color:var(--sub);}
 .dd-entry:last-child{border-bottom:none;}
 
 /* ── Responsive ── */
-@media(max-width:760px){
-  #main{grid-template-columns:1fr;gap:16px;padding:16px;}
+@media(max-width:680px){
+  #main{grid-template-columns:1fr;gap:14px;padding:14px 16px;}
   #ai-wrap{padding:0 16px 28px;}
   .form-grid{grid-template-columns:1fr;}
   .ai-grid{grid-template-columns:1fr;}
   #topbar{padding:0 16px;}
-  #today-pills{display:none;}
+  .today-pill{display:none;}
 }
 </style>
 </head>
@@ -182,132 +186,123 @@ body{
 <div id="topbar">
   <button class="back-btn" onclick="window.open('./index.html','_self')">← Control Center</button>
   <div id="topbar-title">☕ Refueler 💧</div>
-  <div id="today-pills">
+  <div id="topbar-right">
+    <div class="sync-pill sync-idle" id="sync-pill">☁ 同步</div>
     <div class="today-pill tp-coffee" id="tp-coffee">☕ — 杯</div>
     <div class="today-pill tp-water" id="tp-water">💧 — ml</div>
   </div>
 </div>
 
-<!-- Main 2-Column -->
+<!-- Main 2-Column Grid (4 direct children → auto-aligned rows) -->
 <div id="main">
 
-  <!-- COFFEE COLUMN -->
-  <div>
-    <!-- Quick Add Coffee -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header">
-        <div class="sec-title"><span class="sec-emoji">☕</span>Coffee 咖啡記錄</div>
-      </div>
-      <div class="card-body">
-        <!-- Photo -->
-        <div class="photo-wrap">
-          <div id="photo-box" onclick="document.getElementById('photo-inp').click()">📷</div>
-          <div style="flex:1;">
-            <div class="f-lbl">照片（可選）</div>
-            <div style="font-size:11px;color:var(--faint);line-height:1.6;">點擊上傳咖啡照片<br>支援 JPG / PNG</div>
-          </div>
-        </div>
-        <input type="file" id="photo-inp" accept="image/*" style="display:none;" onchange="onPhoto(this)"/>
-        <!-- Fields -->
-        <div class="add-form">
-          <div class="form-grid">
-            <div>
-              <label class="f-lbl">店名 Café</label>
-              <input class="f-inp" id="c-cafe" placeholder="路易莎、星巴克…"/>
-            </div>
-            <div>
-              <label class="f-lbl">品項 Item</label>
-              <input class="f-inp" id="c-item" placeholder="拿鐵、美式…"/>
-            </div>
-            <div>
-              <label class="f-lbl">甜點 Dessert</label>
-              <input class="f-inp" id="c-dessert" placeholder="馬卡龍、司康…"/>
-            </div>
-            <div>
-              <label class="f-lbl">價格 Price (NT$)</label>
-              <input class="f-inp" id="c-price" type="number" min="0" placeholder="120"/>
-            </div>
-          </div>
-          <button class="add-btn add-btn-coffee" onclick="addCoffee()">+ 記錄咖啡</button>
-        </div>
-        <!-- Today Log -->
-        <div class="card-sep" style="margin:14px -20px;"></div>
-        <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
-        <div class="log-wrap" id="coffee-log"></div>
-      </div>
+  <!-- ① Coffee Add Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="sec-title"><span class="sec-emoji">☕</span>Coffee 咖啡記錄</div>
     </div>
-
-    <!-- Coffee Calendar -->
-    <div class="card">
-      <div class="card-body">
-        <div class="cal-header">
-          <div class="cal-month" id="c-cal-title"></div>
-          <div style="display:flex;gap:2px;">
-            <button class="cal-nav" onclick="cCalPrev()">‹</button>
-            <button class="cal-nav" onclick="cCalNext()">›</button>
+    <div class="card-body">
+      <div class="photo-wrap">
+        <div id="photo-box" onclick="document.getElementById('photo-inp').click()">📷</div>
+        <div style="flex:1;">
+          <div class="f-lbl">照片（可選）</div>
+          <div style="font-size:11px;color:var(--faint);line-height:1.6;">點擊上傳咖啡照片<br>支援 JPG / PNG</div>
+        </div>
+      </div>
+      <input type="file" id="photo-inp" accept="image/*" style="display:none;" onchange="onPhoto(this)"/>
+      <div class="add-form">
+        <div class="form-grid">
+          <div>
+            <label class="f-lbl">店名 Café</label>
+            <input class="f-inp" id="c-cafe" placeholder="路易莎、星巴克…"/>
+          </div>
+          <div>
+            <label class="f-lbl">品項 Item</label>
+            <input class="f-inp" id="c-item" placeholder="拿鐵、美式…"/>
+          </div>
+          <div>
+            <label class="f-lbl">甜點 Dessert</label>
+            <input class="f-inp" id="c-dessert" placeholder="馬卡龍、司康…"/>
+          </div>
+          <div>
+            <label class="f-lbl">價格 Price (NT$)</label>
+            <input class="f-inp" id="c-price" type="number" min="0" placeholder="120"/>
           </div>
         </div>
-        <div class="cal-week-header">
-          <div class="cal-wday">日</div><div class="cal-wday">一</div><div class="cal-wday">二</div>
-          <div class="cal-wday">三</div><div class="cal-wday">四</div><div class="cal-wday">五</div><div class="cal-wday">六</div>
+        <button class="add-btn add-btn-coffee" onclick="addCoffee()">+ 記錄咖啡</button>
+      </div>
+      <div class="card-sep" style="margin:13px -18px;"></div>
+      <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
+      <div class="log-wrap" id="coffee-log"></div>
+    </div>
+  </div>
+
+  <!-- ② Water Add Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="sec-title"><span class="sec-emoji">💧</span>Water 水分記錄</div>
+    </div>
+    <div class="card-body">
+      <div class="add-form">
+        <div class="f-lbl">預設水量</div>
+        <div class="preset-row" id="preset-row">
+          <button class="preset-btn" id="pw-150" onclick="pickW(150)">150<br><span style="font-size:9px;font-weight:400;">cc</span></button>
+          <button class="preset-btn" id="pw-250" onclick="pickW(250)">250<br><span style="font-size:9px;font-weight:400;">cc</span></button>
+          <button class="preset-btn" id="pw-350" onclick="pickW(350)">350<br><span style="font-size:9px;font-weight:400;">cc</span></button>
+          <button class="preset-btn" id="pw-500" onclick="pickW(500)">500<br><span style="font-size:9px;font-weight:400;">cc</span></button>
         </div>
-        <div class="cal-grid" id="c-cal-grid"></div>
-        <div class="cal-legend">
-          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(196,122,58,.08);"></div>1杯</div>
-          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(196,122,58,.26);"></div>3杯</div>
-          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(196,122,58,.36);"></div>4+杯</div>
+        <label class="f-lbl">自訂攝取量 (cc / ml)</label>
+        <input class="f-inp water-focus" id="w-amount" type="number" min="50" max="2000" value="250" placeholder="250" style="margin-bottom:10px;"/>
+        <button class="add-btn add-btn-water" onclick="addWater()">+ 記錄水分</button>
+      </div>
+      <div class="card-sep" style="margin:13px -18px;"></div>
+      <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
+      <div class="log-wrap" id="water-log"></div>
+    </div>
+  </div>
+
+  <!-- ③ Coffee Calendar -->
+  <div class="card">
+    <div class="card-body">
+      <div class="cal-header">
+        <div class="cal-month" id="c-cal-title"></div>
+        <div style="display:flex;gap:2px;">
+          <button class="cal-nav" onclick="cCalPrev()">‹</button>
+          <button class="cal-nav" onclick="cCalNext()">›</button>
         </div>
+      </div>
+      <div class="cal-week-header">
+        <div class="cal-wday">日</div><div class="cal-wday">一</div><div class="cal-wday">二</div>
+        <div class="cal-wday">三</div><div class="cal-wday">四</div><div class="cal-wday">五</div><div class="cal-wday">六</div>
+      </div>
+      <div class="cal-grid" id="c-cal-grid"></div>
+      <div class="cal-legend">
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(196,122,58,.09);"></div>1杯</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(196,122,58,.28);"></div>3杯</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(196,122,58,.38);"></div>4+杯</div>
       </div>
     </div>
   </div>
 
-  <!-- WATER COLUMN -->
-  <div>
-    <!-- Quick Add Water -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header">
-        <div class="sec-title"><span class="sec-emoji">💧</span>Water 水分記錄</div>
+  <!-- ④ Water Calendar -->
+  <div class="card">
+    <div class="card-body">
+      <div class="cal-header">
+        <div class="cal-month" id="w-cal-title"></div>
+        <div style="display:flex;gap:2px;">
+          <button class="cal-nav" onclick="wCalPrev()">‹</button>
+          <button class="cal-nav" onclick="wCalNext()">›</button>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="add-form">
-          <div class="f-lbl">預設水量</div>
-          <div class="preset-row" id="preset-row">
-            <button class="preset-btn" id="pw-150" onclick="pickW(150)">150<br><span style="font-size:9px;font-weight:400;">cc</span></button>
-            <button class="preset-btn" id="pw-250" onclick="pickW(250)">250<br><span style="font-size:9px;font-weight:400;">cc</span></button>
-            <button class="preset-btn" id="pw-350" onclick="pickW(350)">350<br><span style="font-size:9px;font-weight:400;">cc</span></button>
-            <button class="preset-btn" id="pw-500" onclick="pickW(500)">500<br><span style="font-size:9px;font-weight:400;">cc</span></button>
-          </div>
-          <label class="f-lbl">自訂攝取量 (cc / ml)</label>
-          <input class="f-inp water-focus" id="w-amount" type="number" min="50" max="2000" value="250" placeholder="250" style="margin-bottom:10px;"/>
-          <button class="add-btn add-btn-water" onclick="addWater()">+ 記錄水分</button>
-        </div>
-        <!-- Today Log -->
-        <div class="card-sep" style="margin:14px -20px;"></div>
-        <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
-        <div class="log-wrap" id="water-log"></div>
+      <div class="cal-week-header">
+        <div class="cal-wday">日</div><div class="cal-wday">一</div><div class="cal-wday">二</div>
+        <div class="cal-wday">三</div><div class="cal-wday">四</div><div class="cal-wday">五</div><div class="cal-wday">六</div>
       </div>
-    </div>
-
-    <!-- Water Calendar -->
-    <div class="card">
-      <div class="card-body">
-        <div class="cal-header">
-          <div class="cal-month" id="w-cal-title"></div>
-          <div style="display:flex;gap:2px;">
-            <button class="cal-nav" onclick="wCalPrev()">‹</button>
-            <button class="cal-nav" onclick="wCalNext()">›</button>
-          </div>
-        </div>
-        <div class="cal-week-header">
-          <div class="cal-wday">日</div><div class="cal-wday">一</div><div class="cal-wday">二</div>
-          <div class="cal-wday">三</div><div class="cal-wday">四</div><div class="cal-wday">五</div><div class="cal-wday">六</div>
-        </div>
-        <div class="cal-grid" id="w-cal-grid"></div>
-        <div class="cal-legend">
-          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(34,161,106,.1);"></div>≥2000ml</div>
-          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(217,119,6,.1);"></div>1000-1999ml</div>
-          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(220,38,38,.08);"></div>&lt;1000ml</div>
-        </div>
+      <div class="cal-grid" id="w-cal-grid"></div>
+      <div class="cal-legend">
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(39,174,96,.1);"></div>≥2000ml</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(230,126,34,.1);"></div>1000–1999ml</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(192,57,43,.08);"></div>&lt;1000ml</div>
       </div>
     </div>
   </div>
@@ -316,7 +311,7 @@ body{
 
 <!-- AI Analysis Card -->
 <div id="ai-wrap">
-  <div class="card" id="ai-card">
+  <div class="card">
     <div class="ai-header">
       <div>
         <div class="ai-title">✨ AI 攝取健康分析</div>
@@ -327,7 +322,6 @@ body{
         <span id="ai-btn-txt">生成 AI 分析</span>
       </button>
     </div>
-    <!-- Stats summary row -->
     <div class="ai-body">
       <div class="ai-grid" id="ai-stats"></div>
       <div id="ai-result" style="display:none;"></div>
@@ -342,15 +336,76 @@ body{
 
 <script>
 'use strict';
-const RF_KEY='refueler_v1', GROQ_KEY='groq_key';
+const RF_KEY='refueler_v1', GROQ_KEY='groq_key', GIST_FILE='refueler_data.json';
 const MN=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+let _syncTimer=null;
 
 // ── DATA ──
 function loadRF(){try{return JSON.parse(localStorage.getItem(RF_KEY))||{entries:[]};}catch{return{entries:[]};}}
-function saveRF(d){localStorage.setItem(RF_KEY,JSON.stringify(d));}
+function saveRF(d){
+  localStorage.setItem(RF_KEY,JSON.stringify(d));
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>syncToGist(d),3000);
+}
 
 function todayStr(){return new Date().toDateString();}
 function todayEntries(){const d=loadRF();return(d.entries||[]).filter(e=>new Date(e.timestamp).toDateString()===todayStr());}
+
+// ── GIST SYNC ──
+function setSyncStatus(state,msg){
+  const p=document.getElementById('sync-pill');
+  if(!p)return;
+  p.className='sync-pill '+({idle:'sync-idle',ing:'sync-ing',ok:'sync-ok',err:'sync-err'}[state]||'sync-idle');
+  p.textContent=msg;
+}
+
+async function syncToGist(data){
+  const pat=localStorage.getItem('gh_pat')||'';
+  const gist=localStorage.getItem('gist_id')||'';
+  if(!pat||!gist){setSyncStatus('idle','☁ 未設定');return;}
+  setSyncStatus('ing','↑ 同步中');
+  try{
+    const r=await fetch('https://api.github.com/gists/'+gist,{
+      method:'PATCH',
+      headers:{'Authorization':'token '+pat,'Content-Type':'application/json'},
+      body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data)}}})
+    });
+    if(!r.ok)throw new Error(r.status);
+    setSyncStatus('ok','☁ 已同步');
+  }catch(e){
+    setSyncStatus('err','⚠ 同步失敗');
+  }
+}
+
+async function loadFromGist(){
+  const pat=localStorage.getItem('gh_pat')||'';
+  const gist=localStorage.getItem('gist_id')||'';
+  if(!pat||!gist){setSyncStatus('idle','☁ 未設定');return;}
+  setSyncStatus('ing','↓ 載入中');
+  try{
+    const r=await fetch('https://api.github.com/gists/'+gist,{
+      headers:{'Authorization':'token '+pat}
+    });
+    if(!r.ok)throw new Error(r.status);
+    const j=await r.json();
+    const content=j.files?.[GIST_FILE]?.content;
+    if(content){
+      const remote=JSON.parse(content);
+      // Merge: combine all entries, deduplicate by id (local + remote)
+      const local=loadRF();
+      const seen=new Set();
+      const merged=[...(remote.entries||[]),...(local.entries||[])].filter(e=>{
+        if(seen.has(e.id))return false;
+        seen.add(e.id);
+        return true;
+      });
+      localStorage.setItem(RF_KEY,JSON.stringify({entries:merged}));
+    }
+    setSyncStatus('ok','☁ 已同步');
+  }catch(e){
+    setSyncStatus('err','⚠ 載入失敗');
+  }
+}
 
 // ── TOP PILLS ──
 function updatePills(){
@@ -369,7 +424,7 @@ function onPhoto(inp){
   r.onload=e=>{
     pendingPhoto=e.target.result;
     const box=document.getElementById('photo-box');
-    box.innerHTML=`<img src="${pendingPhoto}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;"/>`;
+    box.innerHTML=`<img src="${pendingPhoto}" style="width:54px;height:54px;object-fit:cover;border-radius:7px;"/>`;
   };
   r.readAsDataURL(f);
 }
@@ -383,7 +438,6 @@ function addCoffee(){
   const d=loadRF();
   d.entries.push({id:'rf_'+Date.now(),type:'coffee',cafe,item,dessert,price,photo:pendingPhoto||null,timestamp:new Date().toISOString()});
   saveRF(d);
-  // Reset form
   ['c-cafe','c-item','c-dessert','c-price'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   pendingPhoto=null;
   document.getElementById('photo-box').innerHTML='📷';
@@ -442,8 +496,7 @@ let cCalY=new Date().getFullYear(),cCalM=new Date().getMonth();
 let wCalY=new Date().getFullYear(),wCalM=new Date().getMonth();
 
 function buildDateMap(type){
-  const d=loadRF();
-  const map={};
+  const d=loadRF();const map={};
   (d.entries||[]).filter(e=>e.type===type).forEach(e=>{
     const k=new Date(e.timestamp).toDateString();
     if(!map[k])map[k]=[];
@@ -458,20 +511,16 @@ function renderCoffeeCalendar(){
   const first=new Date(cCalY,cCalM,1).getDay();
   const daysN=new Date(cCalY,cCalM+1,0).getDate();
   document.getElementById('c-cal-title').textContent=cCalY+' · '+MN[cCalM];
-
   const blanks='<div class="cal-cell" style="background:transparent;"></div>'.repeat(first);
   const cells=Array.from({length:daysN},(_,i)=>{
     const d=i+1;
     const key=new Date(cCalY,cCalM,d).toDateString();
-    const es=map[key]||[];
-    const n=es.length;
+    const es=map[key]||[];const n=es.length;
     const isT=today.getFullYear()===cCalY&&today.getMonth()===cCalM&&today.getDate()===d;
     const cls=n===0?'':n===1?'c1':n===2?'c2':n===3?'c3':'c4';
     const badge=n?`<span class="cal-badge cal-badge-c">${n}☕</span>`:'';
     const clickFn=n?`onclick="showDayDetail('${key}','coffee')"`:'' ;
-    return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}>
-      <span class="cal-num">${d}</span>${badge}
-    </div>`;
+    return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}</div>`;
   }).join('');
   document.getElementById('c-cal-grid').innerHTML=blanks+cells;
 }
@@ -484,7 +533,6 @@ function renderWaterCalendar(){
   const first=new Date(wCalY,wCalM,1).getDay();
   const daysN=new Date(wCalY,wCalM+1,0).getDate();
   document.getElementById('w-cal-title').textContent=wCalY+' · '+MN[wCalM];
-
   const blanks='<div class="cal-cell" style="background:transparent;"></div>'.repeat(first);
   const cells=Array.from({length:daysN},(_,i)=>{
     const d=i+1;
@@ -498,9 +546,7 @@ function renderWaterCalendar(){
     else if(total>0){cls='w-low';badge=total+'ml';bc='cal-badge-r';}
     const badgeHtml=badge?`<span class="cal-badge ${bc}">${badge}</span>`:'';
     const clickFn=total?`onclick="showDayDetail('${key}','water')"`:'' ;
-    return`<div class="cal-cell ${cls} ${isT?'today-w':''} ${total?'has-data':''}" ${clickFn}>
-      <span class="cal-num">${d}</span>${badgeHtml}
-    </div>`;
+    return`<div class="cal-cell ${cls} ${isT?'today-w':''} ${total?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badgeHtml}</div>`;
   }).join('');
   document.getElementById('w-cal-grid').innerHTML=blanks+cells;
 }
@@ -517,16 +563,12 @@ function showDayDetail(key,type){
     rows=es.map(e=>{
       const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
       const parts=[e.cafe,e.item,e.dessert].filter(Boolean);
-      return`<div class="dd-entry">
-        <span style="color:var(--faint);font-size:11px;">${t}</span><br>
-        <span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>
-        ${e.price?` <span style="color:var(--faint);">NT$${e.price}</span>`:''}
-        ${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}
+      return`<div class="dd-entry"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>${e.price?` <span style="color:var(--faint);">NT$${e.price}</span>`:''}${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}
       </div>`;
     }).join('');
-  } else {
+  }else{
     const total=es.reduce((s,e)=>s+(e.amount||0),0);
-    rows=`<div style="font-size:20px;font-weight:200;color:var(--water);margin-bottom:12px;">${total} <span style="font-size:13px;">ml 總計</span></div>`;
+    rows=`<div style="font-size:20px;font-weight:300;color:var(--water);margin-bottom:12px;">${total} <span style="font-size:13px;">ml 總計</span></div>`;
     rows+=es.map(e=>{
       const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
       return`<div class="dd-entry">${t} — ${e.amount||250} ml</div>`;
@@ -542,26 +584,22 @@ function closeDayDetail(){document.getElementById('day-detail').style.display='n
 
 // ── AI STATS ──
 function renderAIStats(){
-  const d=loadRF();
-  const all=d.entries||[];
-  const today=new Date();
-  const todayStr=today.toDateString();
+  const d=loadRF();const all=d.entries||[];
+  const today=new Date();const todayStr=today.toDateString();
   const week=[];for(let i=6;i>=0;i--){const dt=new Date(today);dt.setDate(today.getDate()-i);week.push(dt.toDateString());}
-
   const todayCoffee=all.filter(e=>e.type==='coffee'&&new Date(e.timestamp).toDateString()===todayStr).length;
   const todayWater=all.filter(e=>e.type==='water'&&new Date(e.timestamp).toDateString()===todayStr).reduce((s,e)=>s+(e.amount||0),0);
   const weekCoffee=Math.round(all.filter(e=>e.type==='coffee'&&week.includes(new Date(e.timestamp).toDateString())).length/7*10)/10;
   const weekWater=Math.round(all.filter(e=>e.type==='water'&&week.includes(new Date(e.timestamp).toDateString())).reduce((s,e)=>s+(e.amount||0),0)/7);
   const coffeeColor=todayCoffee<=3?'var(--ok)':todayCoffee<=4?'var(--warn)':'var(--danger)';
   const waterColor=todayWater>=2000?'var(--ok)':todayWater>=1000?'var(--warn)':'var(--danger)';
-
   document.getElementById('ai-stats').innerHTML=`
-    <div class="ai-stat-card" style="border-left:3px solid var(--coffee-l);">
+    <div class="ai-stat-card" style="border-left:2.5px solid var(--coffee-l);">
       <div class="ai-stat-lbl">☕ 今日咖啡</div>
       <div class="ai-stat-val" style="color:${coffeeColor};">${todayCoffee}<span class="ai-stat-unit">杯</span></div>
       <div style="font-size:11px;color:var(--faint);margin-top:3px;">7日均 ${weekCoffee} 杯/天</div>
     </div>
-    <div class="ai-stat-card" style="border-left:3px solid var(--water-l);">
+    <div class="ai-stat-card" style="border-left:2.5px solid var(--water-l);">
       <div class="ai-stat-lbl">💧 今日水分</div>
       <div class="ai-stat-val" style="color:${waterColor};">${todayWater}<span class="ai-stat-unit">ml</span></div>
       <div style="font-size:11px;color:var(--faint);margin-top:3px;">7日均 ${weekWater} ml/天</div>
@@ -576,17 +614,13 @@ async function runAI(){
   const spinner=document.getElementById('ai-spinner');
   const txt=document.getElementById('ai-btn-txt');
   const res=document.getElementById('ai-result');
-
   if(!key){
     res.style.display='block';
     res.innerHTML='<div style="font-size:13px;color:var(--faint);text-align:center;padding:12px;">請先在 Control Center ⚙️ > API設定 填入 Groq API Key</div>';
     return;
   }
-
   btn.disabled=true;spinner.style.display='block';txt.textContent='分析中…';
-
   const d=loadRF();const all=d.entries||[];
-  const today=new Date();const todayStr=today.toDateString();
   const recentEntries=all.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,60);
   const summary=recentEntries.map(e=>{
     const dt=new Date(e.timestamp);
@@ -595,19 +629,14 @@ async function runAI(){
     if(e.type==='coffee'){
       const parts=[e.cafe,e.item,e.dessert].filter(Boolean);
       return`[${dl} ${tl}] ☕ ${parts.join('/')|| '咖啡'}${e.price?' NT$'+e.price:''}`;
-    }else{
-      return`[${dl} ${tl}] 💧 水 ${e.amount||250}ml`;
-    }
+    }else{return`[${dl} ${tl}] 💧 水 ${e.amount||250}ml`;}
   }).join('\n');
-
   const prompt=`你是溫暖的健康顧問，擅長分析飲食與生理代謝。以下是用戶近期攝取記錄（最多60筆）：\n\n${summary}\n\n請用繁體中文分析（語氣親切像好友，每段2-3句）：\n\n1. ☕ 咖啡模式分析\n   - 攝取時機、頻率是否合理\n   - 是否有下午咖啡因過晚的情況\n   - 甜點搭配對血糖的影響\n\n2. 💧 水分攝取評估\n   - 每日平均量是否達標（建議2000ml）\n   - 飲水分佈時機是否均勻\n\n3. ⚖️ 咖啡 vs 水分 健康對比\n   - 兩者的比例是否平衡\n   - 咖啡利尿效應的補償建議\n\n4. 🌿 最重要的一個改善行動`;
-
   try{
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.75})});
     if(!resp.ok)throw new Error('API '+resp.status);
     const result=await resp.json();
-    res.style.display='block';
-    res.className='ai-result';
+    res.style.display='block';res.className='ai-result';
     res.textContent=result.choices?.[0]?.message?.content||'（無回應）';
   }catch(e){
     res.style.display='block';
@@ -619,15 +648,14 @@ async function runAI(){
 // ── REFRESH ──
 function refresh(){
   updatePills();
-  renderCoffeeLog();
-  renderWaterLog();
-  renderCoffeeCalendar();
-  renderWaterCalendar();
+  renderCoffeeLog();renderWaterLog();
+  renderCoffeeCalendar();renderWaterCalendar();
   renderAIStats();
 }
 
 // ── INIT ──
-refresh();
+refresh(); // 先從 localStorage 立即渲染
+loadFromGist().then(refresh); // 再從 Gist 更新最新資料
 </script>
 </body>
 </html>
