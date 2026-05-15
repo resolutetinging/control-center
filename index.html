@@ -223,26 +223,15 @@ body{position:relative;}
 input[type=range]{width:100%;height:4px;border-radius:3px;background:rgba(40,38,32,.15);-webkit-appearance:none;cursor:pointer;outline:none;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--deep);box-shadow:0 2px 8px rgba(40,38,32,.15);}
 
-/* ── Guard Cat (keep dramatic) ── */
-#guard-overlay{
-  position:fixed;inset:0;z-index:9999;
-  background:rgba(20,16,12,.92);backdrop-filter:blur(10px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-}
-#cat-stage{position:relative;display:flex;align-items:center;justify-content:center;width:100%;}
-#big-cat{line-height:1;filter:drop-shadow(0 0 60px rgba(255,200,100,.35));animation:catRise 1.3s cubic-bezier(.175,.885,.32,1.275) forwards,catFloat 4s ease-in-out 1.3s infinite;display:flex;align-items:center;justify-content:center;font-size:min(34vw,300px);}
-#big-cat img{max-width:min(55vw,360px);max-height:55vh;object-fit:contain;border-radius:20px;box-shadow:0 20px 80px rgba(0,0,0,.5);}
-@keyframes catRise{from{transform:translateY(100vh) scale(.6);}to{transform:translateY(0) scale(1);}}
-#cat-speech{position:absolute;top:5%;right:10%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:12px 18px;font-size:15px;color:rgba(255,255,255,.88);line-height:1.6;animation:fadeUp .5s 1.4s both;max-width:200px;}
-@keyframes fadeUp{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
-#guard-ctrl{display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 20px;animation:fadeUp .5s 1.9s both;}
-#guard-msg{font-size:18px;font-weight:500;color:rgba(255,255,255,.82);text-align:center;max-width:340px;line-height:1.5;}
-#rest-btn{background:linear-gradient(135deg,#E8A87C,#C07050);border:none;border-radius:100px;padding:16px 52px;font-family:inherit;font-size:17px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 8px 32px rgba(200,100,60,.35);transition:transform .2s;}
-#rest-btn:hover{transform:scale(1.06);}
-#break-cd{font-size:66px;font-weight:200;color:rgba(255,255,255,.88);letter-spacing:-2px;text-align:center;display:none;}
-#break-lbl{font-size:13px;color:rgba(255,255,255,.42);text-align:center;margin-top:-6px;display:none;}
-#resume-btn{display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:12px 36px;font-family:inherit;font-size:15px;color:rgba(255,255,255,.7);cursor:pointer;}
-#resume-btn:hover{background:rgba(255,255,255,.18);}
+/* ── Guard Overlay ── */
+#guard-overlay{position:fixed;inset:0;z-index:9999;cursor:pointer;}
+#cat-stage{position:absolute;inset:0;}
+#big-cat{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#big-cat img{width:100%;height:100%;object-fit:cover;}
+#big-cat svg{width:100%;height:100%;}
+@keyframes catRise{from{opacity:0;transform:scale(1.08);}to{opacity:1;transform:scale(1);}}
+#cat-speech{display:none!important;}
+#guard-ctrl{display:none!important;}
 
 /* ── SAS Modal ── */
 .m-ov{position:fixed;inset:0;background:rgba(40,38,32,.3);backdrop-filter:blur(10px);z-index:800;display:flex;align-items:center;justify-content:center;}
@@ -281,7 +270,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 <div id="guard-pill" onclick="openSettings('guard')">
   <span id="guard-dot"></span>
-  <span id="guard-txt">Guard Cat 監控中</span>
+  <span id="guard-txt">Guard · 監控中</span>
 </div>
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
@@ -352,7 +341,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <button class="s-tab on" data-tab="appearance" onclick="switchTab('appearance')"><span class="s-tab-ic">🖼</span>外觀</button>
       <button class="s-tab" data-tab="links" onclick="switchTab('links')"><span class="s-tab-ic">🔗</span>連結管理</button>
       <div class="s-cat">系統</div>
-      <button class="s-tab" data-tab="guard" onclick="switchTab('guard')"><span class="s-tab-ic">🐱</span>Guard Cat</button>
+      <button class="s-tab" data-tab="guard" onclick="switchTab('guard')"><span class="s-tab-ic">🐱</span>Guard</button>
       <button class="s-tab" data-tab="linkedin" onclick="switchTab('linkedin')"><span class="s-tab-ic">💼</span>LinkedIn</button>
       <button class="s-tab" data-tab="api" onclick="switchTab('api')"><span class="s-tab-ic">🔑</span>API 設定</button>
     </div>
@@ -360,19 +349,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   </div>
 </div>
 
-<!-- Guard Cat Overlay -->
-<div id="guard-overlay" style="display:none;">
+<!-- Guard Overlay -->
+<div id="guard-overlay" style="display:none;" onclick="endBreak()">
   <div id="cat-stage">
     <div id="big-cat">🐱</div>
-    <!-- cat img injected by JS when URL is set -->
-    <div id="cat-speech">喵！你已經工作很久了<br>是時候休息一下 🌿</div>
+    <div id="cat-speech"></div>
   </div>
   <div id="guard-ctrl">
     <div id="guard-msg"></div>
-    <button id="rest-btn" onclick="startBreak()">先去休息 🌿</button>
+    <button id="rest-btn" onclick="startBreak()"></button>
     <div id="break-cd"></div>
     <div id="break-lbl"></div>
-    <button id="resume-btn" onclick="endBreak()">我回來了 ✓</button>
+    <button id="resume-btn" onclick="endBreak()"></button>
   </div>
 </div>
 
@@ -854,7 +842,7 @@ function renderTab(tab){
     const catUrl=localStorage.getItem('cc_cat_gif')||'';
     const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower+'%':(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower+'%':'—');
     el.innerHTML=`
-      <div class="s-title">Guard Cat 設定</div>
+      <div class="s-title">Guard 設定</div>
       <div class="s-sec">
         <div class="s-lbl">今日戰力（自動讀取）</div>
         <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${cpDisplay}</div>
@@ -863,12 +851,12 @@ function renderTab(tab){
         <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
       </div>
       <div class="s-sec">
-        <div class="s-lbl">貓貓介入時長（Guard Cat Working Time）</div>
+        <div class="s-lbl">貓貓介入時長（Guard Working Time）</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <input class="s-inp" type="number" id="gs-work" min="1" max="60" value="${workTime}" style="width:80px;"/>
           <span style="font-size:13px;color:var(--faint);">分鐘</span>
         </div>
-        <div class="s-lbl">跳過後冷卻時間（Duration for Skip Guard Cat）</div>
+        <div class="s-lbl">跳過後冷卻時間（Duration for Skip Guard）</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <input class="s-inp" type="number" id="gs-skip" min="5" max="240" value="${skipDur}" style="width:80px;"/>
           <span style="font-size:13px;color:var(--faint);">分鐘</span>
@@ -979,8 +967,8 @@ function checkGuard(){
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
   if(stamina<40||now>end2){triggerGuard();}
-  else if(stamina<60){dot.className='warn';txt.textContent='Guard Cat · 注意';gState='monitoring';}
-  else{dot.className='';txt.textContent='Guard Cat · 監控中';gState='monitoring';}
+  else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
+  else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
 }
 function renderCatDisplay(){
   const url=localStorage.getItem('cc_cat_gif')||'';
@@ -999,31 +987,20 @@ function triggerGuard(){
   const{stamina,endTime,workTime}=getEffective();
   const msgs=stamina<40?'戰力剩 '+stamina+'%，需要充電了！':'已過 '+endTime+'，該歇歇了！';
   const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
-  document.getElementById('guard-msg').textContent=msgs;
-  document.getElementById('cat-speech').innerHTML=cats[Math.floor(Math.random()*cats.length)];
-  document.getElementById('rest-btn').style.display='block';
-  document.getElementById('rest-btn').textContent=`先去休息 ${workTime} 分鐘 🌿`;
-  document.getElementById('break-cd').style.display=document.getElementById('break-lbl').style.display=document.getElementById('resume-btn').style.display='none';
   renderCatDisplay();
   const cat=document.getElementById('big-cat');
   cat.style.animation='none';void cat.offsetWidth;
-  cat.style.animation='catRise 1.5s cubic-bezier(.175,.885,.32,1.275) forwards';
-  document.getElementById('guard-overlay').style.display='flex';
+  cat.style.animation='catRise 1.2s ease forwards';
+  document.getElementById('guard-overlay').style.display='block';
   document.getElementById('guard-dot').className='alert';
-  document.getElementById('guard-txt').textContent='執法中 🐱';
+  document.getElementById('guard-txt').textContent='執法中';
 }
 function startBreak(){
   gState='resting';
   const{workTime}=getEffective();
-  document.getElementById('rest-btn').style.display='none';
-  document.getElementById('guard-msg').textContent=`好好休息 🌿 ${workTime}分鐘後回來`;
-  const cdEl=document.getElementById('break-cd'),lbEl=document.getElementById('break-lbl');
-  cdEl.style.display=lbEl.style.display='block';
-  let secs=workTime*60;
-  function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-  cdEl.textContent=fmt(secs);lbEl.textContent='請離開座位休息';
   if(cdIv)clearInterval(cdIv);
-  cdIv=setInterval(()=>{secs--;cdEl.textContent=fmt(secs);if(secs<=60)lbEl.textContent='快好了，再'+secs+'秒…';if(secs<=0){clearInterval(cdIv);endBreak();}},1000);
+  let secs=workTime*60;
+  cdIv=setInterval(()=>{secs--;if(secs<=0){clearInterval(cdIv);endBreak();}},1000);
 }
 function endBreak(){
   if(cdIv){clearInterval(cdIv);cdIv=null;}
@@ -1032,7 +1009,7 @@ function endBreak(){
   gState='cooldown';cooldownEnd=Date.now()+skipMs;
   document.getElementById('guard-overlay').style.display='none';
   document.getElementById('guard-dot').className='warn';
-  document.getElementById('guard-txt').textContent=`休息完畢 · ${skipDur}分鐘後偵測`;
+  document.getElementById('guard-txt').textContent=`Guard · ${skipDur}m cooldown`;
   setTimeout(()=>{gState='monitoring';checkGuard();},skipMs);
 }
 
