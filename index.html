@@ -432,8 +432,13 @@ function loadOptimizerData(){
   try{
     const rev=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');
     const tasks=JSON.parse(localStorage.getItem('tina_tasks')||'[]');
-    const done=tasks.filter(t=>t.done).length;
-    LIVE.optimizer={total:tasks.length,done,rest:rev.restMode||false,combatPower:rev.combatPower!=null?+rev.combatPower:null,endTime:rev.endTime||null,tasks};
+    const items=rev.items||[];
+    const taskList=items.length>0
+      ?items.map(t=>({text:t.name,done:t.status==='done'}))
+      :tasks;
+    const done=items.length>0?items.filter(t=>t.status==='done').length:tasks.filter(t=>t.done).length;
+    const total=items.length>0?items.length:tasks.length;
+    LIVE.optimizer={total,done,rest:rev.restMode||false,combatPower:rev.combatPower!=null?+rev.combatPower:null,endTime:rev.endTime||null,tasks:taskList};
   }catch{}
 }
 function loadAITrackerData(){
