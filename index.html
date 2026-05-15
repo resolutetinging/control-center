@@ -379,7 +379,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div class="m-pn" id="sas-pn"></div>
 </div>
 
-<button id="dbg-btn" onclick="triggerGuard()">🐱 測試貓貓</button>
+<button id="dbg-btn" onclick="debugTrigger()">🐱 測試貓貓</button>
 
 <script>
 'use strict';
@@ -697,8 +697,8 @@ function checkGuard(){
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
   if(stamina<40||now>end){triggerGuard();}
-  else if(stamina<60){dot.className='warn';txt.textContent='戰力 '+stamina+'% · 注意';gState='monitoring';}
-  else{dot.className='';txt.textContent='Guard Cat · '+stamina+'%';gState='monitoring';}
+  else if(stamina<60){dot.className='warn';txt.textContent='Guard Cat · 注意';gState='monitoring';}
+  else{dot.className='';txt.textContent='Guard Cat · 監控中';gState='monitoring';}
 }
 function triggerGuard(){
   if(gState==='alerting'||gState==='resting')return;
@@ -738,12 +738,18 @@ function endBreak(){
   setTimeout(()=>{gState='monitoring';checkGuard();},3600000);
 }
 
+// ── DEBUG TRIGGER (bypasses state guard) ──
+function debugTrigger(){
+  gState='monitoring';
+  triggerGuard();
+}
+
 // ── SAS ANALYSIS ──
 function openSASAnalysis(){
   document.getElementById('sas-pn').innerHTML=`
     <button class="m-cls" onclick="closeSAS()">✕</button>
     <div class="m-ttl">✨ SAS 身心綜觀報告</div>
-    <p style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:18px;line-height:1.6;">整合攝取 ↔ 睡眠 ↔ 行為 ↔ 情緒，完整身心洞察。</p>
+    <p style="font-size:13px;color:var(--faint);margin-bottom:18px;line-height:1.6;">整合攝取 ↔ 睡眠 ↔ 行為 ↔ 情緒，完整身心洞察。</p>
     <div id="sas-res"><button class="btn-pr" onclick="runSAS()">🔍 開始分析</button></div>
   `;
   document.getElementById('sas-ov').style.display='flex';
@@ -760,7 +766,7 @@ async function runSAS(){
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
     if(!resp.ok)throw new Error('API '+resp.status);
     const result=await resp.json();
-    el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:rgba(255,255,255,.82);">${result.choices?.[0]?.message?.content||'（無回應）'}</div></div>`;
+    el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${result.choices?.[0]?.message?.content||'（無回應）'}</div></div>`;
   }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${e.message}</div>`;}
 }
 
