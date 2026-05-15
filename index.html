@@ -443,53 +443,63 @@ function loadLinkedInData(){
   try{LIVE.linkedin=JSON.parse(localStorage.getItem(LI_KEY)||'null');}catch{}
 }
 let _liLastFetch=0;
-async function notionQueryDb(token,dbId){
-  const notionHdr={'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'};
-  const proxy='https://corsproxy.io/?https://api.notion.com/v1/databases/'+dbId+'/query';
-  const r=await fetch(proxy,{method:'POST',headers:notionHdr,body:JSON.stringify({page_size:100})});
-  if(!r.ok){
-    const errTxt=await r.text().catch(()=>'');
-    const err=JSON.parse(errTxt||'{}');
-    console.error('[LinkedIn] API error',r.status,errTxt);
-    if(err.code==='validation_error'&&(err.message||'').includes('page, not a database')){
-      const pr=await fetch('https://corsproxy.io/?https://api.notion.com/v1/blocks/'+dbId+'/children',{headers:notionHdr});
-      if(!pr.ok)return null;
-      const pj=await pr.json();
-      const db=(pj.results||[]).find(b=>b.type==='child_database');
-      if(!db){console.error('[LinkedIn] no child_database inside page');return null;}
-      const realId=db.id.replace(/-/g,'');
-      console.log('[LinkedIn] auto-resolved database ID:',realId);
-      localStorage.setItem('notion_li_db',realId);
-      return notionQueryDb(token,realId);
-    }
-    return null;
+function _notionHdr(token){return{'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'};}
+function _liCount(results){
+  const counts={saved:0,applied:0,declined:0,contacted:0};
+  for(const pg of results){
+    const sp=pg.properties?.Status||pg.properties?.status||Object.values(pg.properties||{}).find(p=>p.type==='status'||p.type==='select');
+    const name=(sp?.status?.name||sp?.select?.name||'').trim();
+    const s=name.toLowerCase();
+    if(s==='saved only')counts.saved++;
+    else if(s==='applied')counts.applied++;
+    else if(s==='declined')counts.declined++;
+    else if(s==='contacted')counts.contacted++;
+    else if(s)console.log('[LinkedIn] unmatched status:',name);
   }
-  return r.json();
+  return counts;
 }
 async function fetchNotionLinkedIn(){
   if(Date.now()-_liLastFetch<30000)return;
   _liLastFetch=Date.now();
   const token=localStorage.getItem('notion_token')||'';
-  const dbId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
-  if(!token||!dbId)return;
+  const rawId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
+  if(!token||!rawId)return;
+  const hdr=_notionHdr(token);
   try{
-    const j=await notionQueryDb(token,dbId);
-    if(!j?.results){return;}
-    if(j.results.length>0)console.log('[LinkedIn] props keys:',Object.keys(j.results[0].properties||{}));
-    const counts={saved:0,applied:0,declined:0,contacted:0};
-    for(const pg of j.results){
-      const sp=pg.properties?.Status||pg.properties?.status||Object.values(pg.properties||{}).find(p=>p.type==='status'||p.type==='select');
-      const name=(sp?.status?.name||sp?.select?.name||'').trim();
-      const s=name.toLowerCase();
-      if(s==='saved only')counts.saved++;
-      else if(s==='applied')counts.applied++;
-      else if(s==='declined')counts.declined++;
-      else if(s==='contacted')counts.contacted++;
-      else if(s)console.log('[LinkedIn] unmatched status:',name);
+    // 1. Try direct database query
+    const r=await fetch('https://corsproxy.io/?https://api.notion.com/v1/databases/'+rawId+'/query',
+      {method:'POST',headers:hdr,body:JSON.stringify({page_size:100})});
+    if(r.ok){
+      const j=await r.json();
+      if(j.results?.length>0)console.log('[LinkedIn] props:',Object.keys(j.results[0].properties||{}));
+      const counts=_liCount(j.results||[]);
+      console.log('[LinkedIn] counts',counts,'from',j.results.length,'pages');
+      LIVE.linkedin=counts;localStorage.setItem(LI_KEY,JSON.stringify(counts));return;
     }
-    console.log('[LinkedIn] counts',counts,'from',j.results.length,'pages');
-    LIVE.linkedin=counts;
-    localStorage.setItem(LI_KEY,JSON.stringify(counts));
+    const errTxt=await r.text().catch(()=>'{}');
+    const err=JSON.parse(errTxt);
+    console.warn('[LinkedIn] db query failed:',err.message||errTxt);
+
+    // 2. Fallback: search API (works when db is a linked view)
+    console.log('[LinkedIn] trying search API fallback…');
+    const sr=await fetch('https://corsproxy.io/?https://api.notion.com/v1/search',
+      {method:'POST',headers:hdr,body:JSON.stringify({filter:{property:'object',value:'page'},page_size:100})});
+    if(!sr.ok){console.error('[LinkedIn] search also failed',sr.status);return;}
+    const sj=await sr.json();
+    // Filter pages that belong to our database
+    const savedId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
+    const dbPages=(sj.results||[]).filter(p=>{const pid=(p.parent?.database_id||'').replace(/-/g,'');return pid===rawId||pid===savedId;});
+    if(dbPages.length===0){
+      // Use all pages returned — user may have only one DB in the integration
+      console.log('[LinkedIn] search returned',sj.results?.length,'total pages (unfiltered)');
+      const all=_liCount(sj.results||[]);
+      console.log('[LinkedIn] unfiltered counts',all);
+      LIVE.linkedin=all;localStorage.setItem(LI_KEY,JSON.stringify(all));
+    } else {
+      const counts=_liCount(dbPages);
+      console.log('[LinkedIn] search counts',counts,'from',dbPages.length,'pages');
+      LIVE.linkedin=counts;localStorage.setItem(LI_KEY,JSON.stringify(counts));
+    }
   }catch(e){console.error('[LinkedIn] fetch error',e);}
 }
 function fetchSleepData(){
