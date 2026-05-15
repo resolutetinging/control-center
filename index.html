@@ -123,13 +123,12 @@ body{position:relative;}
 /* ── Lean Tooltip ── */
 #tooltip{
   position:fixed;z-index:5000;pointer-events:none;
-  background:rgba(244,241,236,.97);
-  backdrop-filter:blur(20px) saturate(160%);
+  background:rgba(244,241,236,.70);
+  backdrop-filter:blur(24px) saturate(180%);
   border:.5px solid var(--bstr);
   border-radius:13px;
   padding:11px 14px;
-  box-shadow:0 8px 32px rgba(40,38,32,.14);
-  min-width:148px;
+  box-shadow:0 8px 32px rgba(40,38,32,.12);
   transition:opacity .12s,transform .12s;
 }
 #tooltip.tt-hide{opacity:0;transform:translateY(8px);}
@@ -421,7 +420,7 @@ async function fetchSleepData(){
     let html='';
     for(const p of PROXIES){
       try{
-        const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),6000);
+        const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),7000);
         const r=await fetch(p(SLEEP_URL),{signal:ctrl.signal});
         if(!r.ok)continue;
         const t=await r.text();
@@ -429,21 +428,51 @@ async function fetchSleepData(){
         if(html.includes('const RAW'))break;
       }catch{}
     }
-    if(!html||!html.includes('const RAW')){const r=await fetch(SLEEP_URL);html=await r.text();}
-    const m=html.match(/const RAW\s*=\s*(\{[\s\S]*?\});\s*\nconst COLORS/);
-    if(!m)return;
-    const summary=(JSON.parse(m[1]).summary)||[];
+    if(!html||!html.includes('const RAW')){
+      try{const r=await fetch(SLEEP_URL);html=await r.text();}catch{}
+    }
+    if(!html||!html.includes('const RAW'))return;
+    // Brace-counting parser (more robust than regex for nested objects)
+    const rawIdx=html.indexOf('const RAW');
+    if(rawIdx===-1)return;
+    const startBrace=html.indexOf('{',rawIdx);
+    if(startBrace===-1)return;
+    let depth=0,endBrace=startBrace;
+    for(let i=startBrace;i<Math.min(html.length,startBrace+800000);i++){
+      if(html[i]==='{')depth++;
+      else if(html[i]==='}'){depth--;if(depth===0){endBrace=i;break;}}
+    }
+    const raw=JSON.parse(html.slice(startBrace,endBrace+1));
+    const summary=raw.summary||[];
     if(!summary.length)return;
+    // Latest night
     const d=summary[summary.length-1];
     const t=d.total_min||1;
     const deepP=Math.round((d.deep_min||0)/t*100);
     const remP=Math.round((d.rem_min||0)/t*100);
     const coreP=Math.round((d.core_min||0)/t*100);
     const awakeP=Math.round((d.awake_min||0)/t*100);
-    const eff=(d.efficiency||80)/100;
-    const cp=Math.round(Math.min((d.deep_min||0)/t/0.25,1)*35+Math.min((d.rem_min||0)/t/0.22,1)*25+eff*40);
+    const effRaw=d.efficiency!=null?d.efficiency:80;
+    const eff=effRaw>1?effRaw/100:effRaw; // handle % vs decimal
+    const cp=Math.round(Math.min(deepP/100/0.25,1)*35+Math.min(remP/100/0.22,1)*25+eff*40);
+    // 7-day trend
+    const last7=summary.slice(-7);
+    const trend7=last7.map(n=>{
+      const nt=n.total_min||1;
+      return{
+        date:n.date,
+        durH:+(n.total_min/60).toFixed(1),
+        deepP:Math.round((n.deep_min||0)/nt*100),
+        remP:Math.round((n.rem_min||0)/nt*100),
+        eff:Math.round(n.efficiency!=null?(n.efficiency>1?n.efficiency:n.efficiency*100):80)
+      };
+    });
+    const avg7dur=+(trend7.reduce((s,n)=>s+n.durH,0)/trend7.length).toFixed(1);
+    const avg7deep=Math.round(trend7.reduce((s,n)=>s+n.deepP,0)/trend7.length);
+    const avg7rem=Math.round(trend7.reduce((s,n)=>s+n.remP,0)/trend7.length);
     LIVE.sleep={date:d.date,deepP,remP,coreP,awakeP,eff:Math.round(eff*100),combatPower:cp,
-      pace:cp>=75?'今日火力全開 ⚡':cp>=55?'穩定推進節奏 🌿':'輕量任務，多休息 💤'};
+      pace:cp>=75?'今日火力全開 ⚡':cp>=55?'穩定推進節奏 🌿':'輕量任務，多休息 💤',
+      trend7,avg7:{dur:avg7dur,deepP:avg7deep,remP:avg7rem,n:trend7.length}};
   }catch{}
 }
 async function initLiveData(){
@@ -598,7 +627,18 @@ function buildTT(id){
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">讀取中…</div>`;
       const s=LIVE.sleep;
-      return h('睡眠分期 · '+s.date)+row('🔵 Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')+row('🟣 REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')+row('🟢 Core',s.coreP+'%')+row('🟡 Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+      let out=h('睡眠分期 · '+s.date)
+        +row('🔵 Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')
+        +row('🟣 REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')
+        +row('🟢 Core',s.coreP+'%')
+        +row('🟡 Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+      if(s.avg7&&s.avg7.n>1){
+        out+=hr()+`<div style="font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">近${s.avg7.n}日平均</div>`
+          +row('時長',s.avg7.dur+'h')
+          +row('深層',s.avg7.deepP+'%',s.avg7.deepP>=18?'g':s.avg7.deepP>=12?'a':'r')
+          +row('REM',s.avg7.remP+'%',s.avg7.remP>=18?'g':s.avg7.remP>=12?'a':'r');
+      }
+      return out;
     }
     case 'mental':{
       if(!LIVE.mental?.today)return h('今日 Mental')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">今日尚無記錄</div>`;
@@ -624,9 +664,12 @@ function buildTT(id){
       return h('AI 追蹤')+`<div style="font-size:11px;color:var(--ok);padding:3px 0;">✅ 今日筆記已記錄</div>`;
     }
     case 'linkedin':{
-      const li=LIVE.linkedin;
-      if(!li)return h('LinkedIn')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定追蹤數據</div>`;
-      return h('LinkedIn')+row('Saved',li.saved+'個')+row('Applied',li.applied+'個','g')+row('Declined',li.declined+'個',li.declined>0?'a':'')+row('Contacted',li.contacted+'個','g');
+      const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0};
+      return h('LinkedIn 求職進度')
+        +row('⭐ Saved',li.saved+'個')
+        +row('📨 Applied',li.applied+'個','g')
+        +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
+        +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'');
     }
     default:return'';
   }
@@ -638,8 +681,12 @@ document.addEventListener('mouseover',e=>{
   const c=buildTT(ic.dataset.id);
   if(!c){ttp.classList.add('tt-hide');return;}
   ttp.innerHTML=c;ttp.style.display='block';ttp.classList.remove('tt-hide');
-  // Center tooltip in viewport
-  const tw=ttp.offsetWidth||180,th=ttp.offsetHeight||110;
+  // Width = clock element's rendered width
+  const clockRow=document.querySelector('#header > div:first-child');
+  const cw=clockRow?Math.round(clockRow.getBoundingClientRect().width):200;
+  ttp.style.width=cw+'px';
+  // Center under clock
+  const tw=ttp.offsetWidth||cw,th=ttp.offsetHeight||110;
   ttp.style.left=Math.round(window.innerWidth/2-tw/2)+'px';
   ttp.style.top=Math.round(window.innerHeight/2-th/2-40)+'px';
 });
