@@ -1161,8 +1161,9 @@ async function syncUpload(){
   if(btn)btn.textContent='…';
   showSyncMsg('上傳中…');
   try{
+    const SKIP_KEYS=['gh_pat','gist_id','tina_groq','groq_key','groq_api_key','wordvault_groq_key'];
     const snap={};
-    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);snap[k]=localStorage.getItem(k);}
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!SKIP_KEYS.includes(k)&&!k.startsWith('gsk_'))snap[k]=localStorage.getItem(k);}
     const r=await fetch('https://api.github.com/gists/'+gid,{
       method:'PATCH',
       headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
