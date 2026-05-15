@@ -247,6 +247,25 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 #dbg-btn{position:fixed;bottom:110px;right:20px;z-index:6000;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:100px;padding:8px 16px;font-size:11px;color:var(--danger);cursor:pointer;font-family:inherit;backdrop-filter:blur(16px);}
 #dbg-btn:hover{background:rgba(192,57,43,.14);}
 
+/* ── Sync Pill ── */
+#sync-pill{
+  position:fixed;bottom:18px;left:18px;z-index:50;
+  display:flex;align-items:center;gap:2px;padding:6px 10px;
+  border-radius:100px;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+}
+#sync-pill button{
+  background:none;border:none;cursor:pointer;font-family:inherit;
+  font-size:14px;font-weight:500;color:var(--sub);
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;padding:0;line-height:1;
+}
+#sync-pill button:hover{background:rgba(40,38,32,.08);color:var(--ink);}
+#sync-sep{width:.5px;height:14px;background:var(--bstr);margin:0 2px;flex-shrink:0;}
+
 @keyframes pulse-r{0%,100%{opacity:1;}50%{opacity:.2;}}
 @keyframes pulse-s{0%,100%{opacity:1;}50%{opacity:.35;}}
 @keyframes bounce{0%{transform:translateY(0) scale(1);}30%{transform:translateY(-28px) scale(1.08);}60%{transform:translateY(-8px) scale(1.03);}100%{transform:translateY(0) scale(1);}}
@@ -254,6 +273,47 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 /* LinkedIn not-set indicator */
 .d-icon[data-unset="1"] .d-box{border:1.5px dashed var(--faint);background:rgba(255,255,255,.5);}
+
+/* ── Mobile / Touch Responsive ── */
+@media (pointer:coarse){
+  /* Allow page scrolling */
+  html,body{height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;}
+
+  /* Performance: kill backdrop-filter (GPU-heavy on mobile) */
+  #dock,#guard-pill,#settings-btn,#sync-pill{
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    background:rgba(244,241,236,.96)!important;
+  }
+
+  /* Header: in document flow */
+  #header{
+    position:relative;top:auto;left:auto;right:auto;
+    padding-top:80px;padding-bottom:16px;
+    pointer-events:auto;
+  }
+  #clock{font-size:min(20vw,108px);}
+  #clock-sec{font-size:min(7vw,36px);}
+
+  /* Dock: in document flow, grid layout */
+  #dock-outer{
+    position:relative;bottom:auto;left:auto;transform:none;
+    width:100%;padding:0 12px 80px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  #dock{
+    display:grid!important;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;padding:14px;
+    width:100%;max-width:400px;
+    align-items:start;
+  }
+  .d-sep{display:none!important;}
+  .d-icon{width:auto;}
+  .d-box{width:52px;height:52px;}
+
+  /* Tooltip not usable on touch; hide it */
+  #tooltip{display:none!important;}
+}
 </style>
 </head>
 <body>
@@ -370,6 +430,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 </div>
 
 <button id="dbg-btn" onclick="debugTrigger()">Guard</button>
+
+<!-- Sync Pill -->
+<div id="sync-pill">
+  <button id="sync-up" onclick="syncUpload()" title="Upload localStorage → Gist">↑</button>
+  <div id="sync-sep"></div>
+  <button id="sync-dn" onclick="syncDownload()" title="Download from Gist → restore">↓</button>
+</div>
 
 <script>
 'use strict';
@@ -885,11 +952,18 @@ function renderTab(tab){
     `;
   } else if(tab==='api'){
     const k=localStorage.getItem(GROQ_KEY)||'';
+    const pat=localStorage.getItem('gh_pat')||'';
+    const gid=localStorage.getItem('gist_id')||'';
     el.innerHTML=`
       <div class="s-title">API 設定</div>
       <div class="s-sec">
         <div class="s-lbl">Groq API Key</div>
-        <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;margin-bottom:18px;"/>
+        <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;margin-bottom:22px;"/>
+        <div class="s-lbl">GitHub PAT（↑↓ 同步用，需 gist 權限）</div>
+        <input class="s-inp" type="password" id="gs-pat" value="${pat}" placeholder="ghp_…" style="font-family:monospace;font-size:12px;margin-bottom:12px;"/>
+        <div class="s-lbl">Gist ID</div>
+        <input class="s-inp" id="gs-gid" value="${gid}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;"/>
+        <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步時所有 localStorage 會存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>。</div>
         <button class="s-btn s-btn-pr" onclick="saveAPI()">儲存</button>
       </div>
     `;
@@ -940,7 +1014,11 @@ function saveManualLinkedIn(){
 }
 function saveAPI(){
   const k=(document.getElementById('gs-k')?.value||'').trim();
+  const pat=(document.getElementById('gs-pat')?.value||'').trim();
+  const gid=(document.getElementById('gs-gid')?.value||'').trim();
   if(k)localStorage.setItem(GROQ_KEY,k);
+  if(pat)localStorage.setItem('gh_pat',pat);else localStorage.removeItem('gh_pat');
+  if(gid)localStorage.setItem('gist_id',gid);else localStorage.removeItem('gist_id');
   closeSettings();
 }
 
@@ -1043,6 +1121,52 @@ async function runSAS(){
     const result=await resp.json();
     el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${result.choices?.[0]?.message?.content||'（無回應）'}</div></div>`;
   }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${e.message}</div>`;}
+}
+
+// ── GIST SYNC ──
+async function syncUpload(){
+  const pat=localStorage.getItem('gh_pat')||'';
+  const gid=localStorage.getItem('gist_id')||'';
+  if(!pat||!gid){openSettings('api');return;}
+  const btn=document.getElementById('sync-up');
+  if(btn)btn.textContent='…';
+  try{
+    const snap={};
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);snap[k]=localStorage.getItem(k);}
+    const r=await fetch('https://api.github.com/gists/'+gid,{
+      method:'PATCH',
+      headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      body:JSON.stringify({files:{'cc_sync.json':{content:JSON.stringify(snap)}}})
+    });
+    if(!r.ok)throw new Error(r.status);
+    if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='↑';},1500);}
+  }catch(e){
+    console.error('[Sync] upload error',e);
+    if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↑';},1500);}
+  }
+}
+async function syncDownload(){
+  const pat=localStorage.getItem('gh_pat')||'';
+  const gid=localStorage.getItem('gist_id')||'';
+  if(!pat||!gid){openSettings('api');return;}
+  const btn=document.getElementById('sync-dn');
+  if(btn)btn.textContent='…';
+  try{
+    const r=await fetch('https://api.github.com/gists/'+gid,{
+      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json'}
+    });
+    if(!r.ok)throw new Error(r.status);
+    const j=await r.json();
+    const content=j.files?.['cc_sync.json']?.content;
+    if(!content)throw new Error('cc_sync.json not found');
+    const snap=JSON.parse(content);
+    for(const[k,v] of Object.entries(snap)){if(v!=null)localStorage.setItem(k,v);}
+    if(btn)btn.textContent='✓';
+    setTimeout(()=>window.location.reload(),600);
+  }catch(e){
+    console.error('[Sync] download error',e);
+    if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↓';},1500);}
+  }
 }
 
 // ── INIT ──
