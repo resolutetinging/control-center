@@ -230,7 +230,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
 #cat-stage{position:relative;display:flex;align-items:center;justify-content:center;width:100%;}
-#big-cat{font-size:min(34vw,300px);line-height:1;filter:drop-shadow(0 0 60px rgba(255,200,100,.35));animation:catRise 1.3s cubic-bezier(.175,.885,.32,1.275) forwards,catFloat 4s ease-in-out 1.3s infinite;}
+#big-cat{line-height:1;filter:drop-shadow(0 0 60px rgba(255,200,100,.35));animation:catRise 1.3s cubic-bezier(.175,.885,.32,1.275) forwards,catFloat 4s ease-in-out 1.3s infinite;display:flex;align-items:center;justify-content:center;font-size:min(34vw,300px);}
+#big-cat img{max-width:min(55vw,360px);max-height:55vh;object-fit:contain;border-radius:20px;box-shadow:0 20px 80px rgba(0,0,0,.5);}
 @keyframes catRise{from{transform:translateY(110vh) scale(.5);}to{transform:translateY(0) scale(1);}}
 @keyframes catFloat{0%,100%{transform:translateY(0) rotate(-1.5deg);}50%{transform:translateY(-18px) rotate(1.5deg);}}
 #cat-speech{position:absolute;top:5%;right:10%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:12px 18px;font-size:15px;color:rgba(255,255,255,.88);line-height:1.6;animation:fadeUp .5s 1.4s both;max-width:200px;}
@@ -353,6 +354,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <button class="s-tab" data-tab="links" onclick="switchTab('links')"><span class="s-tab-ic">🔗</span>連結管理</button>
       <div class="s-cat">系統</div>
       <button class="s-tab" data-tab="guard" onclick="switchTab('guard')"><span class="s-tab-ic">🐱</span>Guard Cat</button>
+      <button class="s-tab" data-tab="linkedin" onclick="switchTab('linkedin')"><span class="s-tab-ic">💼</span>LinkedIn</button>
       <button class="s-tab" data-tab="api" onclick="switchTab('api')"><span class="s-tab-ic">🔑</span>API 設定</button>
     </div>
     <div id="s-content"></div>
@@ -363,11 +365,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 <div id="guard-overlay" style="display:none;">
   <div id="cat-stage">
     <div id="big-cat">🐱</div>
+    <!-- cat img injected by JS when URL is set -->
     <div id="cat-speech">喵！你已經工作很久了<br>是時候休息一下 🌿</div>
   </div>
   <div id="guard-ctrl">
     <div id="guard-msg"></div>
-    <button id="rest-btn" onclick="startBreak()">先去休息 15 分鐘 🌿</button>
+    <button id="rest-btn" onclick="startBreak()">先去休息 🌿</button>
     <div id="break-cd"></div>
     <div id="break-lbl"></div>
     <button id="resume-btn" onclick="endBreak()">我回來了 ✓</button>
@@ -383,7 +386,72 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 <script>
 'use strict';
-const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1';
+const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1', LI_KEY='cc_linkedin_v1';
+const TODAY=new Date().toISOString().slice(0,10);
+const SLEEP_URL='https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard.html';
+const PROXIES=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`];
+
+// ── LIVE DATA (populated async on load) ──
+let LIVE={sleep:null,mental:null,optimizer:null,aitracker:null,linkedin:null};
+
+function loadMentalData(){
+  try{
+    const db=JSON.parse(localStorage.getItem('wellness_v5')||'{}');
+    const es=(db.entries||[]).filter(e=>e.timestamp&&e.timestamp.slice(0,10)===TODAY);
+    const last=es[es.length-1]||null;
+    LIVE.mental={today:last?{score:last.moodScore,emotions:(last.emotionTags||[]),factors:(last.impactFactors||[]).map(f=>f.detail)}:null};
+  }catch{}
+}
+function loadOptimizerData(){
+  try{
+    const rev=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');
+    const tasks=JSON.parse(localStorage.getItem('tina_tasks')||'[]');
+    const done=tasks.filter(t=>t.done).length;
+    LIVE.optimizer={total:tasks.length,done,rest:rev.restMode||false,combatPower:rev.combatPower!=null?+rev.combatPower:null,endTime:rev.endTime||null};
+  }catch{}
+}
+function loadAITrackerData(){
+  try{const note=localStorage.getItem('note_'+TODAY)||'';LIVE.aitracker={hasNote:!!note.trim()};}catch{}
+}
+function loadLinkedInData(){
+  try{LIVE.linkedin=JSON.parse(localStorage.getItem(LI_KEY)||'null');}catch{}
+}
+async function fetchSleepData(){
+  try{
+    let html='';
+    for(const p of PROXIES){
+      try{
+        const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),6000);
+        const r=await fetch(p(SLEEP_URL),{signal:ctrl.signal});
+        if(!r.ok)continue;
+        const t=await r.text();
+        html=t.includes('"contents"')?JSON.parse(t).contents:t;
+        if(html.includes('const RAW'))break;
+      }catch{}
+    }
+    if(!html||!html.includes('const RAW')){const r=await fetch(SLEEP_URL);html=await r.text();}
+    const m=html.match(/const RAW\s*=\s*(\{[\s\S]*?\});\s*\nconst COLORS/);
+    if(!m)return;
+    const summary=(JSON.parse(m[1]).summary)||[];
+    if(!summary.length)return;
+    const d=summary[summary.length-1];
+    const t=d.total_min||1;
+    const deepP=Math.round((d.deep_min||0)/t*100);
+    const remP=Math.round((d.rem_min||0)/t*100);
+    const coreP=Math.round((d.core_min||0)/t*100);
+    const awakeP=Math.round((d.awake_min||0)/t*100);
+    const eff=(d.efficiency||80)/100;
+    const cp=Math.round(Math.min((d.deep_min||0)/t/0.25,1)*35+Math.min((d.rem_min||0)/t/0.22,1)*25+eff*40);
+    LIVE.sleep={date:d.date,deepP,remP,coreP,awakeP,eff:Math.round(eff*100),combatPower:cp,
+      pace:cp>=75?'今日火力全開 ⚡':cp>=55?'穩定推進節奏 🌿':'輕量任務，多休息 💤'};
+  }catch{}
+}
+async function initLiveData(){
+  loadMentalData();loadOptimizerData();loadAITrackerData();loadLinkedInData();
+  await fetchSleepData();
+  // After sleep loaded, update guard pill if needed
+  checkGuard();
+}
 
 // ── DEFAULT LINKS ──
 const DEFAULT_LINKS={
@@ -519,21 +587,47 @@ let ttT;
 function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
 function hr(){return`<div class="tt-hr"></div>`;}
 function buildTT(id){
-  const R=MOCK;
-  const rf=rfToday();
   const h=(t)=>`<div class="tt-head">${t}</div>`;
+  const rf=rfToday();
   switch(id){
-    case 'sas-hub': return h('SAS Hub')+row('睡眠',R.sleep.dur,'g')+row('品質',R.sleep.q+'%',R.sleep.q>=70?'g':'a')+hr()+row('情緒',R.mental.score+'/10',R.mental.score>=7?'g':'a')+row('戰力',R.opt.stamina+'%',R.opt.stamina>=60?'g':'a');
-    case 'sleep':   return h('昨夜睡眠')+row('時長',R.sleep.dur,'g')+row('品質',R.sleep.q+'%',R.sleep.q>=70?'g':'a')+hr()+row('深睡',R.sleep.deep)+row('REM',R.sleep.rem)+hr()+row('趨勢',R.sleep.trend,'g');
-    case 'mental':  return h('心情')+row('今日分',R.mental.score+'/10',R.mental.score>=7?'g':'a')+row('趨勢',R.mental.trend,'g')+hr()+row('連續',R.mental.streak+'天','g');
-    case 'optimizer':return h('優化器')+row('戰力',R.opt.stamina+'%',R.opt.stamina>=60?'g':'a')+row('續航至',R.opt.endTime)+hr()+row('任務',R.opt.done+'/'+R.opt.total,R.opt.done===R.opt.total?'g':'a')+row('專注',R.opt.focus,'g');
-    case 'refueler':return h('今日攝取')+row('☕ 咖啡',rf.coffee+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',rf.water+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
-    case 'report':  return h('綜觀分析')+row('整合',`${R.sleep.dur} · ${R.mental.score}分 · ${R.opt.stamina}%`);
-    case 'aitracker':return h('AI 動態')+row('新模型',R.ai.models+'個','a')+row('熱門',R.ai.topic)+row('新聞',R.ai.news+'則');
-    case 'linkedin':{const links=getLinks();return h('LinkedIn')+(links['linkedin']?row('已投遞',R.li.applied+'個','g')+row('待回覆',R.li.pending+'個','a')+hr()+row('待投',R.li.saved+'個'):'<div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:4px 0;">點擊設定連結 →</div>');}
-    case 'wordvault':return h('WordVault')+row('單字',R.wv.total+'個')+row('今日',R.wv.today+'個','a')+hr()+row('連續',R.wv.streak+'天','g');
-    case 'mentaltool':return h('心理工具')+row('連續',R.mt.streak+'天','g')+row('未讀',R.mt.unread+'則',R.mt.unread?'a':'g');
-    case 'podcast':return h('Podcast')+row('未讀',R.pc.unread+'則',R.pc.unread?'a':'g')+row('最近',R.pc.recent);
+    case 'sas-hub':{
+      const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
+      const pace=LIVE.sleep?.pace??'讀取中…';
+      return h('SAS Hub')+row('今日戰力',cp+(cp==='—'?'':'%'),cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
+    }
+    case 'sleep':{
+      if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">讀取中…</div>`;
+      const s=LIVE.sleep;
+      return h('睡眠分期 · '+s.date)+row('🔵 Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')+row('🟣 REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')+row('🟢 Core',s.coreP+'%')+row('🟡 Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+    }
+    case 'mental':{
+      if(!LIVE.mental?.today)return h('今日 Mental')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">今日尚無記錄</div>`;
+      const m=LIVE.mental.today;
+      const emos=m.emotions.slice(0,3).join('、')||'—';
+      const facs=m.factors.slice(0,2).join('、')||'—';
+      return h('今日 Mental')+row('心情',m.score+'/10',m.score>=7?'g':m.score>=5?'a':'r')+hr()+`<div class="tt-row"><span class="tt-k">情緒</span><span class="tt-v" style="font-size:10.5px;">${emos}</span></div>`+`<div class="tt-row"><span class="tt-k">因子</span><span class="tt-v" style="font-size:10.5px;">${facs}</span></div>`;
+    }
+    case 'optimizer':{
+      const o=LIVE.optimizer;
+      if(!o)return h('優化器')+`<div style="font-size:11px;color:var(--faint);">讀取中…</div>`;
+      const status=o.rest?'🌿 休假中':'工作中';
+      return h('優化器')+row('狀態',status,o.rest?'a':'g')+hr()+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a');
+    }
+    case 'refueler':
+      return h('今日攝取')+row('☕ 咖啡',rf.coffee+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',rf.water+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
+    case 'report':
+      return h('綜觀分析')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">點擊進行 AI 整合分析</div>`;
+    case 'aitracker':{
+      const ai=LIVE.aitracker;
+      if(!ai)return'';
+      if(!ai.hasNote)return h('AI 追蹤')+`<div style="font-size:11.5px;color:var(--warn);padding:3px 0;font-weight:500;">📝 今天還沒寫新聞筆記！</div>`;
+      return h('AI 追蹤')+`<div style="font-size:11px;color:var(--ok);padding:3px 0;">✅ 今日筆記已記錄</div>`;
+    }
+    case 'linkedin':{
+      const li=LIVE.linkedin;
+      if(!li)return h('LinkedIn')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定追蹤數據</div>`;
+      return h('LinkedIn')+row('Saved',li.saved+'個')+row('Applied',li.applied+'個','g')+row('Declined',li.declined+'個',li.declined>0?'a':'')+row('Contacted',li.contacted+'個','g');
+    }
     default:return'';
   }
 }
@@ -542,14 +636,12 @@ document.addEventListener('mouseover',e=>{
   if(!ic)return;
   clearTimeout(ttT);
   const c=buildTT(ic.dataset.id);
-  if(!c)return;
+  if(!c){ttp.classList.add('tt-hide');return;}
   ttp.innerHTML=c;ttp.style.display='block';ttp.classList.remove('tt-hide');
-  const r=ic.getBoundingClientRect();
-  const tw=ttp.offsetWidth||160,th=ttp.offsetHeight||100;
-  let lx=r.left+r.width/2-tw/2,ty=r.top-th-14;
-  lx=Math.max(8,Math.min(lx,window.innerWidth-tw-8));
-  if(ty<8)ty=r.bottom+14;
-  ttp.style.left=lx+'px';ttp.style.top=ty+'px';
+  // Center tooltip in viewport
+  const tw=ttp.offsetWidth||180,th=ttp.offsetHeight||110;
+  ttp.style.left=Math.round(window.innerWidth/2-tw/2)+'px';
+  ttp.style.top=Math.round(window.innerHeight/2-th/2-40)+'px';
 });
 document.addEventListener('mouseout',e=>{
   if(!e.target.closest('.d-icon'))return;
@@ -624,17 +716,52 @@ function renderTab(tab){
       </div>
     `;
   } else if(tab==='guard'){
+    const gs=getGuardData();
+    const skipDur=gs.skipDur||60;
+    const workTime=gs.workTime||15;
+    const catUrl=localStorage.getItem('cc_cat_gif')||'';
+    const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower+'%':(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower+'%':'讀取中…');
     el.innerHTML=`
       <div class="s-title">Guard Cat 設定</div>
       <div class="s-sec">
-        <div class="s-lbl">今日戰力</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <input type="range" id="gs-s" min="0" max="100" value="${eff.stamina}" oninput="document.getElementById('gs-sv').textContent=this.value+'%'"/>
-          <span id="gs-sv" style="font-size:14px;font-weight:600;min-width:40px;">${eff.stamina}%</span>
-        </div>
-        <div class="s-lbl">結束時間</div>
+        <div class="s-lbl">今日戰力（自動讀取）</div>
+        <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${cpDisplay}</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:16px;">來源：Sleep Dashboard 睡眠分析</div>
+        <div class="s-lbl">工作結束時間</div>
         <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
+      </div>
+      <div class="s-sec">
+        <div class="s-lbl">貓貓介入時長（Guard Cat Working Time）</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <input class="s-inp" type="number" id="gs-work" min="1" max="60" value="${workTime}" style="width:80px;"/>
+          <span style="font-size:13px;color:var(--faint);">分鐘</span>
+        </div>
+        <div class="s-lbl">跳過後冷卻時間（Duration for Skip Guard Cat）</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <input class="s-inp" type="number" id="gs-skip" min="5" max="240" value="${skipDur}" style="width:80px;"/>
+          <span style="font-size:13px;color:var(--faint);">分鐘</span>
+        </div>
+        <div class="s-lbl">貓咪 GIF / 圖片 URL</div>
+        <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址（空白則使用預設貓咪）" style="margin-bottom:8px;"/>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:16px;">💡 可從 Giphy、Tenor 或本地圖片上傳取得 URL</div>
         <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
+      </div>
+    `;
+  } else if(tab==='linkedin'){
+    const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0};
+    el.innerHTML=`
+      <div class="s-title">LinkedIn 追蹤</div>
+      <div class="s-sec">
+        <div style="font-size:12px;color:var(--faint);margin-bottom:16px;line-height:1.6;">手動記錄求職進度，hover LinkedIn 圖示時顯示。</div>
+        <div class="s-lbl">⭐ Saved Only（儲存待投）</div>
+        <input class="s-inp" type="number" id="li-saved" min="0" value="${li.saved}" style="margin-bottom:12px;"/>
+        <div class="s-lbl">📨 Applied（已投遞）</div>
+        <input class="s-inp" type="number" id="li-applied" min="0" value="${li.applied}" style="margin-bottom:12px;"/>
+        <div class="s-lbl">🚫 Declined（已回絕）</div>
+        <input class="s-inp" type="number" id="li-declined" min="0" value="${li.declined}" style="margin-bottom:12px;"/>
+        <div class="s-lbl">💬 Contacted（已聯繫）</div>
+        <input class="s-inp" type="number" id="li-contacted" min="0" value="${li.contacted}" style="margin-bottom:18px;"/>
+        <button class="s-btn s-btn-pr" onclick="saveLinkedIn()">儲存進度</button>
       </div>
     `;
   } else if(tab==='api'){
@@ -666,10 +793,23 @@ function saveAllLinks(){
   saveLinks(l);updateUnsetFlags();closeSettings();
 }
 function saveGS(){
-  const stamina=parseInt(document.getElementById('gs-s')?.value)||60;
   const endTime=document.getElementById('gs-t')?.value||'18:30';
-  localStorage.setItem(GS_KEY,JSON.stringify({stamina,endTime}));
+  const workTime=parseInt(document.getElementById('gs-work')?.value)||15;
+  const skipDur=parseInt(document.getElementById('gs-skip')?.value)||60;
+  const catUrl=(document.getElementById('gs-cat')?.value||'').trim();
+  if(catUrl)localStorage.setItem('cc_cat_gif',catUrl);else localStorage.removeItem('cc_cat_gif');
+  localStorage.setItem(GS_KEY,JSON.stringify({endTime,workTime,skipDur}));
   closeSettings();checkGuard();
+}
+function saveLinkedIn(){
+  const li={
+    saved:parseInt(document.getElementById('li-saved')?.value)||0,
+    applied:parseInt(document.getElementById('li-applied')?.value)||0,
+    declined:parseInt(document.getElementById('li-declined')?.value)||0,
+    contacted:parseInt(document.getElementById('li-contacted')?.value)||0,
+  };
+  localStorage.setItem(LI_KEY,JSON.stringify(li));
+  LIVE.linkedin=li;closeSettings();
 }
 function saveAPI(){
   const k=(document.getElementById('gs-k')?.value||'').trim();
@@ -682,10 +822,11 @@ let gState='monitoring',cooldownEnd=null,cdIv=null;
 function getGuardData(){try{return JSON.parse(localStorage.getItem(GS_KEY))||{};}catch{return{};}}
 function getEffective(){
   const s=getGuardData();
-  let stamina=s.stamina!==undefined?+s.stamina:MOCK.opt.stamina;
+  // Prefer live sleep-derived combat power, fallback to optimizer review, then default
+  let stamina=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??MOCK.opt.stamina;
   let endTime=s.endTime||MOCK.opt.endTime;
-  try{const t=new Date().toISOString().split('T')[0];const o=JSON.parse(localStorage.getItem('review_'+t)||'{}');if(o.stamina!==undefined)stamina=+o.stamina;if(o.endTime)endTime=o.endTime;}catch{}
-  return{stamina,endTime};
+  try{const o=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');if(o.endTime)endTime=o.endTime;}catch{}
+  return{stamina,endTime,workTime:s.workTime||15,skipDur:s.skipDur||60};
 }
 function checkGuard(){
   if(gState==='alerting'||gState==='resting')return;
@@ -700,16 +841,29 @@ function checkGuard(){
   else if(stamina<60){dot.className='warn';txt.textContent='Guard Cat · 注意';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard Cat · 監控中';gState='monitoring';}
 }
+function renderCatDisplay(){
+  const url=localStorage.getItem('cc_cat_gif')||'';
+  const el=document.getElementById('big-cat');
+  if(url){
+    el.style.fontSize='';
+    el.innerHTML=`<img src="${url}" alt="🐱" onerror="this.outerHTML='<span style=font-size:min(34vw,260px)>🐱</span>'"/>`;
+  } else {
+    el.style.fontSize='min(34vw,300px)';
+    el.innerHTML='🐱';
+  }
+}
 function triggerGuard(){
   if(gState==='alerting'||gState==='resting')return;
   gState='alerting';
-  const{stamina,endTime}=getEffective();
-  const msgs=stamina<40?['戰力剩 '+stamina+'%，需要充電了！']:['已過 '+endTime+'，該歇歇了！'];
+  const{stamina,endTime,workTime}=getEffective();
+  const msgs=stamina<40?'戰力剩 '+stamina+'%，需要充電了！':'已過 '+endTime+'，該歇歇了！';
   const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
-  document.getElementById('guard-msg').textContent=msgs[0];
+  document.getElementById('guard-msg').textContent=msgs;
   document.getElementById('cat-speech').innerHTML=cats[Math.floor(Math.random()*cats.length)];
   document.getElementById('rest-btn').style.display='block';
+  document.getElementById('rest-btn').textContent=`先去休息 ${workTime} 分鐘 🌿`;
   document.getElementById('break-cd').style.display=document.getElementById('break-lbl').style.display=document.getElementById('resume-btn').style.display='none';
+  renderCatDisplay();
   const cat=document.getElementById('big-cat');
   cat.style.animation='none';void cat.offsetWidth;
   cat.style.animation='catRise 1.3s cubic-bezier(.175,.885,.32,1.275) forwards,catFloat 4s ease-in-out 1.3s infinite';
@@ -719,11 +873,12 @@ function triggerGuard(){
 }
 function startBreak(){
   gState='resting';
+  const{workTime}=getEffective();
   document.getElementById('rest-btn').style.display='none';
-  document.getElementById('guard-msg').textContent='好好休息 🌿 15分鐘後回來';
+  document.getElementById('guard-msg').textContent=`好好休息 🌿 ${workTime}分鐘後回來`;
   const cdEl=document.getElementById('break-cd'),lbEl=document.getElementById('break-lbl');
   cdEl.style.display=lbEl.style.display='block';
-  let secs=15*60;
+  let secs=workTime*60;
   function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
   cdEl.textContent=fmt(secs);lbEl.textContent='請離開座位休息';
   if(cdIv)clearInterval(cdIv);
@@ -731,11 +886,13 @@ function startBreak(){
 }
 function endBreak(){
   if(cdIv){clearInterval(cdIv);cdIv=null;}
-  gState='cooldown';cooldownEnd=Date.now()+3600000;
+  const{skipDur}=getEffective();
+  const skipMs=skipDur*60*1000;
+  gState='cooldown';cooldownEnd=Date.now()+skipMs;
   document.getElementById('guard-overlay').style.display='none';
   document.getElementById('guard-dot').className='warn';
-  document.getElementById('guard-txt').textContent='休息完畢 · 60分鐘後偵測';
-  setTimeout(()=>{gState='monitoring';checkGuard();},3600000);
+  document.getElementById('guard-txt').textContent=`休息完畢 · ${skipDur}分鐘後偵測`;
+  setTimeout(()=>{gState='monitoring';checkGuard();},skipMs);
 }
 
 // ── DEBUG TRIGGER (bypasses state guard) ──
@@ -775,6 +932,7 @@ loadWP();
 tick();setInterval(tick,1000);
 checkGuard();setInterval(checkGuard,30000);
 updateUnsetFlags();
+initLiveData();
 </script>
 </body>
 </html>
