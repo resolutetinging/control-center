@@ -1076,7 +1076,7 @@ function checkGuard(){
   const now=new Date();
   const[eh,em]=endTime.split(':').map(Number);
   const end=new Date();end.setHours(eh,em,0,0);
-  const end2=new Date(end.getTime()+2*60*60*1000);
+  const end2=new Date(end.getTime()+1*60*60*1000);
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
   if(stamina<40||now>end2){triggerGuard();}
