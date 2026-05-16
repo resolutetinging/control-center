@@ -1160,7 +1160,7 @@ async function runSAS(){
   if(!key){el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.35);text-align:center;padding:16px;">請先在 ⚙️ API設定 填入 Groq API Key</div>';return;}
   el.innerHTML='<div style="text-align:center;padding:24px;"><div style="font-size:28px;animation:pulse-s 1.5s infinite;">✨</div><div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:8px;">分析中…</div></div>';
   const rf=rfToday();const{stamina,endTime}=getEffective();
-  const prompt=`你是整合健康顧問。分析多維度身心數據：睡眠${MOCK.sleep.dur}（品質${MOCK.sleep.q}%），情緒${MOCK.mental.score}/10（${MOCK.mental.trend}），戰力${stamina}%，任務${MOCK.opt.done}/${MOCK.opt.total}，續航至${endTime}，咖啡${rf.coffee}杯，水${rf.water}ml。\n用繁體中文分析（語氣溫暖，每段2-3句）：\n1. 🔗 數據間的關聯性\n2. ⚡ 能量管理評估\n3. 🎯 三個具體行動建議\n4. 💬 今天一句話`;
+  const prompt=`你是整合健康顧問。分析多維度身心數據：睡眠${MOCK.sleep.dur}（品質${MOCK.sleep.q}%），情緒${MOCK.mental.score}/10（${MOCK.mental.trend}），戰力${stamina}%，任務${MOCK.opt.done}/${MOCK.opt.total}，續航至${endTime}，咖啡${rf.coffee}杯，水${rf.water}ml。\n請全程使用繁體中文，嚴禁夾雜英文或其他語言詞彙。語氣溫暖，每段2-3句：\n1. 🔗 數據間的關聯性\n2. ⚡ 能量管理評估\n3. 🎯 三個具體行動建議\n4. 💬 今天一句話`;
   try{
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
     if(!resp.ok)throw new Error('API '+resp.status);
