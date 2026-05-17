@@ -413,6 +413,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="d-box">🎧</div>
       <span class="d-lbl">Podcast</span>
     </div>
+    <div class="d-icon" data-id="oasis" onclick="dClick(this,'oasis')">
+      <div class="d-box">🌿</div>
+      <span class="d-lbl">Oasis</span>
+    </div>
   </div>
 </div>
 
@@ -630,6 +634,7 @@ const DEFAULT_LINKS={
   'wordvault': 'https://resolutetinging.github.io/wordvault/WordVault.html',
   'mentaltool':'notion://www.notion.so',
   'podcast':   'notion://www.notion.so',
+  'oasis':     './oasis.html',
 };
 function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
@@ -839,6 +844,18 @@ function buildTT(id){
         +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
         +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'')
         +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
+    }
+    case 'oasis':{
+      let os=null;
+      try{os=JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{}
+      if(!os)return h('Oasis 文學探索')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未開啟</div>`;
+      let out=h('Oasis 文學探索')
+        +row('關鍵字',os.keywords+'個')
+        +row('已收藏',os.savedCount+'篇',os.savedCount>0?'g':'');
+      if(os.totalCards)out+=row('已探索',os.totalCards+'條');
+      if(os.lastKeywords&&os.lastKeywords.length)
+        out+=hr()+`<div style="font-size:10.5px;color:var(--faint);">${os.lastKeywords.join('・')}</div>`;
+      return out;
     }
     default:return'';
   }

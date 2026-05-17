@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oasis · 文學探索</title>
+<style>
+:root{
+  --bg:#f5edd8;--card:#fdf9f0;--card2:#faf4e5;
+  --accent:#b8955a;--accent2:#6b5030;--accent3:#e8d8b8;
+  --ink:#3a2e1e;--faint:#9a8870;--border:#e0d4b8;
+  --saved:#6d9e72;--red:#c0614b;
+  --shadow:rgba(90,60,20,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'Noto Serif TC','Georgia',serif;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+
+/* ── HEADER ── */
+#hdr{
+  padding:20px 28px 0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+}
+.hdr-title{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--accent2);}
+.hdr-sub{font-size:11.5px;color:var(--faint);margin-top:3px;letter-spacing:.5px;}
+
+/* ── TABS ── */
+#tab-bar{
+  display:flex;gap:0;padding:16px 28px 0;
+  border-bottom:1.5px solid var(--border);margin-top:12px;
+}
+.tab{
+  padding:8px 20px 10px;font-size:13.5px;cursor:pointer;
+  border-bottom:2.5px solid transparent;margin-bottom:-1.5px;
+  color:var(--faint);transition:.15s;letter-spacing:.4px;
+  user-select:none;
+}
+.tab.on{color:var(--accent2);border-bottom-color:var(--accent);font-weight:700;}
+.tab:hover:not(.on){color:var(--ink);}
+
+/* ── MAIN CONTENT ── */
+#main{flex:1;overflow-y:auto;padding:22px 28px;max-width:760px;margin:0 auto;width:100%;}
+
+/* ── KEYWORD PILLS ── */
+#kw-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.kw-pill{
+  padding:6px 16px;border-radius:20px;font-size:12.5px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--card);color:var(--faint);
+  transition:.15s;user-select:none;
+}
+.kw-pill.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
+.kw-pill:hover:not(.on){border-color:var(--accent);color:var(--accent2);}
+
+/* ── FETCH BAR ── */
+#fetch-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+.fetch-btn{
+  padding:7px 16px;border-radius:8px;border:1.5px solid var(--accent);
+  background:var(--card);color:var(--accent2);font-size:12px;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;gap:5px;transition:.15s;
+}
+.fetch-btn:hover{background:var(--accent);color:#fff;}
+.fetch-btn:disabled{opacity:.5;cursor:not-allowed;}
+.last-fetch{font-size:11px;color:var(--faint);}
+
+/* ── CARDS ── */
+.card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:14px;
+  padding:20px 22px;margin-bottom:14px;box-shadow:0 2px 10px var(--shadow);
+  position:relative;transition:.15s;
+}
+.card:hover{box-shadow:0 5px 18px var(--shadow);transform:translateY(-1px);}
+.card-quote{
+  font-size:14.5px;line-height:1.9;color:var(--ink);
+  border-left:3px solid var(--accent);padding-left:14px;margin-bottom:14px;
+  font-style:italic;white-space:pre-wrap;word-break:break-word;
+}
+.card-attr{
+  font-size:12px;color:var(--faint);display:flex;
+  align-items:center;flex-wrap:wrap;gap:6px;
+}
+.card-lang{
+  font-size:10px;padding:2px 8px;border-radius:10px;
+  background:var(--accent3);color:var(--accent2);font-style:normal;
+}
+.card-title{color:var(--accent2);font-weight:700;font-style:normal;}
+.card-tags{margin-top:10px;}
+.tag{
+  display:inline-block;padding:2px 9px;border-radius:10px;font-size:10.5px;
+  background:var(--border);color:var(--faint);margin-right:5px;font-style:normal;
+}
+.save-btn{
+  position:absolute;top:16px;right:16px;background:none;border:none;
+  font-size:22px;cursor:pointer;opacity:.45;transition:.2s;padding:3px;line-height:1;
+}
+.save-btn:hover{opacity:1;transform:scale(1.1);}
+.save-btn.saved{opacity:1;}
+
+/* ── LOADING / EMPTY ── */
+.loading{text-align:center;padding:48px 20px;color:var(--faint);}
+.spinner{
+  display:inline-block;width:22px;height:22px;
+  border:2.5px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;margin-bottom:10px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:56px 20px;color:var(--faint);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-msg{font-size:14px;margin-bottom:6px;color:var(--ink);}
+.empty-sub{font-size:12px;margin-bottom:18px;}
+
+/* ── SAVED FILTER ── */
+.saved-filter{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.filter-pill{
+  padding:5px 13px;border-radius:14px;font-size:11.5px;cursor:pointer;
+  border:1.5px solid var(--border);color:var(--faint);background:var(--card);
+  transition:.15s;user-select:none;
+}
+.filter-pill.on{background:var(--saved);color:#fff;border-color:var(--saved);}
+.filter-pill:hover:not(.on){border-color:var(--saved);color:var(--saved);}
+
+/* ── SETTINGS ── */
+.setting-group{margin-bottom:26px;}
+.setting-label{
+  font-size:11px;color:var(--faint);margin-bottom:8px;
+  letter-spacing:.8px;text-transform:uppercase;font-weight:600;
+}
+.setting-input{
+  width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;
+  background:var(--card);color:var(--ink);font-size:13px;font-family:inherit;
+  transition:.15s;
+}
+.setting-input:focus{outline:none;border-color:var(--accent);}
+.setting-hint{font-size:11px;color:var(--faint);margin-top:5px;}
+.btn{
+  padding:9px 20px;border-radius:9px;border:none;cursor:pointer;
+  font-size:13px;font-family:inherit;transition:.15s;
+}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{
+  background:transparent;border:1.5px solid var(--border);
+  color:var(--faint);padding:8px 16px;
+}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent2);}
+.kw-manage-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:8px;background:var(--card2);
+  border:1px solid var(--border);margin-bottom:7px;
+}
+.kw-manage-name{flex:1;font-size:13px;}
+.kw-del{
+  background:none;border:none;font-size:16px;cursor:pointer;
+  color:var(--faint);padding:2px 4px;transition:.15s;
+}
+.kw-del:hover{color:var(--red);}
+
+/* ── STAT ROW ── */
+.stat-row{
+  display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;
+}
+.stat-chip{
+  padding:7px 16px;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;font-size:12px;
+}
+.stat-chip strong{color:var(--accent2);}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div>
+    <div class="hdr-title">🌿 Oasis</div>
+    <div class="hdr-sub">文學 · 語言 · 靜思</div>
+  </div>
+</div>
+
+<div id="tab-bar">
+  <div class="tab on" data-tab="discover" onclick="showTab('discover')">探索</div>
+  <div class="tab" data-tab="saved" onclick="showTab('saved')">收藏</div>
+  <div class="tab" data-tab="settings" onclick="showTab('settings')">設定</div>
+</div>
+
+<div id="main"></div>
+
+<script>
+// ── STORAGE STATE ──
+const S={
+  get keywords(){try{return JSON.parse(localStorage.getItem('oasis_keywords')||'[]');}catch{return[];}},
+  set keywords(v){localStorage.setItem('oasis_keywords',JSON.stringify(v));saveStatus();},
+  get saved(){try{return JSON.parse(localStorage.getItem('oasis_saved')||'[]');}catch{return[];}},
+  set saved(v){localStorage.setItem('oasis_saved',JSON.stringify(v));saveStatus();},
+  get groqKey(){return localStorage.getItem('oasis_groq_key')||'';},
+  set groqKey(v){localStorage.setItem('oasis_groq_key',v);},
+  get cache(){try{return JSON.parse(localStorage.getItem('oasis_cache')||'{}');}catch{return{};}},
+  set cache(v){localStorage.setItem('oasis_cache',JSON.stringify(v));saveStatus();},
+};
+
+function saveStatus(){
+  const kws=S.keywords, saved=S.saved, cache=S.cache;
+  const totalCards=Object.values(cache).reduce((a,arr)=>a+(arr?.length||0),0);
+  localStorage.setItem('oasis_status',JSON.stringify({
+    keywords:kws.length,savedCount:saved.length,totalCards,
+    lastKeywords:kws.slice(0,3),ts:Date.now()
+  }));
+}
+
+window.getOasisStatus=function(){
+  try{return JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{return null;}
+};
+
+let curTab='discover';
+let curKw=null;
+let savedFilter='all';
+const fetching=new Set();
+
+// ── TAB ROUTING ──
+function showTab(t){
+  curTab=t;
+  document.querySelectorAll('.tab').forEach(el=>
+    el.classList.toggle('on',el.dataset.tab===t)
+  );
+  render();
+}
+
+function render(){
+  document.getElementById('main').innerHTML=
+    curTab==='discover'?buildDiscover():
+    curTab==='saved'?buildSaved():
+    buildSettings();
+}
+
+// ── DISCOVER ──
+function buildDiscover(){
+  const kws=S.keywords;
+  if(!kws.length) return `
+    <div class="empty">
+      <div class="empty-icon">🌾</div>
+      <div class="empty-msg">還沒有探索關鍵字</div>
+      <div class="empty-sub">到設定新增感興趣的主題</div>
+      <button class="btn btn-primary" onclick="showTab('settings')">前往設定</button>
+    </div>`;
+
+  if(!curKw||!kws.includes(curKw)) curKw=kws[0];
+
+  const pills=kws.map(k=>
+    `<div class="kw-pill${k===curKw?' on':''}" onclick="selectKw('${esc(k)}')">${esc(k)}</div>`
+  ).join('');
+
+  const cache=S.cache;
+  const cards=cache[curKw]||[];
+  const lastTs=parseInt(localStorage.getItem('oasis_last_'+curKw)||'0');
+  const ago=lastTs?timeSince(lastTs):'從未取得';
+  const isLoading=fetching.has(curKw);
+
+  let cardsHtml='';
+  if(isLoading){
+    cardsHtml=`<div class="loading"><div class="spinner"></div><br>正在探索「${esc(curKw)}」中的文學引文…</div>`;
+  } else if(!cards.length){
+    cardsHtml=`<div class="empty">
+      <div class="empty-icon">📚</div>
+      <div class="empty-msg">尚無「${esc(curKw)}」的探索結果</div>
+      <div class="empty-sub">按下右上角立即探索</div>
+    </div>`;
+  } else {
+    cardsHtml=cards.map(c=>buildCard(c)).join('');
+  }
+
+  const fetchDisabled=isLoading?' disabled':'';
+  return `
+    <div id="kw-row">${pills}</div>
+    <div id="fetch-bar">
+      <span class="last-fetch">上次更新：${ago}</span>
+      <button class="fetch-btn"${fetchDisabled} onclick="fetchCards('${esc(curKw)}')">
+        ${isLoading?'⏳ 探索中…':'🔄 重新探索'}
+      </button>
+    </div>
+    <div id="cards-area">${cardsHtml}</div>`;
+}
+
+function buildCard(c){
+  const isSaved=S.saved.some(s=>s.id===c.id);
+  const langMap={zh:'中文',ko:'韓文',en:'English',ja:'日本語',fr:'Français',de:'Deutsch'};
+  const langLabel=langMap[c.lang]||c.lang||'';
+  const tagsHtml=(c.tags||[]).length
+    ?`<div class="card-tags">${(c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
+  return `
+    <div class="card">
+      <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
+        title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
+      <div class="card-quote">${esc(c.quote)}</div>
+      <div class="card-attr">
+        ${langLabel?`<span class="card-lang">${langLabel}</span>`:''}
+        <span>《<span class="card-title">${esc(c.title)}</span>》</span>
+        <span>${esc(c.author)}</span>
+        ${c.year?`<span>· ${c.year}</span>`:''}
+      </div>
+      ${tagsHtml}
+    </div>`;
+}
+
+function selectKw(k){curKw=k;render();}
+
+// ── SAVED ──
+function buildSaved(){
+  const items=S.saved;
+  if(!items.length) return `
+    <div class="empty">
+      <div class="empty-icon">🌿</div>
+      <div class="empty-msg">收藏夾是空的</div>
+      <div class="empty-sub">在探索頁按 🤍 加入收藏</div>
+    </div>`;
+
+  const allTags=['all',...new Set(items.flatMap(i=>i.tags||[]))];
+  if(!allTags.includes(savedFilter)) savedFilter='all';
+  const filters=allTags.map(t=>
+    `<div class="filter-pill${t===savedFilter?' on':''}" onclick="setSavedFilter('${esc(t)}')">${t==='all'?'全部':esc(t)}</div>`
+  ).join('');
+  const show=savedFilter==='all'?items:items.filter(i=>(i.tags||[]).includes(savedFilter));
+  const langMap={zh:'中文',ko:'韓文',en:'English',ja:'日本語',fr:'Français'};
+  const cards=show.map(c=>`
+    <div class="card">
+      <button class="save-btn saved" onclick="toggleSave('${esc(c.id)}')" title="移除收藏">🌿</button>
+      <div class="card-quote">${esc(c.quote)}</div>
+      <div class="card-attr">
+        ${(langMap[c.lang]||c.lang)?`<span class="card-lang">${langMap[c.lang]||c.lang}</span>`:''}
+        <span>《<span class="card-title">${esc(c.title)}</span>》</span>
+        <span>${esc(c.author)}</span>
+        ${c.year?`<span>· ${c.year}</span>`:''}
+      </div>
+      ${(c.tags||[]).length?`<div class="card-tags">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+    </div>`).join('');
+
+  return `
+    <div class="stat-row">
+      <div class="stat-chip">共 <strong>${items.length}</strong> 篇收藏</div>
+      ${show.length!==items.length?`<div class="stat-chip">篩選中：<strong>${show.length}</strong> 篇</div>`:''}
+    </div>
+    <div class="saved-filter">${filters}</div>
+    ${cards||`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">此標籤下無收藏</div></div>`}`;
+}
+
+function setSavedFilter(t){savedFilter=t;render();}
+
+// ── SETTINGS ──
+function buildSettings(){
+  const kws=S.keywords;
+  const kwRows=kws.map((k,i)=>`
+    <div class="kw-manage-row">
+      <span class="kw-manage-name">${esc(k)}</span>
+      <button class="kw-del" onclick="removeKw(${i})" title="刪除">✕</button>
+    </div>`).join('');
+
+  const cache=S.cache;
+  const totalCards=Object.values(cache).reduce((a,arr)=>a+(arr?.length||0),0);
+
+  return `
+    <div class="setting-group">
+      <div class="setting-label">Groq API Key</div>
+      <input class="setting-input" type="password" id="groq-key"
+        value="${esc(S.groqKey)}" placeholder="gsk_…" oninput="S.groqKey=this.value">
+      <div class="setting-hint">用於從真實文學典籍中搜尋引文（llama-3.3-70b-versatile）</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">探索關鍵字</div>
+      ${kwRows||'<div style="font-size:12px;color:var(--faint);margin-bottom:10px;">尚無關鍵字</div>'}
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input class="setting-input" id="new-kw" placeholder="新增主題關鍵字…" style="flex:1"
+          onkeydown="if(event.key==='Enter')addKw()">
+        <button class="btn btn-primary" onclick="addKw()">新增</button>
+      </div>
+      <div class="setting-hint">建議：孤獨、邊境、記憶、流浪、自由…</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">統計</div>
+      <div class="stat-row">
+        <div class="stat-chip">關鍵字 <strong>${kws.length}</strong></div>
+        <div class="stat-chip">收藏 <strong>${S.saved.length}</strong> 篇</div>
+        <div class="stat-chip">已探索 <strong>${totalCards}</strong> 條</div>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">管理</div>
+      <button class="btn btn-ghost" onclick="clearCache()" style="margin-right:8px;">清除快取</button>
+      <button class="btn btn-ghost" onclick="exportSaved()">匯出收藏 JSON</button>
+    </div>`;
+}
+
+function addKw(){
+  const inp=document.getElementById('new-kw');
+  const v=(inp?.value||'').trim();
+  if(!v)return;
+  const kws=S.keywords;
+  if(!kws.includes(v)){kws.push(v);S.keywords=kws;}
+  inp.value='';render();
+}
+
+function removeKw(i){
+  const kws=S.keywords;kws.splice(i,1);S.keywords=kws;
+  if(curKw&&!kws.includes(curKw))curKw=kws[0]||null;
+  render();
+}
+
+function clearCache(){
+  S.cache={};
+  S.keywords.forEach(k=>localStorage.removeItem('oasis_last_'+k));
+  alert('快取已清除');render();
+}
+
+function exportSaved(){
+  const data=JSON.stringify(S.saved,null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json,'+encodeURIComponent(data);
+  a.download='oasis_saved_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+
+// ── SAVE / UNSAVE ──
+function toggleSave(id){
+  let saved=S.saved;
+  const idx=saved.findIndex(s=>s.id===id);
+  if(idx>=0){
+    saved.splice(idx,1);
+  } else {
+    const cache=S.cache;
+    let card=null;
+    for(const k of Object.keys(cache)){
+      card=(cache[k]||[]).find(c=>c.id===id);
+      if(card)break;
+    }
+    if(card)saved.push({...card,savedAt:Date.now()});
+  }
+  S.saved=saved;render();
+}
+
+// ── GROQ FETCH ──
+async function fetchCards(kw){
+  if(!S.groqKey){
+    alert('請先在「設定」頁輸入 Groq API Key');showTab('settings');return;
+  }
+  fetching.add(kw);render();
+
+  // Learning context: pass saved items as quality signal
+  const savedSample=S.saved.slice(0,6)
+    .map(s=>`《${s.title}》${s.author}`)
+    .filter(Boolean).join('、');
+  const learningCtx=savedSample
+    ?`\n用戶已收藏的風格參考：${savedSample}。請優先推薦風格或主題相近的真實作品。`:'';
+
+  const sys=`你是嚴謹的文學引文資料庫助理。
+規則（必須遵守）：
+1. 只提供真實存在的已出版書籍、詩集、散文集中的原文
+2. 絕對不得虛構引文、書名、作者，即使找不到合適的也不可虛構
+3. 必須提供正確書名、作者全名、出版年份
+4. 語言優先：繁體中文 > 韓文 > 日文 > 英文
+5. 回傳純 JSON 陣列，直接從 [ 開始，不加任何說明`;
+
+  const prompt=`關鍵字「${kw}」。${learningCtx}
+
+找 5 條真實文學引文，JSON 格式：
+[
+  {
+    "quote": "原文引文（40-150字，保留原文語言）",
+    "title": "書名或詩集名",
+    "author": "作者全名",
+    "year": 出版年份（數字）,
+    "lang": "zh 或 ko 或 ja 或 en",
+    "tags": ["${kw}"]
+  }
+]
+
+只回傳 JSON，無其他文字。`;
+
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+S.groqKey,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[{role:'system',content:sys},{role:'user',content:prompt}],
+        temperature:0.25,
+        max_tokens:2500
+      })
+    });
+    if(!res.ok){
+      const errText=await res.text();
+      console.error('Groq error',res.status,errText);
+      alert('Groq 回應錯誤 '+res.status+'：'+errText.slice(0,200));
+      fetching.delete(kw);render();return;
+    }
+    const json=await res.json();
+    const text=json.choices?.[0]?.message?.content||'';
+    const m=text.match(/\[[\s\S]*\]/);
+    if(!m){
+      console.error('No JSON array',text);
+      alert('回傳格式錯誤，請重試\n'+text.slice(0,200));
+      fetching.delete(kw);render();return;
+    }
+    let cards=JSON.parse(m[0]);
+    if(!Array.isArray(cards)||!cards.length) throw new Error('empty array');
+    cards=cards.map((c,i)=>({
+      id:kw+'_'+Date.now()+'_'+i,
+      quote:c.quote||'',title:c.title||'',author:c.author||'',
+      year:c.year||null,lang:c.lang||'zh',tags:c.tags||[kw]
+    }));
+    const cache=S.cache;
+    cache[kw]=cards;S.cache=cache;
+    localStorage.setItem('oasis_last_'+kw,Date.now().toString());
+  }catch(e){
+    console.error('fetchCards',e);
+    alert('探索失敗：'+e.message);
+  }
+  fetching.delete(kw);render();
+}
+
+// ── UTILS ──
+function esc(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function timeSince(ts){
+  if(!ts)return'從未';
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return s+'秒前';
+  if(s<3600)return Math.floor(s/60)+'分鐘前';
+  if(s<86400)return Math.floor(s/3600)+'小時前';
+  return Math.floor(s/86400)+'天前';
+}
+
+// ── INIT ──
+saveStatus();
+render();
+</script>
+</body>
+</html>
