@@ -846,16 +846,24 @@ function buildTT(id){
         +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
     }
     case 'oasis':{
-      let os=null;
-      try{os=JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{}
-      if(!os)return h('Oasis 文學探索')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未開啟</div>`;
-      let out=h('Oasis 文學探索')
-        +row('關鍵字',os.keywords+'個')
-        +row('已收藏',os.savedCount+'篇',os.savedCount>0?'g':'');
-      if(os.totalCards)out+=row('已探索',os.totalCards+'條');
-      if(os.lastKeywords&&os.lastKeywords.length)
-        out+=hr()+`<div style="font-size:10.5px;color:var(--faint);">${os.lastKeywords.join('・')}</div>`;
-      return out;
+      let saved=[];
+      try{saved=JSON.parse(localStorage.getItem('oasis_saved')||'[]');}catch{}
+      if(!saved.length)return h('🌿 Oasis')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">收藏夾是空的</div>`;
+      const item=saved[Math.floor(Math.random()*saved.length)];
+      const isZh=(item.lang==='zh');
+      const quote=(item.quote||'').replace(/\n/g,' ').slice(0,80)+(item.quote&&item.quote.replace(/\n/g,' ').length>80?'…':'');
+      const trans=(!isZh&&item.translation)?(item.translation||'').replace(/\n/g,' ').slice(0,60)+(item.translation&&item.translation.replace(/\n/g,' ').length>60?'…':''):'';
+      const metaOrig=[item.title?`《${item.title}》`:'',item.author||''].filter(Boolean).join('　');
+      const metaZh=!isZh?[item.title_zh?`《${item.title_zh}》`:'',item.author_zh||''].filter(Boolean).join('　'):'';
+      const country=item.country||'';
+      return h('🌿 Oasis')+
+        (country?`<div style="font-size:10px;padding:2px 7px;border-radius:8px;background:var(--card);display:inline-block;margin-bottom:7px;color:var(--sub);">${country}</div>`+hr():'')+
+        `<div style="font-size:12px;line-height:1.7;color:var(--ink);margin-bottom:6px;">${quote}</div>`+
+        (trans?`<div style="font-size:11px;line-height:1.6;color:var(--sub);margin-bottom:6px;">${trans}</div>`:'')+
+        hr()+
+        `<div style="font-size:10.5px;color:var(--faint);">${metaOrig}</div>`+
+        (metaZh?`<div style="font-size:10px;color:var(--faint);opacity:.75;">${metaZh}</div>`:'')+
+        (saved.length>1?`<div style="font-size:10px;color:var(--faint);margin-top:5px;text-align:right;">共 ${saved.length} 篇收藏</div>`:'');
     }
     default:return'';
   }
