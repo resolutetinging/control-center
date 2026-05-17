@@ -77,8 +77,13 @@ body{
 .card:hover{box-shadow:0 5px 18px var(--shadow);transform:translateY(-1px);}
 .card-quote{
   font-size:14.5px;line-height:1.9;color:var(--ink);
-  border-left:3px solid var(--accent);padding-left:14px;margin-bottom:14px;
-  font-style:italic;white-space:pre-wrap;word-break:break-word;
+  border-left:3px solid var(--accent);padding-left:14px;margin-bottom:8px;
+  white-space:pre-wrap;word-break:break-word;
+}
+.card-translation{
+  font-size:13px;line-height:1.8;color:var(--sub);
+  border-left:3px solid var(--border);padding-left:14px;margin-bottom:14px;
+  white-space:pre-wrap;word-break:break-word;
 }
 .card-attr{
   font-size:12px;color:var(--faint);display:flex;
@@ -159,6 +164,16 @@ body{
   color:var(--faint);padding:2px 4px;transition:.15s;
 }
 .kw-del:hover{color:var(--red);}
+
+/* ── KEY INPUT ── */
+.key-wrap{position:relative;display:flex;align-items:center;}
+.key-wrap .setting-input{padding-right:44px;}
+.eye-btn{
+  position:absolute;right:12px;background:none;border:none;
+  cursor:pointer;color:var(--faint);font-size:16px;padding:4px;
+  line-height:1;transition:color .15s;
+}
+.eye-btn:hover{color:var(--sub);}
 
 /* ── STAT ROW ── */
 .stat-row{
@@ -282,15 +297,18 @@ function buildDiscover(){
 
 function buildCard(c){
   const isSaved=S.saved.some(s=>s.id===c.id);
-  const langMap={zh:'中文',ko:'韓文',en:'English',ja:'日本語',fr:'Français',de:'Deutsch'};
+  const langMap={zh:'中文',ko:'한국어',en:'English',ja:'日本語',fr:'Français',de:'Deutsch'};
   const langLabel=langMap[c.lang]||c.lang||'';
   const tagsHtml=(c.tags||[]).length
     ?`<div class="card-tags">${(c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
+  const translationHtml=(c.lang==='ko'&&c.translation)
+    ?`<div class="card-translation">${esc(c.translation)}</div>`:'';
   return `
     <div class="card">
       <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
         title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
       <div class="card-quote">${esc(c.quote)}</div>
+      ${translationHtml}
       <div class="card-attr">
         ${langLabel?`<span class="card-lang">${langLabel}</span>`:''}
         <span>《<span class="card-title">${esc(c.title)}</span>》</span>
@@ -319,19 +337,7 @@ function buildSaved(){
     `<div class="filter-pill${t===savedFilter?' on':''}" onclick="setSavedFilter('${esc(t)}')">${t==='all'?'全部':esc(t)}</div>`
   ).join('');
   const show=savedFilter==='all'?items:items.filter(i=>(i.tags||[]).includes(savedFilter));
-  const langMap={zh:'中文',ko:'韓文',en:'English',ja:'日本語',fr:'Français'};
-  const cards=show.map(c=>`
-    <div class="card">
-      <button class="save-btn saved" onclick="toggleSave('${esc(c.id)}')" title="移除收藏">🌿</button>
-      <div class="card-quote">${esc(c.quote)}</div>
-      <div class="card-attr">
-        ${(langMap[c.lang]||c.lang)?`<span class="card-lang">${langMap[c.lang]||c.lang}</span>`:''}
-        <span>《<span class="card-title">${esc(c.title)}</span>》</span>
-        <span>${esc(c.author)}</span>
-        ${c.year?`<span>· ${c.year}</span>`:''}
-      </div>
-      ${(c.tags||[]).length?`<div class="card-tags">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
-    </div>`).join('');
+  const cards=show.map(c=>buildCard(c)).join('');
 
   return `
     <div class="stat-row">
@@ -359,8 +365,11 @@ function buildSettings(){
   return `
     <div class="setting-group">
       <div class="setting-label">Groq API Key</div>
-      <input class="setting-input" type="password" id="groq-key"
-        value="${esc(S.groqKey)}" placeholder="gsk_…" oninput="S.groqKey=this.value">
+      <div class="key-wrap">
+        <input class="setting-input" type="password" id="groq-key"
+          value="${esc(S.groqKey)}" placeholder="gsk_…" oninput="S.groqKey=this.value">
+        <button class="eye-btn" onclick="toggleKeyVis()" id="eye-btn" title="顯示／隱藏">👁</button>
+      </div>
       <div class="setting-hint">用於從真實文學典籍中搜尋引文（llama-3.3-70b-versatile）</div>
     </div>
     <div class="setting-group">
@@ -401,6 +410,15 @@ function removeKw(i){
   const kws=S.keywords;kws.splice(i,1);S.keywords=kws;
   if(curKw&&!kws.includes(curKw))curKw=kws[0]||null;
   render();
+}
+
+function toggleKeyVis(){
+  const inp=document.getElementById('groq-key');
+  const btn=document.getElementById('eye-btn');
+  if(!inp)return;
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  if(btn)btn.textContent=show?'🙈':'👁';
 }
 
 function clearCache(){
@@ -451,18 +469,20 @@ async function fetchCards(kw){
 
   const sys=`你是嚴謹的文學引文資料庫助理。
 規則（必須遵守）：
-1. 只提供真實存在的已出版書籍、詩集、散文集中的原文
+1. 只提供真實存在的已出版書籍、詩集、散文集中的原文，可以是完整段落或散文節選
 2. 絕對不得虛構引文、書名、作者，即使找不到合適的也不可虛構
 3. 必須提供正確書名、作者全名、出版年份
 4. 語言優先：繁體中文 > 韓文 > 日文 > 英文
-5. 回傳純 JSON 陣列，直接從 [ 開始，不加任何說明`;
+5. 韓文作品（lang=ko）必須額外提供 translation 欄位（繁體中文翻譯）
+6. 回傳純 JSON 陣列，直接從 [ 開始，不加任何說明`;
 
   const prompt=`關鍵字「${kw}」。${learningCtx}
 
-找 5 條真實文學引文，JSON 格式：
+找 4-5 條真實文學引文（可包含散文節選、小說片段、詩作），JSON 格式：
 [
   {
-    "quote": "原文引文（40-150字，保留原文語言）",
+    "quote": "原文引文，保留原文語言，長度可達散文段落（100-400字）",
+    "translation": "若 lang=ko 則填繁體中文翻譯；其他語言此欄位省略",
     "title": "書名或詩集名",
     "author": "作者全名",
     "year": 出版年份（數字）,
@@ -505,7 +525,8 @@ async function fetchCards(kw){
     if(!Array.isArray(cards)||!cards.length) throw new Error('empty array');
     cards=cards.map((c,i)=>({
       id:kw+'_'+Date.now()+'_'+i,
-      quote:c.quote||'',title:c.title||'',author:c.author||'',
+      quote:c.quote||'',translation:c.translation||'',
+      title:c.title||'',author:c.author||'',
       year:c.year||null,lang:c.lang||'zh',tags:c.tags||[kw]
     }));
     const cache=S.cache;
