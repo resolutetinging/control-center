@@ -778,8 +778,8 @@ function buildTT(id){
       const endTime=(()=>{
         if(storedEnd)return storedEnd; // sleep_dashboard 寫入的精確值
         if(!sleepCp)return null;       // 無 sleep data → 不顯示
-        const eh=8+sleepCp/100*14,h=Math.floor(eh),m=Math.round((eh-h)*60);
-        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        // 與 SAS Hub 公式對齊：Math.floor，固定 :00
+        return `${String(Math.floor(8+sleepCp/100*14)).padStart(2,'0')}:00`;
       })();
       const endColor=sleepCp?(sleepCp>=70?'g':sleepCp>=40?'a':'r'):'';
       const enduranceHtml=endTime?hr()+row('體能續航至',endTime,endColor):'';
