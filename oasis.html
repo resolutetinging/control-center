@@ -365,14 +365,16 @@ function buildSettings(){
       <button class="del-btn" onclick="removeKw(${i})">✕</button>
     </div>`).join('');
 
-  const authorRows=authors.map((a,i)=>`
-    <div class="manage-row">
+  const authorRows=authors.map((a,i)=>{
+    const main=a.name||a.name_zh||'';
+    const sub=a.name&&a.name_zh?a.name_zh:'';
+    return`<div class="manage-row">
       <div style="flex:1;">
-        <div class="manage-main">${esc(a.name)}</div>
-        ${a.name_zh?`<div class="manage-sub">${esc(a.name_zh)}</div>`:''}
+        <div class="manage-main">${esc(main)}</div>
+        ${sub?`<div class="manage-sub">${esc(sub)}</div>`:''}
       </div>
       <button class="del-btn" onclick="removeAuthor(${i})">✕</button>
-    </div>`).join('');
+    </div>`;}).join('');
 
   return `
     <div class="setting-group">
@@ -400,13 +402,13 @@ function buildSettings(){
       <div class="setting-label">喜愛作者</div>
       ${authorRows||'<div style="font-size:12px;color:var(--faint);margin-bottom:8px;">尚無喜愛作者</div>'}
       <div class="add-row">
-        <input class="setting-input" id="new-author" placeholder="作者原文名（如 이효석）"
+        <input class="setting-input" id="new-author" placeholder="姓名（中文或原文皆可）"
           onkeydown="if(event.key==='Enter')addAuthor()">
-        <input class="setting-input" id="new-author-zh" placeholder="中文名（選填）" style="max-width:130px;"
+        <input class="setting-input" id="new-author-zh" placeholder="另一語言名稱（選填）" style="max-width:160px;"
           onkeydown="if(event.key==='Enter')addAuthor()">
         <button class="btn btn-primary" onclick="addAuthor()">新增</button>
       </div>
-      <div class="setting-hint">探索時會優先納入喜愛作者與關鍵字相關的內容</div>
+      <div class="setting-hint">探索時優先納入喜愛作者與關鍵字相關的內容</div>
     </div>
 
     <div class="setting-group">
@@ -446,10 +448,11 @@ function addAuthor(){
   const nameEl=document.getElementById('new-author');
   const zhEl=document.getElementById('new-author-zh');
   const name=(nameEl?.value||'').trim();
-  if(!name)return;
   const name_zh=(zhEl?.value||'').trim();
+  if(!name&&!name_zh)return;
   const authors=S.authors;
-  if(!authors.find(a=>a.name===name)){
+  const key=name||name_zh;
+  if(!authors.find(a=>(a.name||a.name_zh)===key)){
     authors.push({name,name_zh});S.authors=authors;
   }
   if(nameEl)nameEl.value='';
@@ -505,41 +508,44 @@ async function fetchCards(kw){
   fetching.add(kw);render();
 
   const savedSample=S.saved.slice(0,5).map(s=>`《${s.title}》${s.author}`).filter(Boolean).join('、');
-  const favAuthors=S.authors.map(a=>a.name+(a.name_zh?`（${a.name_zh}）`:'')).join('、');
+  const favAuthors=S.authors.map(a=>{
+    if(a.name&&a.name_zh)return`${a.name}（${a.name_zh}）`;
+    return a.name||a.name_zh||'';
+  }).filter(Boolean).join('、');
 
   const learningParts=[];
   if(savedSample)learningParts.push(`用戶收藏風格參考：${savedSample}`);
   if(favAuthors)learningParts.push(`喜愛作者（優先納入其與關鍵字相關作品）：${favAuthors}`);
   const learningCtx=learningParts.length?'\n'+learningParts.join('\n'):'';
 
-  const sys=`你是嚴謹的文學引文資料庫助理。
-規則：
-1. 只提供真實已出版書籍、詩集、散文集的原文，可為完整段落或散文節選
-2. 絕對不得虛構引文、書名、作者
-3. 必須提供正確書名、作者全名、出版年份
-4. 非中文作品必須提供 translation（繁體中文翻譯）
-5. 非中文的書名必須提供 title_zh（繁體中文書名）
-6. 非中文的作者名必須提供 author_zh（繁體中文譯名）
-7. 回傳純 JSON 陣列，直接從 [ 開始`;
+  const sys=`你是嚴謹的文學引文資料庫。【所有規則強制執行，不得例外】
+① 只提供真實已出版書籍、詩集、散文集的原文（散文節選、小說片段、詩作均可）
+② 絕對不得虛構引文、書名、作者——寧可不回傳也不可虛構
+③ 段落換行用 \\n，詩行各自換行
+④ 凡 lang 不是 "zh" 的條目，下列三欄【必填，不得留空或省略】：
+   • translation = 引文的繁體中文翻譯
+   • title_zh    = 書名的繁體中文譯名
+   • author_zh   = 作者姓名的繁體中文譯名
+⑤ 回傳純 JSON 陣列，直接從 [ 開始，不加任何說明文字`;
 
   const prompt=`關鍵字「${kw}」。${learningCtx}
 
-找 4-5 條真實文學引文（散文節選、小說片段、詩作均可），JSON：
+找 4-5 條真實文學引文，JSON 格式如下（每個欄位的說明是規則，不要原樣輸出）：
 [
   {
-    "quote": "原文（保留原始語言，100-400字；段落間以 \\n 換行，詩行也各自換行）",
-    "translation": "繁體中文翻譯（非中文作品必填；段落間以 \\n 換行）",
-    "title": "原文書名",
-    "title_zh": "繁體中文書名（非中文書名必填）",
-    "author": "原文作者名",
-    "author_zh": "繁體中文譯名（非中文作者必填）",
-    "year": 出版年份,
-    "lang": "zh或ko或ja或en或fr",
-    "tags": ["${kw}"]
+    "quote":       "原文，保留原始語言，100-400字",
+    "translation": "【lang非zh時必填】引文繁體中文翻譯",
+    "title":       "原文書名",
+    "title_zh":    "【lang非zh時必填】書名繁體中文譯名",
+    "author":      "原文作者姓名",
+    "author_zh":   "【lang非zh時必填】作者繁體中文譯名",
+    "year":        出版年份數字,
+    "lang":        "zh 或 ko 或 ja 或 en 或 fr",
+    "tags":        ["${kw}"]
   }
 ]
 
-只回傳 JSON。`;
+回傳純 JSON，不加其他文字。`;
 
   try{
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
