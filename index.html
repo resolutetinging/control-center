@@ -607,6 +607,7 @@ function fetchSleepData(){
         date:stored?.date||'—',deepP,remP,coreP,awakeP,
         combatPower,
         pace:combatPower>=80?'高效能 · 火力全開 🔥':combatPower>=70?'穩定輸出 ⚡':combatPower>=60?'注意 · 稍作保留 ⚠':'恢復優先 · 輕量任務 💤',
+        endTime:localStorage.getItem('sas_endurance')||null,
         trend7
       };
     } else {
@@ -771,7 +772,17 @@ function buildTT(id){
     case 'sas-hub':{
       const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
       const pace=LIVE.sleep?.pace??'請先訪問 SAS Hub';
-      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
+      const _cpn=cp!=='—'?+cp:null;
+      const storedEnd=localStorage.getItem('sas_endurance');
+      const endTime=(()=>{
+        if(storedEnd)return storedEnd;
+        if(_cpn===null)return null;
+        const eh=8+_cpn/100*14,h=Math.floor(eh),m=Math.round((eh-h)*60);
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      })();
+      const endColor=_cpn!==null?(_cpn>=70?'g':_cpn>=40?'a':'r'):'';
+      const enduranceHtml=endTime?hr()+row('體能續航至',endTime,endColor):'';
+      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
     }
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
