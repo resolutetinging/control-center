@@ -2,8 +2,10 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Oasis · 文學探索</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Oasis</title>
 <style>
 :root{
   --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
@@ -14,158 +16,123 @@
   --shadow:rgba(40,38,32,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{
-  background:var(--bg);color:var(--ink);
+html,body{
+  min-height:100%;background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;
-  min-height:100vh;display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
 }
+body{display:flex;flex-direction:column;}
 
 /* ── HEADER ── */
-#hdr{
-  padding:20px 28px 0;
-  display:flex;align-items:flex-end;justify-content:space-between;
-}
+#hdr{padding:20px 28px 0;}
 .hdr-title{font-size:22px;font-weight:700;letter-spacing:-.3px;color:var(--ink);}
 
 /* ── TABS ── */
 #tab-bar{
-  display:flex;gap:0;padding:16px 28px 0;
-  border-bottom:1.5px solid var(--border);margin-top:12px;
+  display:flex;padding:14px 28px 0;
+  border-bottom:1px solid var(--bstr);margin-top:10px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
 }
+#tab-bar::-webkit-scrollbar{display:none;}
 .tab{
-  padding:8px 20px 10px;font-size:13.5px;cursor:pointer;
-  border-bottom:2.5px solid transparent;margin-bottom:-1.5px;
-  color:var(--faint);transition:.15s;letter-spacing:.4px;
-  user-select:none;
+  padding:8px 18px 10px;font-size:13.5px;cursor:pointer;white-space:nowrap;
+  border-bottom:2.5px solid transparent;margin-bottom:-1px;
+  color:var(--faint);transition:.15s;user-select:none;flex-shrink:0;
 }
 .tab.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:700;}
 .tab:hover:not(.on){color:var(--sub);}
 
-/* ── MAIN CONTENT ── */
-#main{flex:1;overflow-y:auto;padding:22px 28px;max-width:760px;margin:0 auto;width:100%;}
+/* ── MAIN ── */
+#main{flex:1;overflow-y:auto;padding:20px 28px;max-width:780px;margin:0 auto;width:100%;}
 
 /* ── KEYWORD PILLS ── */
-#kw-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+#kw-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
 .kw-pill{
-  padding:6px 16px;border-radius:20px;font-size:12.5px;cursor:pointer;
-  border:1.5px solid var(--border);background:var(--card);color:var(--faint);
-  transition:.15s;user-select:none;
+  padding:5px 15px;border-radius:20px;font-size:12.5px;cursor:pointer;
+  border:1px solid var(--bstr);background:var(--card);color:var(--faint);
+  transition:.15s;user-select:none;white-space:nowrap;
 }
 .kw-pill.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
 .kw-pill:hover:not(.on){border-color:var(--accent);color:var(--ink);}
 
 /* ── FETCH BAR ── */
-#fetch-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:18px;
-}
+#fetch-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;}
 .fetch-btn{
-  padding:7px 16px;border-radius:8px;border:1px solid var(--bstr);
+  padding:7px 14px;border-radius:8px;border:1px solid var(--bstr);
   background:var(--card);color:var(--sub);font-size:12px;cursor:pointer;
   font-family:inherit;display:flex;align-items:center;gap:5px;transition:.15s;
+  white-space:nowrap;flex-shrink:0;
 }
 .fetch-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 .fetch-btn:disabled{opacity:.5;cursor:not-allowed;}
-.last-fetch{font-size:11px;color:var(--faint);}
+.last-fetch{font-size:11px;color:var(--faint);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* ── CARDS ── */
 .card{
   background:var(--card);border:.5px solid var(--bstr);border-radius:14px;
-  padding:20px 22px;margin-bottom:14px;box-shadow:0 2px 10px var(--shadow);
+  padding:18px 20px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow);
   position:relative;transition:.15s;
 }
-.card:hover{box-shadow:0 5px 18px var(--shadow);transform:translateY(-1px);}
+.card:hover{box-shadow:0 4px 16px var(--shadow);}
 .card-quote{
-  font-size:14.5px;line-height:1.9;color:var(--ink);
-  border-left:3px solid var(--accent);padding-left:14px;margin-bottom:8px;
-  white-space:pre-wrap;word-break:break-word;
+  font-size:14.5px;line-height:1.85;color:var(--ink);
+  border-left:3px solid var(--accent);padding-left:13px;margin-bottom:8px;
+  white-space:pre-wrap;word-break:break-word;padding-right:36px;
 }
 .card-translation{
-  font-size:13px;line-height:1.8;color:var(--sub);
-  border-left:3px solid var(--border);padding-left:14px;margin-bottom:14px;
+  font-size:13px;line-height:1.75;color:var(--sub);
+  border-left:3px solid var(--border);padding-left:13px;margin-bottom:12px;
   white-space:pre-wrap;word-break:break-word;
 }
-.card-attr{
-  font-size:12px;color:var(--faint);display:flex;
-  align-items:center;flex-wrap:wrap;gap:6px;
-}
+.card-attr{font-size:12px;color:var(--faint);display:flex;align-items:flex-start;flex-direction:column;gap:3px;}
+.card-attr-orig{display:flex;align-items:center;flex-wrap:wrap;gap:5px;}
+.card-attr-zh{display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:11px;color:var(--faint);opacity:.8;}
 .card-lang{
-  font-size:10px;padding:2px 8px;border-radius:10px;
-  background:var(--bg2);color:var(--sub);font-style:normal;
+  font-size:10px;padding:2px 7px;border-radius:10px;
+  background:var(--bg2);color:var(--sub);flex-shrink:0;
 }
-.card-title{color:var(--accent2);font-weight:600;font-style:normal;}
-.card-tags{margin-top:10px;}
+.card-title{color:var(--accent2);font-weight:600;}
+.card-tags{margin-top:9px;}
 .tag{
-  display:inline-block;padding:2px 9px;border-radius:10px;font-size:10.5px;
-  background:var(--border);color:var(--faint);margin-right:5px;font-style:normal;
+  display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;
+  background:var(--border);color:var(--faint);margin-right:4px;
 }
 .save-btn{
-  position:absolute;top:16px;right:16px;background:none;border:none;
-  font-size:22px;cursor:pointer;opacity:.45;transition:.2s;padding:3px;line-height:1;
+  position:absolute;top:14px;right:14px;background:none;border:none;
+  font-size:21px;cursor:pointer;opacity:.4;transition:.2s;padding:3px;line-height:1;
 }
-.save-btn:hover{opacity:1;transform:scale(1.1);}
+.save-btn:hover{opacity:1;}
 .save-btn.saved{opacity:1;}
 
 /* ── LOADING / EMPTY ── */
-.loading{text-align:center;padding:48px 20px;color:var(--faint);}
+.loading{text-align:center;padding:44px 20px;color:var(--faint);}
 .spinner{
   display:inline-block;width:22px;height:22px;
   border:2.5px solid var(--border);border-top-color:var(--accent);
   border-radius:50%;animation:spin .7s linear infinite;margin-bottom:10px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:56px 20px;color:var(--faint);}
-.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty{text-align:center;padding:50px 20px;color:var(--faint);}
+.empty-icon{font-size:38px;margin-bottom:12px;}
 .empty-msg{font-size:14px;margin-bottom:6px;color:var(--ink);}
-.empty-sub{font-size:12px;margin-bottom:18px;}
+.empty-sub{font-size:12px;margin-bottom:16px;}
 
 /* ── SAVED FILTER ── */
-.saved-filter{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.saved-filter{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
 .filter-pill{
-  padding:5px 13px;border-radius:14px;font-size:11.5px;cursor:pointer;
-  border:1.5px solid var(--border);color:var(--faint);background:var(--card);
+  padding:4px 12px;border-radius:14px;font-size:11.5px;cursor:pointer;
+  border:1px solid var(--bstr);color:var(--faint);background:var(--card);
   transition:.15s;user-select:none;
 }
 .filter-pill.on{background:var(--saved);color:#fff;border-color:var(--saved);}
 .filter-pill:hover:not(.on){border-color:var(--saved);color:var(--saved);}
 
 /* ── SETTINGS ── */
-.setting-group{margin-bottom:26px;}
+.setting-group{margin-bottom:24px;}
 .setting-label{
   font-size:11px;color:var(--faint);margin-bottom:8px;
   letter-spacing:.8px;text-transform:uppercase;font-weight:600;
 }
-.setting-input{
-  width:100%;padding:10px 14px;border:1.5px solid var(--bstr);border-radius:9px;
-  background:var(--bg2);color:var(--ink);font-size:13px;font-family:inherit;
-  transition:.15s;
-}
-.setting-input:focus{outline:none;border-color:var(--accent);}
-.setting-hint{font-size:11px;color:var(--faint);margin-top:5px;}
-.btn{
-  padding:9px 20px;border-radius:9px;border:none;cursor:pointer;
-  font-size:13px;font-family:inherit;transition:.15s;
-}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:hover{background:var(--accent2);}
-.btn-ghost{
-  background:transparent;border:1px solid var(--bstr);
-  color:var(--faint);padding:8px 16px;
-}
-.btn-ghost:hover{border-color:var(--accent);color:var(--sub);}
-.kw-manage-row{
-  display:flex;align-items:center;gap:8px;
-  padding:8px 12px;border-radius:8px;background:var(--bg2);
-  border:.5px solid var(--bstr);margin-bottom:7px;
-}
-.kw-manage-name{flex:1;font-size:13px;}
-.kw-del{
-  background:none;border:none;font-size:16px;cursor:pointer;
-  color:var(--faint);padding:2px 4px;transition:.15s;
-}
-.kw-del:hover{color:var(--red);}
-
-/* ── KEY INPUT ── */
 .key-wrap{position:relative;display:flex;align-items:center;}
 .key-wrap .setting-input{padding-right:44px;}
 .eye-btn{
@@ -174,16 +141,46 @@ body{
   line-height:1;transition:color .15s;
 }
 .eye-btn:hover{color:var(--sub);}
-
-/* ── STAT ROW ── */
-.stat-row{
-  display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;
+.setting-input{
+  width:100%;padding:10px 14px;border:1.5px solid var(--bstr);border-radius:9px;
+  background:var(--bg2);color:var(--ink);font-size:13px;font-family:inherit;transition:.15s;
 }
-.stat-chip{
-  padding:7px 16px;background:var(--card);border:.5px solid var(--bstr);
-  border-radius:10px;font-size:12px;
+.setting-input:focus{outline:none;border-color:var(--accent);}
+.setting-hint{font-size:11px;color:var(--faint);margin-top:5px;}
+.btn{padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-family:inherit;transition:.15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;border:1px solid var(--bstr);color:var(--faint);padding:8px 14px;}
+.btn-ghost:hover{border-color:var(--accent);color:var(--sub);}
+.manage-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:8px;background:var(--bg2);
+  border:.5px solid var(--bstr);margin-bottom:7px;
 }
+.manage-main{flex:1;font-size:13px;}
+.manage-sub{font-size:11px;color:var(--faint);}
+.del-btn{background:none;border:none;font-size:15px;cursor:pointer;color:var(--faint);padding:2px 5px;transition:.15s;}
+.del-btn:hover{color:var(--red);}
+.stat-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.stat-chip{padding:6px 14px;background:var(--card);border:.5px solid var(--bstr);border-radius:10px;font-size:12px;}
 .stat-chip strong{color:var(--accent);}
+.add-row{display:flex;gap:8px;margin-top:8px;}
+.add-row .setting-input{flex:1;}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  #hdr{padding:16px 16px 0;}
+  #tab-bar{padding:12px 16px 0;}
+  #main{padding:14px 14px;}
+  .card{padding:14px 14px;}
+  .card-quote{font-size:13.5px;}
+  .hdr-title{font-size:19px;}
+  .tab{font-size:13px;padding:7px 14px 9px;}
+}
+@media(max-width:400px){
+  #main{padding:12px 10px;}
+  .card{padding:12px 12px;}
+}
 </style>
 </head>
 <body>
@@ -201,12 +198,14 @@ body{
 <div id="main"></div>
 
 <script>
-// ── STORAGE STATE ──
+// ── STATE ──
 const S={
   get keywords(){try{return JSON.parse(localStorage.getItem('oasis_keywords')||'[]');}catch{return[];}},
   set keywords(v){localStorage.setItem('oasis_keywords',JSON.stringify(v));saveStatus();},
   get saved(){try{return JSON.parse(localStorage.getItem('oasis_saved')||'[]');}catch{return[];}},
   set saved(v){localStorage.setItem('oasis_saved',JSON.stringify(v));saveStatus();},
+  get authors(){try{return JSON.parse(localStorage.getItem('oasis_authors')||'[]');}catch{return[];}},
+  set authors(v){localStorage.setItem('oasis_authors',JSON.stringify(v));saveStatus();},
   get groqKey(){return localStorage.getItem('oasis_groq_key')||'';},
   set groqKey(v){localStorage.setItem('oasis_groq_key',v);},
   get cache(){try{return JSON.parse(localStorage.getItem('oasis_cache')||'{}');}catch{return{};}},
@@ -214,32 +213,24 @@ const S={
 };
 
 function saveStatus(){
-  const kws=S.keywords, saved=S.saved, cache=S.cache;
+  const kws=S.keywords,saved=S.saved,cache=S.cache,authors=S.authors;
   const totalCards=Object.values(cache).reduce((a,arr)=>a+(arr?.length||0),0);
   localStorage.setItem('oasis_status',JSON.stringify({
     keywords:kws.length,savedCount:saved.length,totalCards,
-    lastKeywords:kws.slice(0,3),ts:Date.now()
+    authors:authors.length,lastKeywords:kws.slice(0,3),ts:Date.now()
   }));
 }
+window.getOasisStatus=()=>{try{return JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{return null;}};
 
-window.getOasisStatus=function(){
-  try{return JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{return null;}
-};
-
-let curTab='discover';
-let curKw=null;
-let savedFilter='all';
+let curTab='discover',curKw=null,savedFilter='all';
 const fetching=new Set();
 
-// ── TAB ROUTING ──
+// ── ROUTING ──
 function showTab(t){
   curTab=t;
-  document.querySelectorAll('.tab').forEach(el=>
-    el.classList.toggle('on',el.dataset.tab===t)
-  );
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('on',el.dataset.tab===t));
   render();
 }
-
 function render(){
   document.getElementById('main').innerHTML=
     curTab==='discover'?buildDiscover():
@@ -247,16 +238,57 @@ function render(){
     buildSettings();
 }
 
+// ── CARD RENDERER ──
+const LANG_MAP={zh:'中文',ko:'한국어',en:'English',ja:'日本語',fr:'Français',de:'Deutsch'};
+
+function buildCard(c){
+  const isSaved=S.saved.some(s=>s.id===c.id);
+  const langLabel=LANG_MAP[c.lang]||c.lang||'';
+  const isZh=(c.lang==='zh');
+
+  // Quote + translation
+  const quoteHtml=`<div class="card-quote">${esc(c.quote)}</div>`;
+  const transHtml=(!isZh&&c.translation)
+    ?`<div class="card-translation">${esc(c.translation)}</div>`:'';
+
+  // Attribution: original line
+  const origTitle=`《<span class="card-title">${esc(c.title)}</span>》`;
+  const origAuthor=esc(c.author);
+  const origYear=c.year?`· ${c.year}`:'';
+  const origLine=`<div class="card-attr-orig">
+    ${langLabel?`<span class="card-lang">${langLabel}</span>`:''}
+    <span>${origTitle}</span>
+    <span>${origAuthor}</span>
+    ${origYear?`<span>${origYear}</span>`:''}
+  </div>`;
+
+  // Attribution: zh translation line (title_zh / author_zh)
+  const hasZhAttr=!isZh&&(c.title_zh||c.author_zh);
+  const zhTitle=c.title_zh?`《<span class="card-title">${esc(c.title_zh)}</span>》`:'';
+  const zhAuthor=c.author_zh?esc(c.author_zh):'';
+  const zhLine=hasZhAttr?`<div class="card-attr-zh">${zhTitle}${zhTitle&&zhAuthor?' · ':''}${zhAuthor}</div>`:'';
+
+  const tagsHtml=(c.tags||[]).length
+    ?`<div class="card-tags">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
+
+  return `<div class="card">
+    <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
+      title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
+    ${quoteHtml}${transHtml}
+    <div class="card-attr">${origLine}${zhLine}</div>
+    ${tagsHtml}
+  </div>`;
+}
+
 // ── DISCOVER ──
 function buildDiscover(){
   const kws=S.keywords;
-  if(!kws.length) return `
-    <div class="empty">
-      <div class="empty-icon">🌾</div>
-      <div class="empty-msg">還沒有探索關鍵字</div>
-      <div class="empty-sub">到設定新增感興趣的主題</div>
-      <button class="btn btn-primary" onclick="showTab('settings')">前往設定</button>
-    </div>`;
+  if(!kws.length) return `<div class="empty">
+    <div class="empty-icon">🌾</div>
+    <div class="empty-msg">還沒有探索關鍵字</div>
+    <div class="empty-sub">到設定新增感興趣的主題</div>
+    <button class="btn btn-primary" onclick="showTab('settings')">前往設定</button>
+  </div>`;
 
   if(!curKw||!kws.includes(curKw)) curKw=kws[0];
 
@@ -264,59 +296,33 @@ function buildDiscover(){
     `<div class="kw-pill${k===curKw?' on':''}" onclick="selectKw('${esc(k)}')">${esc(k)}</div>`
   ).join('');
 
-  const cache=S.cache;
-  const cards=cache[curKw]||[];
+  const cache=S.cache,cards=cache[curKw]||[];
   const lastTs=parseInt(localStorage.getItem('oasis_last_'+curKw)||'0');
   const ago=lastTs?timeSince(lastTs):'從未取得';
   const isLoading=fetching.has(curKw);
 
   let cardsHtml='';
   if(isLoading){
-    cardsHtml=`<div class="loading"><div class="spinner"></div><br>正在探索「${esc(curKw)}」中的文學引文…</div>`;
+    cardsHtml=`<div class="loading"><div class="spinner"></div><br>正在探索「${esc(curKw)}」…</div>`;
   } else if(!cards.length){
     cardsHtml=`<div class="empty">
       <div class="empty-icon">📚</div>
       <div class="empty-msg">尚無「${esc(curKw)}」的探索結果</div>
-      <div class="empty-sub">按下右上角立即探索</div>
+      <div class="empty-sub">按右上角開始探索</div>
     </div>`;
   } else {
     cardsHtml=cards.map(c=>buildCard(c)).join('');
   }
 
-  const fetchDisabled=isLoading?' disabled':'';
   return `
     <div id="kw-row">${pills}</div>
     <div id="fetch-bar">
       <span class="last-fetch">上次更新：${ago}</span>
-      <button class="fetch-btn"${fetchDisabled} onclick="fetchCards('${esc(curKw)}')">
+      <button class="fetch-btn"${isLoading?' disabled':''} onclick="fetchCards('${esc(curKw)}')">
         ${isLoading?'⏳ 探索中…':'🔄 重新探索'}
       </button>
     </div>
     <div id="cards-area">${cardsHtml}</div>`;
-}
-
-function buildCard(c){
-  const isSaved=S.saved.some(s=>s.id===c.id);
-  const langMap={zh:'中文',ko:'한국어',en:'English',ja:'日本語',fr:'Français',de:'Deutsch'};
-  const langLabel=langMap[c.lang]||c.lang||'';
-  const tagsHtml=(c.tags||[]).length
-    ?`<div class="card-tags">${(c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
-  const translationHtml=(c.lang==='ko'&&c.translation)
-    ?`<div class="card-translation">${esc(c.translation)}</div>`:'';
-  return `
-    <div class="card">
-      <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
-        title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
-      <div class="card-quote">${esc(c.quote)}</div>
-      ${translationHtml}
-      <div class="card-attr">
-        ${langLabel?`<span class="card-lang">${langLabel}</span>`:''}
-        <span>《<span class="card-title">${esc(c.title)}</span>》</span>
-        <span>${esc(c.author)}</span>
-        ${c.year?`<span>· ${c.year}</span>`:''}
-      </div>
-      ${tagsHtml}
-    </div>`;
 }
 
 function selectKw(k){curKw=k;render();}
@@ -324,12 +330,11 @@ function selectKw(k){curKw=k;render();}
 // ── SAVED ──
 function buildSaved(){
   const items=S.saved;
-  if(!items.length) return `
-    <div class="empty">
-      <div class="empty-icon">🌿</div>
-      <div class="empty-msg">收藏夾是空的</div>
-      <div class="empty-sub">在探索頁按 🤍 加入收藏</div>
-    </div>`;
+  if(!items.length) return `<div class="empty">
+    <div class="empty-icon">🌿</div>
+    <div class="empty-msg">收藏夾是空的</div>
+    <div class="empty-sub">在探索頁按 🤍 加入收藏</div>
+  </div>`;
 
   const allTags=['all',...new Set(items.flatMap(i=>i.tags||[]))];
   if(!allTags.includes(savedFilter)) savedFilter='all';
@@ -337,30 +342,37 @@ function buildSaved(){
     `<div class="filter-pill${t===savedFilter?' on':''}" onclick="setSavedFilter('${esc(t)}')">${t==='all'?'全部':esc(t)}</div>`
   ).join('');
   const show=savedFilter==='all'?items:items.filter(i=>(i.tags||[]).includes(savedFilter));
-  const cards=show.map(c=>buildCard(c)).join('');
 
   return `
     <div class="stat-row">
-      <div class="stat-chip">共 <strong>${items.length}</strong> 篇收藏</div>
-      ${show.length!==items.length?`<div class="stat-chip">篩選中：<strong>${show.length}</strong> 篇</div>`:''}
+      <div class="stat-chip">共 <strong>${items.length}</strong> 篇</div>
+      ${show.length!==items.length?`<div class="stat-chip">篩選：<strong>${show.length}</strong> 篇</div>`:''}
     </div>
     <div class="saved-filter">${filters}</div>
-    ${cards||`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">此標籤下無收藏</div></div>`}`;
+    ${show.map(c=>buildCard(c)).join('')||`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">此標籤下無收藏</div></div>`}`;
 }
 
 function setSavedFilter(t){savedFilter=t;render();}
 
 // ── SETTINGS ──
 function buildSettings(){
-  const kws=S.keywords;
+  const kws=S.keywords,authors=S.authors,cache=S.cache;
+  const totalCards=Object.values(cache).reduce((a,arr)=>a+(arr?.length||0),0);
+
   const kwRows=kws.map((k,i)=>`
-    <div class="kw-manage-row">
-      <span class="kw-manage-name">${esc(k)}</span>
-      <button class="kw-del" onclick="removeKw(${i})" title="刪除">✕</button>
+    <div class="manage-row">
+      <span class="manage-main">${esc(k)}</span>
+      <button class="del-btn" onclick="removeKw(${i})">✕</button>
     </div>`).join('');
 
-  const cache=S.cache;
-  const totalCards=Object.values(cache).reduce((a,arr)=>a+(arr?.length||0),0);
+  const authorRows=authors.map((a,i)=>`
+    <div class="manage-row">
+      <div style="flex:1;">
+        <div class="manage-main">${esc(a.name)}</div>
+        ${a.name_zh?`<div class="manage-sub">${esc(a.name_zh)}</div>`:''}
+      </div>
+      <button class="del-btn" onclick="removeAuthor(${i})">✕</button>
+    </div>`).join('');
 
   return `
     <div class="setting-group">
@@ -368,35 +380,53 @@ function buildSettings(){
       <div class="key-wrap">
         <input class="setting-input" type="password" id="groq-key"
           value="${esc(S.groqKey)}" placeholder="gsk_…" oninput="S.groqKey=this.value">
-        <button class="eye-btn" onclick="toggleKeyVis()" id="eye-btn" title="顯示／隱藏">👁</button>
+        <button class="eye-btn" id="eye-btn" onclick="toggleKeyVis()">👁</button>
       </div>
-      <div class="setting-hint">用於從真實文學典籍中搜尋引文（llama-3.3-70b-versatile）</div>
+      <div class="setting-hint">llama-3.3-70b-versatile</div>
     </div>
+
     <div class="setting-group">
       <div class="setting-label">探索關鍵字</div>
-      ${kwRows||'<div style="font-size:12px;color:var(--faint);margin-bottom:10px;">尚無關鍵字</div>'}
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <input class="setting-input" id="new-kw" placeholder="新增主題關鍵字…" style="flex:1"
+      ${kwRows||'<div style="font-size:12px;color:var(--faint);margin-bottom:8px;">尚無關鍵字</div>'}
+      <div class="add-row">
+        <input class="setting-input" id="new-kw" placeholder="新增關鍵字…"
           onkeydown="if(event.key==='Enter')addKw()">
         <button class="btn btn-primary" onclick="addKw()">新增</button>
       </div>
-      <div class="setting-hint">建議：孤獨、邊境、記憶、流浪、自由…</div>
+      <div class="setting-hint">孤獨、邊境、記憶、流浪、自由…</div>
     </div>
+
+    <div class="setting-group">
+      <div class="setting-label">喜愛作者</div>
+      ${authorRows||'<div style="font-size:12px;color:var(--faint);margin-bottom:8px;">尚無喜愛作者</div>'}
+      <div class="add-row">
+        <input class="setting-input" id="new-author" placeholder="作者原文名（如 이효석）"
+          onkeydown="if(event.key==='Enter')addAuthor()">
+        <input class="setting-input" id="new-author-zh" placeholder="中文名（選填）" style="max-width:130px;"
+          onkeydown="if(event.key==='Enter')addAuthor()">
+        <button class="btn btn-primary" onclick="addAuthor()">新增</button>
+      </div>
+      <div class="setting-hint">探索時會優先納入喜愛作者與關鍵字相關的內容</div>
+    </div>
+
     <div class="setting-group">
       <div class="setting-label">統計</div>
       <div class="stat-row">
         <div class="stat-chip">關鍵字 <strong>${kws.length}</strong></div>
+        <div class="stat-chip">喜愛作者 <strong>${authors.length}</strong></div>
         <div class="stat-chip">收藏 <strong>${S.saved.length}</strong> 篇</div>
         <div class="stat-chip">已探索 <strong>${totalCards}</strong> 條</div>
       </div>
     </div>
+
     <div class="setting-group">
       <div class="setting-label">管理</div>
       <button class="btn btn-ghost" onclick="clearCache()" style="margin-right:8px;">清除快取</button>
-      <button class="btn btn-ghost" onclick="exportSaved()">匯出收藏 JSON</button>
+      <button class="btn btn-ghost" onclick="exportSaved()">匯出收藏</button>
     </div>`;
 }
 
+// ── KEYWORD MGMT ──
 function addKw(){
   const inp=document.getElementById('new-kw');
   const v=(inp?.value||'').trim();
@@ -405,13 +435,32 @@ function addKw(){
   if(!kws.includes(v)){kws.push(v);S.keywords=kws;}
   inp.value='';render();
 }
-
 function removeKw(i){
   const kws=S.keywords;kws.splice(i,1);S.keywords=kws;
   if(curKw&&!kws.includes(curKw))curKw=kws[0]||null;
   render();
 }
 
+// ── AUTHOR MGMT ──
+function addAuthor(){
+  const nameEl=document.getElementById('new-author');
+  const zhEl=document.getElementById('new-author-zh');
+  const name=(nameEl?.value||'').trim();
+  if(!name)return;
+  const name_zh=(zhEl?.value||'').trim();
+  const authors=S.authors;
+  if(!authors.find(a=>a.name===name)){
+    authors.push({name,name_zh});S.authors=authors;
+  }
+  if(nameEl)nameEl.value='';
+  if(zhEl)zhEl.value='';
+  render();
+}
+function removeAuthor(i){
+  const authors=S.authors;authors.splice(i,1);S.authors=authors;render();
+}
+
+// ── SETTINGS ACTIONS ──
 function toggleKeyVis(){
   const inp=document.getElementById('groq-key');
   const btn=document.getElementById('eye-btn');
@@ -420,17 +469,14 @@ function toggleKeyVis(){
   inp.type=show?'text':'password';
   if(btn)btn.textContent=show?'🙈':'👁';
 }
-
 function clearCache(){
   S.cache={};
   S.keywords.forEach(k=>localStorage.removeItem('oasis_last_'+k));
-  alert('快取已清除');render();
+  render();
 }
-
 function exportSaved(){
-  const data=JSON.stringify(S.saved,null,2);
   const a=document.createElement('a');
-  a.href='data:application/json,'+encodeURIComponent(data);
+  a.href='data:application/json,'+encodeURIComponent(JSON.stringify(S.saved,null,2));
   a.download='oasis_saved_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
 }
@@ -455,96 +501,80 @@ function toggleSave(id){
 
 // ── GROQ FETCH ──
 async function fetchCards(kw){
-  if(!S.groqKey){
-    alert('請先在「設定」頁輸入 Groq API Key');showTab('settings');return;
-  }
+  if(!S.groqKey){alert('請先在「設定」頁輸入 Groq API Key');showTab('settings');return;}
   fetching.add(kw);render();
 
-  // Learning context: pass saved items as quality signal
-  const savedSample=S.saved.slice(0,6)
-    .map(s=>`《${s.title}》${s.author}`)
-    .filter(Boolean).join('、');
-  const learningCtx=savedSample
-    ?`\n用戶已收藏的風格參考：${savedSample}。請優先推薦風格或主題相近的真實作品。`:'';
+  const savedSample=S.saved.slice(0,5).map(s=>`《${s.title}》${s.author}`).filter(Boolean).join('、');
+  const favAuthors=S.authors.map(a=>a.name+(a.name_zh?`（${a.name_zh}）`:'')).join('、');
+
+  const learningParts=[];
+  if(savedSample)learningParts.push(`用戶收藏風格參考：${savedSample}`);
+  if(favAuthors)learningParts.push(`喜愛作者（優先納入其與關鍵字相關作品）：${favAuthors}`);
+  const learningCtx=learningParts.length?'\n'+learningParts.join('\n'):'';
 
   const sys=`你是嚴謹的文學引文資料庫助理。
-規則（必須遵守）：
-1. 只提供真實存在的已出版書籍、詩集、散文集中的原文，可以是完整段落或散文節選
-2. 絕對不得虛構引文、書名、作者，即使找不到合適的也不可虛構
+規則：
+1. 只提供真實已出版書籍、詩集、散文集的原文，可為完整段落或散文節選
+2. 絕對不得虛構引文、書名、作者
 3. 必須提供正確書名、作者全名、出版年份
-4. 語言優先：繁體中文 > 韓文 > 日文 > 英文
-5. 韓文作品（lang=ko）必須額外提供 translation 欄位（繁體中文翻譯）
-6. 回傳純 JSON 陣列，直接從 [ 開始，不加任何說明`;
+4. 非中文作品必須提供 translation（繁體中文翻譯）
+5. 非中文的書名必須提供 title_zh（繁體中文書名）
+6. 非中文的作者名必須提供 author_zh（繁體中文譯名）
+7. 回傳純 JSON 陣列，直接從 [ 開始`;
 
   const prompt=`關鍵字「${kw}」。${learningCtx}
 
-找 4-5 條真實文學引文（可包含散文節選、小說片段、詩作），JSON 格式：
+找 4-5 條真實文學引文（散文節選、小說片段、詩作均可），JSON：
 [
   {
-    "quote": "原文引文，保留原文語言，長度可達散文段落（100-400字）",
-    "translation": "若 lang=ko 則填繁體中文翻譯；其他語言此欄位省略",
-    "title": "書名或詩集名",
-    "author": "作者全名",
-    "year": 出版年份（數字）,
-    "lang": "zh 或 ko 或 ja 或 en",
+    "quote": "原文（保留原始語言，100-400字；段落間以 \\n 換行，詩行也各自換行）",
+    "translation": "繁體中文翻譯（非中文作品必填；段落間以 \\n 換行）",
+    "title": "原文書名",
+    "title_zh": "繁體中文書名（非中文書名必填）",
+    "author": "原文作者名",
+    "author_zh": "繁體中文譯名（非中文作者必填）",
+    "year": 出版年份,
+    "lang": "zh或ko或ja或en或fr",
     "tags": ["${kw}"]
   }
 ]
 
-只回傳 JSON，無其他文字。`;
+只回傳 JSON。`;
 
   try{
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{
-        'Authorization':'Bearer '+S.groqKey,
-        'Content-Type':'application/json'
-      },
+      headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'llama-3.3-70b-versatile',
         messages:[{role:'system',content:sys},{role:'user',content:prompt}],
-        temperature:0.25,
-        max_tokens:2500
+        temperature:0.25,max_tokens:3000
       })
     });
-    if(!res.ok){
-      const errText=await res.text();
-      console.error('Groq error',res.status,errText);
-      alert('Groq 回應錯誤 '+res.status+'：'+errText.slice(0,200));
-      fetching.delete(kw);render();return;
-    }
+    if(!res.ok){const e=await res.text();alert('Groq 錯誤 '+res.status+': '+e.slice(0,200));fetching.delete(kw);render();return;}
     const json=await res.json();
     const text=json.choices?.[0]?.message?.content||'';
     const m=text.match(/\[[\s\S]*\]/);
-    if(!m){
-      console.error('No JSON array',text);
-      alert('回傳格式錯誤，請重試\n'+text.slice(0,200));
-      fetching.delete(kw);render();return;
-    }
+    if(!m){alert('格式錯誤，請重試');fetching.delete(kw);render();return;}
     let cards=JSON.parse(m[0]);
-    if(!Array.isArray(cards)||!cards.length) throw new Error('empty array');
+    if(!Array.isArray(cards)||!cards.length)throw new Error('empty');
     cards=cards.map((c,i)=>({
       id:kw+'_'+Date.now()+'_'+i,
       quote:c.quote||'',translation:c.translation||'',
-      title:c.title||'',author:c.author||'',
+      title:c.title||'',title_zh:c.title_zh||'',
+      author:c.author||'',author_zh:c.author_zh||'',
       year:c.year||null,lang:c.lang||'zh',tags:c.tags||[kw]
     }));
-    const cache=S.cache;
-    cache[kw]=cards;S.cache=cache;
+    const cache=S.cache;cache[kw]=cards;S.cache=cache;
     localStorage.setItem('oasis_last_'+kw,Date.now().toString());
-  }catch(e){
-    console.error('fetchCards',e);
-    alert('探索失敗：'+e.message);
-  }
+  }catch(e){alert('探索失敗：'+e.message);}
   fetching.delete(kw);render();
 }
 
 // ── UTILS ──
 function esc(s){
-  return String(s||'')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function timeSince(ts){
   if(!ts)return'從未';
@@ -556,8 +586,7 @@ function timeSince(ts){
 }
 
 // ── INIT ──
-saveStatus();
-render();
+saveStatus();render();
 </script>
 </body>
 </html>
