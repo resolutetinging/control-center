@@ -523,11 +523,13 @@ async function fetchCards(kw){
   if(favAuthors)learningParts.push(`喜愛作者（優先納入其與關鍵字相關作品）：${favAuthors}`);
   const learningCtx=learningParts.length?'\n'+learningParts.join('\n'):'';
 
-  const sys=`你是文學引文資料庫。只提供真實已出版作品的原文節選，絕不虛構。回傳純 JSON 陣列，直接從 [ 開始。`;
+  const sys=`你是文學引文資料庫。只提供真實已出版作品的原文節選，絕不虛構。回傳純 JSON 陣列，直接從 [ 開始。
+【語言純粹性規則】quote 欄位必須 100% 使用作品原始語言，嚴禁夾雜任何其他語言文字（例如韓文 quote 內不得出現中文、英文字；英文 quote 內不得出現中文）。中文翻譯只放在 translation 欄位。`;
 
   const prompt=`關鍵字「${kw}」。${learningCtx}
 
-找 4-5 條真實文學引文。每條嚴格按照以下結構輸出，非中文作品的翻譯欄位不得省略：
+找 4-5 條真實文學引文。每條嚴格按照以下結構輸出，非中文作品的翻譯欄位不得省略。
+⚠️ quote 欄位只能含原文語言文字，嚴禁混入中文或其他語言：
 
 範例一（韓文作品）：
 {"country":"韓國","quote":"나무는 천천히 속삭였다. 너는 혼자가 아니야.","translation":"樹木緩緩低語。你並不孤單。","title":"나무의 속삭임","title_zh":"樹的低語","author":"나태주","author_zh":"羅太柱","year":2001,"lang":"ko","tags":["${kw}"]}
@@ -566,11 +568,11 @@ async function fetchCards(kw){
     cards=cards.map((c,i)=>({
       id:kw+'_'+Date.now()+'_'+i,
       country:c.country||'',
-      quote:c.quote||'',translation:c.translation||'',
+      quote:sanitizeQuote(c.quote||'',c.lang||'zh'),translation:c.translation||'',
       title:c.title||'',title_zh:c.title_zh||'',
       author:c.author||'',author_zh:c.author_zh||'',
       year:c.year||null,lang:c.lang||'zh',tags:c.tags||[kw]
-    }));
+    })).filter(c=>c.quote);
     const cache=S.cache;cache[kw]=cards;S.cache=cache;
     localStorage.setItem('oasis_last_'+kw,Date.now().toString());
   }catch(e){alert('探索失敗：'+e.message);}
@@ -578,6 +580,18 @@ async function fetchCards(kw){
 }
 
 // ── UTILS ──
+// 偵測非中文 quote 混入 CJK 漢字（排除日文合理用字），回傳清空字串讓 filter 丟棄該筆
+function sanitizeQuote(q,lang){
+  if(lang==='zh')return q; // 中文本身就是 CJK，不過濾
+  // 日文可合法含漢字（lang==='ja'），不過濾
+  if(lang==='ja')return q;
+  // 韓文、英文、法文、德文等：quote 中若含 CJK Unified Ideographs（U+4E00–U+9FFF）則視為混語
+  if(/[一-鿿]/.test(q)){
+    console.warn('[Oasis] 混語 quote 被過濾（lang='+lang+'）:',q);
+    return ''; // 被 filter(c=>c.quote) 丟棄
+  }
+  return q;
+}
 function esc(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
