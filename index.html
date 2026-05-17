@@ -863,7 +863,7 @@ function buildTT(id){
         hr()+
         `<div style="font-size:10.5px;color:var(--faint);">${metaOrig}</div>`+
         (metaZh?`<div style="font-size:10px;color:var(--faint);opacity:.75;">${metaZh}</div>`:'')+
-        (saved.length>1?`<div style="font-size:10px;color:var(--faint);margin-top:5px;text-align:right;">共 ${saved.length} 篇收藏</div>`:'');
+        ((item.tags&&item.tags.length)?hr()+`<div style="font-size:10px;color:var(--faint);">${item.tags.map(t=>'#'+t).join('　')}</div>`:'');
     }
     default:return'';
   }
