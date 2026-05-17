@@ -772,15 +772,16 @@ function buildTT(id){
     case 'sas-hub':{
       const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
       const pace=LIVE.sleep?.pace??'請先訪問 SAS Hub';
-      const _cpn=cp!=='—'?+cp:null;
+      // 體能續航：只走 sleep data 路線，不碰 optimizer
       const storedEnd=localStorage.getItem('sas_endurance');
+      const sleepCp=parseInt(localStorage.getItem('sas_combat')||'0')||null;
       const endTime=(()=>{
-        if(storedEnd)return storedEnd;
-        if(_cpn===null)return null;
-        const eh=8+_cpn/100*14,h=Math.floor(eh),m=Math.round((eh-h)*60);
+        if(storedEnd)return storedEnd; // sleep_dashboard 寫入的精確值
+        if(!sleepCp)return null;       // 無 sleep data → 不顯示
+        const eh=8+sleepCp/100*14,h=Math.floor(eh),m=Math.round((eh-h)*60);
         return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
       })();
-      const endColor=_cpn!==null?(_cpn>=70?'g':_cpn>=40?'a':'r'):'';
+      const endColor=sleepCp?(sleepCp>=70?'g':sleepCp>=40?'a':'r'):'';
       const enduranceHtml=endTime?hr()+row('體能續航至',endTime,endColor):'';
       return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
     }
