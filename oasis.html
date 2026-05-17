@@ -74,26 +74,24 @@ body{display:flex;flex-direction:column;}
   position:relative;transition:.15s;
 }
 .card:hover{box-shadow:0 4px 16px var(--shadow);}
+.card-country{
+  display:inline-block;font-size:10px;padding:2px 9px;border-radius:10px;
+  background:var(--bg2);color:var(--sub);margin-bottom:12px;letter-spacing:.3px;
+}
 .card-quote{
-  font-size:14.5px;line-height:1.85;color:var(--ink);
-  border-left:3px solid var(--accent);padding-left:13px;margin-bottom:8px;
+  font-size:14.5px;line-height:1.9;color:var(--ink);
+  border-left:3px solid var(--accent);padding-left:13px;margin-bottom:10px;
   white-space:pre-wrap;word-break:break-word;padding-right:36px;
 }
 .card-translation{
-  font-size:13px;line-height:1.75;color:var(--sub);
-  border-left:3px solid var(--border);padding-left:13px;margin-bottom:12px;
+  font-size:13.5px;line-height:1.85;color:var(--sub);
+  border-left:3px solid var(--border);padding-left:13px;margin-bottom:14px;
   white-space:pre-wrap;word-break:break-word;
 }
-.card-attr{font-size:12px;color:var(--faint);display:flex;align-items:flex-start;flex-direction:column;gap:3px;}
-.card-attr-orig{display:flex;align-items:center;flex-wrap:wrap;gap:5px;}
-.card-attr-zh{display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:11px;color:var(--faint);opacity:.8;}
-.card-lang{
-  font-size:10px;padding:2px 7px;border-radius:10px;
-  background:var(--bg2);color:var(--sub);flex-shrink:0;
-}
+.card-meta-orig{font-size:12px;color:var(--faint);margin-bottom:4px;line-height:1.5;}
+.card-meta-zh{font-size:11.5px;color:var(--faint);opacity:.75;line-height:1.5;}
 .card-title{color:var(--accent2);font-weight:600;}
-.nowrap{white-space:nowrap;}
-.card-tags{margin-top:9px;}
+.card-tags{margin-top:10px;}
 .tag{
   display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;
   background:var(--border);color:var(--faint);margin-right:4px;
@@ -240,32 +238,38 @@ function render(){
 }
 
 // ── CARD RENDERER ──
-const LANG_MAP={zh:'中文',ko:'韓文',en:'英文',ja:'日文',fr:'法文',de:'德文'};
-
 function buildCard(c){
   const isSaved=S.saved.some(s=>s.id===c.id);
-  const langLabel=LANG_MAP[c.lang]||c.lang||'';
   const isZh=(c.lang==='zh');
 
-  // Quote + translation
+  // 1. 國別
+  const countryHtml=c.country
+    ?`<div class="card-country">${esc(c.country)}</div>`:'';
+
+  // 2. 原文內容
   const quoteHtml=`<div class="card-quote">${esc(c.quote)}</div>`;
+
+  // 3. 中文翻譯（非中文才顯示）
   const transHtml=(!isZh&&c.translation)
     ?`<div class="card-translation">${esc(c.translation)}</div>`:'';
 
-  // Attribution row 1: all original language
-  const origTitleSpan=c.title?`<span class="nowrap">《<span class="card-title">${esc(c.title)}</span>》</span>`:'';
-  const origAuthorSpan=c.author?`<span class="nowrap">${esc(c.author)}</span>`:'';
-  const origYearSpan=c.year?`<span class="nowrap">· ${c.year}</span>`:'';
-  const origLine=`<div class="card-attr-orig">
-    ${langLabel?`<span class="card-lang">${langLabel}</span>`:''}
-    ${origTitleSpan}${origAuthorSpan}${origYearSpan}
-  </div>`;
+  // 4. 出處原文：《書名》　作者　年代
+  const origParts=[
+    c.title?`《${esc(c.title)}》`:'',
+    c.author?esc(c.author):'',
+    c.year?String(c.year):'',
+  ].filter(Boolean);
+  const metaOrigHtml=origParts.length
+    ?`<div class="card-meta-orig">${origParts.join('　')}</div>`:'';
 
-  // Attribution row 2: Chinese translations
-  const hasZhAttr=!isZh&&(c.title_zh||c.author_zh);
-  const zhTitleSpan=c.title_zh?`<span class="nowrap">《<span class="card-title">${esc(c.title_zh)}</span>》</span>`:'';
-  const zhAuthorSpan=c.author_zh?`<span class="nowrap">${esc(c.author_zh)}</span>`:'';
-  const zhLine=hasZhAttr?`<div class="card-attr-zh">${zhTitleSpan}${zhAuthorSpan}</div>`:'';
+  // 5. 出處中文翻譯：《中文書名》　中文作者　年代（非中文才顯示）
+  const zhParts=!isZh?[
+    c.title_zh?`《${esc(c.title_zh)}》`:'',
+    c.author_zh?esc(c.author_zh):'',
+    c.year?String(c.year):'',
+  ].filter(Boolean):[];
+  const metaZhHtml=zhParts.length
+    ?`<div class="card-meta-zh">${zhParts.join('　')}</div>`:'';
 
   const tagsHtml=(c.tags||[]).length
     ?`<div class="card-tags">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
@@ -273,9 +277,7 @@ function buildCard(c){
   return `<div class="card">
     <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
       title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
-    ${quoteHtml}${transHtml}
-    <div class="card-attr">${origLine}${zhLine}</div>
-    ${tagsHtml}
+    ${countryHtml}${quoteHtml}${transHtml}${metaOrigHtml}${metaZhHtml}${tagsHtml}
   </div>`;
 }
 
@@ -529,11 +531,12 @@ async function fetchCards(kw){
 
   const prompt=`關鍵字「${kw}」。${learningCtx}
 
-找 4-5 條真實文學引文，JSON 格式如下（每個欄位的說明是規則，不要原樣輸出）：
+找 4-5 條真實文學引文，JSON 格式（欄位說明是規則，勿原樣輸出）：
 [
   {
-    "quote":       "原文，保留原始語言，100-400字",
-    "translation": "【lang非zh時必填】引文繁體中文翻譯",
+    "country":     "作品所屬國家，中文，如：韓國、日本、台灣、美國、英國、法國",
+    "quote":       "原文，保留原始語言，100-400字，段落換行用 \\n",
+    "translation": "【lang非zh時必填】引文繁體中文翻譯，段落換行用 \\n",
     "title":       "原文書名",
     "title_zh":    "【lang非zh時必填】書名繁體中文譯名",
     "author":      "原文作者姓名",
@@ -565,6 +568,7 @@ async function fetchCards(kw){
     if(!Array.isArray(cards)||!cards.length)throw new Error('empty');
     cards=cards.map((c,i)=>({
       id:kw+'_'+Date.now()+'_'+i,
+      country:c.country||'',
       quote:c.quote||'',translation:c.translation||'',
       title:c.title||'',title_zh:c.title_zh||'',
       author:c.author||'',author_zh:c.author_zh||'',
