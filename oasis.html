@@ -78,6 +78,10 @@ body{display:flex;flex-direction:column;}
   display:inline-block;font-size:10px;padding:2px 9px;border-radius:10px;
   background:var(--bg2);color:var(--sub);margin-bottom:12px;letter-spacing:.3px;
 }
+.source-badge{
+  display:inline-block;font-size:10px;padding:2px 9px;border-radius:10px;
+  background:var(--border);color:var(--faint);margin-bottom:12px;margin-left:6px;letter-spacing:.3px;
+}
 .card-quote{
   font-size:14.5px;line-height:1.9;color:var(--ink);
   border-left:3px solid var(--accent);padding-left:13px;margin-bottom:10px;
@@ -238,13 +242,21 @@ function render(){
 }
 
 // ── CARD RENDERER ──
+const SOURCE_MAP={
+  'book':'📚 實體書','novel':'📚 實體書','poetry':'📚 詩集','poetry_collection':'📚 詩集',
+  'essay':'📚 散文集','short_story':'📚 短篇集',
+  'threads':'🧵 Threads','instagram':'📷 Instagram','twitter':'🐦 Twitter','weibo':'微博',
+  'blog':'📝 網誌','magazine':'📰 雜誌','newspaper':'📰 報紙','online':'🔗 網路',
+};
 function buildCard(c){
   const isSaved=S.saved.some(s=>s.id===c.id);
   const isZh=(c.lang==='zh');
 
-  // 1. 國別
+  // 1. 國別 + 來源類型
+  const sourceLbl=SOURCE_MAP[c.source_type]||'';
+  const sourceBadge=sourceLbl?`<span class="source-badge">${sourceLbl}</span>`:'';
   const countryHtml=c.country
-    ?`<div class="card-country">${esc(c.country)}</div>`:'';
+    ?`<div style="margin-bottom:12px;"><span class="card-country" style="margin-bottom:0;">${esc(c.country)}</span>${sourceBadge}</div>`:'';
 
   // 2. 原文內容
   const quoteHtml=`<div class="card-quote">${esc(c.quote)}</div>`;
@@ -523,24 +535,28 @@ async function fetchCards(kw){
   if(favAuthors)learningParts.push(`喜愛作者（優先納入其與關鍵字相關作品）：${favAuthors}`);
   const learningCtx=learningParts.length?'\n'+learningParts.join('\n'):'';
 
-  const sys=`你是文學引文資料庫。只提供真實已出版作品的原文節選，絕不虛構。回傳純 JSON 陣列，直接從 [ 開始。
-【語言純粹性規則】quote 欄位必須 100% 使用作品原始語言，嚴禁夾雜任何其他語言文字（例如韓文 quote 內不得出現中文、英文字；英文 quote 內不得出現中文）。中文翻譯只放在 translation 欄位。`;
+  const sys=`你是文學引文資料庫。只提供真實已出版、可查證的作品原文節選，若不確定引文是否真實存在，寧可省略該條，絕不虛構。回傳純 JSON 陣列，直接從 [ 開始。
+【語言純粹性規則】quote 欄位必須 100% 使用作品原始語言，嚴禁夾雜任何其他語言文字（韓文 quote 內不得出現中文；英文 quote 內不得出現中文）。中文翻譯只放在 translation 欄位。
+【真實性規則】只輸出你確定真實存在的作品與引文；寧可只回傳 2-3 條可查證的，也不要補足虛構的內容。`;
 
   const prompt=`關鍵字「${kw}」。${learningCtx}
 
-找 4-5 條真實文學引文。每條嚴格按照以下結構輸出，非中文作品的翻譯欄位不得省略。
-⚠️ quote 欄位只能含原文語言文字，嚴禁混入中文或其他語言：
+找 3-5 條可查證的真實文學引文，按以下 JSON 結構輸出。非中文作品的翻譯欄位不得省略。
+⚠️ quote 欄位只能含原文語言文字，嚴禁混入中文或其他語言。
+⚠️ 以下三條為【格式示範，絕對不得出現在你的回傳結果中】：
 
-範例一（韓文作品）：
-{"country":"韓國","quote":"나무는 천천히 속삭였다. 너는 혼자가 아니야.","translation":"樹木緩緩低語。你並不孤單。","title":"나무의 속삭임","title_zh":"樹的低語","author":"나태주","author_zh":"羅太柱","year":2001,"lang":"ko","tags":["${kw}"]}
+source_type 填寫規則：實體出版書籍填 "book"；詩集填 "poetry"；散文集填 "essay"；短篇小說集填 "short_story"；Threads 貼文填 "threads"；Instagram 填 "instagram"；部落格填 "blog"；雜誌填 "magazine"；報紙填 "newspaper"；其他網路內容填 "online"。
 
-範例二（英文作品）：
-{"country":"美國","quote":"We are all strangers in a strange land, longing for home.","translation":"我們都是異鄉的陌生人，渴望著回家。","title":"The Stranger","title_zh":"異鄉人","author":"Albert Camus","author_zh":"阿爾貝·卡繆","year":1942,"lang":"en","tags":["${kw}"]}
+【格式示範一 - 勿輸出】韓文詩集：
+{"country":"韓國","quote":"자세히 보아야 예쁘다\n오래 보아야 사랑스럽다\n너도 그렇다","translation":"仔細端詳才看見美麗，久久凝視才懂得愛，你也是如此。","title":"풀꽃","title_zh":"野花","author":"나태주","author_zh":"羅太柱","year":1976,"lang":"ko","source_type":"poetry","tags":["${kw}"]}
 
-範例三（中文作品，無翻譯欄位）：
-{"country":"台灣","quote":"那些走過的路都是為了遇見你。","translation":"","title":"台北人","title_zh":"","author":"白先勇","author_zh":"","year":1971,"lang":"zh","tags":["${kw}"]}
+【格式示範二 - 勿輸出】法文小說：
+{"country":"法國","quote":"Aujourd'hui, maman est morte.","translation":"今天，媽媽死了。","title":"L'Étranger","title_zh":"異鄉人","author":"Albert Camus","author_zh":"阿爾貝·卡繆","year":1942,"lang":"fr","source_type":"book","tags":["${kw}"]}
 
-現在請根據關鍵字「${kw}」找 4-5 條真實引文，回傳 JSON 陣列，不加任何說明：`;
+【格式示範三 - 勿輸出】中文散文（無翻譯欄）：
+{"country":"台灣","quote":"生命是一襲華美的袍，爬滿了蚤子。","translation":"","title":"天才夢","title_zh":"","author":"張愛玲","author_zh":"","year":1940,"lang":"zh","source_type":"essay","tags":["${kw}"]}
+
+現在請根據關鍵字「${kw}」，輸出你確定真實存在的 3-5 條引文，回傳 JSON 陣列，不加任何說明：`;
 
   // Use few-shot: include the examples as assistant demo
   const msgs=[
@@ -571,7 +587,8 @@ async function fetchCards(kw){
       quote:sanitizeQuote(c.quote||'',c.lang||'zh'),translation:c.translation||'',
       title:c.title||'',title_zh:c.title_zh||'',
       author:c.author||'',author_zh:c.author_zh||'',
-      year:c.year||null,lang:c.lang||'zh',tags:c.tags||[kw]
+      year:c.year||null,lang:c.lang||'zh',tags:c.tags||[kw],
+      source_type:c.source_type||''
     })).filter(c=>c.quote);
     const cache=S.cache;cache[kw]=cards;S.cache=cache;
     localStorage.setItem('oasis_last_'+kw,Date.now().toString());
