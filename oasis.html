@@ -606,6 +606,18 @@ function timeSince(ts){
 }
 
 // ── INIT ──
+// 清理已收藏中混語的 quote（一次性，不影響中文/日文作品）
+(function cleanSavedMixedLang(){
+  const before=S.saved;
+  const after=before.map(c=>{
+    const q=sanitizeQuote(c.quote||'',c.lang||'zh');
+    return q?c:null;
+  }).filter(Boolean);
+  if(after.length<before.length){
+    S.saved=after;
+    console.info('[Oasis] 已清除',before.length-after.length,'筆混語收藏');
+  }
+})();
 saveStatus();render();
 </script>
 </body>
