@@ -542,6 +542,7 @@ async function fetchCards(kw){
 
   const sys=`你是文學引文資料庫。只提供真實已出版、可查證的作品原文節選，若不確定引文是否真實存在，寧可省略該條，絕不虛構。回傳純 JSON 陣列，直接從 [ 開始。
 【語言純粹性規則】quote 欄位必須 100% 使用作品原始語言，嚴禁夾雜任何其他語言文字（韓文 quote 內不得出現中文；英文 quote 內不得出現中文）。中文翻譯只放在 translation 欄位。
+【繁體中文規則】所有中文欄位（translation、title_zh、author_zh、country）一律使用繁體中文，嚴禁使用簡體中文。
 【真實性規則】只輸出你確定真實存在的作品與引文；寧可只回傳 2-3 條可查證的，也不要補足虛構的內容。`;
 
   const prompt=`關鍵字「${kw}」。${learningCtx}${excludeCtx}
