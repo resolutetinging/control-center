@@ -92,6 +92,7 @@ body{display:flex;flex-direction:column;}
   background:var(--bg2);color:var(--sub);flex-shrink:0;
 }
 .card-title{color:var(--accent2);font-weight:600;}
+.nowrap{white-space:nowrap;}
 .card-tags{margin-top:9px;}
 .tag{
   display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;
@@ -239,7 +240,7 @@ function render(){
 }
 
 // ── CARD RENDERER ──
-const LANG_MAP={zh:'中文',ko:'한국어',en:'English',ja:'日本語',fr:'Français',de:'Deutsch'};
+const LANG_MAP={zh:'中文',ko:'韓文',en:'英文',ja:'日文',fr:'法文',de:'德文'};
 
 function buildCard(c){
   const isSaved=S.saved.some(s=>s.id===c.id);
@@ -251,22 +252,20 @@ function buildCard(c){
   const transHtml=(!isZh&&c.translation)
     ?`<div class="card-translation">${esc(c.translation)}</div>`:'';
 
-  // Attribution: original line
-  const origTitle=`《<span class="card-title">${esc(c.title)}</span>》`;
-  const origAuthor=esc(c.author);
-  const origYear=c.year?`· ${c.year}`:'';
+  // Attribution row 1: all original language
+  const origTitleSpan=c.title?`<span class="nowrap">《<span class="card-title">${esc(c.title)}</span>》</span>`:'';
+  const origAuthorSpan=c.author?`<span class="nowrap">${esc(c.author)}</span>`:'';
+  const origYearSpan=c.year?`<span class="nowrap">· ${c.year}</span>`:'';
   const origLine=`<div class="card-attr-orig">
     ${langLabel?`<span class="card-lang">${langLabel}</span>`:''}
-    <span>${origTitle}</span>
-    <span>${origAuthor}</span>
-    ${origYear?`<span>${origYear}</span>`:''}
+    ${origTitleSpan}${origAuthorSpan}${origYearSpan}
   </div>`;
 
-  // Attribution: zh translation line (title_zh / author_zh)
+  // Attribution row 2: Chinese translations
   const hasZhAttr=!isZh&&(c.title_zh||c.author_zh);
-  const zhTitle=c.title_zh?`《<span class="card-title">${esc(c.title_zh)}</span>》`:'';
-  const zhAuthor=c.author_zh?esc(c.author_zh):'';
-  const zhLine=hasZhAttr?`<div class="card-attr-zh">${zhTitle}${zhTitle&&zhAuthor?' · ':''}${zhAuthor}</div>`:'';
+  const zhTitleSpan=c.title_zh?`<span class="nowrap">《<span class="card-title">${esc(c.title_zh)}</span>》</span>`:'';
+  const zhAuthorSpan=c.author_zh?`<span class="nowrap">${esc(c.author_zh)}</span>`:'';
+  const zhLine=hasZhAttr?`<div class="card-attr-zh">${zhTitleSpan}${zhAuthorSpan}</div>`:'';
 
   const tagsHtml=(c.tags||[]).length
     ?`<div class="card-tags">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
