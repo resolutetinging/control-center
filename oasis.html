@@ -576,7 +576,7 @@ source_type 填寫規則：實體出版書籍填 "book"；詩集填 "poetry"；�
       method:'POST',
       headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
+        model:'llama-3.1-8b-instant',
         messages:msgs,
         temperature:0.75,max_tokens:3500
       })
