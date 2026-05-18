@@ -225,7 +225,7 @@ function saveStatus(){
 }
 window.getOasisStatus=()=>{try{return JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{return null;}};
 
-let curTab='discover',curKw=null,savedFilter='all';
+let curTab='discover',curKw=null,savedFilter='all',discoverOlOnly=false;
 const fetching=new Set();
 
 // ── ROUTING ──
@@ -328,6 +328,10 @@ function buildDiscover(){
   const savedKeys=new Set(S.saved.map(s=>`${s.title}|${s.author}`));
   const unsaved=cards.filter(c=>!savedKeys.has(`${c.title}|${c.author}`));
 
+  const hasOl=unsaved.some(c=>c.olUrl);
+  if(discoverOlOnly&&!hasOl) discoverOlOnly=false;
+  const displayed=discoverOlOnly?unsaved.filter(c=>c.olUrl):unsaved;
+
   let cardsHtml='';
   if(isLoading){
     cardsHtml=`<div class="loading"><div class="spinner"></div><br>正在探索「${esc(curKw)}」…</div>`;
@@ -343,9 +347,20 @@ function buildDiscover(){
       <div class="empty-msg">此關鍵字的探索結果都已收藏</div>
       <div class="empty-sub">按「重新探索」取得新內容</div>
     </div>`;
+  } else if(!displayed.length){
+    cardsHtml=`<div class="empty">
+      <div class="empty-icon">📖</div>
+      <div class="empty-msg">本批次無 Open Library 已驗證的項目</div>
+      <div class="empty-sub">取消篩選可查看全部，或重新探索</div>
+    </div>`;
   } else {
-    cardsHtml=unsaved.map(c=>buildCard(c)).join('');
+    cardsHtml=displayed.map(c=>buildCard(c)).join('');
   }
+
+  const olFilterRow=hasOl?`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+    <span style="font-size:11px;color:var(--faint);">#</span>
+    <div class="filter-pill${discoverOlOnly?' on':''}" onclick="toggleDiscoverOl()">📖 OpenLibrary</div>
+  </div>`:'';
 
   return `
     <div id="kw-row">${pills}</div>
@@ -355,10 +370,12 @@ function buildDiscover(){
         ${isLoading?'⏳ 探索中…':'🔄 重新探索'}
       </button>
     </div>
+    ${olFilterRow}
     <div id="cards-area">${cardsHtml}</div>`;
 }
 
-function selectKw(k){curKw=k;render();}
+function selectKw(k){curKw=k;discoverOlOnly=false;render();}
+function toggleDiscoverOl(){discoverOlOnly=!discoverOlOnly;render();}
 
 // ── SAVED ──
 function buildSaved(){
@@ -536,12 +553,14 @@ function toggleSave(id){
 }
 
 // ── OPEN LIBRARY 來源查詢 ──
-const OL_TYPES=new Set(['book','poetry','essay','short_story','novel','poem']);
+// 只查 book/novel/essay，且非中文（OL 不收詩作單篇、短篇，也不索引中文書名）
+const OL_TYPES=new Set(['book','novel','essay']);
 async function lookupSource(title,author){
   try{
-    const q=encodeURIComponent(`${title} ${author}`);
+    const t=encodeURIComponent(title);
+    const a=encodeURIComponent(author);
     const res=await Promise.race([
-      fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=key,title,author_name`),
+      fetch(`https://openlibrary.org/search.json?title=${t}&author=${a}&limit=1&fields=key`),
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),4000))
     ]);
     if(!res.ok)return null;
@@ -552,7 +571,9 @@ async function lookupSource(title,author){
 }
 async function enrichWithSources(cards){
   const results=await Promise.all(
-    cards.map(c=>OL_TYPES.has(c.source_type)?lookupSource(c.title,c.author):Promise.resolve(null))
+    cards.map(c=>OL_TYPES.has(c.source_type)&&c.lang!=='zh'
+      ?lookupSource(c.title,c.author)
+      :Promise.resolve(null))
   );
   return cards.map((c,i)=>results[i]?{...c,olUrl:results[i]}:c);
 }
