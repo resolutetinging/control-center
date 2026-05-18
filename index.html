@@ -69,10 +69,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .cm {grid-column:5/13;grid-row:2}     /* mental wave */
 .cd {grid-column:5/13;grid-row:3}     /* debt */
 .chw{grid-column:1/13;grid-row:4}     /* week view */
-.card.chw{overflow:visible}
-.cco{grid-column:1/13;grid-row:5}     /* correlation — full width */
-.ctx{grid-column:1/13;grid-row:6}     /* taxonomy — full width */
-.cha{grid-column:1/13;grid-row:7}     /* HD AI */
+.clw{grid-column:1/13;grid-row:5}     /* last week recap */
+.cco{grid-column:1/13;grid-row:6}     /* correlation — full width */
+.ctx{grid-column:1/13;grid-row:7}     /* taxonomy — full width */
+.cha{grid-column:1/13;grid-row:8}     /* HD AI */
 
 .card{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.2rem;position:relative;overflow:hidden}
 .card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.24) 0%,transparent 55%);pointer-events:none;border-radius:inherit}
@@ -354,17 +354,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
         <div class="week-ai-result" id="week-ai-result">點擊「生成週分析」以獲得建議。</div>
       </div>
     </div>
-    <!-- 上週回顧 -->
-    <div style="margin-top:1rem;padding-top:.9rem;border-top:.5px solid var(--border)">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.5rem">
-        <div class="lbl" style="margin-bottom:0">📋 上週狀態回顧</div>
-        <button class="hd-btn" id="lw-btn" onclick="analyzeLastWeek()">
-          <div class="hd-spinner-inline" id="lw-spinner"></div><span id="lw-btn-text">生成上週回顧</span>
-        </button>
-      </div>
-      <div id="lw-stat-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.6rem"></div>
-      <div class="week-ai-result" id="lw-ai-result">點擊「生成上週回顧」以獲得上週狀態分析。</div>
+  </div>
+
+  <!-- 上週狀態回顧 -->
+  <div class="card clw">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.5rem">
+      <div class="lbl" style="margin-bottom:0">📋 上週狀態回顧</div>
+      <button class="hd-btn" id="lw-btn" onclick="analyzeLastWeek()">
+        <div class="hd-spinner-inline" id="lw-spinner"></div><span id="lw-btn-text">生成上週回顧</span>
+      </button>
     </div>
+    <div id="lw-stat-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.6rem"></div>
+    <div class="week-ai-result" id="lw-ai-result">點擊「生成上週回顧」以獲得上週狀態分析。</div>
   </div>
 
   <!-- 三維相關性圖 -->
@@ -1025,11 +1026,12 @@ function fmtAI(raw){
 
 async function aiCall(prompt,maxTokens){
   var key=localStorage.getItem('tina_groq')||'';
-  if(!key)throw new Error('找不到 Groq API Key（tina_groq）');
+  if(!key)throw new Error('找不到 Groq API Key，請在設定頁輸入（localStorage: tina_groq）');
   var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:maxTokens,temperature:.7})});
-  var d=await r.json();
+  var txt=await r.text();
+  var d;try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON 回應（'+r.status+'）: '+txt.slice(0,120));}
   if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error(d.error?.message||'API回應異常（status '+r.status+'）');
+  throw new Error('Groq '+r.status+': '+(d.error?.message||txt.slice(0,120)));
 }
 
 async function analyzeHD(){
