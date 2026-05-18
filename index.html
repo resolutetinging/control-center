@@ -68,7 +68,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .cb {grid-column:10/13;grid-row:1}    /* 3D bars */
 .cm {grid-column:5/13;grid-row:2}     /* mental wave */
 .cd {grid-column:5/13;grid-row:3}     /* debt */
-.chw{grid-column:1/13;grid-row:4;overflow:visible}     /* week view */
+.chw{grid-column:1/13;grid-row:4}     /* week view */
+.card.chw{overflow:visible}
 .cco{grid-column:1/13;grid-row:5}     /* correlation — full width */
 .ctx{grid-column:1/13;grid-row:6}     /* taxonomy — full width */
 .cha{grid-column:1/13;grid-row:7}     /* HD AI */
@@ -1028,7 +1029,7 @@ async function aiCall(prompt,maxTokens){
   var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:maxTokens,temperature:.7})});
   var d=await r.json();
   if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error('API回應異常');
+  throw new Error(d.error?.message||'API回應異常（status '+r.status+'）');
 }
 
 async function analyzeHD(){
