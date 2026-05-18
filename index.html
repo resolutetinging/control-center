@@ -261,7 +261,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 /* ── Sync Pill ── */
 #sync-pill{
-  position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:18px;z-index:50;
+  position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:18px;z-index:500;
   display:flex;align-items:center;gap:2px;padding:6px 10px;
   border-radius:100px;
   background:rgba(244,241,236,.82);border:1px solid var(--bstr);
@@ -309,9 +309,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   }
   #guard-pill,#settings-btn,#sync-pill{background:rgba(244,241,236,.96)!important;}
 
-  /* Sync pill: raise above home indicator, larger touch targets */
+  /* Sync pill: raise above iOS gesture zone */
   #sync-pill{bottom:calc(22px + env(safe-area-inset-bottom,34px))!important;}
-  #sync-pill button{width:44px!important;height:44px!important;font-size:18px!important;}
 
   /* Header: in document flow */
   #header{
