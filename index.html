@@ -1,1175 +1,1316 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#e8e4de">
-<title>Self Alignment System</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Control Center ✦</title>
 <style>
+*{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;--text:#28261f;
-  --sub:#55514a;--faint:#7a7570;--border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
+  /* ── sleep-dashboard 同款色票 ── */
+  --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
+  --ink:#28261f;--sub:#55514a;--faint:#7a7570;
+  --border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
   --deep:#5c7a96;--rem:#8b7898;--core:#5e8f7e;--awake:#b08d62;--mental:#9e6b7a;
-  --danger:#c0392b;--warn:#e67e22;--ok:#27ae60;--info:#4e6e8a;
-  --sw:220px;--r:13px;--rsm:9px;
+  --ok:#27ae60;--warn:#e67e22;--danger:#c0392b;
+  --blur:blur(32px) saturate(160%);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:15px;-webkit-text-size-adjust:100%}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;display:flex}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;}
+body{position:relative;}
 
-/* SIDEBAR */
-.sb{width:var(--sw);min-height:100dvh;background:var(--card);border-right:.5px solid var(--bstr);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-.sb-brand{padding:1.3rem 1.2rem 1rem;border-bottom:.5px solid var(--border)}
-.brand-word{font-size:.85rem;line-height:1.55;color:var(--text);font-weight:500}
-.brand-tagline{font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);margin-top:5px}
-.sb-clock{padding:.75rem 1.2rem;border-bottom:.5px solid var(--border)}
-.cl-time{font-size:1.25rem;font-weight:300;letter-spacing:.04em}
-.cl-date{font-size:.62rem;color:var(--faint);margin-top:1px}
-.sb-nav{flex:1;padding:.5rem 0;display:flex;flex-direction:column;gap:2px}
-.ni{display:flex;align-items:center;gap:10px;padding:.62rem 1.2rem;cursor:pointer;position:relative;border:none;background:transparent;width:100%;text-align:left;color:var(--sub);font-family:'Noto Sans TC',sans-serif;font-size:.78rem;transition:background .13s,color .13s}
-.ni:hover{background:var(--bg2);color:var(--text)}.ni.on{color:var(--text);background:var(--bg)}
-.ni.on::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:3px;border-radius:0 3px 3px 0;background:var(--mental)}
-.ni-icon{font-size:.95rem;flex-shrink:0;width:18px;text-align:center}.ni-label{font-weight:500}
-.ni-sub{font-size:.58rem;color:var(--faint);display:block;margin-top:1px}
-.sb-foot{padding:.7rem 1.2rem;border-top:.5px solid var(--border);font-size:.6rem;color:var(--faint);line-height:1.7}
+/* ── BG Layer ── */
+#bg-default{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse at 18% 22%,rgba(139,120,152,.14) 0%,transparent 52%),
+    radial-gradient(ellipse at 82% 78%,rgba(92,122,150,.12) 0%,transparent 52%),
+    radial-gradient(ellipse at 52% 48%,rgba(94,143,126,.07) 0%,transparent 45%),
+    #e8e4de;
+}
+#bg-wallpaper{
+  position:fixed;inset:0;z-index:1;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  opacity:0;transition:opacity .5s;
+}
+#bg-wallpaper.active{opacity:0.9;}
+#noise{position:fixed;inset:0;z-index:2;opacity:.018;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size:128px;}
 
-/* MAIN */
-.main{margin-left:var(--sw);width:calc(100vw - var(--sw));height:100dvh;position:relative}
-.view-ov,.view-frame{position:absolute;inset:0;z-index:0;visibility:hidden}
-.view-ov.on,.view-frame.on{z-index:1;visibility:visible}
-.view-ov{padding:1.2rem 1.4rem 3rem;overflow-y:auto;background:var(--bg)}
-.view-frame{display:flex;flex-direction:column;background:var(--bg)}
-.frame-bar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.2rem;background:var(--card);border-bottom:.5px solid var(--bstr);flex-shrink:0;gap:.75rem;flex-wrap:wrap}
-.frame-title{font-size:1rem;font-weight:500}
-.open-btn{font-size:.65rem;color:var(--faint);text-decoration:none;border:.5px solid var(--bstr);padding:3px 10px;border-radius:20px;white-space:nowrap}
-.open-btn:hover{color:var(--text);border-color:var(--text)}
-.frame-wrap{flex:1;position:relative;min-height:0;background:var(--bg)}
-.frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;display:block}
-.frame-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--faint);font-size:.75rem;background:var(--bg);pointer-events:none;transition:opacity .3s}
-.frame-loading.hidden{opacity:0}
-.spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--mental);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── Clock & Header ── */
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:14vh;pointer-events:none;
+}
+#clock{
+  font-size:min(14vw,112px);font-weight:100;letter-spacing:-5px;
+  color:var(--ink);line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+#clock-sec{font-size:min(5vw,38px);font-weight:200;color:var(--faint);margin-left:2px;vertical-align:super;margin-top:10px;display:inline-block;}
+#date-line{font-size:13px;color:var(--faint);margin-top:10px;letter-spacing:.05em;}
+#greeting{font-size:13.5px;font-weight:400;color:var(--sub);margin-top:4px;letter-spacing:.12em;text-transform:uppercase;}
 
-/* OVERVIEW */
-.vh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.2rem;gap:.5rem;flex-wrap:wrap}
-.vtitle{font-size:1.5rem;font-weight:700;color:#1a1814}
-.vsub{font-size:.75rem;color:#6e6a62;font-weight:500}
+/* ── Guard Group ── */
+#guard-group{
+  position:fixed;bottom:18px;right:18px;z-index:10000;
+  display:flex;align-items:center;gap:8px;
+}
+#guard-pill{
+  display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:100px;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  font-size:12px;color:var(--sub);
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+  cursor:pointer;user-select:none;transition:background .2s;
+}
+#guard-pill:hover{background:rgba(255,255,255,.9);}
+#guard-stop-btn{
+  display:none;align-items:center;gap:5px;padding:7px 13px;border-radius:100px;
+  background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.25);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  font-size:11px;font-weight:600;color:var(--danger);
+  box-shadow:0 2px 10px rgba(40,38,32,.08);
+  cursor:pointer;font-family:inherit;transition:background .2s;
+}
+#guard-stop-btn:hover{background:rgba(192,57,43,.18);}
+#guard-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);transition:background .5s;flex-shrink:0;}
+#guard-dot.warn{background:var(--warn);}
+#guard-dot.alert{background:var(--danger);animation:pulse-r 1s infinite;}
 
-.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:9px}
-/* Layout — no sleep proportion card */
-.cg {grid-column:1/5;grid-row:1/4}   /* gauge, tall */
-.cp {grid-column:5/10;grid-row:1}     /* pace */
-.cb {grid-column:10/13;grid-row:1}    /* 3D bars */
-.cm {grid-column:5/13;grid-row:2}     /* mental wave */
-.cd {grid-column:5/13;grid-row:3}     /* debt */
-.chw{grid-column:1/13;grid-row:4}     /* week view */
-.clw{grid-column:1/13;grid-row:5}     /* last week recap */
-.cco{grid-column:1/13;grid-row:6}     /* correlation — full width */
-.ctx{grid-column:1/13;grid-row:7}     /* taxonomy — full width */
-.cha{grid-column:1/13;grid-row:8}     /* HD AI */
+/* ── Settings Btn ── */
+#settings-btn{
+  position:fixed;top:22px;left:22px;z-index:50;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  color:var(--sub);font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+  transition:background .2s;
+}
+#settings-btn:hover{background:rgba(255,255,255,.9);}
 
-.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.2rem;position:relative;overflow:hidden}
-.card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.24) 0%,transparent 55%);pointer-events:none;border-radius:inherit}
-/* BLACK BOLD TITLES — matching sleep-dashboard */
-.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#1a1814;margin-bottom:.6rem;font-weight:700}
+/* ── Dock ── */
+#dock-outer{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  z-index:100;display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+#dock{
+  display:flex;align-items:flex-end;gap:5px;
+  padding:10px 16px 10px;
+  background:rgba(244,241,236,.78);
+  backdrop-filter:blur(50px) saturate(180%);
+  -webkit-backdrop-filter:blur(50px) saturate(180%);
+  border-radius:22px;
+  border:.5px solid var(--bstr);
+  box-shadow:0 8px 40px rgba(40,38,32,.12),0 1px 0 rgba(255,255,255,.8) inset;
+}
+.d-sep{
+  width:.5px;height:38px;align-self:center;
+  background:var(--bstr);margin:0 6px;flex-shrink:0;
+}
+.d-icon{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;position:relative;width:60px;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1);
+  will-change:transform;
+}
+.d-box{
+  width:52px;height:52px;border-radius:13px;
+  background:rgba(255,255,255,.88);
+  border:.5px solid rgba(40,38,32,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;line-height:1;
+  box-shadow:0 2px 10px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.9) inset;
+  transition:inherit;
+}
+.d-icon:active .d-box{transform:scale(.92);}
+.d-lbl{
+  font-size:9.5px;color:var(--faint);font-weight:500;
+  white-space:nowrap;letter-spacing:.02em;
+}
 
-/* GAUGE */
-.gw{display:flex;flex-direction:column;align-items:center;gap:.65rem}
-.gstats{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%}
-.gstat{background:var(--bg2);border-radius:var(--rsm);padding:.4rem .5rem;border:.5px solid var(--border)}
+/* ── Lean Tooltip ── */
+#tooltip{
+  position:fixed;z-index:5000;pointer-events:none;
+  background:rgba(244,241,236,.70);
+  backdrop-filter:blur(24px) saturate(180%);
+  border:.5px solid var(--bstr);
+  border-radius:13px;
+  padding:11px 14px;
+  box-shadow:0 8px 32px rgba(40,38,32,.12);
+  transition:opacity .12s,transform .12s;
+}
+#tooltip.tt-hide{opacity:0;transform:translateY(8px);}
+.tt-head{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:9px;}
+.tt-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:2px 0;}
+.tt-k{font-size:11px;color:var(--faint);font-weight:600;}
+.tt-v{font-size:12px;font-weight:600;color:var(--ink);}
+.tt-v.g{color:#7d9e85;}.tt-v.a{color:#b09870;}.tt-v.r{color:#a87868;}
+.tt-hr{height:.5px;background:var(--border);margin:7px 0;}
+.tt-spark{font-size:11px;letter-spacing:1.5px;font-weight:600;}
 
-/* PILLS */
-.pill{font-size:.62rem;padding:3px 9px;border-radius:20px;font-weight:600;letter-spacing:.03em;white-space:nowrap}
-.p-ok{background:rgba(39,174,96,.14);color:var(--ok)}.p-no{background:rgba(192,57,43,.12);color:var(--danger)}
-.p-warn{background:rgba(230,126,34,.14);color:var(--warn)}.p-info{background:rgba(78,110,138,.14);color:var(--info)}
-.p-purple{background:rgba(139,120,152,.14);color:var(--rem)}
+/* ── Settings Modal ── */
+#settings-overlay{
+  position:fixed;inset:0;z-index:800;
+  background:rgba(40,38,32,.25);backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;
+}
+#settings-panel{
+  background:rgba(244,241,236,.97);
+  backdrop-filter:blur(40px) saturate(180%);
+  border:.5px solid var(--bstr);
+  border-radius:18px;
+  width:min(93vw,600px);max-height:88vh;
+  overflow:hidden;display:flex;
+  box-shadow:0 20px 70px rgba(40,38,32,.18);
+  animation:panel-in .22s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes panel-in{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
 
-/* STATUS BARS */
-.sbar-list{display:flex;flex-direction:column;gap:7px}
-.sbar-row{display:flex;align-items:center;gap:6px}
-.sbar-name{font-size:.7rem;color:var(--sub);min-width:28px;font-weight:500}
-.sbar-track{flex:1;height:5px;background:var(--bstr);border-radius:4px;overflow:hidden}
-.sbar-fill{height:100%;border-radius:4px;transition:width 1s ease}
-.sbar-num{font-size:.75rem;font-weight:700;min-width:28px;text-align:right}
+/* Settings sidebar */
+#s-sidebar{
+  width:152px;flex-shrink:0;padding:22px 10px;
+  border-right:.5px solid var(--bstr);
+  background:rgba(255,255,255,.5);
+  display:flex;flex-direction:column;gap:2px;
+}
+#s-sidebar .s-cat{font-size:10px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:0 8px;margin-bottom:5px;margin-top:14px;}
+#s-sidebar .s-cat:first-child{margin-top:0;}
+.s-tab{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;
+  font-size:13px;color:var(--sub);cursor:pointer;
+  border:none;background:none;width:100%;text-align:left;font-family:inherit;
+  transition:all .15s;
+}
+.s-tab:hover{background:rgba(40,38,32,.06);color:var(--ink);}
+.s-tab.on{background:rgba(40,38,32,.09);color:var(--ink);font-weight:600;}
+.s-tab-ic{font-size:15px;width:20px;text-align:center;}
 
-/* PACE */
-.pace-badge{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;padding:3px 10px;border-radius:20px;font-weight:700;margin-bottom:.5rem}
-.pace-body{font-size:.82rem;line-height:1.9;color:var(--sub)}
-.pace-body strong{color:var(--text);font-weight:700}
-.dd{display:flex;flex-wrap:wrap;gap:4px;margin-top:.65rem}
+/* Settings content */
+#s-content{
+  flex:1;padding:26px;overflow-y:auto;color:var(--ink);
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+#s-content::-webkit-scrollbar{width:4px;}
+#s-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.s-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:22px;}
+.s-sec{margin-bottom:22px;}
+.s-lbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.09em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.s-inp{
+  width:100%;background:rgba(255,255,255,.75);border:.5px solid var(--bstr);
+  border-radius:10px;padding:10px 13px;font-size:13px;color:var(--ink);
+  font-family:inherit;outline:none;transition:border-color .2s,background .2s;
+}
+.s-inp:focus{border-color:var(--deep);background:#fff;}
+.s-inp::placeholder{color:var(--faint);}
+.s-btn{padding:10px 18px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;}
+.s-btn-pr{background:var(--deep);color:#fff;}
+.s-btn-pr:hover{background:#4e6a84;transform:translateY(-1px);}
+.s-btn-g{background:rgba(40,38,32,.06);color:var(--sub);border:.5px solid var(--bstr);}
+.s-btn-g:hover{background:rgba(40,38,32,.1);}
+.s-row{display:flex;gap:8px;margin-bottom:10px;}
 
-/* INERTIA */
-.inertia-box{margin-top:.75rem;padding:.6rem .75rem;border-radius:var(--rsm);border-left:3px solid var(--warn);background:rgba(230,126,34,.07);font-size:.72rem;line-height:1.7;color:var(--sub)}
-.inertia-box.danger{border-color:var(--danger);background:rgba(192,57,43,.07)}
-.inertia-label{font-weight:700;font-size:.7rem;color:inherit;margin-bottom:2px}
+/* Wallpaper picker */
+.wp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.wp-card{
+  aspect-ratio:16/9;border-radius:10px;cursor:pointer;overflow:hidden;
+  border:2px solid transparent;transition:all .2s;position:relative;
+}
+.wp-card:hover{border-color:var(--deep);transform:scale(1.03);}
+.wp-card.active{border-color:var(--ink);}
+.wp-card-name{position:absolute;bottom:0;left:0;right:0;padding:4px 7px;font-size:10px;color:rgba(255,255,255,.82);background:linear-gradient(transparent,rgba(40,38,32,.45));}
+.wp-upload{
+  aspect-ratio:16/9;border-radius:10px;border:2px dashed var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  cursor:pointer;color:var(--faint);font-size:11px;
+  background:rgba(255,255,255,.4);transition:all .2s;
+}
+.wp-upload:hover{border-color:var(--deep);color:var(--sub);background:rgba(255,255,255,.7);}
+.wp-upload-ic{font-size:22px;}
 
-/* MENTAL */
-.msr{display:flex;gap:1rem;margin-top:.65rem;flex-wrap:wrap}
-.mst .val{font-size:.82rem;font-weight:600}
+/* Slider */
+input[type=range]{width:100%;height:4px;border-radius:3px;background:rgba(40,38,32,.15);-webkit-appearance:none;cursor:pointer;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--deep);box-shadow:0 2px 8px rgba(40,38,32,.15);}
 
-/* ALIGNMENT */
-.align-badge{display:inline-flex;align-items:center;gap:5px;font-size:.65rem;padding:3px 9px;border-radius:20px;font-weight:600}
-.align-over{background:rgba(192,57,43,.12);color:var(--danger)}
-.align-under{background:rgba(78,110,138,.12);color:var(--info)}
-.align-ok{background:rgba(39,174,96,.12);color:var(--ok)}
+/* ── Guard Overlay ── */
+#guard-overlay{position:fixed;inset:0;z-index:9999;cursor:pointer;}
+#cat-stage{position:absolute;inset:0;}
+#big-cat{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#big-cat img{width:100%;height:100%;object-fit:cover;}
+#big-cat svg{width:100%;height:100%;}
+@keyframes catRise{from{opacity:0;transform:scale(1.08);}to{opacity:1;transform:scale(1);}}
+#cat-speech{display:none!important;}
+#guard-ctrl{display:none!important;}
 
-/* WEEK */
-.week-strip{margin-bottom:1.1rem;padding-bottom:1rem;border-bottom:.5px solid var(--border)}
-.week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.day-col{display:flex;flex-direction:column;align-items:center;gap:5px}
-.day-header{font-size:.62rem;color:var(--faint);font-weight:500;text-align:center;line-height:1.4}
-.day-header.today{color:var(--text);font-weight:700}
-.day-score-ring{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0}
-.day-score-ring.empty{background:var(--bg2);color:var(--faint);font-size:.62rem;border:.5px solid var(--border)}
-.day-emoji{font-size:.9rem;line-height:1}
-.day-factors{display:flex;flex-direction:column;gap:2px;width:100%}
-.day-factor-tag{font-size:.55rem;padding:2px 4px;border-radius:4px;background:rgba(40,38,32,.07);color:var(--sub);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:.5px solid rgba(40,38,32,.12)}
-.week-grid{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:.8rem}
-.week-stat-item{display:flex;align-items:center;justify-content:space-between;padding:.42rem .6rem;background:var(--bg2);border-radius:var(--rsm);border:.5px solid var(--border);margin-top:4px}
-.week-stat-label{font-size:.7rem;color:var(--sub)}.week-stat-val{font-size:.78rem;font-weight:700}
-.mood-dots{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:.5rem}
-.mood-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;color:#fff;flex-shrink:0}
-.week-ai-result{font-size:.85rem;line-height:1.75;color:var(--sub)}
+/* ── SAS Modal ── */
+.m-ov{position:fixed;inset:0;background:rgba(40,38,32,.3);backdrop-filter:blur(10px);z-index:800;display:flex;align-items:center;justify-content:center;}
+.m-pn{background:rgba(244,241,236,.98);backdrop-filter:blur(30px);border:.5px solid var(--bstr);border-radius:20px;width:min(92vw,620px);max-height:88vh;overflow-y:auto;padding:26px;box-shadow:0 20px 70px rgba(40,38,32,.18);color:var(--ink);}
+.m-ttl{font-size:19px;font-weight:700;color:var(--ink);margin-bottom:16px;}
+.m-cls{float:right;background:rgba(40,38,32,.07);border:none;color:var(--faint);font-size:14px;width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.m-cls:hover{background:rgba(40,38,32,.14);color:var(--ink);}
+.glass-sm{background:rgba(255,255,255,.65);border:.5px solid var(--border);border-radius:13px;padding:14px 16px;}
+.btn-pr{display:block;width:100%;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;background:var(--deep);color:#fff;transition:all .18s;}
+.btn-pr:hover{background:#4e6a84;transform:translateY(-1px);}
 
-/* CORRELATION */
-.cco-inner{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;margin-top:.5rem}
-.corr-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:.6rem}
-.corr-leg-item{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--sub)}
-.xa-insight{display:flex;flex-wrap:wrap;gap:7px;margin-top:.75rem}
-.xa-tag{font-size:.68rem;padding:4px 11px;border-radius:20px;font-weight:500}
+/* ── Debug ── */
+#dbg-btn{position:fixed;bottom:110px;right:20px;z-index:6000;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:100px;padding:8px 16px;font-size:11px;color:var(--danger);cursor:pointer;font-family:inherit;backdrop-filter:blur(16px);}
+#dbg-btn:hover{background:rgba(192,57,43,.14);}
 
-/* TAXONOMY */
-.ctx-inner{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:.5rem}
-.tax-bar-row{display:flex;align-items:center;gap:8px;margin-top:7px}
-.tax-label{font-size:.68rem;color:var(--sub);min-width:70px;font-weight:500}
-.tax-track{flex:1;height:10px;background:var(--bg2);border-radius:5px;overflow:hidden}
-.tax-fill{height:100%;border-radius:5px;transition:width .8s ease}
-.tax-num{font-size:.65rem;color:#1a1814;font-weight:700;min-width:36px;text-align:right}
-.tax-insight-box{background:var(--bg2);border-radius:var(--rsm);padding:.75rem .9rem;border:.5px solid var(--border);font-size:.75rem;line-height:1.8;color:var(--sub)}
-.tax-insight-box strong{color:var(--text);font-weight:700}
+/* ── Sync Pill ── */
+#sync-pill{
+  position:fixed;bottom:18px;left:18px;z-index:50;
+  display:flex;align-items:center;gap:2px;padding:6px 10px;
+  border-radius:100px;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+}
+#sync-pill button{
+  background:none;border:none;cursor:pointer;font-family:inherit;
+  font-size:14px;font-weight:500;color:var(--sub);
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;padding:0;line-height:1;
+}
+#sync-pill button:hover{background:rgba(40,38,32,.08);color:var(--ink);}
+#sync-sep{width:.5px;height:14px;background:var(--bstr);margin:0 2px;flex-shrink:0;}
+#sync-msg{
+  position:fixed;bottom:90px;left:18px;z-index:51;
+  padding:8px 14px;border-radius:10px;font-size:12px;font-weight:500;
+  background:rgba(40,38,32,.82);color:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 4px 16px rgba(40,38,32,.2);
+  white-space:nowrap;pointer-events:none;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .18s,transform .18s;
+}
+#sync-msg.show{opacity:1;transform:translateY(0);}
 
-/* HD */
-.hd-ai-grid{display:grid;grid-template-columns:240px 1fr;gap:12px;align-items:start}
-.hd-profile-box{background:var(--bg2);border-radius:var(--rsm);padding:.7rem .85rem;border:.5px solid var(--border);font-size:.75rem;line-height:1.85;color:var(--sub)}
-.hd-profile-box strong{color:var(--text);font-weight:700}
-.hd-result{font-size:.87rem;line-height:1.75;color:var(--sub)}
-.hd-btn{font-size:.72rem;padding:5px 14px;border-radius:20px;background:var(--text);color:var(--card);border:none;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
-.hd-btn:hover{opacity:.8}.hd-btn:disabled{opacity:.45;cursor:default}
-.hd-spinner-inline{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes pulse-r{0%,100%{opacity:1;}50%{opacity:.2;}}
+@keyframes pulse-s{0%,100%{opacity:1;}50%{opacity:.35;}}
+@keyframes bounce{0%{transform:translateY(0) scale(1);}30%{transform:translateY(-28px) scale(1.08);}60%{transform:translateY(-8px) scale(1.03);}100%{transform:translateY(0) scale(1);}}
+.bouncing{animation:bounce .5s cubic-bezier(.34,1.56,.64,1)!important;}
 
-/* MOBILE */
-@media(max-width:720px){
-  body{flex-direction:column}
-  .sb{width:100%;min-height:auto;height:auto;position:fixed;bottom:0;top:auto;left:0;right:0;flex-direction:row;border-right:none;border-top:.5px solid var(--bstr);padding:0 0 env(safe-area-inset-bottom);z-index:200}
-  .sb-brand,.sb-clock,.sb-foot{display:none}
-  .sb-nav{flex-direction:row;padding:0;width:100%;gap:0}
-  .ni{flex:1;flex-direction:column;align-items:center;gap:3px;padding:.48rem .2rem .36rem;font-size:.55rem}
-  .ni.on::before{left:20%;right:20%;top:0;bottom:auto;width:auto;height:2px;border-radius:0 0 3px 3px}
-  .ni-icon{font-size:1.1rem;width:auto}.ni-sub{display:none}
-  .main{margin-left:0;width:100vw;height:calc(100dvh - 64px)}
-  .view-ov{padding:.8rem .75rem 2rem}
-  /* Single-column stacking on mobile */
-  .bento{grid-template-columns:1fr;gap:9px}
-  .cg,.cp,.cb,.cm,.cd,.chw,.cco,.ctx,.cha{grid-column:1;grid-row:auto}
-  /* Gauge: compact on mobile */
-  .gw svg{max-width:140px}
-  .cco-inner,.ctx-inner,.hd-ai-grid,.week-grid{grid-template-columns:1fr}
-  .corr-legend{gap:8px}
-  .week-days{gap:5px}
-  .day-score-ring{width:30px;height:30px;font-size:.68rem}
-  .day-header{font-size:.58rem}
-  .frame-bar{padding:.5rem .85rem}
-  /* Pace card text sizing */
-  .pace-body{font-size:.85rem;line-height:1.75}
-  /* Gauge compact */
-  .gw{gap:.5rem}
-  /* Week days compact */
-  .day-factor-tag{font-size:.5rem}
-  /* Corr chart taller on mobile since sidebar panel moves below */
-  .cco-inner{gap:12px}
+/* LinkedIn not-set indicator */
+.d-icon[data-unset="1"] .d-box{border:1.5px dashed var(--faint);background:rgba(255,255,255,.5);}
+
+/* ── Mobile / Touch Responsive ── */
+@media (pointer:coarse){
+  /* Allow page scrolling */
+  html,body{height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;}
+
+  /* Performance: kill backdrop-filter (GPU-heavy on mobile) */
+  #dock,#guard-pill,#guard-stop-btn,#settings-btn,#sync-pill{
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  }
+  #guard-pill,#settings-btn,#sync-pill{background:rgba(244,241,236,.96)!important;}
+
+  /* Header: in document flow */
+  #header{
+    position:relative;top:auto;left:auto;right:auto;
+    padding-top:80px;padding-bottom:16px;
+    pointer-events:auto;
+  }
+  #clock{font-size:min(20vw,108px);}
+  #clock-sec{font-size:min(7vw,36px);}
+
+  /* Dock: in document flow, grid layout */
+  #dock-outer{
+    position:relative;bottom:auto;left:auto;transform:none;
+    width:100%;padding:0 12px 80px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  #dock{
+    display:grid!important;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;padding:14px;
+    width:100%;max-width:400px;
+    align-items:start;
+  }
+  .d-sep{display:none!important;}
+  .d-icon{width:auto;}
+  .d-box{width:52px;height:52px;}
+
+  /* Tooltip not usable on touch; hide it */
+  #tooltip{display:none!important;}
 }
 </style>
 </head>
 <body>
 
-<aside class="sb" role="navigation" aria-label="主選單">
-  <div class="sb-brand">
-    <div class="brand-word">Self Alignment System</div>
-  </div>
-  <div class="sb-clock">
-    <div class="cl-time" id="cl-time">—</div>
-    <div class="cl-date" id="cl-date">—</div>
-  </div>
-  <nav class="sb-nav">
-    <button class="ni on" onclick="go('ov')" id="ni-ov" aria-current="page">
-      <span class="ni-icon">🏠</span><span class="ni-label">Overview</span>
-    </button>
-    <button class="ni" onclick="go('sl')" id="ni-sl">
-      <span class="ni-icon">🔋</span><span class="ni-label">Sleep</span>
-    </button>
-    <button class="ni" onclick="go('mn')" id="ni-mn">
-      <span class="ni-icon">🌊</span><span class="ni-label">Mental</span>
-    </button>
-    <button class="ni" onclick="go('op')" id="ni-op">
-      <span class="ni-icon">📋</span><span class="ni-label">Optimizer</span>
-    </button>
-    <button class="ni" onclick="go('rf')" id="ni-rf">
-      <span class="ni-icon">☕</span><span class="ni-label">Refueler</span>
-    </button>
-  </nav>
-  <div class="sb-foot">資料僅存於本機 · LocalStorage · 零上傳</div>
-</aside>
+<div id="bg-default"></div>
+<div id="bg-wallpaper"></div>
+<div id="noise"></div>
 
-<main class="main">
-
-<!-- OVERVIEW -->
-<div class="view-ov on" id="v-ov">
-<div class="vh">
-  <div><div class="vtitle">今日總覽</div><div class="vsub" id="ov-ds">—</div></div>
-</div>
-<div class="bento">
-
-  <!-- 戰力儀表 -->
-  <div class="card cg">
-    <div class="lbl">⚡ 戰力指數</div>
-    <div class="gw">
-      <svg viewBox="0 0 180 118" style="width:100%;max-width:170px">
-        <defs><linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e67e22"/><stop offset="100%" stop-color="#9e6b7a"/></linearGradient></defs>
-        <path d="M20 106 A70 70 0 0 1 160 106" fill="none" stroke="rgba(40,38,32,.10)" stroke-width="9" stroke-linecap="round"/>
-        <path id="g-arc" d="M20 106 A70 70 0 0 1 160 106" fill="none" stroke="url(#gg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220" style="transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)"/>
-        <text x="90" y="93" text-anchor="middle" font-family="Noto Sans TC" font-size="36" font-weight="700" fill="#28261f" id="g-num">—</text>
-        <text x="90" y="107" text-anchor="middle" font-family="Noto Sans TC" font-size="8" fill="#a8a39b" letter-spacing="1.2">Combat Power</text>
-        <text x="21" y="116" font-family="Noto Sans TC" font-size="7.5" fill="#a8a39b">0</text>
-        <text x="152" y="116" font-family="Noto Sans TC" font-size="7.5" fill="#a8a39b">100</text>
-      </svg>
-      <div class="gstats">
-        <div class="gstat" style="grid-column:1/3">
-          <div class="lbl">戰力狀態</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-            <span id="g-status-label" class="pill p-warn">—</span>
-            <span style="font-size:.6rem;color:var(--faint)">Deep×0.7+REM×0.3</span>
-          </div>
-          <div id="g-drag" style="font-size:.68rem;color:var(--sub);margin-top:3px;line-height:1.5">—</div>
-        </div>
-      </div>
-      <div style="width:100%">
-        <div class="lbl">體能續航</div>
-        <div style="font-size:.72rem;color:var(--sub)">高強度可維持至 <strong style="color:var(--text)" id="g-endurance">—</strong></div>
-        <div style="height:3px;background:var(--bstr);border-radius:3px;margin-top:4px;overflow:hidden"><div id="g-endurance-bar" style="width:0%;height:100%;background:linear-gradient(90deg,var(--awake),var(--mental));border-radius:3px;transition:width 1s ease"></div></div>
-      </div>
-      <div style="margin-top:.75rem;padding-top:.6rem;border-top:.5px solid var(--border)">
-        <div class="lbl" style="margin-bottom:5px">體能續航計算定義</div>
-        <div style="display:flex;flex-direction:column;gap:4px;font-size:.65rem;color:var(--sub);line-height:1.6">
-          <div><strong style="color:var(--text)">維持時間</strong>：以戰力指數線性映射，0分=8:00止、100分=22:00止（可高強度運作14小時）</div>
-          <div><strong style="color:var(--text)">顏色等級</strong>：≥70 綠色（良好）／40–69 橘色（注意）／&lt;40 紅色（需休息）</div>
-          <div><strong style="color:var(--text)">注意</strong>：僅反映睡眠生理能量，未納入情緒狀態與外部壓力因素</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 配速建議 + 慣性警告 -->
-  <div class="card cp">
-    <div class="lbl">📋 今日配速建議</div>
-    <div class="pace-badge" id="pace-badge">—</div>
-    <div class="pace-body" id="pace-body">—</div>
-    <div class="dd" id="pace-pills"></div>
-    <div id="inertia-alert" style="display:none"></div>
-  </div>
-
-  <!-- 三維狀態 + Alignment -->
-  <div class="card cb">
-    <div class="lbl">三維狀態</div>
-    <div class="sbar-list">
-      <div class="sbar-row"><span class="sbar-name">戰力</span><div class="sbar-track"><div class="sbar-fill" id="bar-combat" style="width:0%"></div></div><span class="sbar-num" id="num-combat">—</span></div>
-      <div class="sbar-row"><span class="sbar-name">情緒</span><div class="sbar-track"><div class="sbar-fill" style="width:0%;background:var(--mental)" id="bar-mood"></div></div><span class="sbar-num" style="color:var(--mental)" id="ov-mn">—</span></div>
-      <div class="sbar-row"><span class="sbar-name">壓力</span><div class="sbar-track"><div class="sbar-fill" style="width:30%;background:var(--core)"></div></div><span class="sbar-num" style="color:var(--core)">低</span></div>
-    </div>
-    <div style="margin-top:.75rem;padding-top:.55rem;border-top:.5px solid var(--border)">
-      <div class="lbl" style="margin-bottom:4px">狀態/行為匹配</div>
-      <div id="align-today">—</div>
-    </div>
-    <div style="margin-top:.75rem;padding-top:.6rem;border-top:.5px solid var(--border)">
-      <div class="lbl" style="margin-bottom:5px">指標定義</div>
-      <div style="display:flex;flex-direction:column;gap:4px;font-size:.65rem;color:var(--sub);line-height:1.6">
-        <div><strong style="color:var(--text)">戰力</strong>：Deep×0.7＋REM×0.3，以2h為滿分基準，睡眠債修正後計算（0–100）</div>
-        <div><strong style="color:var(--text)">情緒</strong>：wellness journal 手動紀錄分數（1–10），去噪後的內在基準值</div>
-        <div><strong style="color:var(--text)">壓力</strong>：綜合影響因子密度估算，暫為固定示意值（待連接 optimizer 數據）</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 情緒正弦波 -->
-  <div class="card cm">
-    <div class="lbl">🌊 內在情緒正弦波 <span style="text-transform:none;letter-spacing:0;color:var(--faint);font-weight:400">— 已去噪</span></div>
-    <div style="position:relative;height:90px"><canvas id="ov-mc"></canvas></div>
-    <div class="msr">
-      <div class="mst"><div class="lbl">週期</div><div class="val">~18 天</div></div>
-      <div class="mst"><div class="lbl">當前位置</div><div class="val" id="mood-trend" style="color:var(--ok)">—</div></div>
-      <div class="mst"><div class="lbl">滯後效應</div><div class="val" id="lag-days" style="color:var(--info)">—</div></div>
-    </div>
-    <div style="margin-top:.75rem;padding-top:.6rem;border-top:.5px solid var(--border)">
-      <div class="lbl" style="margin-bottom:5px">指標定義</div>
-      <div style="display:flex;flex-direction:column;gap:4px;font-size:.65rem;color:var(--sub);line-height:1.6">
-        <div><strong style="color:var(--text)">正弦波</strong>：去除天氣/社交等環境因子後的純內在情緒週期，用於識別個人生理情緒節律</div>
-        <div><strong style="color:var(--text)">週期</strong>：連續高峰到高峰或低谷到低谷的平均間隔天數（基於歷史紀錄估算）</div>
-        <div><strong style="color:var(--text)">滯後效應</strong>：生理狀態（睡眠）改變後，情緒分數跟著變化所需的平均天數</div>
-        <div><strong style="color:var(--text)">預測虛線</strong>：依識別週期外推的預測段，僅供參考，實際以紀錄為準</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 睡眠負債影響 -->
-  <div class="card cd">
-    <div class="lbl">睡眠負債影響</div>
-    <div id="debt-status-pill" style="margin-bottom:.5rem">—</div>
-    <div id="debt-impact-list" style="display:flex;flex-direction:column;gap:5px"></div>
-  </div>
-
-  <!-- 本週總覽 -->
-  <div class="card chw">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.3rem">
-      <div class="lbl" style="margin-bottom:0">📅 本週總覽 Week View</div>
-      <button class="hd-btn" id="week-btn" onclick="analyzeWeek()">
-        <div class="hd-spinner-inline" id="week-spinner"></div><span id="week-btn-text">生成週分析</span>
-      </button>
-    </div>
-    <div class="week-strip">
-      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#1a1814;margin-bottom:.7rem">每日狀態 · 影響因子</div>
-      <div id="week-day-strip"><div style="font-size:.7rem;color:var(--faint);padding:.5rem">載入中…</div></div>
-    </div>
-    <div class="week-grid">
-      <div>
-        <div class="lbl">🌊 情緒摘要</div>
-        <div id="week-mental-stats" style="margin-top:.3rem"></div>
-      </div>
-      <div>
-        <div class="lbl">🌟 人類圖 · 週調整建議</div>
-        <div class="week-ai-result" id="week-ai-result">點擊「生成週分析」以獲得建議。</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 上週狀態回顧 -->
-  <div class="card clw">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.5rem">
-      <div class="lbl" style="margin-bottom:0">📋 上週狀態回顧</div>
-      <button class="hd-btn" id="lw-btn" onclick="analyzeLastWeek()">
-        <div class="hd-spinner-inline" id="lw-spinner"></div><span id="lw-btn-text">生成上週回顧</span>
-      </button>
-    </div>
-    <div id="lw-stat-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.6rem"></div>
-    <div class="week-ai-result" id="lw-ai-result">點擊「生成上週回顧」以獲得上週狀態分析。</div>
-  </div>
-
-  <!-- 三維相關性圖 -->
-  <div class="card cco">
-    <div class="lbl">🔬 三維相關性 — 情緒週期 × 行為完成度（近14日）</div>
-    <div class="cco-inner">
-      <div>
-        <div style="position:relative;height:180px"><canvas id="corr-chart"></canvas></div>
-        <div class="corr-legend">
-          <span class="corr-leg-item"><span style="width:14px;height:3px;background:var(--mental);border-radius:2px;display:inline-block"></span>情緒分（折線）</span>
-          <span class="corr-leg-item"><span style="width:11px;height:11px;border-radius:50%;background:var(--danger);display:inline-block"></span>意志力透支</span>
-          <span class="corr-leg-item"><span style="width:11px;height:11px;border-radius:50%;background:var(--ok);display:inline-block"></span>狀態對齊</span>
-          <span class="corr-leg-item"><span style="width:11px;height:11px;border-radius:50%;background:var(--info);display:inline-block"></span>低輸出</span>
-        </div>
-      </div>
-      <div>
-        <div class="lbl">洞察摘要</div>
-        <div id="corr-insights" style="display:flex;flex-direction:column;gap:7px"></div>
-        <div style="margin-top:1rem">
-          <div class="lbl">滯後效應說明</div>
-          <div id="lag-explain" style="font-size:.72rem;color:var(--sub);line-height:1.7">計算中…</div>
-        </div>
-        <div style="margin-top:1rem">
-          <div class="lbl">慣性預測</div>
-          <div id="inertia-predict" style="font-size:.72rem;color:var(--sub);line-height:1.7">—</div>
-        </div>
-        <!-- Scoring Definition -->
-        <div style="margin-top:1.2rem;padding-top:.9rem;border-top:.5px solid var(--border)">
-          <div class="lbl">評分定義</div>
-          <div style="display:flex;flex-direction:column;gap:6px;font-size:.68rem;color:var(--sub);line-height:1.6">
-            <div style="display:flex;gap:7px;align-items:baseline">
-              <span style="width:10px;height:10px;border-radius:50%;background:var(--danger);flex-shrink:0;margin-top:2px"></span>
-              <span><strong style="color:var(--text)">意志力透支</strong>：情緒/戰力綜合低於 55%，但任務完成率高於 83%。預測 1–3 天後戰力下行。</span>
-            </div>
-            <div style="display:flex;gap:7px;align-items:baseline">
-              <span style="width:10px;height:10px;border-radius:50%;background:var(--ok);flex-shrink:0;margin-top:2px"></span>
-              <span><strong style="color:var(--text)">狀態對齊</strong>：完成率與狀態分數落差 &lt; 28%。行為輸出與內在資源匹配，可持續。</span>
-            </div>
-            <div style="display:flex;gap:7px;align-items:baseline">
-              <span style="width:10px;height:10px;border-radius:50%;background:var(--info);flex-shrink:0;margin-top:2px"></span>
-              <span><strong style="color:var(--text)">低輸出</strong>：狀態分數高於 60%，但完成率低於 32%。能量未被有效轉化，確認外在阻力或優先順序。</span>
-            </div>
-            <div style="margin-top:3px;padding:.5rem .65rem;background:var(--bg2);border-radius:var(--rsm);font-size:.65rem;color:var(--faint)">
-              散點 Y 軸 = 完成率 × 10（與情緒分同尺度比較）<br>折線 = 每日情緒分（wellness journal）
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 任務屬性熱點 -->
-  <div class="card ctx">
-    <div class="lbl">📊 任務屬性熱點 × 狀態匹配建議</div>
-    <div class="ctx-inner">
-      <div>
-        <div style="font-size:.72rem;font-weight:600;color:var(--sub);margin-bottom:.5rem">本週任務分佈</div>
-        <div id="tax-bars">—</div>
-      </div>
-      <div>
-        <div style="font-size:.72rem;font-weight:600;color:var(--sub);margin-bottom:.5rem">狀態匹配建議</div>
-        <div id="tax-insights" style="display:flex;flex-direction:column;gap:8px"></div>
-      </div>
-    </div>
-    <!-- Category mapping table -->
-    <div style="margin-top:1rem;padding-top:.85rem;border-top:.5px solid var(--border)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:6px">
-        <div class="lbl" style="margin-bottom:0">關鍵字對照表 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--faint)">— 點擊關鍵字可刪除，右側可新增</span></div>
-        <button onclick="saveCatMap()" style="font-size:.65rem;padding:3px 10px;border-radius:20px;background:var(--text);color:var(--card);border:none;cursor:pointer">儲存</button>
-      </div>
-      <div id="cat-map-table" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
-    </div>
-  </div>
-
-  <!-- 人類圖 AI -->
-  <div class="card cha">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.7rem">
-      <div class="lbl" style="margin-bottom:0">🌟 人類圖 AI 深度解析</div>
-      <button class="hd-btn" id="hd-analyze-btn" onclick="analyzeHD()">
-        <div class="hd-spinner-inline" id="hd-spinner"></div><span id="hd-btn-text">生成今日解析</span>
-      </button>
-    </div>
-    <div class="hd-ai-grid">
-      <div>
-        <div class="lbl">已載入人類圖資訊</div>
-        <div class="hd-profile-box" id="hd-profile-display">請前往 Mental Dashboard 設定人類圖資料。</div>
-      </div>
-      <div>
-        <div class="lbl">AI 解析結果</div>
-        <div class="hd-result" id="hd-result">點擊「生成今日解析」，AI 將根據你的人類圖設定給出今日行動策略。</div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /bento -->
-</div><!-- /overview -->
-
-<!-- SLEEP -->
-<div class="view-frame" id="v-sl">
-  <div class="frame-bar"><div><div class="frame-title">Sleep Dashboard</div><div style="font-size:.62rem;color:var(--faint);margin-top:1px">生理油錶 · 睡眠品質分析</div></div><a href="./sleep_dashboard.html" class="open-btn" target="_blank">獨立視窗 ↗</a></div>
-  <div class="frame-wrap"><div class="frame-loading" id="sl-loading"><div class="spinner"></div><span>載入中…</span></div><iframe id="sl-frame" src="about:blank" title="Sleep Dashboard"></iframe></div>
+<div id="header">
+  <div><span id="clock">00:00</span><span id="clock-sec">:00</span></div>
+  <div id="date-line"></div>
+  <div id="greeting"></div>
 </div>
 
-<!-- MENTAL -->
-<div class="view-frame" id="v-mn">
-  <div class="frame-bar"><div><div class="frame-title">Mental Dashboard</div><div style="font-size:.62rem;color:var(--faint);margin-top:1px">心理氣象站 · 情緒週期分析</div></div><a href="https://resolutetinging.github.io/wellness-tracker/mental-dashboard.html" class="open-btn" target="_blank">獨立視窗 ↗</a></div>
-  <div class="frame-wrap"><div class="frame-loading" id="mn-loading"><div class="spinner"></div><span>載入中…</span></div><iframe id="mn-frame" src="about:blank" title="Mental Dashboard"></iframe></div>
+<div id="guard-group">
+  <button id="guard-stop-btn" onclick="forceStopGuard()">⛔ 強制中止</button>
+  <div id="guard-pill" onclick="openSettings('guard')">
+    <span id="guard-dot"></span>
+    <span id="guard-txt">Guard · 監控中</span>
+  </div>
 </div>
 
-<!-- OPTIMIZER -->
-<div class="view-frame" id="v-op">
-  <div class="frame-bar"><div><div class="frame-title">Daily Optimizer</div><div style="font-size:.62rem;color:var(--faint);margin-top:1px">配速秘書 · 今日行程建議</div></div><a href="https://resolutetinging.github.io/daily-optimizer/daily_optimizer.html" class="open-btn" target="_blank">獨立視窗 ↗</a></div>
-  <div class="frame-wrap"><div class="frame-loading" id="op-loading"><div class="spinner"></div><span>載入中…</span></div><iframe id="op-frame" src="about:blank" title="Daily Optimizer"></iframe></div>
+<button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
+
+<!-- DOCK -->
+<div id="dock-outer">
+  <div id="dock">
+    <!-- SAS Group -->
+    <div class="d-icon" data-id="sas-hub" onclick="dClick(this,'sas-hub')">
+      <div class="d-box">🧬</div>
+      <span class="d-lbl">SAS Hub</span>
+    </div>
+    <div class="d-icon" data-id="sleep" onclick="dClick(this,'sleep')">
+      <div class="d-box">😴</div>
+      <span class="d-lbl">Sleep</span>
+    </div>
+    <div class="d-icon" data-id="mental" onclick="dClick(this,'mental')">
+      <div class="d-box">💭</div>
+      <span class="d-lbl">Mental</span>
+    </div>
+    <div class="d-icon" data-id="optimizer" onclick="dClick(this,'optimizer')">
+      <div class="d-box">⚡</div>
+      <span class="d-lbl">Optimizer</span>
+    </div>
+    <div class="d-icon" data-id="refueler" onclick="dClick(this,'refueler')">
+      <div class="d-box">☕</div>
+      <span class="d-lbl">Refueler</span>
+    </div>
+    <div class="d-icon" data-id="report" onclick="openSASAnalysis()">
+      <div class="d-box">✨</div>
+      <span class="d-lbl">Overview</span>
+    </div>
+    <div class="d-sep"></div>
+    <!-- World Group -->
+    <div class="d-icon" data-id="aitracker" onclick="dClick(this,'aitracker')">
+      <div class="d-box">🤖</div>
+      <span class="d-lbl">AI Tracker</span>
+    </div>
+    <div class="d-icon" data-id="linkedin" onclick="dClick(this,'linkedin')">
+      <div class="d-box">💼</div>
+      <span class="d-lbl">LinkedIn</span>
+    </div>
+    <div class="d-sep"></div>
+    <!-- Learn Group -->
+    <div class="d-icon" data-id="wordvault" onclick="dClick(this,'wordvault')">
+      <div class="d-box">📖</div>
+      <span class="d-lbl">WordVault</span>
+    </div>
+    <div class="d-icon" data-id="mentaltool" onclick="dClick(this,'mentaltool')">
+      <div class="d-box">🧘</div>
+      <span class="d-lbl">Ziwei</span>
+    </div>
+    <div class="d-icon" data-id="podcast" onclick="dClick(this,'podcast')">
+      <div class="d-box">🎧</div>
+      <span class="d-lbl">Podcast</span>
+    </div>
+    <div class="d-icon" data-id="oasis" onclick="dClick(this,'oasis')">
+      <div class="d-box">🌿</div>
+      <span class="d-lbl">Oasis</span>
+    </div>
+  </div>
 </div>
 
-<!-- REFUELER -->
-<div class="view-frame" id="v-rf">
-  <div class="frame-bar"><div><div class="frame-title">Refueler</div><div style="font-size:.62rem;color:var(--faint);margin-top:1px">攝取記錄 · 咖啡 / 水分 / 消費</div></div><a href="https://resolutetinging.github.io/control-center/refueler.html" class="open-btn" target="_blank">獨立視窗 ↗</a></div>
-  <div class="frame-wrap"><div class="frame-loading" id="rf-loading"><div class="spinner"></div><span>載入中…</span></div><iframe id="rf-frame" src="about:blank" title="Refueler"></iframe></div>
+<!-- Tooltip -->
+<div id="tooltip" class="tt-hide" style="display:none;"></div>
+
+<!-- Settings Overlay -->
+<div id="settings-overlay" style="display:none;" onclick="if(event.target===this)closeSettings()">
+  <div id="settings-panel">
+    <div id="s-sidebar">
+      <div class="s-cat">偏好設定</div>
+      <button class="s-tab on" data-tab="appearance" onclick="switchTab('appearance')"><span class="s-tab-ic">🖼</span>外觀</button>
+      <button class="s-tab" data-tab="links" onclick="switchTab('links')"><span class="s-tab-ic">🔗</span>連結管理</button>
+      <div class="s-cat">系統</div>
+      <button class="s-tab" data-tab="guard" onclick="switchTab('guard')"><span class="s-tab-ic">🐱</span>Guard</button>
+      <button class="s-tab" data-tab="linkedin" onclick="switchTab('linkedin')"><span class="s-tab-ic">💼</span>LinkedIn</button>
+      <button class="s-tab" data-tab="api" onclick="switchTab('api')"><span class="s-tab-ic">🔑</span>API 設定</button>
+    </div>
+    <div id="s-content"></div>
+  </div>
 </div>
 
-</main>
+<!-- Guard Overlay -->
+<div id="guard-overlay" style="display:none;">
+  <div id="cat-stage">
+    <div id="big-cat">🐱</div>
+    <div id="cat-speech"></div>
+  </div>
+  <div id="guard-ctrl">
+    <div id="guard-msg"></div>
+    <button id="rest-btn" onclick="startBreak()"></button>
+    <div id="break-cd"></div>
+    <div id="break-lbl"></div>
+    <button id="resume-btn" onclick="endBreak()"></button>
+  </div>
+</div>
+
+<!-- SAS Analysis Modal -->
+<div class="m-ov" id="sas-ov" style="display:none;" onclick="if(event.target===this)closeSAS()">
+  <div class="m-pn" id="sas-pn"></div>
+</div>
+
+<button id="dbg-btn" onclick="debugTrigger()">Guard</button>
+
+<!-- Sync Pill -->
+<div id="sync-pill">
+  <button id="sync-up" onclick="syncUpload()" title="Upload localStorage → Gist">↑</button>
+  <div id="sync-sep"></div>
+  <button id="sync-dn" onclick="syncDownload()" title="Download from Gist → restore">↓</button>
+</div>
+<div id="sync-msg"></div>
+
 <script>
-/* CLOCK */
-function tick(){
-  var n=new Date(),WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var $=id=>document.getElementById(id);
-  $('cl-time').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-  $('cl-date').textContent=(n.getMonth()+1)+'/'+n.getDate()+' '+WD[n.getDay()];
-  var ds=$('ov-ds');if(ds)ds.textContent=n.getFullYear()+'/'+(n.getMonth()+1)+'/'+n.getDate()+' · '+WD[n.getDay()];
-}
-tick();setInterval(tick,30000);
-var $=id=>document.getElementById(id);
+'use strict';
+const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1', LI_KEY='cc_linkedin_v1';
+const TODAY=new Date().toISOString().slice(0,10);
+const SLEEP_URL='https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard.html';
+const PROXIES=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`];
 
-/* FRAMES */
-var frameSrcs={sl:'./sleep_dashboard.html',mn:'https://resolutetinging.github.io/wellness-tracker/mental-dashboard.html',op:'https://resolutetinging.github.io/daily-optimizer/daily_optimizer.html',rf:'https://resolutetinging.github.io/control-center/refueler.html'};
-function frameLoaded(k){var el=$(k+'-loading');if(el){el.classList.add('hidden');setTimeout(()=>el.style.display='none',320);}}
-['sl','mn','op','rf'].forEach(k=>{var f=$(k+'-frame');if(f)f.addEventListener('load',()=>{frameLoaded(k);if(k==='sl')setTimeout(readCombat,1200);});});
-function go(id){
-  document.querySelectorAll('.view-ov,.view-frame').forEach(v=>v.classList.remove('on'));
-  document.querySelectorAll('.ni').forEach(n=>{n.classList.remove('on');n.removeAttribute('aria-current');});
-  $(id==='ov'?'v-ov':'v-'+id).classList.add('on');
-  var ni=$('ni-'+id);ni.classList.add('on');ni.setAttribute('aria-current','page');
-  if(id==='ov')renderOv();
-}
-function initFrames(){Object.keys(frameSrcs).forEach(k=>{var f=$(k+'-frame');if(f&&f.src==='about:blank')f.src=frameSrcs[k];});}
+const CAT_SVG=`<svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" style="width:min(88vw,500px);filter:drop-shadow(0 20px 60px rgba(0,0,0,.5))"><defs><radialGradient id="gbody" cx="40%" cy="30%" r="65%"><stop offset="0%" stop-color="#f8a828"/><stop offset="65%" stop-color="#e07820"/><stop offset="100%" stop-color="#b85c10"/></radialGradient><radialGradient id="gbelly" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#fff3dc"/><stop offset="100%" stop-color="#f5c870"/></radialGradient><radialGradient id="ghead" cx="42%" cy="35%" r="60%"><stop offset="0%" stop-color="#f8a028"/><stop offset="100%" stop-color="#c87018"/></radialGradient></defs>
+<ellipse cx="252" cy="193" rx="210" ry="9" fill="rgba(0,0,0,.22)"/>
+<path class="tl" d="M418 125 C458 95 482 55 462 28 C450 12 430 16 434 38" fill="none" stroke="#c06812" stroke-width="22" stroke-linecap="round"/><path class="tl" d="M418 125 C458 95 482 55 462 28 C450 12 430 16 434 38" fill="none" stroke="#e8900c" stroke-width="14" stroke-linecap="round"/><path class="tl" d="M418 125 C458 95 482 55 462 28 C450 12 430 16 434 38" fill="none" stroke="#f8b030" stroke-width="5" stroke-linecap="round"/>
+<path class="bd" d="M98 152 C94 115 132 86 215 82 C300 78 394 92 438 128 C452 155 438 175 395 183 C328 196 128 196 95 174 Z" fill="url(#gbody)"/>
+<path d="M130 170 C152 148 205 136 282 134 C358 132 408 148 424 168 C410 185 368 192 278 194 C185 196 140 188 130 170 Z" fill="url(#gbelly)"/>
+<path d="M218 84 C232 80 248 80 260 84" fill="none" stroke="#bf6010" stroke-width="3.5" opacity=".42" stroke-linecap="round"/><path d="M214 95 C230 90 250 90 268 95" fill="none" stroke="#bf6010" stroke-width="3" opacity=".38" stroke-linecap="round"/><path d="M305 83 C322 79 340 80 354 85" fill="none" stroke="#bf6010" stroke-width="3.5" opacity=".42" stroke-linecap="round"/><path d="M300 94 C320 90 344 91 360 96" fill="none" stroke="#bf6010" stroke-width="3" opacity=".38" stroke-linecap="round"/>
+<ellipse cx="378" cy="186" rx="44" ry="16" fill="#c86e14"/><ellipse cx="378" cy="184" rx="36" ry="11" fill="#de8a22"/><circle cx="358" cy="186" r="7.5" fill="#be6610"/><circle cx="378" cy="190" r="7.5" fill="#be6610"/><circle cx="398" cy="186" r="7.5" fill="#be6610"/>
+<ellipse class="pw" cx="60" cy="182" rx="62" ry="21" fill="url(#ghead)"/><circle cx="28" cy="186" r="9" fill="#c06514" opacity=".9"/><circle cx="48" cy="192" r="9.5" fill="#c06514" opacity=".9"/><circle cx="70" cy="195" r="9.5" fill="#c06514" opacity=".9"/><circle cx="92" cy="192" r="9" fill="#c06514" opacity=".9"/>
+<path d="M104 150 C112 120 136 102 165 98 C158 120 142 142 128 165 Z" fill="#e08820"/>
+<circle class="hd" cx="165" cy="87" r="67" fill="url(#ghead)"/>
+<path d="M144 34 C154 25 167 23 178 28" fill="none" stroke="#bf6010" stroke-width="2.5" opacity=".42" stroke-linecap="round"/><path d="M138 49 C150 40 166 38 178 44" fill="none" stroke="#bf6010" stroke-width="2" opacity=".38" stroke-linecap="round"/>
+<path d="M113 66 L98 26 L144 52 Z" fill="#e08820"/><path d="M117 64 L104 32 L138 52 Z" fill="#cc8888"/>
+<path d="M200 60 L214 22 L228 58 Z" fill="#e08820"/><path d="M200 59 L212 28 L222 57 Z" fill="#cc8888"/>
+<ellipse cx="164" cy="108" rx="33" ry="25" fill="#fce5bc" opacity=".72"/>
+<ellipse class="el" cx="144" cy="84" rx="14" ry="9" fill="#608c30"/><ellipse cx="144" cy="87" rx="9" ry="7.5" fill="#181818"/><ellipse cx="148" cy="82" rx="3.5" ry="2.5" fill="rgba(255,255,255,.72)"/><path d="M130 84 Q144 76 158 84" fill="#e08820" opacity=".5"/>
+<ellipse class="er" cx="184" cy="82" rx="14" ry="9" fill="#608c30"/><ellipse cx="184" cy="85" rx="9" ry="7.5" fill="#181818"/><ellipse cx="188" cy="80" rx="3.5" ry="2.5" fill="rgba(255,255,255,.72)"/><path d="M170 82 Q184 74 198 82" fill="#e08820" opacity=".5"/>
+<path d="M157 106 L171 106 L164 114 Z" fill="#cc5078"/><line x1="164" y1="114" x2="164" y2="120" stroke="#cc5078" stroke-width="1.6"/>
+<path d="M164 120 Q153 128 146 126" fill="none" stroke="#cc5078" stroke-width="2" stroke-linecap="round"/><path d="M164 120 Q175 128 182 126" fill="none" stroke="#cc5078" stroke-width="2" stroke-linecap="round"/>
+<line x1="118" y1="104" x2="154" y2="108" stroke="rgba(255,255,255,.85)" stroke-width="1.4"/><line x1="115" y1="110" x2="154" y2="112" stroke="rgba(255,255,255,.85)" stroke-width="1.4"/><line x1="118" y1="118" x2="154" y2="116" stroke="rgba(255,255,255,.85)" stroke-width="1.4"/>
+<line x1="210" y1="102" x2="174" y2="108" stroke="rgba(255,255,255,.85)" stroke-width="1.4"/><line x1="213" y1="110" x2="174" y2="112" stroke="rgba(255,255,255,.85)" stroke-width="1.4"/><line x1="210" y1="118" x2="174" y2="116" stroke="rgba(255,255,255,.85)" stroke-width="1.4"/>
+<style>.bd{animation:breathe 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}.hd{animation:breathe 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}.tl{animation:tailWag 3.2s ease-in-out infinite;transform-origin:418px 125px}.el{animation:blinkEye 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}.er{animation:blinkEye 6s ease-in-out infinite .18s;transform-box:fill-box;transform-origin:center}.pw{animation:knead 5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.048)}}@keyframes tailWag{0%,100%{transform:rotate(0deg)}50%{transform:rotate(22deg)}}@keyframes blinkEye{0%,85%,100%{transform:scaleY(1)}91%{transform:scaleY(.06)}}@keyframes knead{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}</style>
+</svg>`;
 
-/* COMBAT */
-var _combat=null,_debt=null;
-function scoreColor(s){return s>=70?'var(--ok)':s>=40?'var(--warn)':'var(--danger)';}
-function scoreLabel(s){return s>=85?'頂峰':s>=70?'良好':s>=55?'普通':s>=40?'注意':'需休息';}
-function paceBody(s){
-  if(s>=70)return '<strong>09–12h</strong> 深度思考任務<br><strong>14–17h</strong> 社交/創作協作<br><strong>20h後</strong> 強制降速';
-  if(s>=40)return '<strong>上午</strong> 輕度例行任務<br><strong>下午</strong> 保持節奏，不啟新項目<br><strong>晚間</strong> 提早收工補眠';
-  return '<strong>今日</strong> 以休息為主<br><strong>強制</strong> 補眠、獨處、身體照護';
-}
-function updateCombat(score,skipAnim){
-  if(isNaN(score)||score===_combat)return;
-  _combat=score;
-  var col=scoreColor(score);
-  var cols=score>=70?['#27ae60','#2ecc71']:score>=40?['#e67e22','#f39c12']:['#c0392b','#e74c3c'];
-  var gg=$('gg');if(gg){gg.children[0].setAttribute('stop-color',cols[0]);gg.children[1].setAttribute('stop-color',cols[1]);}
-  var arc=$('g-arc');if(arc)arc.style.strokeDashoffset=220*(1-score/100);
-  var numEl=$('g-num');
-  var startVal=parseInt(numEl.textContent)||0;if(isNaN(startVal))startVal=0;
-  if(skipAnim){numEl.textContent=score;numEl.setAttribute('fill',score>=70?'#27ae60':score>=40?'#e67e22':'#c0392b');}
-  else{var t0=performance.now(),dur=900;function step(t){var p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3);numEl.textContent=Math.round(startVal+(score-startVal)*e);numEl.setAttribute('fill',score>=70?'#27ae60':score>=40?'#e67e22':'#c0392b');if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
-  var sl=$('g-status-label');if(sl){sl.textContent=scoreLabel(score)+' · '+score;sl.className='pill '+(score>=70?'p-ok':score>=40?'p-warn':'p-no');}
-  var dr=$('g-drag');if(dr)dr.textContent=score>=70?'睡眠結構健康，維持現有作息':score>=40?'深睡或REM偏低，注意補眠':'深睡&REM嚴重不足，今日強制休息';
-  var nc=$('num-combat');if(nc){nc.textContent=score;nc.style.color=col;}
-  var bc=$('bar-combat');if(bc){bc.style.background=col;setTimeout(()=>bc.style.width=score+'%',200);}
-  var pb=$('pace-badge');if(pb){pb.textContent=scoreLabel(score)+'狀態';pb.style.background=score>=70?'rgba(39,174,96,.14)':score>=40?'rgba(230,126,34,.14)':'rgba(192,57,43,.12)';pb.style.color=col;}
-  var pbo=$('pace-body');if(pbo)pbo.innerHTML=paceBody(score);
-  var eEl=$('g-endurance');if(eEl)eEl.textContent=String(8+Math.floor(score/100*14)).padStart(2,'0')+':00';
-  var eb=$('g-endurance-bar');if(eb)eb.style.width=score+'%';
-  buildPacePills(score);
-  buildInertiaAlert(score);
-  buildAlignToday(score);
-  rebuildCorrChart();
-}
+// ── LIVE DATA (populated async on load) ──
+let LIVE={sleep:null,mental:null,optimizer:null,aitracker:null,linkedin:null};
 
-function readCombat(){
+function loadMentalData(){
   try{
-    var f=$('sl-frame');if(!f||!f.contentDocument)return;
-    var doc=f.contentDocument;
-    var el=doc.getElementById('combatNum')||doc.getElementById('ds-score');
-    if(el){
-      var s=parseInt(el.textContent);
-      if(!isNaN(s)&&s>0){
-        updateCombat(s);
-        // Read actual color from sleep-dashboard to sync
-        var elColor=el.style.color||window.getComputedStyle(el).color;
-        if(elColor&&elColor!==''){
-          var gNum=document.getElementById('g-num');
-          if(gNum)gNum.setAttribute('fill',elColor);
-          // Also sync arc gradient
-          var arc=document.getElementById('g-arc');
-          if(arc)arc.style.stroke=elColor;
-        }
-      }
-    }
-    // Read debt from debtPanel (reset each poll so it can update)
-    var panel=doc.getElementById('debtPanel');
-    if(panel){
-      var txt=panel.textContent;
-      // "7h 12m" or "7h12m"
-      var hm=txt.match(/(\d+)h\s*(\d+)m/);
-      if(hm){updateDebt(parseInt(hm[1])+parseInt(hm[2])/60);}
-      else{
-        // "7.2h" or just hours
-        var honly=txt.match(/(\d+\.?\d*)\s*h/);
-        if(honly){updateDebt(parseFloat(honly[1]));}
-        else{
-          // Chinese: "7小時12分" or "7小時"
-          var hzh=txt.match(/(\d+)\s*小時\s*(\d+)?\s*分?/);
-          if(hzh){updateDebt(parseInt(hzh[1])+(hzh[2]?parseInt(hzh[2])/60:0));}
-        }
-      }
-    }
-  }catch(e){}
+    const db=JSON.parse(localStorage.getItem('wellness_v5')||'{}');
+    const es=(db.entries||[]).filter(e=>e.timestamp&&e.timestamp.slice(0,10)===TODAY);
+    const last=es[es.length-1]||null;
+    LIVE.mental={today:last?{score:last.moodScore,emotions:(last.emotionTags||[]),factors:(last.impactFactors||[]).map(f=>f.detail)}:null};
+  }catch{}
 }
-setInterval(readCombat,2000);
-
-function updateDebt(h){
-  _debt=h;
-  var level=h<=1?'ok':h<=3?'warn':'danger';
-  var labels={ok:['正常範圍','p-ok'],warn:['需注意','p-warn'],danger:['透支狀態','p-no']};
-  var dP=$('debt-status-pill');
-  if(dP)dP.innerHTML='<span class="pill '+labels[level][1]+'" style="font-size:.72rem">'+labels[level][0]+'</span><span style="font-size:.68rem;color:var(--faint);margin-left:8px">7日累積 +'+h.toFixed(1)+'h</span>';
-  var impacts=h>3?['認知速度下降，決策易衝動','情緒調節能力降低，易受外因影響','建議連續2晚提早30min入睡']:
-              h>1?['輕度疲勞累積，下午容易渙散','建議本週末補眠+45min']:['睡眠負債健康，維持現有節奏'];
-  var dL=$('debt-impact-list');
-  if(dL)dL.innerHTML=impacts.map((t,i)=>'<div style="display:flex;gap:6px;align-items:baseline;font-size:.72rem;color:var(--sub)"><span style="color:var(--faint);flex-shrink:0">'+['①','②','③'][i]+'</span><span>'+t+'</span></div>').join('');
-}
-
-/* DATA */
-function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function today(){return dkey(new Date());}
-function getReview(k){try{return JSON.parse(localStorage.getItem('review_'+k)||'null');}catch(e){return null;}}
-
-function getMoods(){
+function loadOptimizerData(){
   try{
-    // Try wellness_v5 first (current version), fallback to v4
-    var data=null;
-    var v5=localStorage.getItem('wellness_v5');
-    var v4=localStorage.getItem('wellness_v4');
-    if(v5){try{data=JSON.parse(v5);}catch(e){}}
-    if(!data&&v4){try{data=JSON.parse(v4);}catch(e){}}
-    if(!data)return[];
-    return (data.entries||[]).map(e=>{
-      // Handle both UTC timestamps and local dates
-      var raw=e.timestamp||e.date||e.created_at||e.recordedAt||'';
-      var d=raw?new Date(raw):new Date();
-      // If date string only (no time), parse as local date to avoid UTC offset issues
-      if(typeof raw==='string'&&raw.match(/^\d{4}-\d{2}-\d{2}$/)){
-        var parts=raw.split('-');d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
-      }
-      return {
-        date:dkey(d),
-        score:parseFloat(e.moodScore||e.score||e.mood||e.value||0),
-        tags:e.emotionTags||e.tags||[],
-        factors:(e.impactFactors||e.factors||[]).filter(f=>f&&(f.detail||f.name||typeof f==='string')).map(f=>f.detail||f.name||f)
+    const rev=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');
+    const tasks=JSON.parse(localStorage.getItem('tina_tasks')||'[]');
+    const items=rev.items||[];
+    const taskList=items.length>0
+      ?items.map(t=>({text:t.name,done:t.status==='done'}))
+      :tasks;
+    const done=items.length>0?items.filter(t=>t.status==='done').length:tasks.filter(t=>t.done).length;
+    const total=items.length>0?items.length:tasks.length;
+    LIVE.optimizer={total,done,rest:rev.restMode||false,combatPower:rev.combatPower!=null?+rev.combatPower:null,endTime:rev.endTime||null,tasks:taskList};
+  }catch{}
+}
+function loadAITrackerData(){
+  try{const note=localStorage.getItem('note_'+TODAY)||'';LIVE.aitracker={hasNote:!!note.trim()};}catch{}
+}
+function loadLinkedInData(){
+  try{LIVE.linkedin=JSON.parse(localStorage.getItem(LI_KEY)||'null');}catch{}
+}
+let _liLastFetch=0;
+function _notionHdr(token){return{'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'};}
+function _liCount(results){
+  const counts={saved:0,applied:0,declined:0,contacted:0};
+  for(const pg of results){
+    const sp=pg.properties?.Status||pg.properties?.status||Object.values(pg.properties||{}).find(p=>p.type==='status'||p.type==='select');
+    const name=(sp?.status?.name||sp?.select?.name||'').trim();
+    const s=name.toLowerCase();
+    if(s==='saved only')counts.saved++;
+    else if(s==='applied')counts.applied++;
+    else if(s==='declined')counts.declined++;
+    else if(s==='contacted')counts.contacted++;
+    else if(s)console.log('[LinkedIn] unmatched status:',name);
+  }
+  return counts;
+}
+async function fetchNotionLinkedIn(){
+  if(Date.now()-_liLastFetch<30000)return;
+  _liLastFetch=Date.now();
+  const token=localStorage.getItem('notion_token')||'';
+  const rawId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
+  if(!token||!rawId)return;
+  const hdr=_notionHdr(token);
+  try{
+    // 1. Try direct database query
+    const r=await fetch('https://corsproxy.io/?https://api.notion.com/v1/databases/'+rawId+'/query',
+      {method:'POST',headers:hdr,body:JSON.stringify({page_size:100})});
+    if(r.ok){
+      const j=await r.json();
+      if(j.results?.length>0)console.log('[LinkedIn] props:',Object.keys(j.results[0].properties||{}));
+      const counts=_liCount(j.results||[]);
+      console.log('[LinkedIn] counts',counts,'from',j.results.length,'pages');
+      LIVE.linkedin=counts;localStorage.setItem(LI_KEY,JSON.stringify(counts));return;
+    }
+    const errTxt=await r.text().catch(()=>'{}');
+    const err=JSON.parse(errTxt);
+    console.warn('[LinkedIn] db query failed:',err.message||errTxt);
+
+    // 2. Fallback: search API (works when db is a linked view)
+    console.log('[LinkedIn] trying search API fallback…');
+    const sr=await fetch('https://corsproxy.io/?https://api.notion.com/v1/search',
+      {method:'POST',headers:hdr,body:JSON.stringify({filter:{property:'object',value:'page'},page_size:100})});
+    if(!sr.ok){console.error('[LinkedIn] search also failed',sr.status);return;}
+    const sj=await sr.json();
+    // Filter pages that belong to our database
+    const savedId=(localStorage.getItem('notion_li_db')||'').replace(/-/g,'');
+    const dbPages=(sj.results||[]).filter(p=>{const pid=(p.parent?.database_id||'').replace(/-/g,'');return pid===rawId||pid===savedId;});
+    if(dbPages.length===0){
+      // Use all pages returned — user may have only one DB in the integration
+      console.log('[LinkedIn] search returned',sj.results?.length,'total pages (unfiltered)');
+      const all=_liCount(sj.results||[]);
+      console.log('[LinkedIn] unfiltered counts',all);
+      LIVE.linkedin=all;localStorage.setItem(LI_KEY,JSON.stringify(all));
+    } else {
+      const counts=_liCount(dbPages);
+      console.log('[LinkedIn] search counts',counts,'from',dbPages.length,'pages');
+      LIVE.linkedin=counts;localStorage.setItem(LI_KEY,JSON.stringify(counts));
+    }
+  }catch(e){console.error('[LinkedIn] fetch error',e);}
+}
+function fetchSleepData(){
+  try{
+    // Primary: read from localStorage (written by sleep_dashboard.html on load)
+    const stored=JSON.parse(localStorage.getItem('sas_sleep_latest')||'null');
+    const cp=parseInt(localStorage.getItem('sas_combat')||'0')||null;
+    if(stored||cp){
+      const deepP=stored?.deepP??0,remP=stored?.remP??0,coreP=stored?.coreP??0,awakeP=stored?.awakeP??0;
+      const combatPower=cp??(()=>{
+        // Recompute using sleep_dashboard formula if sas_combat missing
+        const remScore=Math.min(remP/22.5*100,100);
+        const deepScore=Math.min(deepP/18*100,100);
+        return Math.round(deepScore*0.7+remScore*0.3);
+      })();
+      const trend7=stored?.trend7||[];
+      LIVE.sleep={
+        date:stored?.date||'—',deepP,remP,coreP,awakeP,
+        combatPower,
+        pace:combatPower>=80?'高效能 · 火力全開 🔥':combatPower>=70?'穩定輸出 ⚡':combatPower>=60?'注意 · 稍作保留 ⚠':'恢復優先 · 輕量任務 💤',
+        endTime:localStorage.getItem('sas_endurance')||null,
+        trend7
       };
-    }).filter(m=>m.score>0);
-  }catch(e){console.warn('getMoods',e);return[];}
-}
-
-/* TASK CLASSIFIER */
-var LOGIC=['工作','研究','寫','策略','規劃','分析','讀書','學習','準備','整理','企劃','報告','設計','程式','代碼','文案'];
-var SOCIAL=['朋友','社交','見面','電話','會議','聊天','約','吃飯','聚','活動','拜訪','party','dinner'];
-var INPUT=['閱讀','運動','冥想','英文','練習','音樂','創作','散步','休息','課程','podcast','思考','冥'];
-function classifyTask(name){
-  var n=(name||'').toLowerCase();
-  var map=window._catMap||loadCatMap();
-  var logic=map.logic||LOGIC,social=map.social||SOCIAL,input=map.input||INPUT;
-  for(var k of logic)if(n.includes(k))return 'logic';
-  for(var k of social)if(n.includes(k))return 'social';
-  for(var k of input)if(n.includes(k))return 'input';
-  return 'other';
-}
-
-/* ALIGNMENT */
-function alignClass(mood,combat,doneRate){
-  var state=(mood/10*0.5+(combat||50)/100*0.5);
-  var gap=doneRate-state;
-  if(gap>0.28&&state<0.55)return 'over';
-  if(gap<-0.28&&state>0.6)return 'under';
-  return 'ok';
-}
-function buildAlignToday(combat){
-  var moods=getMoods();var todayMood=moods.find(m=>m.date===today());
-  var rev=getReview(today());var items=rev?(rev.items||[]):[];
-  var done=items.filter(i=>i.status==='done').length;
-  if(!todayMood||!items.length){$('align-today').innerHTML='<span style="font-size:.68rem;color:var(--faint)">今日尚無完整紀錄</span>';return;}
-  var dr=done/items.length;
-  var cls=alignClass(todayMood.score,combat,dr);
-  var html=cls==='over'?'<span class="align-badge align-over">⚡ 意志力透支</span><div style="font-size:.65rem;color:var(--sub);margin-top:4px">狀態偏低但完成度高，預測48h內戰力下行。</div>'
-    :cls==='under'?'<span class="align-badge align-under">💭 低輸出</span><div style="font-size:.65rem;color:var(--sub);margin-top:4px">狀態良好但完成度低，確認優先順序。</div>'
-    :'<span class="align-badge align-ok">✓ 狀態對齊</span><div style="font-size:.65rem;color:var(--sub);margin-top:4px">行為輸出與內在狀態匹配。</div>';
-  $('align-today').innerHTML=html;
-}
-
-/* INERTIA ALERT */
-function buildInertiaAlert(combat){
-  var el=$('inertia-alert');if(!el)return;
-  var moods=getMoods().slice(-7);
-  if(moods.length<3){el.style.display='none';return;}
-  var overDays=0;
-  for(var i=moods.length-3;i<moods.length-1;i++){
-    var rev=getReview(moods[i].date);if(!rev)continue;
-    var items=rev.items||[];if(!items.length)continue;
-    var dr=items.filter(t=>t.status==='done').length/items.length;
-    if(alignClass(moods[i].score,combat,dr)==='over')overDays++;
-  }
-  var last3=moods.slice(-3);
-  var hadLow=last3.length>=2&&last3.slice(0,2).every(m=>m.score<5);
-  var nowRecov=last3[last3.length-1]&&last3[last3.length-1].score>=6;
-  var html='',cls='';
-  if(overDays>=2){
-    cls='danger';html='<div class="inertia-label" style="color:var(--danger)">⚠ 連續意志力透支警告</div>已連續'+overDays+'天在狀態偏低時維持高輸出，戰力持續下行中。今日強制降速，明日做防禦性排程。';
-  }else if(hadLow&&nowRecov){
-    cls='warn';html='<div class="inertia-label" style="color:var(--warn)">⏱ 慣性提醒 — 情緒修復具備滯後性</div>戰力已回升，但情緒波谷後修復通常滯後1–2天。今日建議維持「防禦性排程」，不宜貿然衝量。';
-  }else{el.style.display='none';return;}
-  el.className='inertia-box '+cls;el.innerHTML=html;el.style.display='block';
-}
-
-/* PACE PILLS */
-function buildPacePills(score){
-  var el=$('pace-pills');if(!el)return;
-  var ss={};try{ss=JSON.parse(localStorage.getItem('sas_settings')||'{}');}catch(e){}
-  var strat=ss.hdStrat||'';
-  var base=score>=70?'<span class="pill p-ok">✓ 深度工作</span><span class="pill p-ok">✓ 重要談判</span><span class="pill p-no">✗ 衝動承諾</span>'
-    :'<span class="pill p-warn">⚠ 輕量任務</span><span class="pill p-no">✗ 重大決策</span>';
-  el.innerHTML=base+(strat?'<span class="pill p-purple">⚠ '+strat+'</span>':'');
-}
-
-/* LAG EFFECT */
-function calcLag(moods){
-  var lags=[];
-  for(var i=1;i<moods.length-3;i++){
-    if(moods[i-1].score-moods[i].score>=2){
-      for(var j=i+1;j<moods.length;j++){
-        if(moods[j].score-moods[i].score>1){
-          for(var k=j+1;k<moods.length;k++){if(moods[k].score<moods[j].score-1){lags.push(k-i);break;}}
-          break;
-        }
-      }
+    } else {
+      // No localStorage data → user hasn't visited sleep dashboard yet
+      LIVE.sleep=null;
     }
-  }
-  return lags.length?Math.round(lags.reduce((a,b)=>a+b,0)/lags.length):null;
+  }catch{}
+}
+async function initLiveData(){
+  loadMentalData();loadOptimizerData();loadAITrackerData();loadLinkedInData();
+  fetchSleepData();
+  fetchNotionLinkedIn(); // async, updates LIVE.linkedin in background
+  checkGuard();
 }
 
-/* CHART HELPERS */
-var CI={};var TC='rgba(40,38,32,.07)',LC='#a8a39b';
-function mk(id,cfg){if(CI[id])CI[id].destroy();var el=$(id);if(!el)return;CI[id]=new Chart(el,cfg);}
-var D30=[],RM=[],PM=[];
-for(var _i=0;_i<30;_i++){var _d=new Date('2026-05-05');_d.setDate(_d.getDate()-29+_i);D30.push((_d.getMonth()+1)+'/'+(_d.getDate()));}
-for(var _i=0;_i<25;_i++)RM.push(Math.round((5+3.5*Math.sin((_i/18)*2*Math.PI)+.3*(Math.random()-.5))*10)/10);
-for(var _i=0;_i<5;_i++)PM.push(Math.round((5+3.5*Math.sin(((24+_i)/18)*2*Math.PI))*10)/10);
-
-/* CORRELATION CHART */
-function rebuildCorrChart(){
-  var moods=getMoods();var moodMap={};moods.forEach(m=>{moodMap[m.date]=m.score;});
-  var labels=[],moodLine=[],compLine=[],compColors=[],compRadius=[];
-  for(var i=13;i>=0;i--){
-    var d=new Date();d.setDate(d.getDate()-i);
-    var k=dkey(d);labels.push((d.getMonth()+1)+'/'+(d.getDate()));
-    var ms=moodMap[k]!==undefined?moodMap[k]:null;
-    moodLine.push(ms);
-    var rev=getReview(k);
-    if(rev&&ms!==null){
-      var items=rev.items||[];
-      if(items.length>0){
-        var dr=items.filter(t=>t.status==='done').length/items.length;
-        var cls=alignClass(ms,_combat||50,dr);
-        compLine.push(parseFloat((dr*10).toFixed(1)));
-        compColors.push(cls==='over'?'rgba(192,57,43,.85)':cls==='under'?'rgba(78,110,138,.85)':'rgba(39,174,96,.85)');
-        compRadius.push(8);
-      }else{compLine.push(null);compColors.push('transparent');compRadius.push(0);}
-    }else{compLine.push(null);compColors.push('transparent');compRadius.push(0);}
-  }
-  mk('corr-chart',{type:'line',data:{labels,datasets:[
-    {label:'情緒',data:moodLine,borderColor:'#9e6b7a',backgroundColor:'rgba(158,107,122,.08)',tension:.4,pointRadius:3,pointBackgroundColor:'#9e6b7a',fill:true,borderWidth:2,spanGaps:true,order:2},
-    {label:'完成度',data:compLine,borderWidth:0,showLine:false,pointRadius:compRadius,pointBackgroundColor:compColors,pointBorderWidth:0,order:1}
-  ]},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?'情緒: '+(ctx.raw||'—'):ctx.raw!=null?'完成度: '+Math.round(ctx.raw*10)+'%':null}}},
-    scales:{x:{ticks:{color:LC,font:{size:9},maxTicksLimit:8},grid:{display:false}},y:{min:0,max:10,ticks:{color:LC,font:{size:9},maxTicksLimit:4},grid:{color:TC}}}}});
-  var over=compColors.filter(c=>c.includes('192,57')).length;
-  var under=compColors.filter(c=>c.includes('78,110')).length;
-  var ok=compColors.filter(c=>c.includes('39,174')).length;
-  var ins=$('corr-insights');
-  if(ins){
-    var tags=[];
-    if(over>0)tags.push('<span class="xa-tag align-over">⚡ 意志力透支 '+over+' 天</span>');
-    if(under>0)tags.push('<span class="xa-tag align-under">💭 低輸出 '+under+' 天</span>');
-    if(ok>0)tags.push('<span class="xa-tag align-ok">✓ 對齊 '+ok+' 天</span>');
-    if(!over&&!under&&!ok)tags.push('<span style="font-size:.7rem;color:var(--faint)">紀錄不足，繼續記錄後查看</span>');
-    ins.innerHTML=tags.join('');
-  }
-  var lag=calcLag(moods);
-  var lagEl=$('lag-days');if(lagEl)lagEl.textContent=lag?'平均'+lag+'天後':'積累中';
-  var lagExp=$('lag-explain');
-  if(lagExp)lagExp.innerHTML=lag?'歷史模式：狀態下滑後，行為完成率平均延遲 <strong>'+lag+' 天</strong>才跟著下降。':'持續記錄後自動計算滯後天數。';
-  var ip=$('inertia-predict');
-  if(ip){
-    var rec=moods.slice(-3);var avg3=rec.length?rec.reduce((a,m)=>a+m.score,0)/rec.length:null;
-    if(avg3&&avg3<5)ip.innerHTML='近3天情緒均值 <strong>'+avg3.toFixed(1)+'</strong> 分，處於低谷。預測 '+(lag||2)+' 天後行為表現明顯下滑。建議啟動防禦模式。';
-    else ip.textContent='目前狀態平穩，無立即下行風險。';
-  }
-}
-function buildTaskTaxonomy(){
-  var counts={logic:0,social:0,input:0,other:0};
-  var done_counts={logic:0,social:0,input:0,other:0};
-  var skipsLow={logic:0,social:0,input:0,other:0};
-  var taskLists={logic:[],social:[],input:[],other:[]};
-  var moods=getMoods();var moodMap={};moods.forEach(m=>{moodMap[m.date]=m.score;});
-  for(var i=13;i>=0;i--){
-    var d=new Date();d.setDate(d.getDate()-i);var k=dkey(d);
-    var rev=getReview(k);if(!rev)continue;
-    var ms=moodMap[k]!==undefined?moodMap[k]:5;
-    var isLow=ms<5||(_combat&&_combat<40);
-    (rev.items||[]).forEach(item=>{
-      var cat=classifyTask(item.name);
-      counts[cat]++;
-      var isDone=item.status==='done';
-      if(isDone)done_counts[cat]++;
-      else if(isLow)skipsLow[cat]++;
-      if(i<7){var dd=new Date();dd.setDate(dd.getDate()-i);taskLists[cat].push({name:item.name,status:item.status||'',date:(dd.getMonth()+1)+'/'+(dd.getDate()),done:isDone});}
-    });
-  }
-  var total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
-  var defs=[{k:'logic',label:'邏輯/工作',col:'#5c7a96'},{k:'social',label:'社交耗能',col:'#9e6b7a'},{k:'input',label:'身心靈/輸入',col:'#5e8f7e'},{k:'other',label:'其他',col:'#b08d62'}];
-  var legend='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:.65rem;font-size:.65rem;font-weight:700;color:#1a1814;padding:.4rem .6rem;background:var(--bg2);border-radius:var(--rsm)">'+
-    '<span>第一% <span style="font-weight:400;color:var(--sub)">= 佔總任務比例</span></span>'+
-    '<span>✓ 第二% <span style="font-weight:400;color:var(--sub)">= 此類任務完成率</span></span>'+
-    '<span style="color:var(--info);font-weight:400">▶ 點擊列展開近7日任務明細</span></div>';
-  var bars=$('tax-bars');
-  if(bars)bars.innerHTML=legend+defs.map(d=>{
-    var pct=Math.round(counts[d.k]/total*100);
-    var donePct=counts[d.k]?Math.round(done_counts[d.k]/counts[d.k]*100):0;
-    var tasks=taskLists[d.k];
-    var taskHtml=tasks.length?tasks.map(t=>'<div style="display:flex;align-items:center;gap:7px;padding:3px 0;border-bottom:.5px solid var(--border);font-size:.65rem"><span style="color:'+(t.done?'var(--ok)':t.status==='skip'?'var(--warn)':'var(--faint)')+';flex-shrink:0;font-size:.75rem">'+(t.done?'✓':t.status==='skip'?'→':'○')+'</span><span style="color:var(--sub);flex:1">'+t.name+'</span><span style="color:var(--faint);font-size:.6rem;white-space:nowrap">'+t.date+'</span></div>').join(''):
-      '<div style="font-size:.65rem;color:var(--faint);padding:4px 0">近7日無記錄</div>';
-    return '<div style="margin-bottom:5px">'+
-      '<div class="tax-bar-row" onclick="toggleExpand(&quot;ex-'+d.k+'&quot;)" style="cursor:pointer">'+
-      '<span class="tax-label">'+d.label+'</span>'+
-      '<div class="tax-track"><div class="tax-fill" style="width:'+pct+'%;background:'+d.col+'"></div></div>'+
-      '<span class="tax-num">'+pct+'%&nbsp;<span style="color:var(--ok)">✓'+donePct+'%</span>&nbsp;<span style="font-size:.58rem;color:var(--info)">▶</span></span>'+
-      '</div>'+
-      '<div id="ex-'+d.k+'" style="display:none;margin:4px 0 8px 74px;border:.5px solid var(--border);border-radius:var(--rsm);padding:6px 8px;background:var(--bg2)">'+taskHtml+'</div>'+
-      '</div>';
-  }).join('');
-  var insights=[];
-  var catNames={logic:'邏輯/工作',social:'社交',input:'身心靈/輸入',other:'其他'};
-  var socialPct=Math.round(counts.social/total*100);
-  if(socialPct>35)insights.push({icon:'🔋',text:'社交耗能佔比 <strong>'+socialPct+'%</strong>，偏高。建議每次高密度社交後安排獨處緩衝時間。'});
-  var maxSkip=Object.entries(skipsLow).sort((a,b)=>b[1]-a[1])[0];
-  if(maxSkip&&maxSkip[1]>0)insights.push({icon:'⚠',text:'狀態偏低時最常略過 <strong>'+catNames[maxSkip[0]]+'任務</strong>（'+maxSkip[1]+'次）。建議低狀態日提前降優先或重排。'});
-  var inputPct=Math.round(counts.input/total*100);
-  if(inputPct<10&&total>5)insights.push({icon:'🌱',text:'身心靈/輸入任務佔比僅 <strong>'+inputPct+'%</strong>，建議增加恢復型任務比例。'});
-  if(!insights.length)insights.push({icon:'✓',text:'任務分佈暫無明顯失衡，繼續觀察。'});
-  var ins=$('tax-insights');
-  if(ins)ins.innerHTML=insights.map(t=>'<div style="display:flex;gap:8px;align-items:baseline;font-size:.75rem;line-height:1.7;color:var(--sub)"><span style="flex-shrink:0">'+t.icon+'</span><span>'+t.text+'</span></div>').join('');
-}
-
-function toggleExpand(id){var el=$(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
-function loadHDProfile(){
-  try{
-    var v5data=null;try{v5data=JSON.parse(localStorage.getItem('wellness_v5')||'null');}catch(e){}
-    var w4=v5data||JSON.parse(localStorage.getItem('wellness_v4')||'{}');
-    var ss=JSON.parse(localStorage.getItem('sas_settings')||'{}');
-    var p=w4.profile||{};
-    var hd={type:p.hdType||ss.hdType||'',strat:p.hdStrategy||ss.hdStrat||'',auth:p.hdAuthority||ss.hdAuth||'',defn:p.hdDefinition||'',profile:p.hdProfile||'',notself:p.hdNotSelf||ss.hdTheme||'',cross:p.hdCross||'',ziStar:p.ziWeiStar||ss.ziStar||'',ziTravel:ss.ziTravel||'',ziYear:ss.ziYear||'',parsed:p.hdParseResult||''};
-    var lines=[];
-    if(hd.type)lines.push('<strong>類型</strong>：'+hd.type);if(hd.strat)lines.push('<strong>策略</strong>：'+hd.strat);
-    if(hd.auth)lines.push('<strong>權威</strong>：'+hd.auth);if(hd.defn)lines.push('<strong>定義</strong>：'+hd.defn);
-    if(hd.profile)lines.push('<strong>人生角色</strong>：'+hd.profile);if(hd.cross)lines.push('<strong>人生主題</strong>：'+hd.cross);
-    if(hd.notself)lines.push('<strong>非自己主題</strong>：'+hd.notself);if(hd.ziStar)lines.push('<strong>紫微主星</strong>：'+hd.ziStar);
-    if(hd.ziTravel)lines.push('<strong>遷移宮</strong>：'+hd.ziTravel);if(hd.ziYear)lines.push('<strong>流年</strong>：'+hd.ziYear);
-    var box=$('hd-profile-display');if(box)box.innerHTML=lines.length?lines.join('<br>'):'請前往 Mental Dashboard 填寫人類圖資料。';
-    window._hdData=hd;
-  }catch(e){console.warn('HD',e);}
-}
-
-/* WEEK VIEW — use most recent 30 days of data, display last 14 calendar days (2 weeks) */
-function loadWeekView(){
-  var moods=getMoods();
-  // Aggregate all records per day: average score, union factors/tags
-  var moodMap={};
-  moods.forEach(m=>{
-    if(!moodMap[m.date])moodMap[m.date]={date:m.date,scoreSum:0,count:0,tags:[],factors:[]};
-    moodMap[m.date].scoreSum+=m.score;moodMap[m.date].count++;
-    (m.tags||[]).forEach(t=>{if(!moodMap[m.date].tags.includes(t))moodMap[m.date].tags.push(t);});
-    (m.factors||[]).forEach(f=>{if(!moodMap[m.date].factors.includes(f))moodMap[m.date].factors.push(f);});
-  });
-  Object.values(moodMap).forEach(d=>{d.score=Math.round(d.scoreSum/d.count*10)/10;});
-
-  // Last 7 calendar days for the strip
-  renderWeekStrip(moodMap);
-
-  // For mood summary, use most recent records (up to 30 days)
-  var sorted=moods.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
-  var recent=sorted.slice(0,10); // last 10 entries regardless of date
-  var scores=recent.map(m=>m.score);
-  var avg=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1):'—';
-  var trend=scores.length>=2?(scores[0]>scores[scores.length-1]+0.5?'↑ 上升':scores[0]<scores[scores.length-1]-0.5?'↓ 下降':'→ 持平'):'—';
-  var mStats=$('week-mental-stats');
-  if(mStats)mStats.innerHTML=[['最近情緒均值',avg+' / 10',parseFloat(avg)>=7?'var(--ok)':parseFloat(avg)>=4?'var(--warn)':'var(--danger)'],['趨勢',trend,'var(--sub)'],['有效紀錄',scores.length+' 筆','var(--info)']].map(r=>'<div class="week-stat-item"><span class="week-stat-label">'+r[0]+'</span><span class="week-stat-val" style="color:'+r[2]+'">'+r[1]+'</span></div>').join('');
-
-  // Mood dots: align to current week Mon-Sun (same as strip)
-  var now2=new Date();
-  var dow2=now2.getDay();
-  var mo2=new Date(now2);mo2.setDate(now2.getDate()+(dow2===0?-6:1-dow2));
-  var weekDates=[];
-  for(var wi=0;wi<7;wi++){var wd2=new Date(mo2);wd2.setDate(mo2.getDate()+wi);weekDates.push(dkey(wd2));}
-  var weekEntries=weekDates.map(k=>moodMap[k]).filter(Boolean);
-
-  // mood dots removed (shown in week strip above)
-  // Stats: also use week entries
-  var weekScores=weekEntries.map(m=>m.score);
-  var wavg=weekScores.length?(weekScores.reduce((a,b)=>a+b,0)/weekScores.length).toFixed(1):'—';
-  var wtrend=weekScores.length>=2?(weekScores[weekScores.length-1]>weekScores[0]+0.5?'↑ 上升':weekScores[weekScores.length-1]<weekScores[0]-0.5?'↓ 下降':'→ 持平'):'—';
-  var mStats=$('week-mental-stats');
-  if(mStats)mStats.innerHTML=[['本週情緒均值',wavg+' / 10',parseFloat(wavg)>=7?'var(--ok)':parseFloat(wavg)>=4?'var(--warn)':'var(--danger)'],['本週趨勢',wtrend,'var(--sub)'],['本週紀錄',weekEntries.length+' / 7 天','var(--info)']].map(r=>'<div class="week-stat-item"><span class="week-stat-label">'+r[0]+'</span><span class="week-stat-val" style="color:'+r[2]+'">'+r[1]+'</span></div>').join('');
-  window._weekData={avg:wavg,trend:wtrend,entries:weekEntries.length,scores:weekScores,combat:_combat};
-}
-
-function renderWeekStrip(moodMap){
-  var strip=$('week-day-strip');if(!strip)return;
-  var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var now=new Date();
-  var dow=now.getDay();
-  var mondayOffset=dow===0?-6:1-dow;
-  var monday=new Date(now);monday.setDate(now.getDate()+mondayOffset);
-  var lastMonday=new Date(monday);lastMonday.setDate(monday.getDate()-7);
-  function makeWeekCols(startDate){
-    var cols='';
-    for(var i=0;i<7;i++){
-      var d=new Date(startDate);d.setDate(startDate.getDate()+i);
-      var k=dkey(d);var isFuture=d>now;var isToday=dkey(d)===dkey(now);
-      var mood=moodMap[k];var s=mood?mood.score:null;
-      var bg=s!==null?(s>=7?'#27ae60':s>=4?'#e67e22':'#c0392b'):'';
-      var ring=isFuture?'<div class="day-score-ring empty" style="opacity:.3">—</div>'
-        :s!==null?'<div class="day-score-ring" style="background:'+bg+'">'+Math.round(s)+'</div>'
-        :'<div class="day-score-ring empty">—</div>';
-      var emoji=(!isFuture&&s!==null)?(s>=9?'🤩':s>=7?'😊':s>=5?'😐':s>=3?'😔':'😞'):(isFuture?'':'·');
-      var factors=mood?(mood.factors||[]).slice(0,3).map(f=>'<div class="day-factor-tag">'+f+'</div>').join(''):'';
-      cols+='<div class="day-col"><div class="day-header'+(isToday?' today':'')+'">'+(d.getMonth()+1)+'/'+(d.getDate())+'<br>'+DAYS[d.getDay()]+'</div>'+ring+'<div class="day-emoji">'+emoji+'</div><div class="day-factors">'+factors+'</div></div>';
-    }
-    return cols;
-  }
-  strip.innerHTML=
-    '<div style="font-size:.58rem;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600;grid-column:1/-1;margin-bottom:4px;">上週</div>'+
-    '<div class="week-days" style="margin-bottom:10px;">'+makeWeekCols(lastMonday)+'</div>'+
-    '<div style="font-size:.58rem;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:4px;">本週</div>'+
-    '<div class="week-days">'+makeWeekCols(monday)+'</div>';
-}
-/* MAIN RENDER */
-var chartsDrawn=false;
-function renderOv(){
-  var stored=localStorage.getItem('sas_combat');
-  if(stored&&!_combat)updateCombat(parseInt(stored),true);
-
-  var moods=getMoods();
-  var todayMood=moods.find(m=>m.date===today());
-  var mn=$('ov-mn');if(mn){mn.textContent=todayMood?todayMood.score:'—';if(todayMood){var bm=$('bar-mood');if(bm)bm.style.width=(todayMood.score/10*100)+'%';}}
-
-  var mt=$('mood-trend');
-  if(mt&&moods.length>=4){
-    var rec=moods.slice(-3).map(m=>m.score),prev=moods.slice(-6,-3).map(m=>m.score);
-    if(prev.length){var ravg=rec.reduce((a,b)=>a+b,0)/rec.length,pavg=prev.reduce((a,b)=>a+b,0)/prev.length;mt.textContent=ravg>pavg+0.5?'上升段 ↑':ravg<pavg-0.5?'下降段 ↓':'持平 →';mt.style.color=ravg>pavg+0.5?'var(--ok)':ravg<pavg-0.5?'var(--danger)':'var(--faint)';}
-  }else if(mt)mt.textContent='數據積累中';
-
-  if(!_debt)updateDebt(2.4);
-
-  if(!chartsDrawn){
-    chartsDrawn=true;
-    mk('ov-mc',{type:'line',data:{labels:D30,datasets:[
-      {label:'情緒',data:RM.concat(Array(5).fill(null)),borderColor:'#9e6b7a',backgroundColor:'rgba(158,107,122,.09)',tension:.45,pointRadius:1.5,pointBackgroundColor:'#9e6b7a',fill:true,borderWidth:1.5},
-      {label:'預測',data:Array(24).fill(null).concat([RM[24]]).concat(PM),borderColor:'#b08d62',borderDash:[4,4],tension:.45,pointRadius:0,fill:false,borderWidth:1.5}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:LC,font:{size:8},maxTicksLimit:8},grid:{display:false}},y:{min:1,max:10,ticks:{color:LC,font:{size:8},maxTicksLimit:4},grid:{color:TC}}}}});
-  }
-  rebuildCorrChart();
-  buildTaskTaxonomy();
-  loadHDProfile();
-  loadWeekView();
-}
-
-/* CATEGORY MAP */
-var DEFAULT_CAT_MAP = {
-  logic: ['工作','研究','寫','策略','規劃','分析','讀書','學習','準備','整理','企劃','報告','設計','程式','代碼','文案'],
-  social: ['朋友','社交','見面','電話','會議','聊天','約','吃飯','聚','活動','拜訪'],
-  input: ['閱讀','運動','冥想','英文','練習','音樂','創作','散步','休息','課程','podcast','思考']
+// ── DEFAULT LINKS ──
+const DEFAULT_LINKS={
+  'sas-hub':   'https://resolutetinging.github.io/sleep-dashboard/',
+  'sleep':     'https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard.html',
+  'mental':    'https://resolutetinging.github.io/wellness-tracker/mental-dashboard.html',
+  'optimizer': 'https://resolutetinging.github.io/daily-optimizer/daily_optimizer.html',
+  'refueler':  './refueler.html',
+  'aitracker': 'https://resolutetinging.github.io/aitracker/ai_tracker_v6.html',
+  'linkedin':  '',
+  'wordvault': 'https://resolutetinging.github.io/wordvault/WordVault.html',
+  'mentaltool':'notion://www.notion.so',
+  'podcast':   'notion://www.notion.so',
+  'oasis':     './oasis.html',
 };
-var CAT_LABELS = {logic:'邏輯/工作',social:'社交耗能',input:'身心靈/輸入'};
-var CAT_COLORS = {logic:'#5c7a96',social:'#9e6b7a',input:'#5e8f7e'};
+function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
+function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
 
-function loadCatMap(){
-  try{return JSON.parse(localStorage.getItem('sas_cat_map')||'null')||JSON.parse(JSON.stringify(DEFAULT_CAT_MAP));}
-  catch(e){return JSON.parse(JSON.stringify(DEFAULT_CAT_MAP));}
+// ── MOCK / LIVE DATA ──
+const MOCK={
+  sleep:{dur:'7h 12m',q:78,deep:'1h45m',rem:'2h08m',trend:'↑'},
+  mental:{score:7.2,trend:'↑',streak:5},
+  opt:{stamina:62,endTime:'18:30',done:4,total:7,focus:'3.5h'},
+  ai:{models:2,topic:'Multimodal',news:8},
+  li:{applied:3,pending:2,saved:5},
+  wv:{total:234,today:5,streak:12},
+  mt:{streak:7,unread:2},
+  pc:{unread:3,recent:'The Knowledge Project'}
+};
+function rfToday(){
+  try{
+    const d=JSON.parse(localStorage.getItem(RF_KEY)||'{}');
+    const td=new Date().toDateString();
+    const te=(d.entries||[]).filter(e=>new Date(e.timestamp).toDateString()===td);
+    return{coffee:te.filter(e=>e.type==='coffee').length,water:te.filter(e=>e.type==='water').reduce((s,e)=>s+(e.amount||0),0)};
+  }catch{return{coffee:0,water:0};}
 }
-function saveCatMap(){
-  // Read from inputs
-  var map={};
-  ['logic','social','input'].forEach(cat=>{
-    var inp=$('cat-input-'+cat);
-    map[cat]=window._catMap[cat]||[];
-    if(inp&&inp.value.trim()){
-      inp.value.trim().split(/[,，、\s]+/).filter(Boolean).forEach(k=>{if(!map[cat].includes(k))map[cat].push(k);});
-      inp.value='';
+
+// ── WALLPAPER ──
+const WP_PRESETS=[
+  {key:'sand',  name:'暖麻砂',  bg:'radial-gradient(ellipse at 18% 22%,rgba(139,120,152,.14) 0%,transparent 52%),radial-gradient(ellipse at 82% 78%,rgba(92,122,150,.12) 0%,transparent 52%),#e8e4de'},
+  {key:'lav',   name:'薰衣草霧',bg:'radial-gradient(ellipse at 25% 30%,rgba(176,148,198,.22) 0%,transparent 55%),radial-gradient(ellipse at 78% 72%,rgba(136,120,172,.18) 0%,transparent 55%),#ece7f2'},
+  {key:'sage',  name:'鼠尾草晨',bg:'radial-gradient(ellipse at 20% 20%,rgba(94,143,126,.2) 0%,transparent 52%),radial-gradient(ellipse at 80% 80%,rgba(92,122,150,.12) 0%,transparent 52%),#e4ece8'},
+  {key:'rose',  name:'玫瑰奶茶',bg:'radial-gradient(ellipse at 22% 25%,rgba(176,120,100,.18) 0%,transparent 52%),radial-gradient(ellipse at 80% 75%,rgba(158,107,122,.14) 0%,transparent 52%),#ede6e3'},
+  {key:'blue',  name:'矢車菊藍',bg:'radial-gradient(ellipse at 20% 22%,rgba(92,122,150,.22) 0%,transparent 52%),radial-gradient(ellipse at 80% 78%,rgba(78,110,138,.16) 0%,transparent 52%),#e4eaf2'},
+  {key:'dusk',  name:'暮光石板',bg:'radial-gradient(ellipse at 22% 25%,rgba(90,80,120,.35) 0%,transparent 52%),radial-gradient(ellipse at 80% 75%,rgba(60,90,130,.3) 0%,transparent 52%),#2a2838'},
+];
+
+function applyBG(preset){
+  const bg=document.getElementById('bg-default');
+  const wp=document.getElementById('bg-wallpaper');
+  bg.style.background=preset.bg;
+  wp.classList.remove('active');
+  localStorage.setItem(WP_KEY,'preset:'+preset.key);
+}
+function applyCustomWP(dataUrl){
+  const wp=document.getElementById('bg-wallpaper');
+  wp.style.backgroundImage='url('+dataUrl+')';
+  wp.classList.add('active');
+  localStorage.setItem(WP_KEY,'custom:'+dataUrl);
+}
+function resetWP(){
+  document.getElementById('bg-wallpaper').classList.remove('active');
+  document.getElementById('bg-default').style.background='';
+  localStorage.removeItem(WP_KEY);
+}
+function loadWP(){
+  const v=localStorage.getItem(WP_KEY)||'';
+  if(v.startsWith('preset:')){
+    const k=v.slice(7);
+    const p=WP_PRESETS.find(x=>x.key===k);
+    if(p)applyBG(p);
+  } else if(v.startsWith('custom:')){
+    applyCustomWP(v.slice(7));
+  }
+}
+
+// ── CLOCK ──
+function tick(){
+  const n=new Date();
+  const h=String(n.getHours()).padStart(2,'0');
+  const m=String(n.getMinutes()).padStart(2,'0');
+  const s=String(n.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent=h+':'+m;
+  document.getElementById('clock-sec').textContent=':'+s;
+  const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const yyyy=n.getFullYear(),mm=String(n.getMonth()+1).padStart(2,'0'),dd=String(n.getDate()).padStart(2,'0');
+  document.getElementById('date-line').textContent=yyyy+'/'+mm+'/'+dd+' · '+WD[n.getDay()];
+  const hr=n.getHours();
+  document.getElementById('greeting').textContent=hr<5?'late night, get some rest 🌙':hr<12?'good morning ☀️':hr<17?'good afternoon 🌤':hr<21?'good evening 🌆':'late night 🌙';
+}
+
+// ── DOCK MAGNIFICATION ──
+const dock=document.getElementById('dock');
+function dockMag(e){
+  dock.querySelectorAll('.d-icon').forEach(ic=>{
+    const r=ic.getBoundingClientRect();
+    const cx=r.left+r.width/2;
+    const dist=Math.abs(e.clientX-cx);
+    const maxD=120,maxS=0.58,maxY=22;
+    if(dist<maxD){
+      const f=1-dist/maxD;
+      ic.style.transform=`translateY(${-(f*maxY)}px) scale(${1+f*maxS})`;
+    } else {
+      ic.style.transform='';
     }
   });
-  window._catMap=map;
-  localStorage.setItem('sas_cat_map',JSON.stringify(map));
-  renderCatMapTable();
-  // Rebuild with new map
-  Object.assign(LOGIC,map.logic||[]);Object.assign(SOCIAL,map.social||[]);Object.assign(INPUT,map.input||[]);
-  buildTaskTaxonomy();
-  var ok=document.createElement('span');ok.textContent=' ✓ 已儲存';ok.style.cssText='font-size:.65rem;color:var(--ok)';
-  var btn=document.querySelector('[onclick="saveCatMap()"]');if(btn){btn.after(ok);setTimeout(()=>ok.remove(),2000);}
 }
-function removeCatKey(cat,key){
-  if(!window._catMap)window._catMap=loadCatMap();
-  window._catMap[cat]=(window._catMap[cat]||[]).filter(k=>k!==key);
-  localStorage.setItem('sas_cat_map',JSON.stringify(window._catMap));
-  renderCatMapTable();buildTaskTaxonomy();
-}
-function renderCatMapTable(){
-  var map=window._catMap||loadCatMap();
-  var el=$('cat-map-table');if(!el)return;
-  el.innerHTML=['logic','social','input'].map(cat=>
-    '<div style="background:var(--bg2);border-radius:var(--rsm);padding:.6rem .75rem;border:.5px solid var(--border)">'+
-    '<div style="font-size:.68rem;font-weight:700;color:'+CAT_COLORS[cat]+';margin-bottom:.45rem">'+CAT_LABELS[cat]+'</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:.5rem">'+
-    (map[cat]||[]).map(k=>'<span style="font-size:.6rem;padding:2px 7px;border-radius:12px;background:var(--card);border:.5px solid var(--border);cursor:pointer;color:var(--sub)" onclick="removeCatKey(\''+cat+'\',\''+k+'\')">'
-    +k+' ×</span>').join('')+
-    '</div>'+
-    '<input id="cat-input-'+cat+'" placeholder="新增關鍵字（逗號分隔）" style="width:100%;font-size:.65rem;padding:3px 7px;border:.5px solid var(--bstr);border-radius:var(--rsm);background:var(--card);color:var(--text);font-family:inherit">'+
-    '</div>'
-  ).join('');
+if(!window.matchMedia('(pointer:coarse)').matches){
+  dock.addEventListener('mousemove',dockMag);
+  dock.addEventListener('mouseleave',()=>dock.querySelectorAll('.d-icon').forEach(i=>i.style.transform=''));
 }
 
-/* AI FORMAT */
-function fmtAI(raw){
-  var html='';
-  raw.split('\n').forEach(line=>{
-    var t=line.trim();if(!t){html+='<div style="height:.3rem"></div>';return;}
-    var hM=t.match(/^\*\*(\d+\.\s+[^*]+)\*\*$/)||t.match(/^#{1,3}\s+(.+)$/);
-    if(hM){html+='<div style="margin-top:1rem;margin-bottom:.35rem;padding-bottom:.25rem;border-bottom:1.5px solid rgba(40,38,32,.09);font-weight:700;font-size:.9rem;color:#1a1814">'+hM[1].replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')+'</div>';return;}
-    var nM=t.match(/^(\d+)\.\s+(.+)/);
-    if(nM){html+='<div style="display:flex;gap:7px;margin-top:.4rem;align-items:baseline"><span style="color:var(--mental);font-weight:700;flex-shrink:0;min-width:16px">'+nM[1]+'.</span><span style="color:var(--sub);line-height:1.65">'+nM[2].replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')+'</span></div>';return;}
-    var bM=t.match(/^[-·•]\s+(.+)/);
-    if(bM){html+='<div style="display:flex;gap:7px;margin-top:.25rem;margin-left:1.2rem;align-items:baseline"><span style="color:var(--faint);flex-shrink:0">›</span><span style="color:var(--sub);line-height:1.65">'+bM[1].replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')+'</span></div>';return;}
-    html+='<div style="color:var(--sub);line-height:1.75;margin-top:.15rem">'+t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')+'</div>';
+// ── DOCK CLICK ──
+function dClick(el,id){
+  el.classList.remove('bouncing');void el.offsetWidth;el.classList.add('bouncing');
+  setTimeout(()=>el.classList.remove('bouncing'),500);
+  const links=getLinks();
+  const url=links[id]||'';
+  if(!url){openSettings('links');return;}
+  window.open(url,'_blank');
+}
+// Mark LinkedIn if not set
+function updateUnsetFlags(){
+  const links=getLinks();
+  document.querySelectorAll('.d-icon').forEach(ic=>{
+    const id=ic.dataset.id;
+    if(!id||!links.hasOwnProperty(id))return;
+    ic.dataset.unset=(!links[id])?'1':'0';
   });
-  return '<div style="font-size:.87rem">'+html+'</div>';
 }
 
-async function aiCall(prompt,maxTokens){
-  var key=localStorage.getItem('tina_groq')||'';
-  if(!key)throw new Error('找不到 Groq API Key，請在設定頁輸入（localStorage: tina_groq）');
-  var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:maxTokens,temperature:.7})});
-  var txt=await r.text();
-  var d;try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON 回應（'+r.status+'）: '+txt.slice(0,120));}
-  if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error('Groq '+r.status+': '+(d.error?.message||txt.slice(0,120)));
+// ── LEAN TOOLTIP ──
+const ttp=document.getElementById('tooltip');
+let ttT;
+function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
+function hr(){return`<div class="tt-hr"></div>`;}
+function spark(vals){
+  const B='▁▂▃▄▅▆▇█';
+  if(!vals||!vals.length)return'';
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  return vals.map(v=>B[Math.round((v-mn)/rng*7)]).join('');
 }
-
-async function analyzeHD(){
-  var btn=$('hd-analyze-btn'),sp=$('hd-spinner'),bt=$('hd-btn-text'),res=$('hd-result');
-  btn.disabled=true;sp.style.display='block';bt.textContent='分析中…';
-  res.innerHTML='<span style="color:var(--faint)">AI 正在解讀你的人類圖…</span>';
-  var hd=window._hdData||{};var sc=_combat||60;
-  try{
-    var r=await aiCall(`你是一位精通人類圖（Human Design）的深度解析師。
-
-人類圖資料：
-- 類型：${hd.type||'未知'}　策略：${hd.strat||'未知'}　權威：${hd.auth||'未知'}
-- 定義：${hd.defn||'未知'}　人生角色：${hd.profile||'未知'}
-- 人生主題：${hd.cross||'未知'}　非自己主題：${hd.notself||'未知'}
-${hd.ziStar?'- 紫微主星：'+hd.ziStar:''}${hd.ziTravel?'\n- 遷移宮：'+hd.ziTravel:''}${hd.ziYear?'\n- 流年：'+hd.ziYear:''}
-${hd.parsed?'- 原始解析資料：'+hd.parsed:''}
-
-今日戰力：${sc}/100　日期：${new Date().toLocaleDateString('zh-TW')}
-
-請提供（繁體中文，具體有行動性）：
-
-**1. 能量類型解析**
-核心運作邏輯、今日適合的能量節奏
-
-**2. 策略與權威的日常應用**
-今日決策的具體步驟
-
-**3. 閘道逐一解析**
-每個已亮起的閘道：編號、天賦特質、陷阱、今日具體建議
-
-**4. 今日能量配置**（結合戰力 ${sc} 分）
-最適時段、要避免的行為、維持簽名狀態的方法
-
-**5. 防禦性提醒**（3-5條今日不宜）
-
-**6. 長期培養建議**（2-3條）`,3000);
-    res.innerHTML=fmtAI(r);
-  }catch(e){res.innerHTML='<span style="color:var(--danger)">'+e.message+'</span>';}
-  btn.disabled=false;sp.style.display='none';bt.textContent='重新生成';
-}
-
-async function analyzeLastWeek(){
-  var btn=$('lw-btn'),sp=$('lw-spinner'),bt=$('lw-btn-text'),res=$('lw-ai-result'),statRow=$('lw-stat-row');
-  btn.disabled=true;sp.style.display='block';bt.textContent='分析中…';
-  res.innerHTML='<span style="color:var(--faint)">分析中…</span>';
-
-  // 計算上週日期範圍
-  var now=new Date();
-  var dow=now.getDay();
-  var thisMonday=new Date(now);thisMonday.setDate(now.getDate()+(dow===0?-6:1-dow));
-  var lastMonday=new Date(thisMonday);lastMonday.setDate(thisMonday.getDate()-7);
-  var lwDates=[];
-  for(var i=0;i<7;i++){var d=new Date(lastMonday);d.setDate(lastMonday.getDate()+i);lwDates.push(dkey(d));}
-
-  // 從情緒紀錄取上週資料
-  var moods=getMoods();
-  var moodMap={};moods.forEach(m=>{moodMap[m.date]=m;});
-  var lwEntries=lwDates.map(k=>moodMap[k]).filter(Boolean);
-  var scores=lwEntries.map(m=>m.score);
-  var avg=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1):'—';
-  var trend=scores.length>=2?(scores[scores.length-1]>scores[0]+0.5?'↑ 上升':scores[scores.length-1]<scores[0]-0.5?'↓ 下降':'→ 持平'):'—';
-  var maxDay=lwEntries.reduce((b,m)=>(!b||m.score>b.score)?m:b,null);
-  var minDay=lwEntries.reduce((b,m)=>(!b||m.score<b.score)?m:b,null);
-  var allFactors=lwEntries.flatMap(m=>m.factors||[]);
-  var fc={};allFactors.forEach(f=>{fc[f]=(fc[f]||0)+1;});
-  var topFactors=Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([f])=>f);
-
-  // 顯示上週數字摘要
-  if(statRow){
-    var color=parseFloat(avg)>=7?'var(--ok)':parseFloat(avg)>=4?'var(--warn)':'var(--danger)';
-    statRow.innerHTML=[
-      ['情緒均值',avg+' / 10',color],
-      ['趨勢',trend,'var(--sub)'],
-      ['有效紀錄',lwEntries.length+' / 7 天','var(--info)']
-    ].map(r=>'<div class="week-stat-item"><span class="week-stat-label">'+r[0]+'</span><span class="week-stat-val" style="color:'+r[2]+'">'+r[1]+'</span></div>').join('');
+function buildTT(id){
+  const h=(t)=>`<div class="tt-head">${t}</div>`;
+  const rf=rfToday();
+  switch(id){
+    case 'sas-hub':{
+      const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
+      const pace=LIVE.sleep?.pace??'請先訪問 SAS Hub';
+      // 體能續航：與 SAS Hub 公式完全對齊（Math.floor + :00），從 sas_combat 計算
+      const sleepCp=parseInt(localStorage.getItem('sas_combat')||'0')||null;
+      const endTime=sleepCp?`${String(Math.floor(8+sleepCp/100*14)).padStart(2,'0')}:00`:null;
+      const endColor=sleepCp?(sleepCp>=70?'g':sleepCp>=40?'a':'r'):'';
+      const enduranceHtml=endTime?hr()+row('體能續航至',endTime,endColor):'';
+      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
+    }
+    case 'sleep':{
+      if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
+      const s=LIVE.sleep;
+      const dot=(c)=>`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c};margin-right:4px;vertical-align:middle;opacity:.85;"></span>`;
+      let out=h('睡眠分期 · '+s.date)
+        +row(dot('#8aabcc')+'Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')
+        +row(dot('#a898b8')+'REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')
+        +row(dot('#8fac94')+'Core',s.coreP+'%')
+        +row(dot('#c4aa7c')+'Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+      if(s.trend7&&s.trend7.length>2){
+        const deepVals=s.trend7.map(n=>n.deepP);
+        const remVals=s.trend7.map(n=>n.remP);
+        const latestDeep=deepVals[deepVals.length-1],prevDeep=deepVals[deepVals.length-2];
+        const latestRem=remVals[remVals.length-1],prevRem=remVals[remVals.length-2];
+        const dArr=latestDeep>prevDeep?'↑':latestDeep<prevDeep?'↓':'→';
+        const rArr=latestRem>prevRem?'↑':latestRem<prevRem?'↓':'→';
+        out+=hr()
+          +`<div style="font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;">近${s.trend7.length}日趨勢</div>`
+          +`<div class="tt-row"><span class="tt-k">${dot('#8aabcc')}Deep</span><span class="tt-v tt-spark" style="color:#8aabcc;">${spark(deepVals)}</span><span class="tt-v ${latestDeep>=18?'g':latestDeep>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${dArr}</span></div>`
+          +`<div class="tt-row"><span class="tt-k">${dot('#a898b8')}REM</span><span class="tt-v tt-spark" style="color:#a898b8;">${spark(remVals)}</span><span class="tt-v ${latestRem>=18?'g':latestRem>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${rArr}</span></div>`;
+      }
+      return out;
+    }
+    case 'mental':{
+      if(!LIVE.mental?.today)return h('今日 Mental')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">今日尚無記錄</div>`;
+      const m=LIVE.mental.today;
+      const emos=m.emotions.slice(0,3).join('、')||'—';
+      const facs=m.factors.slice(0,2).join('、')||'—';
+      return h('今日 Mental')+row('心情',m.score+'/10',m.score>=7?'g':m.score>=5?'a':'r')+hr()+`<div class="tt-row"><span class="tt-k">情緒</span><span class="tt-v" style="font-size:10.5px;">${emos}</span></div>`+`<div class="tt-row"><span class="tt-k">因子</span><span class="tt-v" style="font-size:10.5px;">${facs}</span></div>`;
+    }
+    case 'optimizer':{
+      loadOptimizerData();
+      const o=LIVE.optimizer;
+      if(!o)return h('優化器')+`<div style="font-size:11px;color:var(--faint);">讀取中…</div>`;
+      const status=o.rest?'🌿 休假中':'工作中';
+      let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a')+hr();
+      if(o.tasks&&o.tasks.length){
+        const show=o.tasks.slice(0,6);
+        out+=`<div style="display:grid;grid-template-columns:14px 1fr;row-gap:5px;column-gap:7px;padding:2px 0;">`;
+        for(const t of show){
+          const dn=t.done||false;
+          const lbl=(t.text||t.title||t.label||t.content||t.name||'').slice(0,24)||'—';
+          out+=`<span style="font-size:10px;color:${dn?'#7d9e85':'#bbb'};text-align:center;line-height:1.5;">${dn?'✓':'○'}</span>`
+             +`<span style="font-size:10.5px;color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">${lbl}</span>`;
+        }
+        out+=`</div>`;
+        if(o.tasks.length>6)out+=`<div style="font-size:10px;color:var(--faint);padding:2px 0 0;text-align:right;">…另有 ${o.tasks.length-6} 項</div>`;
+      }
+      return out;
+    }
+    case 'refueler':
+      return h('今日攝取')+row('☕ 咖啡',rf.coffee+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',rf.water+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
+    case 'report':
+      return h('綜觀分析')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">點擊進行 AI 整合分析</div>`;
+    case 'aitracker':{
+      const ai=LIVE.aitracker;
+      if(!ai)return'';
+      if(!ai.hasNote)return h('AI 追蹤')+`<div style="font-size:11.5px;color:var(--warn);padding:3px 0;font-weight:500;">📝 今天還沒寫新聞筆記！</div>`;
+      return h('AI 追蹤')+`<div style="font-size:11px;color:var(--ok);padding:3px 0;">✅ 今日筆記已記錄</div>`;
+    }
+    case 'linkedin':{
+      loadLinkedInData();
+      fetchNotionLinkedIn();
+      const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0};
+      const hasData=li.saved||li.applied||li.declined||li.contacted;
+      return h('LinkedIn 求職進度')
+        +row('⭐ Saved',li.saved+'個')
+        +row('📨 Applied',li.applied+'個','g')
+        +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
+        +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'')
+        +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
+    }
+    case 'oasis':{
+      let saved=[];
+      try{saved=JSON.parse(localStorage.getItem('oasis_saved')||'[]');}catch{}
+      if(!saved.length)return h('🌿 Oasis')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">收藏夾是空的</div>`;
+      const item=saved[Math.floor(Math.random()*saved.length)];
+      const isZh=(item.lang==='zh');
+      const quote=(item.quote||'').replace(/\n/g,' ').slice(0,80)+(item.quote&&item.quote.replace(/\n/g,' ').length>80?'…':'');
+      const trans=(!isZh&&item.translation)?(item.translation||'').replace(/\n/g,' ').slice(0,60)+(item.translation&&item.translation.replace(/\n/g,' ').length>60?'…':''):'';
+      const metaOrig=[item.title?`《${item.title}》`:'',item.author||''].filter(Boolean).join('　');
+      const metaZh=!isZh?[item.title_zh?`《${item.title_zh}》`:'',item.author_zh||''].filter(Boolean).join('　'):'';
+      const country=item.country||'';
+      return h('🌿 Oasis')+
+        (country?`<div style="font-size:10px;padding:2px 7px;border-radius:8px;background:var(--card);display:inline-block;margin-bottom:7px;color:var(--sub);">${country}</div>`+hr():'')+
+        `<div style="font-size:12px;line-height:1.7;color:var(--ink);margin-bottom:6px;">${quote}</div>`+
+        (trans?`<div style="font-size:11px;line-height:1.6;color:var(--sub);margin-bottom:6px;">${trans}</div>`:'')+
+        hr()+
+        `<div style="font-size:10.5px;color:var(--faint);">${metaOrig}</div>`+
+        (metaZh?`<div style="font-size:10px;color:var(--faint);opacity:.75;">${metaZh}</div>`:'')+
+        ((item.tags&&item.tags.length)?hr()+`<div style="font-size:10px;color:var(--faint);">${item.tags.map(t=>'#'+t).join('　')}</div>`:'');
+    }
+    default:return'';
   }
+}
+document.addEventListener('mouseover',e=>{
+  const ic=e.target.closest('.d-icon');
+  if(!ic)return;
+  clearTimeout(ttT);
+  const c=buildTT(ic.dataset.id);
+  if(!c){ttp.classList.add('tt-hide');return;}
+  ttp.innerHTML=c;ttp.style.display='block';ttp.classList.remove('tt-hide');
+  // Width = clock element's rendered width
+  const clockRow=document.querySelector('#header > div:first-child');
+  const cw=clockRow?Math.round(clockRow.getBoundingClientRect().width):200;
+  ttp.style.width=cw+'px';
+  // Center under clock
+  const tw=ttp.offsetWidth||cw,th=ttp.offsetHeight||110;
+  ttp.style.left=Math.round(window.innerWidth/2-tw/2)+'px';
+  ttp.style.top=Math.round(window.innerHeight/2-th/2-40)+'px';
+});
+document.addEventListener('mouseout',e=>{
+  if(!e.target.closest('.d-icon'))return;
+  ttT=setTimeout(()=>{ttp.classList.add('tt-hide');setTimeout(()=>ttp.style.display='none',130);},70);
+});
 
-  var hd=window._hdData||{};
-  var prompt=`整合人類圖與身心數據的週報顧問。
+// ── SETTINGS ──
+let curTab='appearance';
+function openSettings(tab){
+  curTab=tab||'appearance';
+  document.getElementById('settings-overlay').style.display='flex';
+  renderTab(curTab);
+  document.querySelectorAll('.s-tab').forEach(b=>{
+    b.classList.toggle('on',b.dataset.tab===curTab);
+  });
+}
+function closeSettings(){document.getElementById('settings-overlay').style.display='none';}
+function switchTab(tab){
+  curTab=tab;
+  document.querySelectorAll('.s-tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  renderTab(tab);
+}
+function renderTab(tab){
+  const el=document.getElementById('s-content');
+  const links=getLinks();
+  const eff=getEffective();
+  const curWP=localStorage.getItem(WP_KEY)||'';
 
-上週（${lwDates[0]} ~ ${lwDates[6]}）數據摘要：
-- 情緒均值：${avg}/10
-- 情緒趨勢：${trend}
-- 有效紀錄：${lwEntries.length}/7 天
-- 最高分日：${maxDay?maxDay.date+'（'+maxDay.score+'分）':'—'}
-- 最低分日：${minDay?minDay.date+'（'+minDay.score+'分）':'—'}
-- 主要影響因子：${topFactors.join('、')||'無'}
-人類圖：類型 ${hd.type||'未知'}，策略 ${hd.strat||'未知'}，權威 ${hd.auth||'未知'}，非自己 ${hd.notself||'未知'}
-
-請提供上週回顧（繁體中文）：
-
-**1. 上週整體狀態評估**
-情緒走勢與高低點的脈絡解讀
-
-**2. 主要模式洞察**
-影響因子規律、與人類圖設計的對應或背離
-
-**3. 帶入本週的關鍵提醒**（1-2條）
-從上週經驗提取、本週最需注意的事`;
-
-  try{
-    var r=await aiCall(prompt,1200);
-    res.innerHTML=fmtAI(r);
-  }catch(e){res.innerHTML='<span style="color:var(--danger)">'+e.message+'</span>';}
-  btn.disabled=false;sp.style.display='none';bt.textContent='重新生成';
+  if(tab==='appearance'){
+    const presetCards=WP_PRESETS.map(p=>{
+      const isActive=curWP==='preset:'+p.key;
+      return`<div class="wp-card${isActive?' active':''}" onclick="applyBG_ui('${p.key}')" style="background:${p.bg};"><span class="wp-card-name">${p.name}</span></div>`;
+    }).join('');
+    el.innerHTML=`
+      <div class="s-title">外觀</div>
+      <div class="s-sec">
+        <div class="s-lbl">桌布 / Wallpaper</div>
+        <div class="wp-grid">
+          ${presetCards}
+          <label class="wp-upload" for="wp-inp">
+            <span class="wp-upload-ic">📷</span>
+            <span>上傳自訂圖片</span>
+          </label>
+        </div>
+        <input type="file" id="wp-inp" accept="image/*" style="display:none;" onchange="onWPFile(this)"/>
+        <div class="s-row">
+          <button class="s-btn s-btn-g" onclick="resetWP();renderTab('appearance');">重設預設</button>
+        </div>
+      </div>
+    `;
+  } else if(tab==='links'){
+    const linkRows=[
+      {id:'sas-hub',lbl:'🧬 SAS Hub',ph:'../Sleep Dashboard/index.html'},
+      {id:'sleep',lbl:'😴 Sleep Dashboard',ph:'../Sleep Dashboard/sleep_dashboard.html'},
+      {id:'mental',lbl:'💭 Mental Dashboard',ph:'https://…'},
+      {id:'optimizer',lbl:'⚡ Daily Optimizer',ph:'https://…'},
+      {id:'refueler',lbl:'☕ Refueler',ph:'./refueler.html'},
+      {id:'aitracker',lbl:'🤖 AI Tracker',ph:'../AI Tracker/ai_tracker_v6.html'},
+      {id:'linkedin',lbl:'💼 LinkedIn',ph:'https://www.linkedin.com/…',highlight:true},
+      {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
+      {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
+      {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
+    ];
+    el.innerHTML=`
+      <div class="s-title">連結管理</div>
+      <div class="s-sec">
+        ${linkRows.map(r=>`
+          <div class="s-lbl" style="${r.highlight?'color:#7be08a;':''}">${r.lbl}${r.highlight&&!links[r.id]?' <span style="font-size:9px;background:rgba(123,224,138,.15);padding:2px 7px;border-radius:100px;letter-spacing:0;text-transform:none;">請設定</span>':''}</div>
+          <input class="s-inp" style="margin-bottom:12px;" id="lnk-${r.id}" value="${links[r.id]||''}" placeholder="${r.ph}"/>
+        `).join('')}
+        <button class="s-btn s-btn-pr" onclick="saveAllLinks()">儲存所有連結</button>
+      </div>
+    `;
+  } else if(tab==='guard'){
+    const gs=getGuardData();
+    const skipDur=gs.skipDur||60;
+    const workTime=gs.workTime||15;
+    const catUrl=localStorage.getItem('cc_cat_gif')||'';
+    const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower:(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower:'—');
+    el.innerHTML=`
+      <div class="s-title">Guard 設定</div>
+      <div class="s-sec">
+        <div class="s-lbl">今日戰力（自動讀取）</div>
+        <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${cpDisplay}</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:16px;">來源：Sleep Dashboard 睡眠分析</div>
+        <div class="s-lbl">工作結束時間</div>
+        <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
+      </div>
+      <div class="s-sec">
+        <div class="s-lbl">介入時長（Guard Working Time）</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <input class="s-inp" type="number" id="gs-work" min="1" max="60" value="${workTime}" style="width:80px;"/>
+          <span style="font-size:13px;color:var(--faint);">分鐘</span>
+        </div>
+        <div class="s-lbl">跳過後冷卻時間（Cooldown）</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <input class="s-inp" type="number" id="gs-skip" min="5" max="240" value="${skipDur}" style="width:80px;"/>
+          <span style="font-size:13px;color:var(--faint);">分鐘</span>
+        </div>
+        <div class="s-lbl">GIF / 圖片 URL</div>
+        <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址" style="margin-bottom:18px;"/>
+        <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
+      </div>
+    `;
+  } else if(tab==='linkedin'){
+    const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0};
+    const nt=localStorage.getItem('notion_token')||'';
+    const nd=localStorage.getItem('notion_li_db')||'';
+    el.innerHTML=`
+      <div class="s-title">LinkedIn 求職進度</div>
+      <div class="s-sec">
+        <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;">☁ Notion 自動同步</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:12px;line-height:1.6;">填入 Notion Integration Token 和 LinkedIn 職缺資料庫 ID，頁面載入時自動從 Notion 讀取各狀態數量。</div>
+        <div class="s-lbl">Notion Integration Token</div>
+        <input class="s-inp" type="password" id="li-ntoken" value="${nt}" placeholder="secret_…" style="font-family:monospace;font-size:12px;margin-bottom:12px;"/>
+        <div class="s-lbl">Notion Database ID</div>
+        <input class="s-inp" id="li-ndb" value="${nd}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="font-family:monospace;font-size:12px;margin-bottom:4px;"/>
+        <div style="font-size:10.5px;color:var(--faint);margin-bottom:16px;">資料庫需有 Select 類型欄位，值包含 Saved / Applied / Declined / Contacted</div>
+        <button class="s-btn s-btn-pr" onclick="saveLinkedIn()">儲存並同步 Notion</button>
+      </div>
+    `;
+  } else if(tab==='api'){
+    const k=localStorage.getItem(GROQ_KEY)||'';
+    const pat=localStorage.getItem('gh_pat')||'';
+    const gid=localStorage.getItem('gist_id')||'';
+    el.innerHTML=`
+      <div class="s-title">API 設定</div>
+      <div class="s-sec">
+        <div class="s-lbl">Groq API Key</div>
+        <div style="display:flex;gap:6px;margin-bottom:22px;">
+          <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <button onclick="toggleVis('gs-k',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
+        </div>
+        <div class="s-lbl">GitHub PAT（↑↓ 同步用，需 gist 權限）</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <input class="s-inp" type="password" id="gs-pat" value="${pat}" placeholder="ghp_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <button onclick="toggleVis('gs-pat',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
+        </div>
+        <div class="s-lbl">Gist ID</div>
+        <input class="s-inp" id="gs-gid" value="${gid}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步時所有 localStorage 會存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>。</div>
+        <button class="s-btn s-btn-pr" onclick="saveAPI()">儲存</button>
+      </div>
+    `;
+  }
+}
+function applyBG_ui(key){
+  const p=WP_PRESETS.find(x=>x.key===key);
+  if(p){applyBG(p);renderTab('appearance');}
+}
+function onWPFile(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{applyCustomWP(ev.target.result);renderTab('appearance');};
+  r.readAsDataURL(f);
+}
+function saveAllLinks(){
+  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast'];
+  const l={};
+  ids.forEach(id=>{const el=document.getElementById('lnk-'+id);if(el)l[id]=(el.value||'').trim();});
+  saveLinks(l);updateUnsetFlags();closeSettings();
+}
+function saveGS(){
+  const endTime=document.getElementById('gs-t')?.value||'18:30';
+  const workTime=parseInt(document.getElementById('gs-work')?.value)||15;
+  const skipDur=parseInt(document.getElementById('gs-skip')?.value)||60;
+  const catUrl=(document.getElementById('gs-cat')?.value||'').trim();
+  if(catUrl)localStorage.setItem('cc_cat_gif',catUrl);else localStorage.removeItem('cc_cat_gif');
+  localStorage.setItem(GS_KEY,JSON.stringify({endTime,workTime,skipDur}));
+  closeSettings();checkGuard();
+}
+function saveLinkedIn(){
+  const nt=(document.getElementById('li-ntoken')?.value||'').trim();
+  const nd=(document.getElementById('li-ndb')?.value||'').trim();
+  if(nt)localStorage.setItem('notion_token',nt);else localStorage.removeItem('notion_token');
+  if(nd)localStorage.setItem('notion_li_db',nd);else localStorage.removeItem('notion_li_db');
+  closeSettings();
+  if(nt&&nd)fetchNotionLinkedIn();
+}
+function saveManualLinkedIn(){
+  const li={
+    saved:parseInt(document.getElementById('li-saved')?.value)||0,
+    applied:parseInt(document.getElementById('li-applied')?.value)||0,
+    declined:parseInt(document.getElementById('li-declined')?.value)||0,
+    contacted:parseInt(document.getElementById('li-contacted')?.value)||0,
+  };
+  localStorage.setItem(LI_KEY,JSON.stringify(li));
+  LIVE.linkedin=li;closeSettings();
+}
+function toggleVis(id,btn){const el=document.getElementById(id);if(!el)return;el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁':'🙈';}
+function saveAPI(){
+  const k=(document.getElementById('gs-k')?.value||'').trim();
+  const pat=(document.getElementById('gs-pat')?.value||'').trim();
+  const gid=(document.getElementById('gs-gid')?.value||'').trim();
+  if(k)localStorage.setItem(GROQ_KEY,k);
+  if(pat)localStorage.setItem('gh_pat',pat);else localStorage.removeItem('gh_pat');
+  if(gid)localStorage.setItem('gist_id',gid);else localStorage.removeItem('gist_id');
+  closeSettings();
 }
 
-async function analyzeWeek(){
-  var btn=$('week-btn'),sp=$('week-spinner'),bt=$('week-btn-text'),res=$('week-ai-result');
-  btn.disabled=true;sp.style.display='block';bt.textContent='分析中…';
-  res.innerHTML='<span style="color:var(--faint)">分析中…</span>';
-  var hd=window._hdData||{};var wd=window._weekData||{};wd.combat=_combat||wd.combat;
-  try{
-    var r=await aiCall(`整合人類圖與身心數據的週報顧問。
-
-數據：情緒均值 ${wd.avg||'—'}/10，趨勢 ${wd.trend||'—'}，有效紀錄 ${wd.entries||0} 筆，戰力 ${wd.combat||'—'}/100
-人類圖：類型 ${hd.type||'未知'}，策略 ${hd.strat||'未知'}，權威 ${hd.auth||'未知'}，角色 ${hd.profile||'未知'}，主題 ${hd.cross||'未知'}，非自己 ${hd.notself||'未知'}
-${hd.ziYear?'流年：'+hd.ziYear:''}
-
-請提供（繁體中文）：
-
-**1. 本週情緒模式解讀**
-規律、去噪後的內在狀態、與人類圖設計的對應
-
-**2. 數據與人類圖交叉洞察**
-哪些模式是「在設計中」，哪些是「非自己」的訊號
-
-**3. 下週行動調整建議**（3-5條具體行動）`,1400);
-    res.innerHTML=fmtAI(r);
-  }catch(e){res.innerHTML='<span style="color:var(--danger)">'+e.message+'</span>';}
-  btn.disabled=false;sp.style.display='none';bt.textContent='重新生成';
+// ── GUARD CAT ──
+let gState='monitoring',cooldownEnd=null,cdIv=null;
+function getGuardData(){try{return JSON.parse(localStorage.getItem(GS_KEY))||{};}catch{return{};}}
+function getEffective(){
+  const s=getGuardData();
+  // Prefer live sleep-derived combat power, fallback to optimizer review, then default
+  let stamina=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??MOCK.opt.stamina;
+  let endTime=s.endTime||MOCK.opt.endTime;
+  try{const o=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');if(o.endTime)endTime=o.endTime;}catch{}
+  return{stamina,endTime,workTime:s.workTime||15,skipDur:s.skipDur||60};
+}
+function checkGuard(){
+  if(gState==='alerting'||gState==='resting')return;
+  if(gState==='cooldown'&&cooldownEnd&&Date.now()<cooldownEnd)return;
+  const{stamina,endTime}=getEffective();
+  const now=new Date();
+  const[eh,em]=endTime.split(':').map(Number);
+  const end=new Date();end.setHours(eh,em,0,0);
+  const end2=new Date(end.getTime()+1*60*60*1000);
+  const dot=document.getElementById('guard-dot');
+  const txt=document.getElementById('guard-txt');
+  if(stamina<40||now>end2){triggerGuard();}
+  else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
+  else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
+}
+function renderCatDisplay(){
+  const url=localStorage.getItem('cc_cat_gif')||'';
+  const el=document.getElementById('big-cat');
+  if(url){
+    el.style.fontSize='';
+    el.innerHTML=`<img src="${url}" alt="🐱" onerror="this.innerHTML=CAT_SVG"/>`;
+  } else {
+    el.style.fontSize='';
+    el.innerHTML=CAT_SVG;
+  }
+}
+function triggerGuard(){
+  if(gState==='alerting'||gState==='resting')return;
+  gState='alerting';
+  const{stamina,endTime,workTime}=getEffective();
+  const msgs=stamina<40?'戰力剩 '+stamina+'%，需要充電了！':'已過 '+endTime+'，該歇歇了！';
+  const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
+  renderCatDisplay();
+  const cat=document.getElementById('big-cat');
+  cat.style.animation='none';void cat.offsetWidth;
+  cat.style.animation='catRise 1.2s ease forwards';
+  document.getElementById('guard-overlay').style.display='block';
+  document.getElementById('guard-dot').className='alert';
+  document.getElementById('guard-txt').textContent='執法中';
+  document.getElementById('guard-stop-btn').style.display='flex';
+  startBreak();
+}
+function startBreak(){
+  gState='resting';
+  const{workTime}=getEffective();
+  if(cdIv)clearInterval(cdIv);
+  let secs=workTime*60;
+  const speech=document.getElementById('cat-speech');
+  const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  if(speech)speech.innerHTML=fmt(secs);
+  cdIv=setInterval(()=>{
+    secs--;
+    if(speech)speech.innerHTML=fmt(secs);
+    if(secs<=0){clearInterval(cdIv);endBreak();}
+  },1000);
+}
+function endBreak(){
+  if(cdIv){clearInterval(cdIv);cdIv=null;}
+  const{skipDur}=getEffective();
+  const skipMs=skipDur*60*1000;
+  gState='cooldown';cooldownEnd=Date.now()+skipMs;
+  document.getElementById('guard-overlay').style.display='none';
+  document.getElementById('guard-dot').className='warn';
+  document.getElementById('guard-txt').textContent=`Guard · ${skipDur}m cooldown`;
+  document.getElementById('guard-stop-btn').style.display='none';
+  setTimeout(()=>{gState='monitoring';checkGuard();},skipMs);
+}
+function forceStopGuard(){
+  if(cdIv){clearInterval(cdIv);cdIv=null;}
+  gState='monitoring';cooldownEnd=null;
+  document.getElementById('guard-overlay').style.display='none';
+  document.getElementById('guard-dot').className='';
+  document.getElementById('guard-txt').textContent='Guard · 監控中';
+  document.getElementById('guard-stop-btn').style.display='none';
 }
 
-/* INIT */
-window._catMap=loadCatMap();
-renderCatMapTable();
-renderOv();
-initFrames();
+// ── DEBUG TRIGGER (bypasses state guard) ──
+function debugTrigger(){
+  gState='monitoring';
+  cooldownEnd=null;
+  triggerGuard();
+}
+
+// ── SAS ANALYSIS ──
+function openSASAnalysis(){
+  document.getElementById('sas-pn').innerHTML=`
+    <button class="m-cls" onclick="closeSAS()">✕</button>
+    <div class="m-ttl">✨ SAS 身心綜觀報告</div>
+    <p style="font-size:13px;color:var(--faint);margin-bottom:18px;line-height:1.6;">整合攝取 ↔ 睡眠 ↔ 行為 ↔ 情緒，完整身心洞察。</p>
+    <div id="sas-res"><button class="btn-pr" onclick="runSAS()">🔍 開始分析</button></div>
+  `;
+  document.getElementById('sas-ov').style.display='flex';
+}
+function closeSAS(){document.getElementById('sas-ov').style.display='none';}
+async function runSAS(){
+  const key=localStorage.getItem(GROQ_KEY)||'';
+  const el=document.getElementById('sas-res');
+  if(!key){el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.35);text-align:center;padding:16px;">請先在 ⚙️ API設定 填入 Groq API Key</div>';return;}
+  el.innerHTML='<div style="text-align:center;padding:24px;"><div style="font-size:28px;animation:pulse-s 1.5s infinite;">✨</div><div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:8px;">分析中…</div></div>';
+  const rf=rfToday();const{stamina,endTime}=getEffective();
+  const prompt=`你是整合健康顧問。分析多維度身心數據：睡眠${MOCK.sleep.dur}（品質${MOCK.sleep.q}%），情緒${MOCK.mental.score}/10（${MOCK.mental.trend}），戰力${stamina}%，任務${MOCK.opt.done}/${MOCK.opt.total}，續航至${endTime}，咖啡${rf.coffee}杯，水${rf.water}ml。\n請全程使用繁體中文，嚴禁夾雜英文或其他語言詞彙。語氣溫暖，每段2-3句：\n1. 🔗 數據間的關聯性\n2. ⚡ 能量管理評估\n3. 🎯 三個具體行動建議\n4. 💬 今天一句話`;
+  try{
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
+    if(!resp.ok)throw new Error('API '+resp.status);
+    const result=await resp.json();
+    el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${result.choices?.[0]?.message?.content||'（無回應）'}</div></div>`;
+  }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${e.message}</div>`;}
+}
+
+// ── GIST SYNC ──
+let _syncMsgT=null;
+function showSyncMsg(txt,isErr=false){
+  const el=document.getElementById('sync-msg');
+  if(!el)return;
+  if(_syncMsgT)clearTimeout(_syncMsgT);
+  el.textContent=txt;
+  el.style.background=isErr?'rgba(168,120,104,.92)':'rgba(40,38,32,.82)';
+  el.classList.add('show');
+}
+function hideSyncMsg(delay=2800){
+  _syncMsgT=setTimeout(()=>{
+    const el=document.getElementById('sync-msg');
+    if(el)el.classList.remove('show');
+  },delay);
+}
+async function syncUpload(){
+  const pat=localStorage.getItem('gh_pat')||'';
+  const gid=localStorage.getItem('gist_id')||'';
+  if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
+  const btn=document.getElementById('sync-up');
+  if(btn)btn.textContent='…';
+  showSyncMsg('上傳中…');
+  try{
+    const SKIP_KEYS=['gh_pat','gist_id','tina_groq','groq_key','groq_api_key','wordvault_groq_key','notion_token','do_gist_token','do_gist_id','wordvault_gist_token','wordvault_gist_id','gist_token','gist_id'];
+    const PAT_RE=/ghp_[A-Za-z0-9]{10,}|ghs_[A-Za-z0-9]{10,}|github_pat_[A-Za-z0-9_]{10,}|gsk_[A-Za-z0-9]{10,}/;
+    const snap={};
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(SKIP_KEYS.includes(k)||k.startsWith('gsk_'))continue;
+      const v=localStorage.getItem(k)||'';
+      if(PAT_RE.test(v))continue;
+      snap[k]=v;
+    }
+    const r=await fetch('https://api.github.com/gists/'+gid,{
+      method:'PATCH',
+      headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      body:JSON.stringify({files:{'cc_sync.json':{content:JSON.stringify(snap)}}})
+    });
+    if(!r.ok){
+      let msg='GitHub '+r.status;
+      if(r.status===403){let b={};try{b=await r.json();}catch(_){}msg='403：PAT 請使用 Classic token 並勾選 gist scope（不支援 fine-grained token）。'+(b.message?b.message:'');}
+      else if(r.status===404){msg='404：Gist ID 不存在或不屬於此帳號';}
+      else if(r.status===401){msg='401：PAT 無效或已過期';}
+      throw new Error(msg);
+    }
+    showSyncMsg('✓ 上傳完成（共 '+Object.keys(snap).length+' 個 key）');
+    hideSyncMsg();
+    if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='↑';},1500);}
+  }catch(e){
+    console.error('[Sync] upload error',e);
+    showSyncMsg('✗ '+e.message,true);
+    hideSyncMsg(3500);
+    if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↑';},1500);}
+  }
+}
+async function syncDownload(){
+  const pat=(localStorage.getItem('gh_pat')||'').trim();
+  const gid=(localStorage.getItem('gist_id')||'').replace(/\s/g,'');
+  if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
+  if(!/^[a-f0-9]{20,}$/i.test(gid)){showSyncMsg('Gist ID 格式錯誤（'+gid.slice(0,8)+'…），請重新貼上',true);hideSyncMsg(4000);return;}
+  const btn=document.getElementById('sync-dn');
+  if(btn)btn.textContent='…';
+  showSyncMsg('連線 Gist 中…');
+  try{
+    let r;
+    try{r=await fetch('https://api.github.com/gists/'+gid,{headers:{'Authorization':'Bearer '+pat}});}
+    catch(fe){throw new Error('網路錯誤 '+fe.message);}
+    if(!r.ok)throw new Error('GitHub '+r.status+(r.status===401?' (PAT無效)':r.status===404?' (Gist ID錯誤)':''));
+    const j=await r.json();
+    const fileData=j.files?.['cc_sync.json'];
+    if(!fileData)throw new Error('Gist 內找不到 cc_sync.json');
+    showSyncMsg('還原資料中…');
+    let content=fileData.content;
+    if(fileData.truncated){
+      let rawR;
+      try{rawR=await fetch(fileData.raw_url);}
+      catch(fe){throw new Error('讀取完整內容失敗 '+fe.message);}
+      if(!rawR.ok)throw new Error('raw 內容取得失敗 '+rawR.status);
+      content=await rawR.text();
+    }
+    let snap;
+    try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤：'+e.message);}
+    if(!snap||typeof snap!=='object'||Array.isArray(snap))throw new Error('資料結構錯誤，請重新 Upload');
+    for(const[k,v] of Object.entries(snap)){if(v!=null)localStorage.setItem(k,v);}
+    showSyncMsg('✓ 下載完成，重新載入中…');
+    if(btn)btn.textContent='✓';
+    setTimeout(()=>window.location.reload(),800);
+  }catch(e){
+    console.error('[Sync] download error',e);
+    showSyncMsg('✗ 下載失敗：'+e.message+(e.name?'['+e.name+']':''),true);
+    hideSyncMsg(3500);
+    if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↓';},1500);}
+  }
+}
+
+// ── INIT ──
+loadWP();
+tick();setInterval(tick,1000);
+checkGuard();setInterval(checkGuard,30000);
+updateUnsetFlags();
+initLiveData();
+document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});
 </script>
 </body>
 </html>
