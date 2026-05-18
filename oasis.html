@@ -225,7 +225,8 @@ function saveStatus(){
 }
 window.getOasisStatus=()=>{try{return JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{return null;}};
 
-let curTab='discover',curKw=null,savedFilter='all',discoverOlOnly=false;
+let curTab='discover',curKw=null,savedFilter='all',discoverFilter=null;
+// discoverFilter: null | 'ol' | 'country:X' | 'author:X'
 const fetching=new Set();
 
 // ── ROUTING ──
@@ -328,9 +329,26 @@ function buildDiscover(){
   const savedKeys=new Set(S.saved.map(s=>`${s.title}|${s.author}`));
   const unsaved=cards.filter(c=>!savedKeys.has(`${c.title}|${c.author}`));
 
+  // 篩選選項來源
   const hasOl=unsaved.some(c=>c.olUrl);
-  if(discoverOlOnly&&!hasOl) discoverOlOnly=false;
-  const displayed=discoverOlOnly?unsaved.filter(c=>c.olUrl):unsaved;
+  const countries=[...new Set(unsaved.map(c=>c.country).filter(Boolean))];
+  const favAuthors=S.authors;
+  const matchedAuthors=favAuthors.filter(a=>
+    unsaved.some(c=>c.author===a.name||c.author_zh===a.name_zh||c.author===a.name_zh||c.author_zh===a.name)
+  );
+
+  // 套用篩選
+  let displayed=unsaved;
+  if(discoverFilter==='ol') displayed=unsaved.filter(c=>c.olUrl);
+  else if(discoverFilter?.startsWith('country:')){
+    const co=discoverFilter.slice(8);
+    displayed=unsaved.filter(c=>c.country===co);
+  } else if(discoverFilter?.startsWith('author:')){
+    const ak=discoverFilter.slice(7);
+    displayed=unsaved.filter(c=>c.author===ak||c.author_zh===ak);
+  }
+  // 若篩選後無結果（換分頁後），自動重置
+  if(discoverFilter&&!displayed.length&&unsaved.length) discoverFilter=null,displayed=unsaved;
 
   let cardsHtml='';
   if(isLoading){
@@ -349,17 +367,20 @@ function buildDiscover(){
     </div>`;
   } else if(!displayed.length){
     cardsHtml=`<div class="empty">
-      <div class="empty-icon">📖</div>
-      <div class="empty-msg">本批次無 Open Library 已驗證的項目</div>
-      <div class="empty-sub">取消篩選可查看全部，或重新探索</div>
+      <div class="empty-icon">🔍</div>
+      <div class="empty-msg">此篩選條件下無符合項目</div>
+      <div class="empty-sub">點擊篩選標籤取消選取</div>
     </div>`;
   } else {
     cardsHtml=displayed.map(c=>buildCard(c)).join('');
   }
 
-  const olFilterRow=hasOl?`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
-    <span style="font-size:11px;color:var(--faint);">#</span>
-    <div class="filter-pill${discoverOlOnly?' on':''}" onclick="toggleDiscoverOl()">📖 OpenLibrary</div>
+  // 篩選列（有任何可篩選選項就顯示）
+  const hasFilters=hasOl||countries.length||matchedAuthors.length;
+  const filterRow=hasFilters&&!isLoading?`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+    ${hasOl?`<div class="filter-pill${discoverFilter==='ol'?' on':''}" onclick="setDiscoverFilter('ol')">📖 OpenLibrary</div>`:''}
+    ${countries.map(co=>`<div class="filter-pill${discoverFilter==='country:'+co?' on':''}" onclick="setDiscoverFilter('country:${esc(co)}')">${esc(co)}</div>`).join('')}
+    ${matchedAuthors.map(a=>{const k=a.name||a.name_zh,lbl=a.name_zh||a.name;return`<div class="filter-pill${discoverFilter==='author:'+k?' on':''}" onclick="setDiscoverFilter('author:${esc(k)}')">${esc(lbl)}</div>`;}).join('')}
   </div>`:'';
 
   return `
@@ -370,12 +391,12 @@ function buildDiscover(){
         ${isLoading?'⏳ 探索中…':'🔄 重新探索'}
       </button>
     </div>
-    ${olFilterRow}
+    ${filterRow}
     <div id="cards-area">${cardsHtml}</div>`;
 }
 
-function selectKw(k){curKw=k;discoverOlOnly=false;render();}
-function toggleDiscoverOl(){discoverOlOnly=!discoverOlOnly;render();}
+function selectKw(k){curKw=k;render();}
+function setDiscoverFilter(f){discoverFilter=discoverFilter===f?null:f;render();}
 
 // ── SAVED ──
 function buildSaved(){
