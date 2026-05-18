@@ -312,6 +312,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   /* Sync pill: raise above iOS gesture zone */
   #sync-pill{bottom:calc(22px + env(safe-area-inset-bottom,34px))!important;}
 
+  /* Sync message: center bottom row, bottom edge aligned with pill buttons */
+  #sync-msg{
+    left:50%!important;
+    bottom:calc(22px + env(safe-area-inset-bottom,34px))!important;
+    transform:translateX(-50%) translateY(6px)!important;
+    max-width:55vw;white-space:normal;text-align:center;z-index:501!important;
+  }
+  #sync-msg.show{transform:translateX(-50%) translateY(0)!important;}
+
   /* Header: in document flow */
   #header{
     position:relative;top:auto;left:auto;right:auto;
