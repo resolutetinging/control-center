@@ -290,10 +290,14 @@ function buildCard(c){
   const tagsHtml=(c.tags||[]).length
     ?`<div class="card-tags">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
 
+  // 來源查核連結（Google 搜尋，比 LLM 提供的 URL 更可靠）
+  const searchQ=encodeURIComponent(`"${c.title||''}" ${c.author||''}`);
+  const verifyHtml=`<div style="margin-top:8px;"><a href="https://www.google.com/search?q=${searchQ}" target="_blank" rel="noopener" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">🔍 查核來源</a></div>`;
+
   return `<div class="card">
     <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
       title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
-    ${countryHtml}${quoteHtml}${transHtml}${metaOrigHtml}${metaZhHtml}${tagsHtml}
+    ${countryHtml}${quoteHtml}${transHtml}${metaOrigHtml}${metaZhHtml}${tagsHtml}${verifyHtml}
   </div>`;
 }
 
@@ -318,17 +322,27 @@ function buildDiscover(){
   const ago=lastTs?timeSince(lastTs):'從未取得';
   const isLoading=fetching.has(curKw);
 
+  // 過濾已收藏的項目（以 title+author 為 key，避免重複探索）
+  const savedKeys=new Set(S.saved.map(s=>`${s.title}|${s.author}`));
+  const unsaved=cards.filter(c=>!savedKeys.has(`${c.title}|${c.author}`));
+
   let cardsHtml='';
   if(isLoading){
     cardsHtml=`<div class="loading"><div class="spinner"></div><br>正在探索「${esc(curKw)}」…</div>`;
-  } else if(!cards.length){
+  } else if(!unsaved.length&&!cards.length){
     cardsHtml=`<div class="empty">
       <div class="empty-icon">📚</div>
       <div class="empty-msg">尚無「${esc(curKw)}」的探索結果</div>
       <div class="empty-sub">按右上角開始探索</div>
     </div>`;
+  } else if(!unsaved.length){
+    cardsHtml=`<div class="empty">
+      <div class="empty-icon">🌿</div>
+      <div class="empty-msg">此關鍵字的探索結果都已收藏</div>
+      <div class="empty-sub">按「重新探索」取得新內容</div>
+    </div>`;
   } else {
-    cardsHtml=cards.map(c=>buildCard(c)).join('');
+    cardsHtml=unsaved.map(c=>buildCard(c)).join('');
   }
 
   return `
