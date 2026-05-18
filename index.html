@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Control Center ✦</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -261,7 +261,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 /* ── Sync Pill ── */
 #sync-pill{
-  position:fixed;bottom:18px;left:18px;z-index:50;
+  position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:18px;z-index:50;
   display:flex;align-items:center;gap:2px;padding:6px 10px;
   border-radius:100px;
   background:rgba(244,241,236,.82);border:1px solid var(--bstr);
@@ -274,6 +274,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   width:22px;height:22px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s;padding:0;line-height:1;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
 }
 #sync-pill button:hover{background:rgba(40,38,32,.08);color:var(--ink);}
 #sync-sep{width:.5px;height:14px;background:var(--bstr);margin:0 2px;flex-shrink:0;}
@@ -307,6 +308,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
   }
   #guard-pill,#settings-btn,#sync-pill{background:rgba(244,241,236,.96)!important;}
+
+  /* Sync pill: raise above home indicator, larger touch targets */
+  #sync-pill{bottom:calc(22px + env(safe-area-inset-bottom,34px))!important;}
+  #sync-pill button{width:44px!important;height:44px!important;font-size:18px!important;}
 
   /* Header: in document flow */
   #header{
