@@ -225,8 +225,8 @@ function saveStatus(){
 }
 window.getOasisStatus=()=>{try{return JSON.parse(localStorage.getItem('oasis_status')||'null');}catch{return null;}};
 
-let curTab='discover',curKw=null,savedFilter='all',discoverFilter=null;
-// discoverFilter: null | 'ol' | 'country:X' | 'author:X'
+let curTab='discover',curKw=null,savedFilter='all',savedFilter2=null,discoverFilter=null;
+// discoverFilter / savedFilter2: null | 'ol' | 'country:X' | 'author:X'
 const fetching=new Set();
 
 // ── ROUTING ──
@@ -412,7 +412,30 @@ function buildSaved(){
   const filters=allTags.map(t=>
     `<div class="filter-pill${t===savedFilter?' on':''}" onclick="setSavedFilter('${esc(t)}')">${t==='all'?'全部':esc(t)}</div>`
   ).join('');
-  const show=savedFilter==='all'?items:items.filter(i=>(i.tags||[]).includes(savedFilter));
+
+  // 套用關鍵字標籤篩選
+  const tagFiltered=savedFilter==='all'?items:items.filter(i=>(i.tags||[]).includes(savedFilter));
+
+  // 第二列篩選選項（OL / 國別 / 喜愛作家）
+  const hasOl=tagFiltered.some(c=>c.olUrl);
+  const countries=[...new Set(tagFiltered.map(c=>c.country).filter(Boolean))];
+  const matchedAuthors=S.authors.filter(a=>
+    tagFiltered.some(c=>c.author===a.name||c.author_zh===a.name_zh||c.author===a.name_zh||c.author_zh===a.name)
+  );
+  const hasFilter2=hasOl||countries.length||matchedAuthors.length;
+
+  // 套用第二層篩選
+  let show=tagFiltered;
+  if(savedFilter2==='ol') show=tagFiltered.filter(c=>c.olUrl);
+  else if(savedFilter2?.startsWith('country:')){const co=savedFilter2.slice(8);show=tagFiltered.filter(c=>c.country===co);}
+  else if(savedFilter2?.startsWith('author:')){const ak=savedFilter2.slice(7);show=tagFiltered.filter(c=>c.author===ak||c.author_zh===ak);}
+  if(savedFilter2&&!show.length&&tagFiltered.length){savedFilter2=null;show=tagFiltered;}
+
+  const filter2Row=hasFilter2?`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+    ${hasOl?`<div class="filter-pill${savedFilter2==='ol'?' on':''}" onclick="setSavedFilter2('ol')">📖 OpenLibrary</div>`:''}
+    ${countries.map(co=>`<div class="filter-pill${savedFilter2==='country:'+co?' on':''}" onclick="setSavedFilter2('country:${esc(co)}')">${esc(co)}</div>`).join('')}
+    ${matchedAuthors.map(a=>{const k=a.name||a.name_zh,lbl=a.name_zh||a.name;return`<div class="filter-pill${savedFilter2==='author:'+k?' on':''}" onclick="setSavedFilter2('author:${esc(k)}')">${esc(lbl)}</div>`;}).join('')}
+  </div>`:'';
 
   return `
     <div class="stat-row">
@@ -420,10 +443,12 @@ function buildSaved(){
       ${show.length!==items.length?`<div class="stat-chip">篩選：<strong>${show.length}</strong> 篇</div>`:''}
     </div>
     <div class="saved-filter">${filters}</div>
-    ${show.map(c=>buildCard(c)).join('')||`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">此標籤下無收藏</div></div>`}`;
+    ${filter2Row}
+    ${show.map(c=>buildCard(c)).join('')||`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">此篩選條件下無收藏</div></div>`}`;
 }
 
-function setSavedFilter(t){savedFilter=t;render();}
+function setSavedFilter(t){savedFilter=t;savedFilter2=null;render();}
+function setSavedFilter2(f){savedFilter2=savedFilter2===f?null:f;render();}
 
 // ── SETTINGS ──
 function buildSettings(){
