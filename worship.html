@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⛩️ Worship</title>
+<style>
+:root{
+  --bg:#14121C;--bg2:#1C1929;--bg3:#252236;
+  --border:rgba(255,255,255,.08);
+  --ink:#EAE6F2;--sub:#A898C0;--faint:#685E80;
+  --temple:#8B6DBE;--temple-l:#B49FD8;--temple-tint:rgba(139,109,190,.13);
+  --gold:#C9A84C;--gold-l:#E4C87A;--gold-tint:rgba(201,168,76,.13);
+  --ok:#5AC98A;--warn:#E4A94A;--danger:#E05A5A;
+  --r:12px;--rsm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
+.app{max-width:720px;margin:0 auto;padding:1rem;display:flex;flex-direction:column;gap:1rem;}
+header{display:flex;align-items:center;gap:.5rem;padding:.4rem 0 .1rem;font-size:1.15rem;font-weight:700;color:var(--temple-l);letter-spacing:.02em;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;}
+.sec-lbl{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:.7rem;display:flex;align-items:center;justify-content:space-between;}
+.sep{border:none;border-top:1px solid var(--border);margin:1rem 0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 2fr;gap:.6rem;}
+label.lbl{font-size:.73rem;color:var(--sub);display:block;margin-bottom:.3rem;}
+input[type=text],input[type=date],input[type=time],input[type=number],textarea,select{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);
+  color:var(--ink);font-size:.88rem;padding:.48rem .7rem;outline:none;
+  transition:border-color .15s;font-family:inherit;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--temple);}
+textarea{resize:vertical;min-height:60px;line-height:1.5;}
+.fg{display:flex;flex-direction:column;}
+
+/* Toggle switch */
+.toggle-row{display:flex;align-items:center;gap:.55rem;cursor:pointer;user-select:none;}
+.toggle-lbl{font-size:.9rem;color:var(--ink);font-weight:500;}
+.toggle{position:relative;width:40px;height:22px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;transition:background .2s,border-color .2s;flex-shrink:0;}
+.toggle.on{background:var(--temple);border-color:var(--temple);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.toggle.on::after{transform:translateX(18px);}
+
+/* Slip section */
+.slip-section{margin-top:1rem;display:none;}
+.tab-row{display:flex;gap:.4rem;margin-bottom:.8rem;}
+.tab{padding:.32rem .8rem;border-radius:var(--rsm);font-size:.78rem;font-weight:600;cursor:pointer;background:var(--bg3);color:var(--sub);border:1px solid var(--border);transition:all .15s;}
+.tab.active{background:var(--temple-tint);color:var(--temple-l);border-color:var(--temple);}
+.slip-panel{display:none;}
+.slip-panel.active{display:block;}
+.fetch-row{display:flex;gap:.5rem;align-items:flex-end;}
+.fetch-row .fg{flex:1;}
+
+/* Photo drop */
+.photo-drop{border:1.5px dashed var(--border);border-radius:var(--rsm);padding:1.3rem;text-align:center;color:var(--faint);cursor:pointer;transition:border-color .2s;display:block;}
+.photo-drop:hover,.photo-drop.drag-over{border-color:var(--temple);color:var(--temple-l);}
+.photo-hint{font-size:.82rem;margin-bottom:.3rem;}
+.photo-preview{max-width:100%;border-radius:var(--rsm);margin-top:.7rem;display:none;object-fit:contain;max-height:220px;}
+
+/* Poem box */
+.poem-box{background:var(--gold-tint);border:1px solid rgba(201,168,76,.22);border-radius:var(--rsm);padding:.9rem 1rem;margin-top:.8rem;display:none;}
+.poem-num{font-size:.63rem;color:var(--gold);font-weight:700;letter-spacing:.09em;margin-bottom:.4rem;}
+.poem-text{font-size:.95rem;line-height:2;color:var(--gold-l);font-weight:500;white-space:pre-line;}
+.poem-meaning{font-size:.8rem;color:var(--sub);margin-top:.5rem;line-height:1.6;border-top:1px solid rgba(201,168,76,.15);padding-top:.5rem;}
+
+/* AI result */
+.ai-card{background:var(--temple-tint);border:1px solid rgba(139,109,190,.2);border-radius:var(--rsm);padding:1rem;margin-top:.8rem;display:none;}
+.ai-layer{margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid rgba(255,255,255,.06);}
+.ai-layer:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.ai-layer-title{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--temple-l);margin-bottom:.4rem;}
+.ai-layer-body{font-size:.85rem;line-height:1.72;color:var(--ink);}
+
+/* Buttons */
+.btn{padding:.48rem 1rem;border-radius:var(--rsm);font-size:.84rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap;}
+.btn-temple{background:var(--temple);color:#fff;}
+.btn-temple:hover{background:var(--temple-l);}
+.btn-temple:disabled{opacity:.5;cursor:not-allowed;}
+.btn-gold{background:var(--gold);color:#1a1200;font-weight:700;}
+.btn-gold:hover{background:var(--gold-l);}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-outline:hover{border-color:var(--temple);color:var(--temple-l);}
+.save-row{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem;}
+
+/* Spinner */
+.sp{display:none;width:13px;height:13px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Timeline */
+.cat-bar{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;}
+.cat-sel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);color:var(--ink);font-size:.84rem;padding:.38rem .65rem;outline:none;cursor:pointer;}
+.cat-sel:focus{border-color:var(--temple);}
+.timeline{display:flex;flex-direction:column;position:relative;}
+.timeline::before{content:'';position:absolute;left:7px;top:14px;bottom:14px;width:1.5px;background:linear-gradient(to bottom,var(--temple),transparent);border-radius:1px;}
+.tl-node{display:flex;gap:.85rem;padding-bottom:1.4rem;position:relative;}
+.tl-node:last-child{padding-bottom:0;}
+.tl-dot{width:15px;height:15px;border-radius:50%;background:var(--temple);border:2.5px solid var(--bg2);flex-shrink:0;margin-top:2px;box-shadow:0 0 0 3px var(--temple-tint);z-index:1;}
+.tl-content{flex:1;min-width:0;}
+.tl-meta{font-size:.7rem;color:var(--faint);font-weight:600;margin-bottom:.2rem;}
+.tl-temple{font-size:.88rem;font-weight:700;color:var(--temple-l);margin-bottom:.3rem;}
+.tl-report{font-size:.82rem;color:var(--sub);line-height:1.6;margin-bottom:.4rem;}
+.tl-slip{background:var(--gold-tint);border:1px solid rgba(201,168,76,.18);border-radius:6px;padding:.55rem .75rem;font-size:.8rem;color:var(--sub);line-height:1.6;}
+.tl-q{font-size:.77rem;color:var(--faint);font-style:italic;margin-bottom:.25rem;}
+.tl-slip-num{font-size:.78rem;color:var(--gold);font-weight:600;margin-bottom:.15rem;}
+.tl-poem{font-size:.77rem;color:var(--sub);margin-bottom:.3rem;}
+.tl-ai3{font-size:.82rem;color:var(--ink);line-height:1.65;margin-top:.4rem;display:none;}
+.tl-expand{font-size:.73rem;color:var(--temple);cursor:pointer;margin-top:.3rem;font-weight:500;}
+.tl-expand:hover{text-decoration:underline;}
+
+/* History */
+.hist-item{border-bottom:1px solid var(--border);padding:.65rem 0;cursor:default;}
+.hist-item:last-child{border-bottom:none;}
+.hist-top{display:flex;justify-content:space-between;align-items:center;}
+.hist-temple{font-weight:600;font-size:.87rem;}
+.hist-date{font-size:.72rem;color:var(--faint);}
+.hist-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem;}
+.hist-tag{font-size:.65rem;padding:.13rem .42rem;border-radius:20px;background:var(--bg3);color:var(--sub);}
+.hist-slip-badge{font-size:.65rem;padding:.13rem .42rem;border-radius:20px;background:var(--gold-tint);color:var(--gold);border:1px solid rgba(201,168,76,.2);}
+.hist-del{font-size:.7rem;color:var(--faint);cursor:pointer;padding:.18rem .4rem;border-radius:4px;border:1px solid transparent;transition:all .15s;}
+.hist-del:hover{color:var(--danger);border-color:var(--danger);}
+.empty{text-align:center;color:var(--faint);padding:2rem;font-size:.84rem;}
+</style>
+</head>
+<body>
+<div class="app">
+<header>⛩️ Worship</header>
+
+<!-- ── 新增紀錄 ── -->
+<div class="card">
+  <div class="sec-lbl">
+    <span>新增參拜紀錄</span>
+    <button class="btn btn-outline" style="font-size:.72rem;padding:.22rem .6rem" onclick="loadLastReports()">沿用上次交代事項</button>
+  </div>
+  <div class="grid3">
+    <div class="fg"><label class="lbl">日期</label><input type="date" id="inp-date"></div>
+    <div class="fg"><label class="lbl">時間</label><input type="time" id="inp-time"></div>
+    <div class="fg"><label class="lbl">廟宇名稱</label><input type="text" id="inp-temple" placeholder="行天宮、龍山寺…"></div>
+  </div>
+
+  <hr class="sep">
+  <div class="sec-lbl"><span>近期交代事項</span></div>
+  <div class="grid2">
+    <div class="fg"><label class="lbl">正職</label><textarea id="rpt-work" placeholder="工作現況、待解問題…" rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">副業</label><textarea id="rpt-side" placeholder="副業進展、計畫…" rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">健康</label><textarea id="rpt-health" placeholder="近期健康狀況…" rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">財務</label><textarea id="rpt-finance" placeholder="財務狀態、目標…" rows="2"></textarea></div>
+  </div>
+  <div class="fg" style="margin-top:.6rem">
+    <label class="lbl">家務</label>
+    <textarea id="rpt-chores" placeholder="家務或生活事務…" rows="2"></textarea>
+  </div>
+
+  <hr class="sep">
+  <!-- 賜籤開關 -->
+  <div class="toggle-row" onclick="toggleSlip()">
+    <div class="toggle" id="slip-toggle"></div>
+    <span class="toggle-lbl">賜籤紀錄</span>
+  </div>
+
+  <div class="slip-section" id="slip-section">
+    <div class="tab-row" style="margin-top:.9rem">
+      <div class="tab active" id="tab-num" onclick="setSlipTab('num')">🔢 籤號帶入</div>
+      <div class="tab" id="tab-photo" onclick="setSlipTab('photo')">📸 照片辨識</div>
+    </div>
+
+    <!-- 數字流 -->
+    <div class="slip-panel active" id="panel-num">
+      <div class="fetch-row">
+        <div class="fg"><label class="lbl">籤號</label><input type="number" id="slip-num" min="1" max="100" placeholder="例：42" style="width:100px"></div>
+        <button class="btn btn-temple" id="fetch-btn" onclick="fetchSlipByNumber()" style="margin-bottom:.05rem">
+          <span class="sp" id="fetch-sp"></span>自動帶入
+        </button>
+      </div>
+    </div>
+
+    <!-- 照片流 -->
+    <div class="slip-panel" id="panel-photo">
+      <label class="photo-drop" for="photo-input" id="photo-drop">
+        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+        <div class="photo-hint" id="photo-hint">📸 點擊選取或拖曳上傳籤詩照片</div>
+        <img id="photo-preview" class="photo-preview">
+      </label>
+      <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+        <button class="btn btn-temple" id="photo-btn" onclick="analyzePhoto()" style="display:none">
+          <span class="sp" id="photo-sp"></span>AI 辨識照片
+        </button>
+      </div>
+    </div>
+
+    <!-- 籤詩顯示 -->
+    <div class="poem-box" id="poem-box">
+      <div class="poem-num" id="poem-num-lbl"></div>
+      <div class="poem-text" id="poem-text"></div>
+      <div class="poem-meaning" id="poem-meaning"></div>
+    </div>
+
+    <!-- 求籤問題 -->
+    <div class="fg" style="margin-top:.8rem">
+      <label class="lbl">求籤問題</label>
+      <textarea id="slip-question" placeholder="這次求籤想詢問的問題…" rows="2"></textarea>
+    </div>
+
+    <!-- 三階解析 -->
+    <div style="margin-top:.6rem">
+      <button class="btn btn-gold" id="analyze-btn" onclick="analyzeSlip()" style="width:100%;justify-content:center">
+        <span class="sp" id="analyze-sp" style="border-top-color:#1a1200"></span>⚡ AI 三階解析
+      </button>
+    </div>
+    <div class="ai-card" id="ai-result"></div>
+  </div>
+
+  <div class="save-row">
+    <button class="btn btn-outline" onclick="clearForm()">清除</button>
+    <button class="btn btn-temple" onclick="saveEntry()">儲存紀錄</button>
+  </div>
+</div>
+
+<!-- ── 分類時間軸 ── -->
+<div class="card" id="timeline-card" style="display:none">
+  <div class="cat-bar">
+    <div class="sec-lbl" style="margin:0">分類時間軸</div>
+    <select class="cat-sel" id="cat-select" onchange="renderTimeline()">
+      <option value="work">正職</option>
+      <option value="side">副業</option>
+      <option value="health">健康</option>
+      <option value="finance">財務</option>
+      <option value="chores">家務</option>
+    </select>
+  </div>
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<!-- ── 歷史紀錄 ── -->
+<div class="card">
+  <div class="sec-lbl"><span>歷史紀錄</span></div>
+  <div id="history"></div>
+</div>
+</div>
+
+<script>
+const WP_KEY='worship_v1', GROQ_STORE='tina_groq';
+const TEXT_MDL='llama-3.1-8b-instant', VIS_MDL='meta-llama/llama-4-scout-17b-16e-instruct';
+const CAT_LABELS={work:'正職',side:'副業',health:'健康',finance:'財務',chores:'家務'};
+
+var slipOn=false,slipTab='num',photoB64=null,curSlip=null,aiRaw=null,editId=null;
+
+function $(id){return document.getElementById(id);}
+function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function loadWP(){try{return JSON.parse(localStorage.getItem(WP_KEY)||'null')||{entries:[]};}catch{return{entries:[]};}}
+function saveWP(d){localStorage.setItem(WP_KEY,JSON.stringify(d));}
+
+// ── Toggle & Tabs ──
+function toggleSlip(){
+  slipOn=!slipOn;
+  slipOn?$('slip-toggle').classList.add('on'):$('slip-toggle').classList.remove('on');
+  $('slip-section').style.display=slipOn?'block':'none';
+}
+function setSlipTab(t){
+  slipTab=t;
+  ['num','photo'].forEach(function(k){
+    $(('tab-'+k)).classList.toggle('active',k===t);
+    $('panel-'+k).classList.toggle('active',k===t);
+    $('panel-'+k).style.display=k===t?'block':'none';
+  });
+}
+
+// ── Photo ──
+function handlePhotoSelect(e){if(e.target.files[0])readPhoto(e.target.files[0]);}
+function readPhoto(file){
+  var r=new FileReader();
+  r.onload=function(ev){
+    photoB64=ev.target.result;
+    $('photo-preview').src=photoB64;$('photo-preview').style.display='block';
+    $('photo-hint').textContent='✓ 照片已選取，點擊更換';
+    $('photo-btn').style.display='inline-flex';
+  };
+  r.readAsDataURL(file);
+}
+(function(){
+  var drop=$('photo-drop');
+  drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('drag-over');});
+  drop.addEventListener('dragleave',function(){drop.classList.remove('drag-over');});
+  drop.addEventListener('drop',function(e){
+    e.preventDefault();drop.classList.remove('drag-over');
+    var f=e.dataTransfer.files[0];
+    if(f&&f.type.startsWith('image/'))readPhoto(f);
+  });
+})();
+
+// ── Groq ──
+async function groqCall(messages,model,maxTokens){
+  var key=localStorage.getItem(GROQ_STORE)||'';
+  if(!key)throw new Error('找不到 Groq API Key（localStorage: tina_groq）');
+  var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:model,messages:messages,max_tokens:maxTokens,temperature:0.5})
+  });
+  var txt=await res.text();var d;
+  try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
+  if(d.choices&&d.choices[0])return d.choices[0].message.content;
+  throw new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
+}
+
+// ── 籤號帶入 ──
+async function fetchSlipByNumber(){
+  var num=parseInt($('slip-num').value);
+  var temple=$('inp-temple').value.trim();
+  if(!num||num<1)return alert('請輸入籤號');
+  if(!temple)return alert('請先填寫廟宇名稱');
+  var btn=$('fetch-btn'),sp=$('fetch-sp');
+  btn.disabled=true;sp.style.display='block';
+  try{
+    var r=await groqCall([
+      {role:'system',content:'你是台灣廟宇籤詩資料庫，熟悉各大廟宇籤詩傳統。回應格式嚴格依照：\n【籤詩】\n（四句，每句一行）\n【意涵】\n（白話意涵，1-2句）'},
+      {role:'user',content:'廟宇：'+temple+'，籤號：第'+num+'籤。請提供此籤的籤詩原文與基本意涵。若非知名廟宇籤，請依傳統籤詩格式生成符合該籤號吉凶傳統的內容，並說明這是 AI 參考生成。'}
+    ],TEXT_MDL,400);
+    var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=【意涵】|$)/);
+    var mm=r.match(/【意涵】\s*([\s\S]+)/);
+    curSlip={number:num,poem:pm?pm[1].trim():r.trim(),basicMeaning:mm?mm[1].trim():''};
+    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning);
+  }catch(e){alert(e.message);}
+  btn.disabled=false;sp.style.display='none';
+}
+
+// ── 照片辨識 ──
+async function analyzePhoto(){
+  if(!photoB64)return;
+  var temple=$('inp-temple').value.trim()||'廟宇';
+  var btn=$('photo-btn'),sp=$('photo-sp');
+  btn.disabled=true;sp.style.display='block';
+  try{
+    var r=await groqCall([{role:'user',content:[
+      {type:'image_url',image_url:{url:photoB64}},
+      {type:'text',text:'這是一張'+temple+'籤詩照片。請辨識並回傳：\n【籤號】\n（數字或未知）\n【籤詩】\n（完整原文，逐句）\n【意涵】\n（白話意涵）\n若部分看不清楚，請標注（？）並盡力辨識。'}
+    ]}],VIS_MDL,600);
+    var nm=r.match(/【籤號】\s*([^\n]+)/);
+    var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=【意涵】|$)/);
+    var mm=r.match(/【意涵】\s*([\s\S]+)/);
+    var num=nm?nm[1].trim().replace(/第|籤/g,'').trim():'?';
+    curSlip={number:num,poem:pm?pm[1].trim():'',basicMeaning:mm?mm[1].trim():'',photoData:photoB64};
+    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning);
+  }catch(e){alert('AI 辨識失敗：'+e.message+'\n可改用籤號帶入後手動對照。');}
+  btn.disabled=false;sp.style.display='none';
+}
+
+function showPoem(temple,num,poem,meaning){
+  $('poem-num-lbl').textContent='⛩ '+temple+' · 第 '+num+' 籤';
+  $('poem-text').textContent=poem;
+  $('poem-meaning').textContent=meaning;
+  $('poem-box').style.display='block';
+}
+
+// ── AI 三階解析 ──
+async function analyzeSlip(){
+  if(!curSlip||!curSlip.poem)return alert('請先取得籤詩內容（籤號帶入或照片辨識）');
+  var temple=$('inp-temple').value.trim()||'廟宇';
+  var question=$('slip-question').value.trim();
+  var rpts={work:$('rpt-work').value.trim(),side:$('rpt-side').value.trim(),health:$('rpt-health').value.trim(),finance:$('rpt-finance').value.trim(),chores:$('rpt-chores').value.trim()};
+  var rptLines=Object.entries({'正職':rpts.work,'副業':rpts.side,'健康':rpts.health,'財務':rpts.finance,'家務':rpts.chores}).filter(function(e){return e[1];}).map(function(e){return'- '+e[0]+'：'+e[1];}).join('\n')||'（未填寫）';
+  var btn=$('analyze-btn'),sp=$('analyze-sp'),res=$('ai-result');
+  btn.disabled=true;sp.style.display='block';
+  res.innerHTML='<span style="color:var(--faint)">AI 解析中…</span>';res.style.display='block';
+  try{
+    var prompt='你是廟宇籤詩解析專家，請以繁體中文提供三層解析。\n\n廟宇：'+temple+'\n籤號：第'+curSlip.number+'籤\n籤詩原文：\n'+curSlip.poem+'\n'+(curSlip.basicMeaning?'基本意涵：'+curSlip.basicMeaning+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n近期交代事項：\n'+rptLines+'\n\n請嚴格依以下格式回覆，各段落不可省略：\n\n## 籤詩意涵\n[白話翻譯與聖意，2-3句，說明這張籤的整體神意]\n\n## 籤意解析\n[單純解讀籤詩含意與運勢走向，不帶入個人問題，3-4句，直白清晰]\n\n## 問題綜合解析\n[嚴格比對求籤問題與近期交代事項，給出客製化深度解答與具體行動建議，4-6句]';
+    var r=await groqCall([
+      {role:'system',content:'你是精通易理與廟宇文化的籤詩解析顧問，分析具體有深度，不說空話，全程繁體中文。'},
+      {role:'user',content:prompt}
+    ],TEXT_MDL,900);
+    aiRaw=r;
+    var secs={};
+    ['籤詩意涵','籤意解析','問題綜合解析'].forEach(function(n){
+      var m=r.match(new RegExp('##\\s*'+n+'\\s*([\\s\\S]+?)(?=##|$)'));
+      secs[n]=m?m[1].trim():'';
+    });
+    res.innerHTML=[
+      {t:'一、籤詩意涵',b:secs['籤詩意涵']},
+      {t:'二、籤意解析',b:secs['籤意解析']},
+      {t:'三、問題綜合解析',b:secs['問題綜合解析']}
+    ].filter(function(s){return s.b;}).map(function(s){
+      return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+s.b.replace(/\n/g,'<br>')+'</div></div>';
+    }).join('');
+  }catch(e){res.innerHTML='<span style="color:var(--danger)">'+e.message+'</span>';}
+  btn.disabled=false;sp.style.display='none';
+}
+
+// ── 儲存 ──
+function saveEntry(){
+  var temple=$('inp-temple').value.trim();
+  if(!temple)return alert('請填寫廟宇名稱');
+  var d=loadWP();
+  var entry={
+    id:editId||('wp_'+Date.now()),
+    date:$('inp-date').value,
+    time:$('inp-time').value,
+    temple:temple,
+    reports:{work:$('rpt-work').value.trim(),side:$('rpt-side').value.trim(),health:$('rpt-health').value.trim(),finance:$('rpt-finance').value.trim(),chores:$('rpt-chores').value.trim()},
+    hasSlip:slipOn,
+    slip:slipOn&&curSlip?{number:curSlip.number,poem:curSlip.poem,basicMeaning:curSlip.basicMeaning,photoData:curSlip.photoData||null,question:$('slip-question').value.trim(),aiRaw:aiRaw||''}:null
+  };
+  if(editId){d.entries=d.entries.map(function(e){return e.id===editId?entry:e;});}
+  else d.entries.push(entry);
+  saveWP(d);
+  localStorage.setItem('worship_last',JSON.stringify({temple:temple,date:entry.date,time:entry.time}));
+  clearForm();renderAll();
+}
+
+function clearForm(){
+  editId=null;
+  var n=new Date();$('inp-date').value=dkey(n);$('inp-time').value=n.toTimeString().slice(0,5);
+  $('inp-temple').value='';
+  ['work','side','health','finance','chores'].forEach(function(k){$('rpt-'+k).value='';});
+  if(slipOn)toggleSlip();slipOn=false;
+  $('slip-toggle').classList.remove('on');$('slip-section').style.display='none';
+  $('slip-num').value='';$('slip-question').value='';
+  photoB64=null;curSlip=null;aiRaw=null;
+  $('poem-box').style.display='none';
+  $('ai-result').style.display='none';$('ai-result').innerHTML='';
+  $('photo-preview').style.display='none';$('photo-preview').src='';
+  $('photo-hint').textContent='📸 點擊選取或拖曳上傳籤詩照片';
+  $('photo-btn').style.display='none';$('photo-input').value='';
+}
+
+function loadLastReports(){
+  var d=loadWP();
+  var last=d.entries.slice().sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);})[0];
+  if(!last||!last.reports)return alert('尚無歷史紀錄可沿用');
+  ['work','side','health','finance','chores'].forEach(function(k){if(last.reports[k])$('rpt-'+k).value=last.reports[k];});
+  if(last.temple&&!$('inp-temple').value)$('inp-temple').value=last.temple;
+}
+
+// ── 分類時間軸 ──
+function renderTimeline(){
+  var cat=$('cat-select').value;
+  var d=loadWP();
+  var rel=d.entries.filter(function(e){return e.reports&&e.reports[cat];}).sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);});
+  $('timeline-card').style.display=rel.length?'block':'none';
+  if(!rel.length){$('timeline').innerHTML='<div class="empty">此分類尚無紀錄</div>';return;}
+  $('timeline').innerHTML=rel.map(function(e,i){
+    var slipHtml='';
+    if(e.hasSlip&&e.slip){
+      var ai3='';
+      if(e.slip.aiRaw){var m=e.slip.aiRaw.match(/##\s*問題綜合解析\s*([\s\S]+?)(?=##|$)/);ai3=m?m[1].trim():'';}
+      slipHtml='<div class="tl-slip">'+(e.slip.question?'<div class="tl-q">「'+e.slip.question+'」</div>':'')+
+        '<div class="tl-slip-num">第 '+e.slip.number+' 籤</div>'+
+        (e.slip.poem?'<div class="tl-poem">'+e.slip.poem.split('\n').slice(0,2).join('　')+(e.slip.poem.split('\n').length>2?'…':'')+'</div>':'')+
+        (ai3?'<div class="tl-ai3" id="ai3-'+i+'">'+ai3.replace(/\n/g,'<br>')+'</div><div class="tl-expand" onclick="toggleAI3('+i+')">▼ 展開綜合解析</div>':'')+
+      '</div>';
+    }
+    return '<div class="tl-node"><div class="tl-dot"></div><div class="tl-content">'+
+      '<div class="tl-meta">'+e.date+(e.time?' '+e.time:'')+'</div>'+
+      '<div class="tl-temple">⛩ '+e.temple+'</div>'+
+      '<div class="tl-report">'+CAT_LABELS[cat]+'：'+e.reports[cat]+'</div>'+
+      slipHtml+'</div></div>';
+  }).join('');
+}
+
+function toggleAI3(i){
+  var el=$('ai3-'+i);if(!el)return;
+  var open=el.style.display==='block';
+  el.style.display=open?'none':'block';
+  var exp=el.nextElementSibling;if(exp)exp.textContent=open?'▼ 展開綜合解析':'▲ 收合解析';
+}
+
+// ── 歷史 ──
+function renderHistory(){
+  var d=loadWP();
+  var entries=d.entries.slice().sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);});
+  if(!entries.length){$('history').innerHTML='<div class="empty">尚無參拜紀錄</div>';return;}
+  $('history').innerHTML=entries.map(function(e){
+    var cats=Object.entries(e.reports||{}).filter(function(r){return r[1];}).map(function(r){return'<span class="hist-tag">'+CAT_LABELS[r[0]]+'</span>';}).join('');
+    var slip=e.hasSlip&&e.slip?'<span class="hist-slip-badge">第 '+e.slip.number+' 籤</span>':'';
+    return '<div class="hist-item">'+
+      '<div class="hist-top"><span class="hist-temple">⛩ '+e.temple+'</span>'+
+      '<div style="display:flex;align-items:center;gap:.4rem">'+
+      '<span class="hist-del" onclick="delEntry(event,\''+e.id+'\')">✕</span>'+
+      '<span class="hist-date">'+e.date+(e.time?' '+e.time:'')+'</span></div></div>'+
+      '<div class="hist-tags">'+cats+slip+'</div></div>';
+  }).join('');
+}
+
+function delEntry(evt,id){
+  evt.stopPropagation();
+  if(!confirm('確定刪除此筆紀錄？'))return;
+  var d=loadWP();d.entries=d.entries.filter(function(e){return e.id!==id;});saveWP(d);renderAll();
+}
+
+function renderAll(){renderHistory();renderTimeline();}
+
+// ── Init ──
+(function(){
+  var n=new Date();$('inp-date').value=dkey(n);$('inp-time').value=n.toTimeString().slice(0,5);
+  setSlipTab('num');renderAll();
+})();
+</script>
+</body>
+</html>

@@ -417,6 +417,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="d-box">🌿</div>
       <span class="d-lbl">Oasis</span>
     </div>
+    <div class="d-icon" data-id="worship" onclick="dClick(this,'worship')">
+      <div class="d-box">⛩️</div>
+      <span class="d-lbl">Worship</span>
+    </div>
   </div>
 </div>
 
@@ -636,6 +640,7 @@ const DEFAULT_LINKS={
   'mentaltool':'notion://www.notion.so',
   'podcast':   'notion://www.notion.so',
   'oasis':     './oasis.html',
+  'worship':   './worship.html',
 };
 function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
@@ -878,6 +883,11 @@ function buildTT(id){
         `<div style="font-size:10.5px;color:var(--faint);">${metaOrig}</div>`+
         (metaZh?`<div style="font-size:10px;color:var(--faint);opacity:.75;">${metaZh}</div>`:'')+
         ((item.tags&&item.tags.length)?hr()+`<div style="font-size:10px;color:var(--faint);">${item.tags.map(t=>'#'+t).join('　')}</div>`:'');
+    }
+    case 'worship':{
+      let wl=null;try{wl=JSON.parse(localStorage.getItem('worship_last')||'null');}catch{}
+      if(!wl)return h('⛩️ Worship')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無參拜紀錄，點擊新增</div>`;
+      return h('⛩️ Worship')+row('最近參拜',wl.temple)+row('日期',wl.date+(wl.time?' '+wl.time:''),'g');
     }
     default:return'';
   }
