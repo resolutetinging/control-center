@@ -772,12 +772,20 @@ function buildTT(id){
     case 'sas-hub':{
       const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
       const pace=LIVE.sleep?.pace??'請先訪問 SAS Hub';
-      // 體能續航：與 SAS Hub 公式完全對齊（Math.floor + :00），從 sas_combat 計算
       const sleepCp=parseInt(localStorage.getItem('sas_combat')||'0')||null;
       const endTime=sleepCp?`${String(Math.floor(8+sleepCp/100*14)).padStart(2,'0')}:00`:null;
       const endColor=sleepCp?(sleepCp>=70?'g':sleepCp>=40?'a':'r'):'';
       const enduranceHtml=endTime?hr()+row('體能續航至',endTime,endColor):'';
-      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`;
+      // 上週回顧摘要（週一顯示，或當週有資料時顯示）
+      let recapHtml='';
+      try{
+        const rc=JSON.parse(localStorage.getItem('sas_weekly_recap')||'null');
+        const isMonday=new Date().getDay()===1;
+        if(rc&&rc.text&&(isMonday||Date.now()-rc.ts<7*86400000)){
+          recapHtml=hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:3px 0;"><span class="tt-k">📋 上週回顧</span><span style="font-size:10.5px;color:var(--ink);line-height:1.55;margin-top:3px;">${rc.text}</span></div>`;
+        }
+      }catch(e){}
+      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`+recapHtml;
     }
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
