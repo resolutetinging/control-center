@@ -842,16 +842,14 @@ function buildTT(id){
       const status=o.rest?'🌿 休假中':'工作中';
       let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a')+hr();
       if(o.tasks&&o.tasks.length){
-        const show=o.tasks.slice(0,6);
         out+=`<div style="display:grid;grid-template-columns:14px 1fr;row-gap:5px;column-gap:7px;padding:2px 0;">`;
-        for(const t of show){
+        for(const t of o.tasks){
           const dn=t.done||false;
           const lbl=(t.text||t.title||t.label||t.content||t.name||'').slice(0,24)||'—';
           out+=`<span style="font-size:10px;color:${dn?'#7d9e85':'#bbb'};text-align:center;line-height:1.5;">${dn?'✓':'○'}</span>`
              +`<span style="font-size:10.5px;color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">${lbl}</span>`;
         }
         out+=`</div>`;
-        if(o.tasks.length>6)out+=`<div style="font-size:10px;color:var(--faint);padding:2px 0 0;text-align:right;">…另有 ${o.tasks.length-6} 項</div>`;
       }
       return out;
     }
@@ -873,8 +871,8 @@ function buildTT(id){
       return h('LinkedIn 求職進度')
         +row('⭐ Saved',li.saved+'個')
         +row('📨 Applied',li.applied+'個','g')
-        +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
         +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'')
+        +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
         +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
     }
     case 'oasis':{
