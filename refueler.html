@@ -184,6 +184,24 @@ body{
 .dd-entry{padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px;color:var(--sub);}
 .dd-entry:last-child{border-bottom:none;}
 
+/* ── Reminder Overlay ── */
+#reminder-overlay{position:fixed;inset:0;z-index:2000;background:rgba(40,38,32,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn .22s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.rm-panel{background:var(--card);border-radius:var(--r);padding:30px 26px 22px;width:min(90vw,360px);box-shadow:var(--shadow-lg);border:.5px solid var(--border);text-align:center;animation:slideUp .22s ease;}
+@keyframes slideUp{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.rm-icon{font-size:50px;line-height:1;margin-bottom:14px;}
+.rm-title{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:9px;}
+.rm-body{font-size:13.5px;color:var(--sub);line-height:1.75;margin-bottom:20px;white-space:pre-line;}
+.rm-progress{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:-8px 0 18px;}
+.rm-progress-bar{height:100%;border-radius:3px;transition:width .4s ease;background:linear-gradient(90deg,var(--water-l),var(--water));}
+.rm-btns{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+.rm-ok{padding:11px 28px;border-radius:100px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--water-l),var(--water));color:#fff;transition:all .18s;}
+.rm-ok:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(74,127,165,.3);}
+.rm-ok.coffee-ok{background:linear-gradient(135deg,var(--coffee-l),var(--coffee));}
+.rm-ok.coffee-ok:hover{box-shadow:0 4px 14px rgba(196,122,58,.3);}
+.rm-skip{background:none;border:none;font-family:inherit;font-size:12px;color:var(--faint);cursor:pointer;padding:6px 10px;border-radius:8px;transition:color .15s;}
+.rm-skip:hover{color:var(--sub);}
+
 /* ── Responsive ── */
 @media(max-width:680px){
   #main{grid-template-columns:1fr;gap:14px;padding:14px 16px;}
@@ -360,6 +378,20 @@ body{
   </div>
 </div>
 
+<!-- Reminder Overlay -->
+<div id="reminder-overlay" style="display:none;" onclick="if(event.target===this)rmDismiss()">
+  <div class="rm-panel">
+    <div class="rm-icon" id="rm-icon">💧</div>
+    <div class="rm-title" id="rm-title"></div>
+    <div class="rm-body" id="rm-body"></div>
+    <div class="rm-progress" id="rm-progress" style="display:none;"><div class="rm-progress-bar" id="rm-progress-bar"></div></div>
+    <div class="rm-btns">
+      <button class="rm-ok" id="rm-ok">知道了</button>
+      <button class="rm-skip" id="rm-skip">稍後再說</button>
+    </div>
+  </div>
+</div>
+
 <!-- Day Detail -->
 <div id="day-detail" style="display:none;" onclick="if(event.target===this)closeDayDetail()">
   <div class="dd-panel" id="dd-panel"></div>
@@ -475,6 +507,7 @@ function addCoffee(){
   document.getElementById('photo-box').innerHTML='📷';
   document.getElementById('photo-inp').value='';
   refresh();
+  checkCoffeeReminder();
 }
 
 // ── WATER ──
@@ -738,6 +771,103 @@ async function runAI(){
   btn.disabled=false;spinner.style.display='none';txt.textContent='重新分析';
 }
 
+// ── REMINDER SYSTEM ──
+const RM_STATE_KEY='refueler_rm_state';
+function loadRMState(){try{return JSON.parse(localStorage.getItem(RM_STATE_KEY))||{};}catch{return{};}}
+function saveRMState(s){localStorage.setItem(RM_STATE_KEY,JSON.stringify(s));}
+
+let _rmOkCb=null;
+function rmDismiss(){
+  document.getElementById('reminder-overlay').style.display='none';
+  _rmOkCb=null;
+}
+function showReminder({icon,title,body,okLabel,okClass,showProgress,waterMl,onOk}){
+  document.getElementById('rm-icon').textContent=icon||'💧';
+  document.getElementById('rm-title').textContent=title||'';
+  document.getElementById('rm-body').textContent=body||'';
+  const okBtn=document.getElementById('rm-ok');
+  okBtn.textContent=okLabel||'知道了';
+  okBtn.className='rm-ok'+(okClass?' '+okClass:'');
+  const prog=document.getElementById('rm-progress');
+  const bar=document.getElementById('rm-progress-bar');
+  if(showProgress&&waterMl!==undefined){
+    const pct=Math.min(100,Math.round(waterMl/2000*100));
+    bar.style.width=pct+'%';
+    prog.style.display='block';
+  }else{prog.style.display='none';}
+  _rmOkCb=onOk||null;
+  document.getElementById('reminder-overlay').style.display='flex';
+  okBtn.onclick=()=>{rmDismiss();if(_rmOkCb)_rmOkCb();};
+  document.getElementById('rm-skip').onclick=rmDismiss;
+}
+
+// Coffee 3rd-cup reminder
+function checkCoffeeReminder(){
+  const te=todayEntries();
+  const cc=te.filter(e=>e.type==='coffee').length;
+  if(cc!==3)return; // 只在恰好第3杯時觸發
+  const state=loadRMState();
+  const dk=new Date().toDateString();
+  if(state.coffee3===dk)return; // 今天已提醒過
+  state.coffee3=dk;
+  saveRMState(state);
+  const wml=te.filter(e=>e.type==='water').reduce((s,e)=>s+(e.amount||0),0);
+  const gap=Math.max(0,2000-wml);
+  showReminder({
+    icon:'☕💧',
+    title:'咖啡因攝取提醒',
+    body:`今天已經是第 3 杯咖啡了！\n\n咖啡因有利尿效果，建議每喝一杯咖啡就補充 300ml 以上的水幫助代謝。\n\n今日水分：${wml} ml / 目標 2000 ml（還差 ${gap} ml）`,
+    okLabel:'馬上去喝水 💧',
+    okClass:'coffee-ok',
+    showProgress:true,
+    waterMl:wml,
+    onOk:()=>{document.getElementById('w-amount').focus();document.getElementById('w-amount').scrollIntoView({behavior:'smooth',block:'center'});}
+  });
+}
+
+// Water schedule reminders（依成人一天建議 2000ml 安排）
+const WATER_SCHEDULE=[
+  {hm:'08:00',msg:'早安！起床後喝一杯水，促進新陳代謝，為一天補足能量 🌅'},
+  {hm:'10:00',msg:'上午工作中，補充水分有助保持專注，大腦運作更靈活 🧠'},
+  {hm:'12:00',msg:'午餐時間到！餐前喝一杯水有助消化，也能避免吃太多 🍱'},
+  {hm:'14:00',msg:'午後容易感到疲憊，補充水分比咖啡更能提振精神 ⚡'},
+  {hm:'16:00',msg:'下午補水時間，讓身體保持水分平衡，肌膚也會謝謝你 ✨'},
+  {hm:'18:30',msg:'晚餐前補一杯水，幫助消化並減少晚餐攝取量 🥗'},
+  {hm:'20:30',msg:'睡前 2 小時適量補水，但別喝太多以免夜間起床 🌙'},
+];
+function timeInWindow(hmStr){
+  const now=new Date();
+  const[h,m]=hmStr.split(':').map(Number);
+  const sched=new Date(now);sched.setHours(h,m,0,0);
+  const diff=(now-sched)/60000;
+  return diff>=0&&diff<5; // 排程後5分鐘內都算
+}
+function checkWaterSchedule(){
+  const state=loadRMState();
+  const dk=new Date().toDateString();
+  for(const s of WATER_SCHEDULE){
+    if(!timeInWindow(s.hm))continue;
+    const key='w_'+s.hm+'_'+dk;
+    if(state[key])break; // 今天這時段已提醒
+    const wml=todayEntries().filter(e=>e.type==='water').reduce((sum,e)=>sum+(e.amount||0),0);
+    if(wml>=2000){state[key]=true;saveRMState(state);break;} // 已達標，靜默記下
+    state[key]=true;saveRMState(state);
+    const gap=Math.max(0,2000-wml);
+    showReminder({
+      icon:'💧',
+      title:'補水提醒 '+s.hm,
+      body:s.msg+`\n\n今日已喝：${wml} ml（目標 2000 ml，還差 ${gap} ml）`,
+      okLabel:'記錄喝水 💧',
+      showProgress:true,
+      waterMl:wml,
+      onOk:()=>{document.getElementById('w-amount').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('w-amount').focus();}
+    });
+    break;
+  }
+}
+// 每 60 秒檢查一次水分排程
+setInterval(checkWaterSchedule,60000);
+
 // ── REFRESH ──
 function refresh(){
   updatePills();
@@ -750,6 +880,8 @@ function refresh(){
 // ── INIT ──
 refresh(); // 先從 localStorage 立即渲染
 loadFromGist().then(refresh); // 再從 Gist 更新最新資料
+checkWaterSchedule(); // 頁面載入時立即檢查是否在提醒時間窗內
 </script>
+<script src="cc_autosync.js"></script>
 </body>
 </html>
