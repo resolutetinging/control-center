@@ -562,6 +562,7 @@ function _liCount(results){
       counts.interviewed++;
       const tp=Object.values(pg.properties||{}).find(p=>p.type==='title');
       const t=(tp?.title||[]).map(r=>r.plain_text||'').join('').trim();
+      console.log('[LinkedIn] interviewed page props:',JSON.stringify(pg.properties),'→ title:',t);
       if(t)counts.interviewed_titles.push(t);
     }
     else if(s)console.log('[LinkedIn] unmatched status:',name);
