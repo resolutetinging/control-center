@@ -585,7 +585,7 @@ function renderCoffeeCalendar(){
     const isT=today.getFullYear()===cCalY&&today.getMonth()===cCalM&&today.getDate()===d;
     const cls=n===0?'':n===1?'c1':n===2?'c2':n===3?'c3':'c4';
     const dayCost=es.reduce((s,e)=>s+(e.coffeePrice??e.price??0)+(e.dessertPrice??0),0);
-    const badge=n?`<span class="cal-badge cal-badge-c">${n}杯${dayCost?`·$${dayCost}`:''}</span>`:'';
+    const badge=n?`<span class="cal-badge cal-badge-c">${n}杯</span>${dayCost?`<span class="cal-badge cal-badge-c" style="font-size:9px;font-weight:600;">$${dayCost}</span>`:''}`:'';
     const clickFn=n?`onclick="showDayDetail('${key}','coffee')"`:'' ;
     return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}</div>`;
   }).join('');
