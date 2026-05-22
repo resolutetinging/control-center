@@ -523,8 +523,11 @@ function loadMentalData(){
   try{
     const db=JSON.parse(localStorage.getItem('wellness_v5')||'{}');
     const es=(db.entries||[]).filter(e=>e.timestamp&&e.timestamp.slice(0,10)===TODAY);
-    const last=es[es.length-1]||null;
-    LIVE.mental={today:last?{score:last.moodScore,emotions:(last.emotionTags||[]),factors:(last.impactFactors||[]).map(f=>f.detail)}:null};
+    LIVE.mental={entries:es.map(e=>({
+      time:e.timestamp?e.timestamp.slice(11,16):'',
+      score:e.moodScore,
+      factors:(e.impactFactors||[]).map(f=>f.detail||f.category||'').filter(Boolean)
+    }))};
   }catch{}
 }
 function loadOptimizerData(){
@@ -838,11 +841,17 @@ function buildTT(id){
       return out;
     }
     case 'mental':{
-      if(!LIVE.mental?.today)return h('今日 Mental')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">今日尚無記錄</div>`;
-      const m=LIVE.mental.today;
-      const emos=m.emotions.slice(0,3).join('、')||'—';
-      const facs=m.factors.slice(0,2).join('、')||'—';
-      return h('今日 Mental')+row('心情',m.score+'/10',m.score>=7?'g':m.score>=5?'a':'r')+hr()+`<div class="tt-row"><span class="tt-k">情緒</span><span class="tt-v" style="font-size:10.5px;">${emos}</span></div>`+`<div class="tt-row"><span class="tt-k">因子</span><span class="tt-v" style="font-size:10.5px;">${facs}</span></div>`;
+      const mes=LIVE.mental?.entries||[];
+      if(!mes.length)return h('今日 Mental')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">今日尚無記錄</div>`;
+      let out=h('今日 Mental');
+      mes.forEach((m,i)=>{
+        if(i>0)out+=hr();
+        out+=row(m.time||`#${i+1}`,m.score+'/10',m.score>=7?'g':m.score>=5?'a':'r');
+        if(m.factors.length){
+          out+=m.factors.map(f=>`<div style="font-size:10.5px;color:var(--sub);padding:1px 0 1px 4px;line-height:1.5;">· ${f}</div>`).join('');
+        }
+      });
+      return out;
     }
     case 'optimizer':{
       loadOptimizerData();
