@@ -560,9 +560,11 @@ function _liCount(results){
     else if(s==='contacted')counts.contacted++;
     else if(s==='to be interviewed'){
       counts.interviewed++;
-      const tp=Object.values(pg.properties||{}).find(p=>p.type==='title');
-      const t=(tp?.title||[]).map(r=>r.plain_text||'').join('').trim();
-      console.log('[LinkedIn] interviewed page props:',JSON.stringify(pg.properties),'→ title:',t);
+      // 優先取 rich_text 的 Title/Name 欄，fallback 到 type=title
+      const np=pg.properties?.Title??pg.properties?.Name??Object.values(pg.properties||{}).find(p=>p.type==='title');
+      const t=np?.type==='rich_text'
+        ?(np.rich_text||[]).map(r=>r.plain_text||'').join('').trim()
+        :(np?.title||[]).map(r=>r.plain_text||'').join('').trim();
       if(t)counts.interviewed_titles.push(t);
     }
     else if(s)console.log('[LinkedIn] unmatched status:',name);
