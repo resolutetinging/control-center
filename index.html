@@ -262,12 +262,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 /* ── Sync Pill ── */
 #sync-pill{
   position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:18px;z-index:500;
-  display:flex;align-items:center;gap:2px;padding:6px 10px;
-  border-radius:100px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px;
+  border-radius:16px;
   background:rgba(244,241,236,.82);border:1px solid var(--bstr);
   backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
   box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
 }
+#sync-time{font-size:9px;color:var(--faint);white-space:nowrap;line-height:1;min-height:10px;}
+#sync-btns{display:flex;align-items:center;gap:2px;}
 #sync-pill button{
   background:none;border:none;cursor:pointer;font-family:inherit;
   font-size:14px;font-weight:500;color:var(--sub);
@@ -480,9 +482,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 <!-- Sync Pill -->
 <div id="sync-pill">
-  <button id="sync-up" onclick="syncUpload()" title="Upload localStorage → Gist">↑</button>
-  <div id="sync-sep"></div>
-  <button id="sync-dn" onclick="syncDownload()" title="Download from Gist → restore">↓</button>
+  <div id="sync-time"></div>
+  <div id="sync-btns">
+    <button id="sync-up" onclick="syncUpload()" title="Upload localStorage → Gist">↑</button>
+    <div id="sync-sep"></div>
+    <button id="sync-dn" onclick="syncDownload()" title="Download from Gist → restore">↓</button>
+  </div>
 </div>
 <div id="sync-msg"></div>
 
@@ -1259,6 +1264,12 @@ async function runSAS(){
 }
 
 // ── GIST SYNC ──
+function updateSyncTime(){
+  const el=document.getElementById('sync-time');
+  if(!el)return;
+  const t=localStorage.getItem('cc_last_sync')||'';
+  el.textContent=t?'↑ '+t:'';
+}
 let _syncMsgT=null;
 function showSyncMsg(txt,isErr=false){
   const el=document.getElementById('sync-msg');
@@ -1304,6 +1315,9 @@ async function syncUpload(){
       else if(r.status===401){msg='401：PAT 無效或已過期';}
       throw new Error(msg);
     }
+    const nowStr=new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('cc_last_sync',nowStr);
+    updateSyncTime();
     showSyncMsg('✓ 上傳完成（共 '+Object.keys(snap).length+' 個 key）');
     hideSyncMsg();
     if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='↑';},1500);}
@@ -1360,6 +1374,7 @@ tick();setInterval(tick,1000);
 checkGuard();setInterval(checkGuard,30000);
 updateUnsetFlags();
 initLiveData();
+updateSyncTime();
 document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});
 </script>
 <script src="cc_autosync.js"></script>
