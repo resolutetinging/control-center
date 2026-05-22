@@ -549,7 +549,7 @@ function loadLinkedInData(){
 let _liLastFetch=0;
 function _notionHdr(token){return{'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28','Content-Type':'application/json'};}
 function _liCount(results){
-  const counts={saved:0,applied:0,declined:0,contacted:0,interviewed:0};
+  const counts={saved:0,applied:0,declined:0,contacted:0,interviewed:0,interviewed_titles:[]};
   for(const pg of results){
     const sp=pg.properties?.Status||pg.properties?.status||Object.values(pg.properties||{}).find(p=>p.type==='status'||p.type==='select');
     const name=(sp?.status?.name||sp?.select?.name||'').trim();
@@ -558,7 +558,12 @@ function _liCount(results){
     else if(s==='applied')counts.applied++;
     else if(s==='declined')counts.declined++;
     else if(s==='contacted')counts.contacted++;
-    else if(s==='to be interviewed')counts.interviewed++;
+    else if(s==='to be interviewed'){
+      counts.interviewed++;
+      const tp=Object.values(pg.properties||{}).find(p=>p.type==='title');
+      const t=(tp?.title||[]).map(r=>r.plain_text||'').join('').trim();
+      if(t)counts.interviewed_titles.push(t);
+    }
     else if(s)console.log('[LinkedIn] unmatched status:',name);
   }
   return counts;
@@ -867,14 +872,16 @@ function buildTT(id){
     case 'linkedin':{
       loadLinkedInData();
       fetchNotionLinkedIn();
-      const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0,interviewed:0};
+      const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0,interviewed:0,interviewed_titles:[]};
       const hasData=li.saved||li.applied||li.declined||li.contacted||li.interviewed;
+      const itv=(li.interviewed_titles||[]);
       return h('LinkedIn 求職進度')
         +row('⭐ Saved',li.saved+'個')
         +row('📨 Applied',li.applied+'個','g')
         +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'')
         +row('🗓 To be interviewed',li.interviewed+'個',li.interviewed>0?'g':'')
         +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
+        +(itv.length?hr()+itv.map(t=>`<div style="font-size:11px;color:var(--ink);padding:2px 0;line-height:1.55;">· ${t.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`).join(''):'')
         +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
     }
     case 'oasis':{
@@ -1025,7 +1032,7 @@ function renderTab(tab){
       </div>
     `;
   } else if(tab==='linkedin'){
-    const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0,interviewed:0};
+    const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0,interviewed:0,interviewed_titles:[]};
     const nt=localStorage.getItem('notion_token')||'';
     const nd=localStorage.getItem('notion_li_db')||'';
     el.innerHTML=`
