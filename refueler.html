@@ -757,9 +757,9 @@ async function runAI(){
       return`[${dl} ${tl}] ☕ ${parts.join('/')|| '咖啡'}${e.price?' NT$'+e.price:''}`;
     }else{return`[${dl} ${tl}] 💧 水 ${e.amount||250}ml`;}
   }).join('\n');
-  const prompt=`你是溫暖的健康顧問，擅長分析飲食與生理代謝。以下是用戶近期攝取記錄（最多60筆）：\n\n${summary}\n\n請全程使用繁體中文，嚴禁夾雜英文、法文或任何其他語言詞彙。語氣親切像好友，每段2-3句：\n\n1. ☕ 咖啡模式分析\n   - 攝取時機、頻率是否合理\n   - 是否有下午咖啡因過晚的情況\n   - 甜點搭配對血糖的影響\n\n2. 💧 水分攝取評估\n   - 每日平均量是否達標（建議2000ml）\n   - 飲水分佈時機是否均勻\n\n3. ⚖️ 咖啡 vs 水分 健康對比\n   - 兩者的比例是否平衡\n   - 咖啡利尿效應的補償建議\n\n4. 🌿 最重要的一個改善行動`;
+  const prompt=`以下是用戶近期咖啡與水分記錄（最多60筆）：\n\n${summary}\n\n請用繁體中文，每點一句話，直接說重點，不要廢話：\n☕ 咖啡：時機/頻率有無問題\n💧 水分：有無達標\n🌿 最需要改的一件事`;
   try{
-    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.75})});
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:200,temperature:.6})});
     if(!resp.ok)throw new Error('API '+resp.status);
     const result=await resp.json();
     res.style.display='block';res.className='ai-result';
