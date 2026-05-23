@@ -1293,6 +1293,8 @@ async function syncUpload(){
   if(btn)btn.textContent='…';
   showSyncMsg('上傳中…');
   try{
+    const nowStr=new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('cc_last_sync',nowStr);
     const SKIP_KEYS=['gh_pat','gist_id','tina_groq','groq_key','groq_api_key','wordvault_groq_key','notion_token','do_gist_token','do_gist_id','wordvault_gist_token','wordvault_gist_id','gist_token','gist_id'];
     const PAT_RE=/ghp_[A-Za-z0-9]{10,}|ghs_[A-Za-z0-9]{10,}|github_pat_[A-Za-z0-9_]{10,}|gsk_[A-Za-z0-9]{10,}/;
     const snap={};
@@ -1315,8 +1317,6 @@ async function syncUpload(){
       else if(r.status===401){msg='401：PAT 無效或已過期';}
       throw new Error(msg);
     }
-    const nowStr=new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    localStorage.setItem('cc_last_sync',nowStr);
     updateSyncTime();
     showSyncMsg('✓ 上傳完成（共 '+Object.keys(snap).length+' 個 key）');
     hideSyncMsg();
