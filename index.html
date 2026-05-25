@@ -1165,7 +1165,8 @@ function checkGuard(){
   const end2=new Date(end.getTime()+1*60*60*1000);
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
-  if(stamina<40||now>end2){triggerGuard();}
+  const newDay=(now-end2)>8*60*60*1000; // 超過 end+1h 的 8 小時視為新的一天
+  if(stamina<40||(now>end2&&!newDay)){triggerGuard();}
   else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
 }
