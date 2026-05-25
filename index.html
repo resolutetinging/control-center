@@ -244,6 +244,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 @keyframes catRise{from{opacity:0;transform:scale(1.08);}to{opacity:1;transform:scale(1);}}
 #cat-speech{display:none!important;}
 #guard-ctrl{display:none!important;}
+#guard-snooze-btn{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);font-size:.72rem;padding:8px 22px;border-radius:20px;border:.5px solid rgba(255,255,255,.25);background:rgba(0,0,0,.28);color:rgba(255,255,255,.75);cursor:pointer;z-index:10000;letter-spacing:.03em;white-space:nowrap;}
+#guard-snooze-btn:hover{background:rgba(0,0,0,.45);color:#fff;}
 
 /* ── SAS Modal ── */
 .m-ov{position:fixed;inset:0;background:rgba(40,38,32,.3);backdrop-filter:blur(10px);z-index:800;display:flex;align-items:center;justify-content:center;}
@@ -463,6 +465,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div id="cat-stage">
     <div id="big-cat">🐱</div>
     <div id="cat-speech"></div>
+    <button id="guard-snooze-btn" onclick="snoozeGuard()">今日不再提醒</button>
   </div>
   <div id="guard-ctrl">
     <div id="guard-msg"></div>
@@ -1028,7 +1031,8 @@ function renderTab(tab){
       <div class="s-sec">
         <div class="s-lbl">今日戰力（自動讀取）</div>
         <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${cpDisplay}</div>
-        <div style="font-size:11px;color:var(--faint);margin-bottom:16px;">來源：Sleep Dashboard 睡眠分析</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:${localStorage.getItem('guard_snooze_'+today())?'8':'16'}px;">來源：Sleep Dashboard 睡眠分析</div>
+        ${localStorage.getItem('guard_snooze_'+today())?`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:var(--rsm);padding:8px 12px;margin-bottom:16px;"><span style="font-size:.7rem;color:var(--warn)">⚠ 今日 Guard 已靜默</span><button onclick="localStorage.removeItem('guard_snooze_'+today());checkGuard();openSettings('guard')" style="font-size:.65rem;padding:4px 10px;border-radius:12px;border:.5px solid var(--bstr);background:transparent;color:var(--sub);cursor:pointer;">解除靜默</button></div>`:''}
         <div class="s-lbl">工作結束時間</div>
         <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
       </div>
@@ -1155,6 +1159,17 @@ function getEffective(){
   try{const o=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');if(o.endTime)endTime=o.endTime;}catch{}
   return{stamina,endTime,workTime:s.workTime||15,skipDur:s.skipDur||60};
 }
+function snoozeGuard(){
+  localStorage.setItem('guard_snooze_'+today(),'1');
+  if(cdIv){clearInterval(cdIv);cdIv=null;}
+  gState='monitoring';cooldownEnd=null;
+  document.getElementById('guard-overlay').style.display='none';
+  document.getElementById('guard-stop-btn').style.display='none';
+  const dot=document.getElementById('guard-dot');
+  const txt=document.getElementById('guard-txt');
+  if(dot)dot.className='warn';
+  if(txt)txt.textContent='Guard · 低戰力（今日靜默）';
+}
 function checkGuard(){
   if(gState==='alerting'||gState==='resting')return;
   if(gState==='cooldown'&&cooldownEnd&&Date.now()<cooldownEnd)return;
@@ -1165,7 +1180,10 @@ function checkGuard(){
   const end2=new Date(end.getTime()+1*60*60*1000);
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
-  const newDay=(now-end2)>8*60*60*1000; // 超過 end+1h 的 8 小時視為新的一天，完全靜默
+  const newDay=(now-end2)>8*60*60*1000;
+  if(localStorage.getItem('guard_snooze_'+today())){
+    dot.className='warn';txt.textContent='Guard · 低戰力（今日靜默）';gState='monitoring';return;
+  }
   if(!newDay&&(stamina<40||now>end2)){triggerGuard();}
   else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
