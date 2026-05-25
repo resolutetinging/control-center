@@ -1026,7 +1026,7 @@ function renderTab(tab){
     const workTime=gs.workTime||15;
     const catUrl=localStorage.getItem('cc_cat_gif')||'';
     const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower:(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower:'—');
-    const isSnoozed=!!localStorage.getItem('guard_snooze_'+today());
+    const isSnoozed=!!localStorage.getItem('guard_snooze_'+TODAY);
     const snoozeBar=isSnoozed?'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:var(--rsm);padding:8px 12px;margin-bottom:16px;"><span style="font-size:.7rem;color:var(--warn)">⚠ 今日 Guard 已靜默</span><button onclick="clearGuardSnooze()" style="font-size:.65rem;padding:4px 10px;border-radius:12px;border:.5px solid var(--bstr);background:transparent;color:var(--sub);cursor:pointer;">解除靜默</button></div>':'';
     el.innerHTML=`
       <div class="s-title">Guard 設定</div>
@@ -1162,12 +1162,12 @@ function getEffective(){
   return{stamina,endTime,workTime:s.workTime||15,skipDur:s.skipDur||60};
 }
 function clearGuardSnooze(){
-  localStorage.removeItem('guard_snooze_'+today());
+  localStorage.removeItem('guard_snooze_'+TODAY);
   checkGuard();
   openSettings('guard');
 }
 function snoozeGuard(){
-  localStorage.setItem('guard_snooze_'+today(),'1');
+  localStorage.setItem('guard_snooze_'+TODAY,'1');
   if(cdIv){clearInterval(cdIv);cdIv=null;}
   gState='monitoring';cooldownEnd=null;
   document.getElementById('guard-overlay').style.display='none';
@@ -1188,7 +1188,7 @@ function checkGuard(){
   const dot=document.getElementById('guard-dot');
   const txt=document.getElementById('guard-txt');
   const newDay=(now-end2)>8*60*60*1000;
-  if(localStorage.getItem('guard_snooze_'+today())){
+  if(localStorage.getItem('guard_snooze_'+TODAY)){
     dot.className='warn';txt.textContent='Guard · 低戰力（今日靜默）';gState='monitoring';return;
   }
   if(!newDay&&(stamina<40||now>end2)){triggerGuard();}
