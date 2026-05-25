@@ -1026,13 +1026,15 @@ function renderTab(tab){
     const workTime=gs.workTime||15;
     const catUrl=localStorage.getItem('cc_cat_gif')||'';
     const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower:(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower:'—');
+    const isSnoozed=!!localStorage.getItem('guard_snooze_'+today());
+    const snoozeBar=isSnoozed?'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:var(--rsm);padding:8px 12px;margin-bottom:16px;"><span style="font-size:.7rem;color:var(--warn)">⚠ 今日 Guard 已靜默</span><button onclick="clearGuardSnooze()" style="font-size:.65rem;padding:4px 10px;border-radius:12px;border:.5px solid var(--bstr);background:transparent;color:var(--sub);cursor:pointer;">解除靜默</button></div>':'';
     el.innerHTML=`
       <div class="s-title">Guard 設定</div>
       <div class="s-sec">
         <div class="s-lbl">今日戰力（自動讀取）</div>
         <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${cpDisplay}</div>
-        <div style="font-size:11px;color:var(--faint);margin-bottom:${localStorage.getItem('guard_snooze_'+today())?'8':'16'}px;">來源：Sleep Dashboard 睡眠分析</div>
-        ${localStorage.getItem('guard_snooze_'+today())?`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:var(--rsm);padding:8px 12px;margin-bottom:16px;"><span style="font-size:.7rem;color:var(--warn)">⚠ 今日 Guard 已靜默</span><button onclick="localStorage.removeItem('guard_snooze_'+today());checkGuard();openSettings('guard')" style="font-size:.65rem;padding:4px 10px;border-radius:12px;border:.5px solid var(--bstr);background:transparent;color:var(--sub);cursor:pointer;">解除靜默</button></div>`:''}
+        <div style="font-size:11px;color:var(--faint);margin-bottom:${isSnoozed?'8':'16'}px;">來源：Sleep Dashboard 睡眠分析</div>
+        ${snoozeBar}
         <div class="s-lbl">工作結束時間</div>
         <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
       </div>
@@ -1158,6 +1160,11 @@ function getEffective(){
   let endTime=s.endTime||MOCK.opt.endTime;
   try{const o=JSON.parse(localStorage.getItem('review_'+TODAY)||'{}');if(o.endTime)endTime=o.endTime;}catch{}
   return{stamina,endTime,workTime:s.workTime||15,skipDur:s.skipDur||60};
+}
+function clearGuardSnooze(){
+  localStorage.removeItem('guard_snooze_'+today());
+  checkGuard();
+  openSettings('guard');
 }
 function snoozeGuard(){
   localStorage.setItem('guard_snooze_'+today(),'1');
