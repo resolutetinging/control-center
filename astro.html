@@ -88,7 +88,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 /* forecast section cards */
 .forecast-sections{display:flex;flex-direction:column;gap:20px}
 .forecast-section{background:var(--card);border:.5px solid var(--bstr);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(40,38,32,.08)}
-.forecast-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--astro);padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.forecast-section-title{font-size:12.5px;font-weight:700;color:var(--astro);padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--border)}
 .forecast-section-body{padding:16px 18px;font-size:13px;line-height:1.85;color:var(--ink)}
 .forecast-section-body p{margin-bottom:10px}.forecast-section-body p:last-child{margin-bottom:0}
 .forecast-section-body strong{color:var(--astro);font-weight:600}
@@ -700,45 +700,16 @@ function renderForecastSections(text){
     const cat = getCat(title);
     let bodyHtml;
     if(cat === 'timeline'){
-      // 解析新格式：M月：heading\n**類別**：content\n...
-      const lines = stripMdHeaders(body).split('\n').filter(l=>l.trim());
-      let monthBlocks = [], cur = null;
-      lines.forEach(line=>{
-        const mh = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
-        if(mh){
-          if(cur) monthBlocks.push(cur);
-          cur = {month: mh[1], head: mh[2], cats:[]};
-        } else if(cur){
-          const cat2 = line.match(/^\*\*([^*：:]+)\*\*[：:]\s*(.*)/);
-          if(cat2) cur.cats.push({label: cat2[1], text: cat2[2]});
-          else if(cur.cats.length) cur.cats[cur.cats.length-1].text += ' ' + line.trim();
-          else cur.head += ' ' + line.trim();
-        }
-      });
-      if(cur) monthBlocks.push(cur);
-
-      if(monthBlocks.length){
-        const rows = monthBlocks.map(({month, head, cats})=>{
-          const headHtml = esc(head).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
-          const catsHtml = cats.map(({label,text})=>
-            `<div class="tl-cat"><span class="tl-cat-lbl">${esc(label)}</span>：${esc(text).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div>`
-          ).join('');
-          return `<div class="tl-expanded"><div class="tl-month">${esc(month)}</div><div class="tl-body"><div class="tl-head">${headHtml}</div>${catsHtml}</div></div>`;
-        }).join('');
-        bodyHtml = `<div>${rows}</div>`;
-      } else {
-        // 舊格式 fallback
-        const rows2 = lines.map(line=>{
-          const mm = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
-          if(mm) return `<div class="tl-expanded"><div class="tl-month">${esc(mm[1])}</div><div class="tl-body"><div class="tl-head">${esc(mm[2]).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div></div>`;
-          return `<div class="tl-expanded"><div class="tl-month"></div><div class="tl-body"><div class="tl-head">${esc(line).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div></div>`;
-        }).join('');
-        bodyHtml = `<div>${rows2}</div>`;
-      }
+      const rows = stripMdHeaders(body).split('\n').filter(l=>l.trim()).map(line=>{
+        const mm = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
+        if(!mm) return '';
+        return `<div class="timeline-row"><div class="timeline-month">${esc(mm[1])}</div><div class="timeline-body">${esc(mm[2]).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+      }).filter(Boolean).join('');
+      bodyHtml = `<div class="timeline-list">${rows}</div>`;
     } else {
       bodyHtml = renderParas(body);
     }
-    return `<div class="forecast-section" data-cat="${cat}"><div class="forecast-section-title">${esc(title)}</div><div class="forecast-section-body">${bodyHtml}</div></div>`;
+    return `<div class="forecast-section" data-cat="${cat}"><div class="forecast-section-title">[${esc(title)}]</div><div class="forecast-section-body">${bodyHtml}</div></div>`;
   }).join('');
 }
 
@@ -795,23 +766,27 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
   if(isYearly){
     return base +
 `【年度時間軸】
-請逐月輸出完整的1月到12月分析。每個月嚴格按以下格式（禁止更動格式或合併月份）：
+逐月輸出 1月 到 12月 的年度概覽，每月嚴格一行（禁止換行、禁止加分類標籤）：
+M月：[本月核心主題（8-12字）+ 最關鍵1個星象節點]
+（依序輸出 1月到12月，不加空行）
 
-M月：[本月主題詞（10-15字）+ 1-2個關鍵行星事件（日期格式：月/日）]
-**工作&事業**：[2-3句，引用本命盤事業指標與本月行星過境揭示的生命節點]
-**感情&人際**：[2-3句，引用本命盤感情指標與人際面的本命節點]
-**財務&資源**：[1-2句]
-**健康&能量**：[1句，引用本命盤健康指標]
-**副業&第二收入**：[1-2句]
+【工作 & 事業】
+從年度整體角度分析 ${selYear} 年工作事業走勢（6-8句）：說明全年最關鍵的轉折月份（月/日格式精確標注）、本命盤事業指標的核心激活時機、最值得把握的行動窗口，以及年度事業主軸策略。
 
-範例格式（僅供格式參考）：
-5月：**木星**逆行結束（5/9）正式直行，本命9宮啟動擴展節點，同時**水星**入雙子（5/15）激活8宮溝通能量。
-**工作&事業**：木星直行激活你第9宮的學習擴展節點，本命盤太陽巨蟹9宮揭示此時是你...
-**感情&人際**：...
-（以此格式依序輸出1月到12月，每月緊接輸出不加空行）
+【感情 & 人際】
+從年度整體角度分析 ${selYear} 年感情與人際走勢（5-6句）：全年感情節點月份（月/日格式）、本命盤感情指標的激活時機、人際汰換或深化的關鍵時段，以及年度人際主軸建議。
+
+【財務 & 資源】
+從年度整體角度分析 ${selYear} 年財務走勢（4-5句）：適合擴張與收斂的月份（月/日格式）、本命盤財務宮位的激活時機、年度財務佈局策略重點。
+
+【健康 & 能量】
+從年度整體角度分析 ${selYear} 年健康能量走勢（3-4句）：全年能量高峰與低谷月份、本命盤健康指標的年度提示、適合調養的時間節點。
+
+【副業 & 第二收入】
+從年度整體角度分析 ${selYear} 年副業發展（4-5句）：最適合開展行動的月份（月/日格式）、本命盤天賦與副業結合點、年度副業佈局策略。
 
 【年度核心建議】
-基於本命盤與${selYear}年整體行星格局，給出3個本命盤揭示的必然生命節點行動方向，每個附上最佳回應時間窗口（月/日格式）與星象依據。`;
+基於本命盤與 ${selYear} 年整體星象，給出3個本命盤揭示的年度必然生命節點，每個附上最佳回應時間窗口（月份）與星象依據。`;
   } else {
     const daysInMonth = new Date(selYear, selMonth, 0).getDate();
     const d1 = Math.floor(daysInMonth / 3);
