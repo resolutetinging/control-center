@@ -111,20 +111,27 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .chat-input-row{display:flex;gap:8px}
 .chat-input-row textarea{min-height:46px;max-height:120px;resize:none;padding:10px 12px;flex:1}
 
-/* ── MYSELF OUTPUT ── */
-/* ── MYSELF 3-col ── */
-.myself-col-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start}
-@media(max-width:800px){.myself-col-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:540px){.myself-col-grid{grid-template-columns:1fr}.month-grid{grid-template-columns:repeat(4,1fr)}}
-.myself-col{display:flex;flex-direction:column;gap:10px}
-.myself-col-header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 10px;border-bottom:1.5px solid var(--astro-tint2);margin-bottom:2px}
-.myself-col-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--astro)}
-.myself-col-meta{display:flex;align-items:center;gap:6px}
-.myself-section{background:var(--card);border:.5px solid var(--bstr);border-radius:10px;padding:14px;box-shadow:var(--shadow)}
-.myself-section .card-label{color:var(--astro)}
-.myself-section p{font-size:13px;line-height:1.78;color:var(--sub);margin-bottom:8px}
+/* ── MYSELF ── */
+@media(max-width:540px){.month-grid{grid-template-columns:repeat(4,1fr)}}
+.myself-section{background:var(--card);border:.5px solid var(--bstr);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
+.myself-section .card-label{color:var(--astro);margin-bottom:10px}
+.myself-tri{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.myself-tri-col{padding:0 14px;border-left:.5px solid var(--bstr)}
+.myself-tri-col:first-child{padding-left:0;border-left:none}
+.myself-tri-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.myself-section p{font-size:12.5px;line-height:1.78;color:var(--sub);margin-bottom:6px}
 .myself-section p:last-child{margin-bottom:0}
 .myself-section p strong{color:var(--astro);font-weight:600}
+@media(max-width:600px){.myself-tri{grid-template-columns:1fr}.myself-tri-col{padding:8px 0 0;border-left:none;border-top:.5px solid var(--bstr)}.myself-tri-col:first-child{padding-top:0;border-top:none}}
+/* ── YEARLY TIMELINE EXPANDED ── */
+.tl-expanded{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:12px 0;border-bottom:.5px solid var(--border)}
+.tl-expanded:last-child{border-bottom:none}
+.tl-month{font-size:11px;font-weight:700;color:var(--astro);white-space:nowrap;padding-top:2px}
+.tl-body{display:flex;flex-direction:column;gap:4px}
+.tl-head{font-size:13px;line-height:1.7;color:var(--sub);margin-bottom:4px}
+.tl-cat{font-size:12.5px;line-height:1.65;color:var(--sub)}
+.tl-cat-lbl{font-weight:700;text-decoration:underline;color:var(--astro)}
+.tl-cat-lbl strong{color:var(--astro)}
 
 /* ── MISC ── */
 .divider{height:.5px;background:var(--bstr);margin:14px 0}
@@ -188,50 +195,15 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 
 <!-- ══════════════ MYSELF ══════════════ -->
 <div class="page" id="page-myself">
-  <div class="myself-col-grid">
-    <!-- ─ 西方 ─ -->
-    <div class="myself-col">
-      <div class="myself-col-header">
-        <span class="myself-col-label">西方占星</span>
-        <div class="myself-col-meta">
-          <span class="dim" id="myself-ts-western" style="font-size:10px"></span>
-          <button class="btn btn-primary btn-sm" id="myself-btn-western" onclick="genMyself('western')">生成</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearMyselfCol('western')" style="padding:5px 8px;font-size:10px">✕</button>
-        </div>
-      </div>
-      <div id="myself-loading-western" style="display:none" class="loading">分析中…</div>
-      <div id="myself-out-western"></div>
-      <div class="empty-hint" id="myself-empty-western" style="font-size:11px;padding:20px 8px;text-align:left">尚無分析<br><span style="font-size:10px">需西洋星盤文字</span></div>
-    </div>
-    <!-- ─ 印度 ─ -->
-    <div class="myself-col">
-      <div class="myself-col-header">
-        <span class="myself-col-label">印度占星</span>
-        <div class="myself-col-meta">
-          <span class="dim" id="myself-ts-vedic" style="font-size:10px"></span>
-          <button class="btn btn-primary btn-sm" id="myself-btn-vedic" onclick="genMyself('vedic')">生成</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearMyselfCol('vedic')" style="padding:5px 8px;font-size:10px">✕</button>
-        </div>
-      </div>
-      <div id="myself-loading-vedic" style="display:none" class="loading">分析中…</div>
-      <div id="myself-out-vedic"></div>
-      <div class="empty-hint" id="myself-empty-vedic" style="font-size:11px;padding:20px 8px;text-align:left">尚無分析<br><span style="font-size:10px">需印度星盤圖片</span></div>
-    </div>
-    <!-- ─ 整體 ─ -->
-    <div class="myself-col">
-      <div class="myself-col-header">
-        <span class="myself-col-label">雙系統整合</span>
-        <div class="myself-col-meta">
-          <span class="dim" id="myself-ts-both" style="font-size:10px"></span>
-          <button class="btn btn-primary btn-sm" id="myself-btn-both" onclick="genMyself('both')">生成</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearMyselfCol('both')" style="padding:5px 8px;font-size:10px">✕</button>
-        </div>
-      </div>
-      <div id="myself-loading-both" style="display:none" class="loading">分析中…</div>
-      <div id="myself-out-both"></div>
-      <div class="empty-hint" id="myself-empty-both" style="font-size:11px;padding:20px 8px;text-align:left">尚無分析<br><span style="font-size:10px">需西洋 + 印度雙資料</span></div>
-    </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <button class="btn btn-primary" id="myself-btn" onclick="genMyself()">✦ 生成分析</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearMyself()">清除</button>
+    <span class="dim" id="myself-ts" style="font-size:11px"></span>
+    <span class="dim" id="myself-progress" style="font-size:11px"></span>
   </div>
+  <div id="myself-loading" style="display:none" class="loading">分析中，請稍候…</div>
+  <div id="myself-out"></div>
+  <div class="empty-hint" id="myself-empty">尚無分析結果<br>請先在設定頁貼入星盤資料，再點擊「生成分析」</div>
 </div>
 
 <!-- ══════════════ FORECAST ══════════════ -->
@@ -516,72 +488,85 @@ function parseMyselfText(text){
   return sections;
 }
 
-// ── 渲染單欄
-function renderMyselfCol(mode, cache){
-  const outEl   = document.getElementById(`myself-out-${mode}`);
-  const emptyEl = document.getElementById(`myself-empty-${mode}`);
-  const tsEl    = document.getElementById(`myself-ts-${mode}`);
-  const btn     = document.getElementById(`myself-btn-${mode}`);
-  if(!cache){
-    outEl.innerHTML = ''; emptyEl.style.display = 'block';
-    tsEl.textContent = ''; btn.textContent = '生成';
+function renderMyself(){
+  const raw   = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
+  const store = raw.text ? {western: raw} : raw; // 相容舊格式
+  const out   = document.getElementById('myself-out');
+  const empty = document.getElementById('myself-empty');
+  const ts    = document.getElementById('myself-ts');
+  const btn   = document.getElementById('myself-btn');
+
+  const hasAny = ['western','vedic','both'].some(m => store[m]);
+  if(!hasAny){
+    out.innerHTML = ''; empty.style.display = 'block';
+    ts.textContent = ''; btn.textContent = '✦ 生成分析';
     return;
   }
-  emptyEl.style.display = 'none';
-  btn.textContent = '重新生成';
-  const d = new Date(cache.ts);
-  tsEl.textContent = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  empty.style.display = 'none';
+  btn.textContent = '✦ 重新生成';
 
-  const text = cache.text;
-  const sections = parseMyselfText(text);
-  const sectionKeys = MYSELF_SECTIONS.map(s=>s.label);
-  const parsedCount = sectionKeys.filter(k=>sections[k]).length;
-
-  if(parsedCount === 0){
-    outEl.innerHTML = `<div class="myself-section"><div class="card-label">分析結果</div>${renderParas(text)}</div>`;
-    return;
+  // 最新生成時間
+  const latestTs = Math.max(...['western','vedic','both'].map(m => store[m]?.ts||0));
+  if(latestTs){
+    const d = new Date(latestTs);
+    ts.textContent = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')} 生成`;
   }
-  outEl.innerHTML = MYSELF_SECTIONS.map(({label})=>{
-    const content = sections[label] || '';
-    const bodyHtml = content
-      ? renderParas(content)
-      : `<p><span style="color:var(--faint)">（未能解析此段落）</span></p>`;
-    return `<div class="myself-section"><div class="card-label">${label}</div>${bodyHtml}</div>`;
+
+  // 解析各模式 sections
+  const parsed = {};
+  ['western','vedic','both'].forEach(m => {
+    if(store[m]) parsed[m] = parseMyselfText(store[m].text);
+  });
+
+  const COL_LABELS = {western:'西方', vedic:'印度', both:'整合'};
+  out.innerHTML = MYSELF_SECTIONS.map(({label}) => {
+    const triCols = ['western','vedic','both'].map(m => {
+      const content = (parsed[m]||{})[label] || '';
+      const body = content
+        ? renderParas(content)
+        : `<p style="color:var(--faint);font-size:11px">${store[m] ? '（未解析）' : '未生成'}</p>`;
+      return `<div class="myself-tri-col"><div class="myself-tri-label">${COL_LABELS[m]}</div>${body}</div>`;
+    }).join('');
+    return `<div class="myself-section"><div class="card-label">${label}</div><div class="myself-tri">${triCols}</div></div>`;
   }).join('');
 }
 
-function renderMyself(){
-  const store = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
-  // 相容舊格式（{text,ts} 直接在根層）
-  const compat = store.text ? {western: store} : store;
-  ['western','vedic','both'].forEach(mode => renderMyselfCol(mode, compat[mode]||null));
-}
-
-async function genMyself(mode){
+async function genMyself(){
   const ctx  = chartContext();
   const imgs = getImages();
-  if(mode === 'western' && !ctx){ alert('請先在設定頁貼入西洋星盤文字'); return; }
-  if(mode === 'vedic'   && !imgs.length){ alert('請先在設定頁上傳印度星盤圖片'); return; }
-  if(mode === 'both'    && (!ctx || !imgs.length)){ alert('雙系統整合需同時具備西洋星盤文字與印度星盤圖片'); return; }
+  if(!ctx && !imgs.length){ alert('請先在設定頁貼入星盤資料或上傳印度星盤圖'); return; }
 
-  const btn     = document.getElementById(`myself-btn-${mode}`);
-  const loading = document.getElementById(`myself-loading-${mode}`);
+  const btn      = document.getElementById('myself-btn');
+  const loading  = document.getElementById('myself-loading');
+  const progress = document.getElementById('myself-progress');
   btn.disabled = true; btn.textContent = '分析中…';
   loading.style.display = 'flex';
-  document.getElementById(`myself-empty-${mode}`).style.display = 'none';
-  document.getElementById(`myself-out-${mode}`).innerHTML = '';
+  document.getElementById('myself-empty').style.display = 'none';
 
-  try{
-    const name = getName();
-    const _now = new Date();
-    const _todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
+  const name = getName();
+  const _now = new Date();
+  const _todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
+
+  const FMT = `格式規定（嚴格遵守）：\n- 開頭第一行輸出對應的【解析視角：...】標籤\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 每個段落必須以完整【標題】行開頭，七個標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
+
+  const SECTIONS_W = `【核心個性】\n整合上升天蠍、太陽巨蟹9宮、月亮雙子8宮三角，從心理占星視角深入描述你的核心性格結構（5-6句）。分別說明：上升天蠍賦予的外在防衛機制與神祕氣場、太陽巨蟹的情感驅動力與安全感需求、月亮雙子8宮的思維情緒運作方式，以及三者之間的內在張力與矛盾。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的本命盤天賦優勢，每項單獨一段。每項引用具體行星/宮位配置，說明在職場或生活中的具體展現方式，以及此配置賦予你的獨特能力。\n\n【工作 & 事業】\n以西方占星流年視角（今日 ${_todayStr}）分析你的職涯天賦與當前能量週期（4-5句）。引用事業相關行星（第10宮、木星、太陽）與當前流年行星過境（Transits）對職涯的本命生命節點顯化。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項你的心理課題或盲點，每項單獨一段。以心理占星視角分析：星盤根源、在生活中的具體表現、符合你靈魂演化方向的突破路徑。\n\n【關係模式】\n從心理占星視角分析你在親密關係、友誼、家庭中的互動模式（4-5句）。引用第7宮、金星雙子8宮、月亮雙子8宮說明你的依附風格、最深層的關係需求與常見困境。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述你的思考方式與溝通習慣（4-5句）。說明此配置如何影響你的表達邏輯、在壓力下的溝通變化，以及你溝通上的獨特性。\n\n【人生主軸】\n從整體星盤格局與靈魂演化視角（引用北交點/南交點業力方向）說明你的核心靈魂課題（4-5句）。說明你此生最重要的轉化主題與靈魂成長路徑。`;
+
+  const SECTIONS_V = `【核心個性】\n從吠陀占星視角，整合上升天秤（主星金星）、月亮金牛8宮旺相、太陽巨蟹10宮的業力格局，深入描述你的性格結構（5-6句）。分別說明：天秤上升帶來的外交人格與平衡追求、月亮金牛8宮旺相的情緒穩定性與潛在轉化能力、太陽10宮的事業業力使命，以及各配置的廟旺平陷狀態對你實際行為的影響。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的吠陀星盤天賦格局（Yogas），每項單獨一段。每項說明：格局名稱或宮位依據、業力顯化的方式，以及此格局在你現實生活中最直接的展現。\n\n【工作 & 事業】\n以吠陀占星視角（今日 ${_todayStr}）分析你的事業業力格局與當前大運（Dasha）對職涯的催化（4-5句）。引用太陽/木星匯聚第10宮的核心格局，說明當前 Dasha 主星、Gochar 流年行星對事業宮的影響，以及未來 3-6 個月的具體生命節點時間點。\n\n【成長課題】\n列出 3-4 項你在業力層面需要面對的課題，每項單獨一段。以吠陀占星視角分析：業力根源（宮位或行星弱陷/逆行等）、在現實生活中的具體顯化，以及對應的業力修行方向。\n\n【關係模式】\n從吠陀占星視角分析你在親密關係與人際互動中的業力模式（4-5句）。引用第7宮、第8宮、金星主星位置，說明你在關係中的業力課題、最深層的情感需求，以及感情業力的修行重點。不同面向換行分段。\n\n【溝通風格】\n根據吠陀星盤水星位置及其廟旺平陷狀態，描述你的思維模式與溝通習慣（4-5句）。說明此配置帶來的業力特質、在不同情境下的溝通表現。\n\n【人生主軸】\n從 Rahu/Ketu（羅睺/計都）的業力軸線說明你此生最核心的靈魂課題（4-5句）。說明 Rahu 指向的今生業力成長方向、Ketu 帶來的前世業力積累，以及最能讓你完成業力使命的人生領域。`;
+
+  const modes = [];
+  if(ctx) modes.push('western');
+  if(imgs.length) modes.push('vedic');
+  if(ctx && imgs.length) modes.push('both');
+
+  const raw   = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
+  const store = raw.text ? {} : raw;
+  let errCount = 0;
+
+  for(let i = 0; i < modes.length; i++){
+    const mode = modes[i];
+    const modeLabel = {western:'西方占星', vedic:'印度占星', both:'雙系統整合'}[mode];
+    progress.textContent = `${modeLabel} (${i+1}/${modes.length})…`;
     const useVision = (mode === 'vedic' || mode === 'both');
-
-    const FMT = `格式規定（嚴格遵守）：\n- 開頭第一行輸出對應的【解析視角：...】標籤\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 每個段落必須以完整【標題】行開頭，七個標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
-
-    const SECTIONS_W = `【核心個性】\n整合上升天蠍、太陽巨蟹9宮、月亮雙子8宮三角，從心理占星視角深入描述你的核心性格結構（5-6句）。分別說明：上升天蠍賦予的外在防衛機制與神祕氣場、太陽巨蟹的情感驅動力與安全感需求、月亮雙子8宮的思維情緒運作方式，以及三者之間的內在張力與矛盾。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的本命盤天賦優勢，每項單獨一段。每項引用具體行星/宮位配置，說明在職場或生活中的具體展現方式，以及此配置賦予你的獨特能力。\n\n【工作 & 事業】\n以西方占星流年視角（今日 ${_todayStr}）分析你的職涯天賦與當前能量週期（4-5句）。引用事業相關行星（第10宮、木星、太陽）與當前流年行星過境（Transits）對職涯的心理轉變與機遇窗口。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項你的心理課題或盲點，每項單獨一段。以心理占星視角分析：星盤根源、在生活中的具體表現、符合你靈魂演化方向的突破路徑。\n\n【關係模式】\n從心理占星視角分析你在親密關係、友誼、家庭中的互動模式（4-5句）。引用第7宮、金星雙子8宮、月亮雙子8宮說明你的依附風格、最深層的關係需求與常見困境。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述你的思考方式與溝通習慣（4-5句）。說明此配置如何影響你的表達邏輯、在壓力下的溝通變化，以及你溝通上的獨特性。\n\n【人生主軸】\n從整體星盤格局與靈魂演化視角（引用北交點/南交點業力方向）說明你的核心靈魂課題（4-5句）。說明你此生最重要的轉化主題與靈魂成長路徑。`;
-
-    const SECTIONS_V = `【核心個性】\n從吠陀占星視角，整合上升天秤（主星金星）、月亮金牛8宮旺相、太陽巨蟹10宮的業力格局，深入描述你的性格結構（5-6句）。分別說明：天秤上升帶來的外交人格與平衡追求、月亮金牛8宮旺相的情緒穩定性與潛在轉化能力、太陽10宮的事業業力使命，以及各配置的廟旺平陷狀態對你實際行為的影響。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的吠陀星盤天賦格局（Yogas），每項單獨一段。每項說明：格局名稱或宮位依據、業力顯化的方式，以及此格局在你現實生活中最直接的展現。\n\n【工作 & 事業】\n以吠陀占星視角（今日 ${_todayStr}）分析你的事業業力格局與當前大運（Dasha）對職涯的催化（4-5句）。引用太陽/木星匯聚第10宮的核心格局，說明當前 Dasha 主星、Gochar 流年行星對事業宮的影響，以及未來 3-6 個月的具體事件時間點推導。\n\n【成長課題】\n列出 3-4 項你在業力層面需要面對的課題，每項單獨一段。以吠陀占星視角分析：業力根源（宮位或行星弱陷/逆行等）、在現實生活中的具體顯化，以及對應的業力修行方向。\n\n【關係模式】\n從吠陀占星視角分析你在親密關係與人際互動中的業力模式（4-5句）。引用第7宮、第8宮、金星主星位置，說明你在關係中的業力課題、最深層的情感需求，以及感情業力的修行重點。不同面向換行分段。\n\n【溝通風格】\n根據吠陀星盤水星位置及其廟旺平陷狀態，描述你的思維模式與溝通習慣（4-5句）。說明此配置帶來的業力特質、在不同情境下的溝通表現。\n\n【人生主軸】\n從 Rahu/Ketu（羅睺/計都）的業力軸線說明你此生最核心的靈魂課題（4-5句）。說明 Rahu 指向的今生業力成長方向、Ketu 帶來的前世業力積累，以及最能讓你完成業力使命的人生領域。`;
 
     let promptText;
     if(mode === 'western'){
@@ -591,37 +576,27 @@ async function genMyself(mode){
     } else {
       promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次為【解析視角：雙系統整合】分析。今日日期：${_todayStr}。\n\n西洋星盤資料：\n${ctx}\n\n印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}\n請在以下每個段落中，先以西方占星視角（心理底蘊），再以印度占星視角（業力現實），最後給出兩系統共振的整合洞見。子視角標記用 **西方視角**、**印度視角**、**共振交集**（不用【】格式，避免解析錯誤）。\n\n${SECTIONS_W}`;
     }
-
     let messages;
     if(useVision){
       messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
     } else {
       messages = [{role:'user', content: promptText}];
     }
-
-    const result = await callGroq(messages, useVision, 3200);
-    const store  = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
-    // 清除舊格式（根層直接有 text 的情況）
-    const base = store.text ? {} : store;
-    base[mode] = {text: result, ts: Date.now()};
-    localStorage.setItem(KEY_MYSELF, JSON.stringify(base));
-    renderMyselfCol(mode, base[mode]);
-  }catch(e){
-    alert('生成失敗：'+e.message);
-  }finally{
-    btn.disabled = false;
-    btn.textContent = document.getElementById(`myself-out-${mode}`).innerHTML ? '重新生成' : '生成';
-    loading.style.display = 'none';
+    try{
+      const result = await callGroq(messages, useVision, 3200);
+      store[mode] = {text: result, ts: Date.now()};
+      localStorage.setItem(KEY_MYSELF, JSON.stringify(store));
+      renderMyself();
+    }catch(e){
+      errCount++;
+      console.error(`genMyself ${mode} failed:`, e);
+    }
   }
-}
-
-function clearMyselfCol(mode){
-  if(!confirm(`確定清除「${mode === 'western' ? '西方占星' : mode === 'vedic' ? '印度占星' : '雙系統整合'}」的分析結果？`)) return;
-  const store = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
-  const base  = store.text ? {} : store;
-  delete base[mode];
-  localStorage.setItem(KEY_MYSELF, JSON.stringify(base));
-  renderMyselfCol(mode, null);
+  if(errCount) alert(`部分生成失敗（${errCount}/${modes.length}）`);
+  progress.textContent = '';
+  btn.disabled = false;
+  btn.textContent = '✦ 重新生成';
+  loading.style.display = 'none';
 }
 
 function clearMyself(){
@@ -712,12 +687,41 @@ function renderForecastSections(text){
     const cat = getCat(title);
     let bodyHtml;
     if(cat === 'timeline'){
-      const rows = stripMdHeaders(body).split('\n').filter(l=>l.trim()).map(line=>{
-        const mm = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
-        if(mm) return `<div class="timeline-row"><div class="timeline-month">${esc(mm[1])}</div><div class="timeline-body">${esc(mm[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
-        return `<div class="timeline-row"><div class="timeline-month"></div><div class="timeline-body">${esc(line).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
-      }).join('');
-      bodyHtml = `<div class="timeline-list">${rows}</div>`;
+      // 解析新格式：M月：heading\n**類別**：content\n...
+      const lines = stripMdHeaders(body).split('\n').filter(l=>l.trim());
+      let monthBlocks = [], cur = null;
+      lines.forEach(line=>{
+        const mh = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
+        if(mh){
+          if(cur) monthBlocks.push(cur);
+          cur = {month: mh[1], head: mh[2], cats:[]};
+        } else if(cur){
+          const cat2 = line.match(/^\*\*([^*：:]+)\*\*[：:]\s*(.*)/);
+          if(cat2) cur.cats.push({label: cat2[1], text: cat2[2]});
+          else if(cur.cats.length) cur.cats[cur.cats.length-1].text += ' ' + line.trim();
+          else cur.head += ' ' + line.trim();
+        }
+      });
+      if(cur) monthBlocks.push(cur);
+
+      if(monthBlocks.length){
+        const rows = monthBlocks.map(({month, head, cats})=>{
+          const headHtml = esc(head).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+          const catsHtml = cats.map(({label,text})=>
+            `<div class="tl-cat"><span class="tl-cat-lbl">${esc(label)}</span>：${esc(text).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div>`
+          ).join('');
+          return `<div class="tl-expanded"><div class="tl-month">${esc(month)}</div><div class="tl-body"><div class="tl-head">${headHtml}</div>${catsHtml}</div></div>`;
+        }).join('');
+        bodyHtml = `<div>${rows}</div>`;
+      } else {
+        // 舊格式 fallback
+        const rows2 = lines.map(line=>{
+          const mm = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
+          if(mm) return `<div class="tl-expanded"><div class="tl-month">${esc(mm[1])}</div><div class="tl-body"><div class="tl-head">${esc(mm[2]).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div></div>`;
+          return `<div class="tl-expanded"><div class="tl-month"></div><div class="tl-body"><div class="tl-head">${esc(line).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div></div>`;
+        }).join('');
+        bodyHtml = `<div>${rows2}</div>`;
+      }
     } else {
       bodyHtml = renderParas(body);
     }
@@ -758,7 +762,7 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
   const _now = new Date();
   const todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
 
-  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）。關鍵詞、行星、宮位用 **詞語** 粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星事件（含大約日期）。真實有深度，不同面向換行分段，不泛泛而談。全程以「你」稱呼。`;
+  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）。關鍵詞、行星、宮位用 **詞語** 粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星事件（日期格式一律使用「月/日」，如 5/20，不使用日期範圍）。全程以「你」稱呼，不泛泛而談。\n解析視角：本命盤是出生時即已訂定的生命藍圖，行星過境是激活本命潛藏事件的時間開關，絕非評斷運勢好壞。所有描述以「本命盤揭示此期間的必然生命節點」視角呈現，給出最佳回應方式。`;
 
   const ANALYSIS_LOGIC = `\n分析邏輯準則（必須貫穿全文）：\n① 時間線雙軌制：遇到重大吉星（如木星）換座，若西盤與印盤觸發時間不一致，必須明確拆分陳述：「西盤代表機會敲門、心智開窗（時間A）；印盤代表現實物質全面顯化與定錨（時間B）」，不可混為一談。\n② 落地行動導向：解讀凶星施壓或轉型焦慮期時，必須將心理演化的「排毒過程」轉化為具體物理行動建議（例如金牛座能量對應的自然接觸、感官療癒；整備期對應的實際文書準備、技能盤點），不可停留在心理層次的泛述。\n③ 性格與流年互鎖：流年事件（如人際汰換、職場轉換）必須結合本命人格特質——天蠍上升的防禦機制 vs 天秤上升的外交本能——給出具體的「應對行為指南」，而非純粹的事件預測。`;
 
@@ -778,56 +782,52 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
   if(isYearly){
     return base +
 `【年度時間軸】
-以「M月：主題詞 + 關鍵星象事件（含大約日期） + 對${name}的具體影響」格式逐月列出1月到12月。
-格式範例：1月：**土星**在水瓶座尾聲，事業格局整固期，X/X **木星**進入X宮帶來擴張機遇，適合主動出擊。
-12個月完整列出，每月必須引用至少一個具體星象事件，不可只有一句口號。
+請逐月輸出完整的1月到12月分析。每個月嚴格按以下格式（禁止更動格式或合併月份）：
 
-【工作 & 事業】
-引用本命盤事業相關指標（第10宮、主星、水星、土星配置）與全年重要行星過境，深入分析全年工作走勢（5-6句）。說明：全年工作能量的主要節奏（哪些月份是高峰、哪些是低谷）、最有利的行動時間窗口（精確到月份）、需要謹慎的時期及原因、以及本命盤職場天賦在此年度的最佳發揮方式。不同面向換行分段。
+M月：[本月主題詞（10-15字）+ 1-2個關鍵行星事件（日期格式：月/日）]
+**工作&事業**：[2-3句，引用本命盤事業指標與本月行星過境揭示的生命節點]
+**感情&人際**：[2-3句，引用本命盤感情指標與人際面的本命節點]
+**財務&資源**：[1-2句]
+**健康&能量**：[1句，引用本命盤健康指標]
+**副業&第二收入**：[1-2句]
 
-【感情 & 人際】
-引用本命盤感情相關指標（第7宮、金星、月亮位置）與全年行星過境，分析全年感情走勢與人際互動模式（4-5句）。標示感情運轉折的關鍵時間點（精確到月份），說明各時期的人際相處策略。
-
-【財務 & 資源】
-引用本命盤財務指標（第2宮、第8宮、木星位置）與全年行星過境，深入分析全年財務節奏（4-5句）。說明：哪些月份收入機遇最強、哪些時期需保守觀望的星象原因，以及適合投入的財務行動類型。
-
-【健康 & 能量】
-引用本命盤健康相關指標（上升星座、第6宮、月亮）與全年行星過境，說明全年身心能量週期規律（4-5句）。明確標示最需要注意的低谷月份（並說明星象原因）及具體的身心養護建議。
-
-【副業 & 第二收入】
-引用本命盤副業/偏財指標（第5宮、木星、金星配置）與流年機遇，分析全年副業走勢（4-5句）。標示最適合啟動或擴展的時間窗口，以及副業方向與本命盤天賦的最佳結合點。
+範例格式（僅供格式參考）：
+5月：**木星**逆行結束（5/9）正式直行，本命9宮啟動擴展節點，同時**水星**入雙子（5/15）激活8宮溝通能量。
+**工作&事業**：木星直行激活你第9宮的學習擴展節點，本命盤太陽巨蟹9宮揭示此時是你...
+**感情&人際**：...
+（以此格式依序輸出1月到12月，每月緊接輸出不加空行）
 
 【年度核心建議】
-基於本命盤優勢與${selYear}年整體星象，給出3個最值得優先執行的具體行動方向，每個附上最佳執行的時間窗口（精確到季度或月份），並說明選擇此時間點的星象依據。`;
+基於本命盤與${selYear}年整體行星格局，給出3個本命盤揭示的必然生命節點行動方向，每個附上最佳回應時間窗口（月/日格式）與星象依據。`;
   } else {
     const daysInMonth = new Date(selYear, selMonth, 0).getDate();
     const d1 = Math.floor(daysInMonth / 3);
     const d2 = Math.floor(daysInMonth * 2 / 3);
     return base +
 `【本月關鍵星象】
-列出${period}最重要的3-5個行星事件，每個包含：（1）精確日期（如${selMonth}/X日）；（2）星象內容（火星入X座、X新月/滿月、行星逆行等）；（3）影響本命盤哪個宮位或行星；（4）對${name}的具體意義與影響方向。每個事件單獨一段。
+列出${period}最重要的3-5個行星事件，每個事件單獨一段，包含：（1）精確日期（格式：${selMonth}/日，如 ${selMonth}/9）；（2）星象內容（火星入X座、滿月/新月、行星逆行/直行等）；（3）激活本命盤哪個宮位或行星；（4）揭示的本命生命節點意義。
 
 【工作 & 事業】
-以三個時段分別說明本月工作面走勢（各段2-3句，引用該時段的星象事件）：
-**月初（${selMonth}/1-${d1}日）**：說明此段工作能量主軸與建議行動
-**月中（${selMonth}/${d1+1}-${d2}日）**：說明此段轉折或機遇
-**月底（${selMonth}/${d2+1}-${daysInMonth}日）**：說明此段收尾或下月佈局
-最後引用本命盤職場天賦指標，給出整月最核心的工作策略（2句）。
+以三個時間點說明本月工作面的本命節點（各段2-3句，引用關鍵日期與本命盤事業指標）：
+**${selMonth}/1 前後**：說明月初工作節點主軸
+**${selMonth}/${d1} 前後**：說明月中轉折節點
+**${selMonth}/${d2} 前後**：說明月底收束節點
+最後引用本命盤職場天賦指標，給出整月最核心的工應對方式（2句）。
 
 【感情 & 人際】
-以上旬（1-${d1}日）、中旬（${d1+1}-${d2}日）、下旬（${d2+1}-${daysInMonth}日）三段分別說明感情與人際走勢（每段2-3句，引用相關星象）。最後引用本命盤感情相關配置，給出整月人際相處的核心建議（2句）。
+以三個關鍵日期節點（${selMonth}/1前後、${selMonth}/${d1}前後、${selMonth}/${d2}前後）分別說明感情與人際的本命節點（每段2-3句，引用相關星象日期）。最後引用本命盤感情相關配置，給出整月人際回應策略（2句）。
 
 【財務 & 資源】
-說明本月財務節奏（4-5句）：哪個時段適合投入/保守、本月可能出現的財務機遇或需注意的風險，以及最佳財務決策時間點（精確到日期區間）。引用本命盤財務指標與本月行星過境依據。
+說明本月財務面的本命節點（3-4句）：揭示哪個日期前後適合行動/收斂、本命盤財務宮位在本月被哪顆行星激活、最佳財務決策時間點（月/日格式）。引用本命盤財務指標與行星過境依據。
 
 【健康 & 能量】
-說明本月身心能量的具體節奏（4-5句）：哪個時段能量高峰、哪個低谷、本月最需要注意的健康面向（引用本命盤健康相關指標）。給出符合本命盤特質的具體養護建議。
+說明本月身心能量的本命節律（3-4句）：哪個日期前後能量節點出現、本命盤揭示的健康關注面向（引用本命盤健康相關指標）、符合本命盤特質的具體養護方式。
 
 【副業 & 第二收入】
-說明本月副業最佳行動時機（3-4句）：最適合創作/推廣/洽談的具體時段與原因、應避開的時機、本月副業方向與本命盤天賦的結合點。引用具體星象依據。
+說明本月副業的本命節點時機（3-4句）：最適合行動的具體日期前後（月/日格式）、本月副業方向與本命盤天賦的結合點、應避開的時機與原因。
 
 【本月整體建議】
-給出2-3個本月最值得優先執行的具體行動，每個附上最佳執行的時間點（精確到日期區間），並說明選擇此時間點的星象依據。`;
+給出2-3個本月本命盤揭示的優先行動節點，每個附上最佳回應時間（月/日格式），並說明星象依據。`;
   }
 }
 
