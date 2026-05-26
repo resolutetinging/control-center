@@ -106,7 +106,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .msg.user{align-self:flex-end;background:var(--astro);color:#fff;border-bottom-right-radius:3px}
 .msg.ai{align-self:flex-start;background:var(--card);border:.5px solid var(--bstr);color:var(--ink);border-bottom-left-radius:3px}
 .msg.ai strong{color:var(--astro)}
-.msg.sys{align-self:center;font-size:11px;color:var(--faint);font-style:italic}
+.msg.sys{align-self:center;font-size:11px;color:var(--faint)}
 .chat-input-row{display:flex;gap:8px}
 .chat-input-row textarea{min-height:46px;max-height:120px;resize:none;padding:10px 12px;flex:1}
 
@@ -419,7 +419,7 @@ async function genMyself(){
     const imgs = getImages();
     const useVision = imgs.length > 0;
 
-    const promptText = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式全面解析此星盤。嚴格使用【標題】格式，禁止使用 ### 標題符號。關鍵詞用 **詞語** 標示粗體。每個段落給出真實、具體的觀察，不泛泛而談，不過度鼓勵。\n\n【核心個性】\n根據太陽、月亮、上升三角組合，深入描述此人的核心性格結構、驅動力與內在矛盾（5-6句）。說明外在呈現與內在真實的落差。\n\n【天賦強項】\n列出 3-4 項此星盤的天然優勢，每項含 2-3 句說明具體展現方式與適用場景。\n\n【成長課題】\n列出 3-4 項需要面對的挑戰或盲點，每項含 2-3 句說明根源與突破方向。\n\n【關係模式】\n分析此人在親密關係、友誼、家庭中的互動模式（4-5句）。包含依附風格、在關係中的需求與常見困境。\n\n【溝通風格】\n根據水星位置及相位，描述此人的思考方式、溝通習慣與說話特點（4-5句）。說明在不同情境下的表達差異。\n\n【人生主軸】\n從整體星盤格局說明此人的靈魂課題與人生核心主題（4-5句）。說明此生需要完成的重要轉化。\n\n${useVision?'圖片為此人的印度星盤（共'+imgs.length+'張），請整合印度命盤對以上各段落進行補充分析。\n\n':''}`;
+    const promptText = `你是精通西方占星與印度吠陀占星（Jyotish）的專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式全面解析此星盤。\n\n格式要求（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止使用任何 Markdown 標題符號（#、##、###、####），包括行首所有 # 字元\n- 關鍵詞、行星名稱、宮位用 **詞語** 標示粗體\n- 每個觀察必須明確引用具體的行星位置或宮位作為依據（如：**水星10宮**、**月亮旺相金牛8宮**、**土星3宮**）\n- 給出真實、具體、有深度的解析，不泛泛而談，不過度鼓勵\n\n【核心個性】\n整合太陽、月亮、上升三角的核心配置，深入描述此人的性格結構與外在氣場（5-6句）。分別說明：上升星座決定的外在呈現方式與防衛機制、太陽星座的核心驅動力、月亮星座的情緒反應模式，以及三者之間的內在矛盾或張力。每個觀察需引用具體行星位置。\n\n【天賦強項】\n列出 3-4 項此星盤的天然優勢，每項含 2-3 句說明。每項必須：（1）引用賦予此天賦的具體行星/宮位；（2）說明在職場或生活中如何具體展現；（3）說明此配置賦予的獨特能力與一般人的差異。\n\n【成長課題】\n列出 3-4 項需要面對的挑戰或盲點，每項含 2-3 句說明。每項必須：（1）引用造成此挑戰的具體行星/宮位根源；（2）說明此課題在現實中的具體表現方式；（3）提供符合此星盤特質的具體突破方向。\n\n【關係模式】\n分析此人在親密關係、友誼、家庭中的互動模式（4-5句）。引用具體行星配置說明：依附風格的星盤成因、在關係中最深層的需求、最容易出現的困境，以及與他人建立深度連結時的特殊方式。\n\n【溝通風格】\n根據水星位置及相位，描述此人的思考方式與溝通習慣（4-5句）。說明：此水星配置如何影響表達邏輯與說話風格、在壓力下的溝通變化、以及此人溝通上相較一般星盤的獨特之處。\n\n【人生主軸】\n從整體星盤格局（包含 Rahu/Ketu 或北南交點的業力指標）說明此人的靈魂課題（4-5句）。說明：此生最重要的轉化方向、靈魂需要學習的核心功課，以及最能讓此人感到活著意義的人生領域。\n\n${useVision?'印度星盤圖片（共'+imgs.length+'張）見附圖。請在以上每個段落中整合印度吠陀占星的觀點（Dasha、宮位、行星旺相/弱陷）作為補充或對照分析。\n\n':''}`;
 
     let messages;
     if(useVision){
@@ -434,7 +434,7 @@ async function genMyself(){
       messages = [{role:'user', content: promptText}];
     }
 
-    const result = await callGroq(messages, useVision, 2800);
+    const result = await callGroq(messages, useVision, 3200);
     const cache = {text: result, ts: Date.now()};
     localStorage.setItem(KEY_MYSELF, JSON.stringify(cache));
     renderMyself();
@@ -566,8 +566,7 @@ function getCat(title){
 }
 
 function stripMdHeaders(s){
-  // 移除 LLM 殘留的 # ## ### #### 標題符號
-  return s.replace(/^#{1,6}\s+/gm,'');
+  return s.replace(/^#{1,6}\s*/gm,'').trim();
 }
 function mdToHtml(s){
   return esc(stripMdHeaders(s)).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
