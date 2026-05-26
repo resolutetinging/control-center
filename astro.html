@@ -90,6 +90,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .forecast-section{background:var(--card);border:.5px solid var(--bstr);border-radius:10px;overflow:hidden}
 .forecast-section-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--astro);padding:9px 14px;background:var(--bg2);border-bottom:.5px solid var(--border)}
 .forecast-section-body{padding:12px 14px;font-size:13px;line-height:1.78;color:var(--ink)}
+.forecast-section-body p{margin-bottom:8px}.forecast-section-body p:last-child{margin-bottom:0}
 .forecast-section-body strong{color:var(--astro);font-weight:600}
 
 /* timeline (year view) */
@@ -562,7 +563,7 @@ function selectChartType(type){
 }
 
 function getCat(title){
-  if(/時間軸/.test(title)) return 'timeline';
+  if(/時間軸|關鍵星象/.test(title)) return 'timeline';
   if(/工作|事業/.test(title)) return 'work';
   if(/感情|人際/.test(title)) return 'relationship';
   if(/財務|資源/.test(title)) return 'finance';
@@ -601,7 +602,10 @@ function renderForecastSections(text){
       }).join('');
       bodyHtml = `<div class="timeline-list">${rows}</div>`;
     } else {
-      bodyHtml = mdToHtml(body);
+      bodyHtml = stripMdHeaders(body).trim().split(/\n{2,}/).map(para=>{
+        const h = esc(para.trim()).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+        return `<p>${h}</p>`;
+      }).join('');
     }
     return `<div class="forecast-section" data-cat="${cat}"><div class="forecast-section-title">${esc(title)}</div><div class="forecast-section-body">${bodyHtml}</div></div>`;
   }).join('');
@@ -637,68 +641,77 @@ function loadForecastResult(){
 function buildForecastPrompt(name, ctx, chartType, imgs){
   const isYearly = !selMonth;
   const period = selMonth ? `${selYear}年${MONTHS[selMonth-1]}` : `${selYear}年`;
-  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止使用 #、##、###、#### 等 Markdown 標題符號。關鍵詞用 **詞語** 標示粗體。每個觀察必須引用具體的行星位置、宮位或相位作為依據（例如：木星過境第10宮、月亮在8宮等）。語氣直接真實，給出有深度的具體預測，避免泛泛而談。`;
+  const _now = new Date();
+  const todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
+
+  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止使用任何 Markdown 標題符號（#、##、###、####）。關鍵詞、行星、宮位用 **詞語** 標示粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星過境事件（含大約日期）。預測要真實有深度，不同面向換行分段，不泛泛而談。`;
 
   let dataIntro;
   if(chartType === 'vedic'){
     const bgNote = ctx ? `\n\n【西洋星盤補充背景（僅供參考）】\n${ctx}` : '';
-    dataIntro = `你是精通印度占星（Jyotish）的專業占星師。以下是 ${name} 的印度星盤圖片（共${imgs.length}張）${bgNote}`;
+    dataIntro = `你是精通印度占星（Jyotish）的專業占星師。今日日期：${todayStr}。以下是 ${name} 的印度星盤圖片（共${imgs.length}張）${bgNote}`;
   } else {
-    dataIntro = `你是專業占星師。以下是 ${name} 的西洋星盤資料：\n\n${ctx}`;
+    dataIntro = `你是精通西方占星與流年推運的專業占星師。今日日期：${todayStr}。以下是 ${name} 的西洋星盤資料：\n\n${ctx}`;
   }
   const analysisBase = chartType === 'vedic'
     ? `以印度占星（Jyotish）原則，包含 Dasha/Antardasha 大小限、行星過境（Gochara）及宮位影響`
-    : `根據此本命盤的行星位置、宮位與相位`;
+    : `根據本命盤的行星位置、宮位與相位，結合 ${period} 的實際行星過境（Transit）事件`;
 
   const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}\n\n`;
 
   if(isYearly){
     return base +
 `【年度時間軸】
-以「M月：一句話主題，說明主要轉折或能量」格式逐月列出1月到12月，例如：
-1月：緩和調整期，**木星過境第2宮**帶來資源整合機會
-2月：...
-（每月一行，12行完整列出，每行必須引用至少一個具體星象依據）
+以「M月：主題詞 + 關鍵星象事件（含大約日期） + 對${name}的具體影響」格式逐月列出1月到12月。
+格式範例：1月：**土星**在水瓶座尾聲，事業格局整固期，X/X **木星**進入X宮帶來擴張機遇，適合主動出擊。
+12個月完整列出，每月必須引用至少一個具體星象事件，不可只有一句口號。
 
 【工作 & 事業】
-全年工作機遇、關鍵轉折期與建議行動方向（3-5句，標示具體月份與星象依據）
+引用本命盤事業相關指標（第10宮、主星、水星、土星配置）與全年重要行星過境，深入分析全年工作走勢（5-6句）。說明：全年工作能量的主要節奏（哪些月份是高峰、哪些是低谷）、最有利的行動時間窗口（精確到月份）、需要謹慎的時期及原因、以及本命盤職場天賦在此年度的最佳發揮方式。不同面向換行分段。
 
 【感情 & 人際】
-全年感情走勢與人際互動模式（3-4句，引用具體相位或宮位）
+引用本命盤感情相關指標（第7宮、金星、月亮位置）與全年行星過境，分析全年感情走勢與人際互動模式（4-5句）。標示感情運轉折的關鍵時間點（精確到月份），說明各時期的人際相處策略。
 
 【財務 & 資源】
-全年財務機遇、風險與適合時機（2-3句）
+引用本命盤財務指標（第2宮、第8宮、木星位置）與全年行星過境，深入分析全年財務節奏（4-5句）。說明：哪些月份收入機遇最強、哪些時期需保守觀望的星象原因，以及適合投入的財務行動類型。
 
 【健康 & 能量】
-全年身心能量的週期規律與需注意的低谷（3-4句）
+引用本命盤健康相關指標（上升星座、第6宮、月亮）與全年行星過境，說明全年身心能量週期規律（4-5句）。明確標示最需要注意的低谷月份（並說明星象原因）及具體的身心養護建議。
 
 【副業 & 第二收入】
-副業機遇、適合啟動的時間窗口與方向建議（2-3句）
+引用本命盤副業/偏財指標（第5宮、木星、金星配置）與流年機遇，分析全年副業走勢（4-5句）。標示最適合啟動或擴展的時間窗口，以及副業方向與本命盤天賦的最佳結合點。
 
-【年度建議】
-2-3個此年度最值得優先執行的核心行動或心態調整`;
+【年度核心建議】
+基於本命盤優勢與${selYear}年整體星象，給出3個最值得優先執行的具體行動方向，每個附上最佳執行的時間窗口（精確到季度或月份），並說明選擇此時間點的星象依據。`;
   } else {
+    const daysInMonth = new Date(selYear, selMonth, 0).getDate();
+    const d1 = Math.floor(daysInMonth / 3);
+    const d2 = Math.floor(daysInMonth * 2 / 3);
     return base +
-`【整體能量方向】
-本月整體主題與核心能量（2-3句，引用主要行星過境）
+`【本月關鍵星象】
+列出${period}最重要的3-5個行星事件，每個包含：（1）精確日期（如${selMonth}/X日）；（2）星象內容（火星入X座、X新月/滿月、行星逆行等）；（3）影響本命盤哪個宮位或行星；（4）對${name}的具體意義與影響方向。每個事件單獨一段。
 
 【工作 & 事業】
-本月工作機會、挑戰與適合的行動時機（3-4句，引用具體宮位或相位）
+以三個時段分別說明本月工作面走勢（各段2-3句，引用該時段的星象事件）：
+**月初（${selMonth}/1-${d1}日）**：說明此段工作能量主軸與建議行動
+**月中（${selMonth}/${d1+1}-${d2}日）**：說明此段轉折或機遇
+**月底（${selMonth}/${d2+1}-${daysInMonth}日）**：說明此段收尾或下月佈局
+最後引用本命盤職場天賦指標，給出整月最核心的工作策略（2句）。
 
 【感情 & 人際】
-本月感情狀態與人際互動傾向（2-3句）
+以上旬（1-${d1}日）、中旬（${d1+1}-${d2}日）、下旬（${d2+1}-${daysInMonth}日）三段分別說明感情與人際走勢（每段2-3句，引用相關星象）。最後引用本命盤感情相關配置，給出整月人際相處的核心建議（2句）。
 
 【財務 & 資源】
-本月財務機遇或需注意事項（2-3句）
+說明本月財務節奏（4-5句）：哪個時段適合投入/保守、本月可能出現的財務機遇或需注意的風險，以及最佳財務決策時間點（精確到日期區間）。引用本命盤財務指標與本月行星過境依據。
 
 【健康 & 能量】
-本月身心狀態的具體提醒（2-3句）
+說明本月身心能量的具體節奏（4-5句）：哪個時段能量高峰、哪個低谷、本月最需要注意的健康面向（引用本命盤健康相關指標）。給出符合本命盤特質的具體養護建議。
 
 【副業 & 第二收入】
-本月副業機遇與最佳行動窗口（2-3句）
+說明本月副業最佳行動時機（3-4句）：最適合創作/推廣/洽談的具體時段與原因、應避開的時機、本月副業方向與本命盤天賦的結合點。引用具體星象依據。
 
-【本月建議】
-2個本月最值得優先執行的具體行動`;
+【本月整體建議】
+給出2-3個本月最值得優先執行的具體行動，每個附上最佳執行的時間點（精確到日期區間），並說明選擇此時間點的星象依據。`;
   }
 }
 
@@ -718,7 +731,7 @@ async function genForecast(cacheKey){
     const ctx = chartContext();
     const useVision = selChartType === 'vedic';
     const promptText = buildForecastPrompt(name, ctx, selChartType, imgs);
-    const maxTok = !selMonth ? 3000 : 2000;
+    const maxTok = !selMonth ? 3500 : 2800;
     let messages;
     if(useVision){
       messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
