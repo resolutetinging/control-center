@@ -455,7 +455,7 @@ function renderParas(text){
   }).join('');
 }
 
-// ── 解析 myself 文字 → sections map
+// ── 解析 myself 文字 → sections map（{sectionLabel: rawText}）
 function parseMyselfText(text){
   const sectionKeys = MYSELF_SECTIONS.map(s=>s.label);
   const sections = {};
@@ -466,66 +466,88 @@ function parseMyselfText(text){
     if(sectionKeys.includes(title)) sections[title] = m[2].trim();
   }
   const normKey = k => k.replace(/\s*[&和與]\s*/g,' & ');
-  const missingKeys = sectionKeys.filter(k=>!sections[k]);
-  if(missingKeys.length > 0){
-    let currentKey = null, currentLines = [];
+  if(sectionKeys.some(k=>!sections[k])){
+    let cur = null, lines = [];
     text.split('\n').forEach(line=>{
       const stripped = line.trim().replace(/^\*+|\*+$/g,'');
       const matched = sectionKeys.find(k=>{
         const inner = (stripped.match(/【([^】]+)】/)||[])[1];
-        if(!inner) return false;
-        return normKey(inner.trim()) === normKey(k);
+        return inner && normKey(inner.trim()) === normKey(k);
       });
       if(matched){
-        if(currentKey && !sections[currentKey]) sections[currentKey] = currentLines.join('\n').trim();
-        currentKey = matched; currentLines = [];
+        if(cur && !sections[cur]) sections[cur] = lines.join('\n').trim();
+        cur = matched; lines = [];
         const inline = stripped.replace(/【[^】]+】/,'').replace(/^\*+|\*+$/g,'').trim();
-        if(inline) currentLines.push(inline);
-      } else if(currentKey){ currentLines.push(line); }
+        if(inline) lines.push(inline);
+      } else if(cur){ lines.push(line); }
     });
-    if(currentKey && !sections[currentKey]) sections[currentKey] = currentLines.join('\n').trim();
+    if(cur && !sections[cur]) sections[cur] = lines.join('\n').trim();
   }
   return sections;
 }
 
+// ── 在 both 模式下把段落內文按子視角拆成 3 欄
+// 輸入：段落原文；輸出：{western, vedic, both}
+function splitToColumns(sectionText, mode){
+  if(mode === 'western') return {western: sectionText, vedic:'', both:''};
+  if(mode === 'vedic')   return {western:'', vedic: sectionText, both:''};
+  // mode === 'both'：解析 **西方視角**：/ **印度視角**：/ **共振交集**：
+  const MARKER = {'西方視角':'western','印度視角':'vedic','共振交集':'both'};
+  const cols = {western:'', vedic:'', both:''};
+  let cur = null;
+  sectionText.split('\n').forEach(line=>{
+    const mk = line.match(/^\*{0,2}(西方視角|印度視角|共振交集)\*{0,2}[：:\s]*(.*)/);
+    if(mk && MARKER[mk[1]]){
+      cur = MARKER[mk[1]];
+      if(mk[2].trim()) cols[cur] += mk[2].trim() + '\n';
+    } else if(cur){
+      cols[cur] += line + '\n';
+    }
+  });
+  // 若沒有任何 marker，全部放 western（降級）
+  if(!cols.western && !cols.vedic && !cols.both) cols.western = sectionText;
+  return cols;
+}
+
 function renderMyself(){
-  const raw   = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
-  const store = raw.text ? {western: raw} : raw; // 相容舊格式
+  const raw = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
   const out   = document.getElementById('myself-out');
   const empty = document.getElementById('myself-empty');
   const ts    = document.getElementById('myself-ts');
   const btn   = document.getElementById('myself-btn');
 
-  const hasAny = ['western','vedic','both'].some(m => store[m]);
-  if(!hasAny){
+  // 取出 {mode, text, ts} — 相容多種舊格式
+  let mode, text, stamp;
+  if(raw.mode && raw.text){ mode = raw.mode; text = raw.text; stamp = raw.ts; }
+  else if(raw.text){ mode = 'western'; text = raw.text; stamp = raw.ts; } // 最舊格式
+  else {
+    // 舊版三-key 格式：找最新的
+    const k = ['both','western','vedic'].find(m => raw[m]);
+    if(k){ mode = k; text = raw[k].text; stamp = raw[k].ts; }
+  }
+
+  if(!text){
     out.innerHTML = ''; empty.style.display = 'block';
     ts.textContent = ''; btn.textContent = '✦ 生成分析';
     return;
   }
   empty.style.display = 'none';
   btn.textContent = '✦ 重新生成';
+  if(stamp){ const d = new Date(stamp); ts.textContent = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')} 生成`; }
 
-  // 最新生成時間
-  const latestTs = Math.max(...['western','vedic','both'].map(m => store[m]?.ts||0));
-  if(latestTs){
-    const d = new Date(latestTs);
-    ts.textContent = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')} 生成`;
-  }
-
-  // 解析各模式 sections
-  const parsed = {};
-  ['western','vedic','both'].forEach(m => {
-    if(store[m]) parsed[m] = parseMyselfText(store[m].text);
-  });
-
+  const sections = parseMyselfText(text);
   const COL_LABELS = {western:'西方', vedic:'印度', both:'整合'};
-  out.innerHTML = MYSELF_SECTIONS.map(({label}) => {
-    const triCols = ['western','vedic','both'].map(m => {
-      const content = (parsed[m]||{})[label] || '';
+
+  out.innerHTML = MYSELF_SECTIONS.map(({label})=>{
+    const raw = sections[label] || '';
+    const cols = raw ? splitToColumns(raw, mode)
+      : {western:'', vedic:'', both:''};
+    const triCols = ['western','vedic','both'].map(c=>{
+      const content = cols[c];
       const body = content
         ? renderParas(content)
-        : `<p style="color:var(--faint);font-size:11px">${store[m] ? '（未解析）' : '未生成'}</p>`;
-      return `<div class="myself-tri-col"><div class="myself-tri-label">${COL_LABELS[m]}</div>${body}</div>`;
+        : `<p style="color:var(--faint);font-size:11px">${mode === 'both' ? '（未解析）' : mode === c ? '（未解析）' : '—'}</p>`;
+      return `<div class="myself-tri-col"><div class="myself-tri-label">${COL_LABELS[c]}</div>${body}</div>`;
     }).join('');
     return `<div class="myself-section"><div class="card-label">${label}</div><div class="myself-tri">${triCols}</div></div>`;
   }).join('');
@@ -547,56 +569,47 @@ async function genMyself(){
   const _now = new Date();
   const _todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
 
-  const FMT = `格式規定（嚴格遵守）：\n- 開頭第一行輸出對應的【解析視角：...】標籤\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 每個段落必須以完整【標題】行開頭，七個標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
+  // 決定 mode（單次 call）
+  const mode = (ctx && imgs.length) ? 'both' : imgs.length ? 'vedic' : 'western';
+  const useVision = (mode === 'vedic' || mode === 'both');
+  progress.textContent = {western:'西方占星分析中…', vedic:'印度占星分析中…', both:'雙系統整合分析中…'}[mode];
+
+  const FMT = `格式規定（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 七個段落標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
 
   const SECTIONS_W = `【核心個性】\n整合上升天蠍、太陽巨蟹9宮、月亮雙子8宮三角，從心理占星視角深入描述你的核心性格結構（5-6句）。分別說明：上升天蠍賦予的外在防衛機制與神祕氣場、太陽巨蟹的情感驅動力與安全感需求、月亮雙子8宮的思維情緒運作方式，以及三者之間的內在張力與矛盾。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的本命盤天賦優勢，每項單獨一段。每項引用具體行星/宮位配置，說明在職場或生活中的具體展現方式，以及此配置賦予你的獨特能力。\n\n【工作 & 事業】\n以西方占星流年視角（今日 ${_todayStr}）分析你的職涯天賦與當前能量週期（4-5句）。引用事業相關行星（第10宮、木星、太陽）與當前流年行星過境（Transits）對職涯的本命生命節點顯化。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項你的心理課題或盲點，每項單獨一段。以心理占星視角分析：星盤根源、在生活中的具體表現、符合你靈魂演化方向的突破路徑。\n\n【關係模式】\n從心理占星視角分析你在親密關係、友誼、家庭中的互動模式（4-5句）。引用第7宮、金星雙子8宮、月亮雙子8宮說明你的依附風格、最深層的關係需求與常見困境。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述你的思考方式與溝通習慣（4-5句）。說明此配置如何影響你的表達邏輯、在壓力下的溝通變化，以及你溝通上的獨特性。\n\n【人生主軸】\n從整體星盤格局與靈魂演化視角（引用北交點/南交點業力方向）說明你的核心靈魂課題（4-5句）。說明你此生最重要的轉化主題與靈魂成長路徑。`;
 
   const SECTIONS_V = `【核心個性】\n從吠陀占星視角，整合上升天秤（主星金星）、月亮金牛8宮旺相、太陽巨蟹10宮的業力格局，深入描述你的性格結構（5-6句）。分別說明：天秤上升帶來的外交人格與平衡追求、月亮金牛8宮旺相的情緒穩定性與潛在轉化能力、太陽10宮的事業業力使命，以及各配置的廟旺平陷狀態對你實際行為的影響。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的吠陀星盤天賦格局（Yogas），每項單獨一段。每項說明：格局名稱或宮位依據、業力顯化的方式，以及此格局在你現實生活中最直接的展現。\n\n【工作 & 事業】\n以吠陀占星視角（今日 ${_todayStr}）分析你的事業業力格局與當前大運（Dasha）對職涯的催化（4-5句）。引用太陽/木星匯聚第10宮的核心格局，說明當前 Dasha 主星、Gochar 流年行星對事業宮的影響，以及未來 3-6 個月的具體生命節點時間點。\n\n【成長課題】\n列出 3-4 項你在業力層面需要面對的課題，每項單獨一段。以吠陀占星視角分析：業力根源（宮位或行星弱陷/逆行等）、在現實生活中的具體顯化，以及對應的業力修行方向。\n\n【關係模式】\n從吠陀占星視角分析你在親密關係與人際互動中的業力模式（4-5句）。引用第7宮、第8宮、金星主星位置，說明你在關係中的業力課題、最深層的情感需求，以及感情業力的修行重點。不同面向換行分段。\n\n【溝通風格】\n根據吠陀星盤水星位置及其廟旺平陷狀態，描述你的思維模式與溝通習慣（4-5句）。說明此配置帶來的業力特質、在不同情境下的溝通表現。\n\n【人生主軸】\n從 Rahu/Ketu（羅睺/計都）的業力軸線說明你此生最核心的靈魂課題（4-5句）。說明 Rahu 指向的今生業力成長方向、Ketu 帶來的前世業力積累，以及最能讓你完成業力使命的人生領域。`;
 
-  const modes = [];
-  if(ctx) modes.push('western');
-  if(imgs.length) modes.push('vedic');
-  if(ctx && imgs.length) modes.push('both');
+  // both 模式：要求在每個段落內用子視角 marker 分段
+  const BOTH_INST = `\n在以下每個段落中，依序輸出三個子視角（標記格式嚴格遵守，每個標記從行首開始，後接全形冒號）：\n**西方視角**：[現代西方心理占星，2-3句，僅引用天蠍上升/巨蟹太陽9宮/雙子月亮8宮]\n**印度視角**：[吠陀業力占星，2-3句，僅引用天秤上升/金牛月亮8宮/巨蟹太陽木星10宮]\n**共振交集**：[兩系統共同指向的核心洞見，1-2句]`;
 
-  const raw   = JSON.parse(localStorage.getItem(KEY_MYSELF)||'{}');
-  const store = raw.text ? {} : raw;
-  let errCount = 0;
-
-  for(let i = 0; i < modes.length; i++){
-    const mode = modes[i];
-    const modeLabel = {western:'西方占星', vedic:'印度占星', both:'雙系統整合'}[mode];
-    progress.textContent = `${modeLabel} (${i+1}/${modes.length})…`;
-    const useVision = (mode === 'vedic' || mode === 'both');
-
-    let promptText;
-    if(mode === 'western'){
-      promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：現代西方占星】進行本命盤分析。今日日期：${_todayStr}。\n\n以下是 ${name} 的西洋星盤資料：\n${ctx}\n\n${FMT}\n\n${SECTIONS_W}`;
-    } else if(mode === 'vedic'){
-      promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：古典印度占星】進行本命盤分析。今日日期：${_todayStr}。印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}\n\n${SECTIONS_V}`;
-    } else {
-      promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次為【解析視角：雙系統整合】分析。今日日期：${_todayStr}。\n\n西洋星盤資料：\n${ctx}\n\n印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}\n請在以下每個段落中，先以西方占星視角（心理底蘊），再以印度占星視角（業力現實），最後給出兩系統共振的整合洞見。子視角標記用 **西方視角**、**印度視角**、**共振交集**（不用【】格式，避免解析錯誤）。\n\n${SECTIONS_W}`;
-    }
-    let messages;
-    if(useVision){
-      messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
-    } else {
-      messages = [{role:'user', content: promptText}];
-    }
-    try{
-      const result = await callGroq(messages, useVision, 3200);
-      store[mode] = {text: result, ts: Date.now()};
-      localStorage.setItem(KEY_MYSELF, JSON.stringify(store));
-      renderMyself();
-    }catch(e){
-      errCount++;
-      console.error(`genMyself ${mode} failed:`, e);
-    }
+  let promptText;
+  if(mode === 'western'){
+    promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：現代西方占星】進行本命盤分析，嚴禁引用吠陀/印度占星術語或天秤上升、金牛月亮等吠陀配置。今日日期：${_todayStr}。\n\n西洋星盤資料：\n${ctx}\n\n${FMT}\n\n${SECTIONS_W}`;
+  } else if(mode === 'vedic'){
+    promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：古典印度占星】進行本命盤分析，嚴禁引用西方占星術語或天蠍上升、雙子月亮等西方配置。今日日期：${_todayStr}。印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}\n\n${SECTIONS_V}`;
+  } else {
+    promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次為【解析視角：雙系統整合】分析。今日日期：${_todayStr}。\n\n西洋星盤資料：\n${ctx}\n\n印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}${BOTH_INST}\n\n${SECTIONS_W}`;
   }
-  if(errCount) alert(`部分生成失敗（${errCount}/${modes.length}）`);
-  progress.textContent = '';
-  btn.disabled = false;
-  btn.textContent = '✦ 重新生成';
-  loading.style.display = 'none';
+
+  let messages;
+  if(useVision){
+    messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
+  } else {
+    messages = [{role:'user', content: promptText}];
+  }
+  try{
+    const result = await callGroq(messages, useVision, 3800);
+    localStorage.setItem(KEY_MYSELF, JSON.stringify({mode, text: result, ts: Date.now()}));
+    renderMyself();
+  }catch(e){
+    alert('生成失敗：'+e.message);
+  }finally{
+    progress.textContent = '';
+    btn.disabled = false;
+    btn.textContent = '✦ 重新生成';
+    loading.style.display = 'none';
+  }
 }
 
 function clearMyself(){
