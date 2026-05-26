@@ -541,29 +541,37 @@ function getCat(title){
   return 'other';
 }
 
+function stripMdHeaders(s){
+  // 移除 LLM 殘留的 # ## ### #### 標題符號
+  return s.replace(/^#{1,6}\s+/gm,'');
+}
+function mdToHtml(s){
+  return esc(stripMdHeaders(s)).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
 function renderForecastSections(text){
   const sections = [];
-  const re = /【([^】]+)】\n?([\s\S]*?)(?=\n【[^】]+】|$)/g;
+  const re = /【([^】]+)】[^\n]*\n([\s\S]*?)(?=\n?【[^】]+】|$)/g;
   let m;
   while((m = re.exec(text)) !== null){
     const t = m[1].trim(), b = m[2].trim();
     if(t) sections.push({title:t, body:b});
   }
   if(!sections.length){
-    return `<div class="forecast-section"><div class="forecast-section-body">${esc(text).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div></div>`;
+    return `<div class="forecast-section"><div class="forecast-section-body">${mdToHtml(text)}</div></div>`;
   }
   return sections.map(({title, body})=>{
     const cat = getCat(title);
     let bodyHtml;
     if(cat === 'timeline'){
-      const rows = body.split('\n').filter(l=>l.trim()).map(line=>{
+      const rows = stripMdHeaders(body).split('\n').filter(l=>l.trim()).map(line=>{
         const mm = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
         if(mm) return `<div class="timeline-row"><div class="timeline-month">${esc(mm[1])}</div><div class="timeline-body">${esc(mm[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
         return `<div class="timeline-row"><div class="timeline-month"></div><div class="timeline-body">${esc(line).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
       }).join('');
       bodyHtml = `<div class="timeline-list">${rows}</div>`;
     } else {
-      bodyHtml = esc(body).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+      bodyHtml = mdToHtml(body);
     }
     return `<div class="forecast-section" data-cat="${cat}"><div class="forecast-section-title">${esc(title)}</div><div class="forecast-section-body">${bodyHtml}</div></div>`;
   }).join('');
@@ -600,7 +608,7 @@ function buildForecastPrompt(name, ctx, useVision, imgs){
   const isYearly = !selMonth;
   const period = selMonth ? `${selYear}年${MONTHS[selMonth-1]}` : `${selYear}年`;
   const visionNote = useVision ? `\n\n圖片為印度星盤（共${imgs.length}張），請整合印度占星觀點。` : '';
-  const base = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請根據此本命盤，分析 ${period} 的走勢，以繁體中文輸出。嚴格使用【標題】格式，禁止使用 ### 標題符號。關鍵詞用 **詞語** 標示粗體。語氣直接真實，給出有深度的具體觀察，避免泛泛而談。\n\n`;
+  const base = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請根據此本命盤，分析 ${period} 的走勢，以繁體中文輸出。嚴格使用【標題】格式，絕對禁止使用 #、##、###、#### 等 Markdown 標題符號。關鍵詞用 **詞語** 標示粗體。語氣直接真實，給出有深度的具體觀察，避免泛泛而談。\n\n`;
 
   if(isYearly){
     return base +
@@ -660,18 +668,11 @@ async function genForecast(cacheKey){
     const name = getName();
     const ctx = chartContext();
     const imgs = getImages();
-    const useVision = imgs.length > 0;
-    const promptText = buildForecastPrompt(name, ctx, useVision, imgs);
+    // 人生預測固定用文字模型，避免 Vision TPM 超限
+    const promptText = buildForecastPrompt(name, ctx, false, imgs);
     const maxTok = !selMonth ? 3000 : 2000;
-
-    let messages;
-    if(useVision){
-      messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
-    } else {
-      messages = [{role:'user', content:promptText}];
-    }
-
-    const result = await callGroq(messages, useVision, maxTok);
+    const messages = [{role:'user', content:promptText}];
+    const result = await callGroq(messages, false, maxTok);
     const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
     forecasts[cacheKey] = {text:result, ts:Date.now()};
     localStorage.setItem(KEY_FORECAST, JSON.stringify(forecasts));
