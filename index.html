@@ -826,15 +826,16 @@ function buildTT(id){
         }
       }catch(e){}
       const cpSingle=LIVE.sleep?.combatSingle??null;
-      const cpWeighted=sleepCp;
+      const cpWeightedRaw=parseInt(localStorage.getItem('sas_combat_weighted')||'0')||parseInt(localStorage.getItem('sas_combat')||'0')||null;
       let combatRows='';
-      if(cpSingle!=null&&cpWeighted!=null){
-        const diff=cpSingle-cpWeighted;
-        const diffStr=diff>0?`+${diff}`:String(diff);
-        const diffColor=Math.abs(diff)<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)';
+      if(cpSingle!=null&&cpWeightedRaw!=null){
+        const diff=cpSingle-cpWeightedRaw;
+        const absDiff=Math.abs(diff);
+        const diffColor=absDiff<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)';
+        const diffLabel=absDiff<5?'穩定':diff>0?`單夜高 +${diff}`:`加權高 +${absDiff}`;
         combatRows=row('單夜戰力',String(cpSingle),cpSingle>=75?'g':cpSingle>=50?'a':'r')
-          +row('3夜加權',String(cpWeighted),cpWeighted>=75?'g':cpWeighted>=50?'a':'r')
-          +`<div class="tt-row"><span class="tt-k">單夜 vs 加權</span><span style="font-size:11px;color:${diffColor};font-weight:600;">${diffStr}</span></div>`;
+          +row('3夜加權',String(cpWeightedRaw),cpWeightedRaw>=75?'g':cpWeightedRaw>=50?'a':'r')
+          +`<div class="tt-row"><span class="tt-k">差距</span><span style="font-size:11px;color:${diffColor};font-weight:600;">${diffLabel}</span></div>`;
       } else {
         combatRows=row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'));
       }
