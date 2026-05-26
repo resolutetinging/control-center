@@ -115,7 +115,8 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 @media(max-width:600px){.myself-grid{grid-template-columns:1fr}.month-grid{grid-template-columns:repeat(4,1fr)}}
 .myself-section{background:var(--card);border:.5px solid var(--bstr);border-radius:10px;padding:14px;box-shadow:var(--shadow)}
 .myself-section .card-label{color:var(--astro)}
-.myself-section p{font-size:13px;line-height:1.78;color:var(--sub)}
+.myself-section p{font-size:13px;line-height:1.78;color:var(--sub);margin-bottom:8px}
+.myself-section p:last-child{margin-bottom:0}
 .myself-section p strong{color:var(--astro);font-weight:600}
 
 /* ── MISC ── */
@@ -396,6 +397,7 @@ function loadSettingForm(){
 const MYSELF_SECTIONS = [
   {key:'personality', label:'核心個性'},
   {key:'strengths',   label:'天賦強項'},
+  {key:'career',      label:'工作 & 事業'},
   {key:'challenges',  label:'成長課題'},
   {key:'relationship',label:'關係模式'},
   {key:'communication',label:'溝通風格'},
@@ -419,7 +421,9 @@ async function genMyself(){
     const imgs = getImages();
     const useVision = imgs.length > 0;
 
-    const promptText = `你是精通西方占星與印度吠陀占星（Jyotish）的專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式全面解析此星盤。\n\n格式要求（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止使用任何 Markdown 標題符號（#、##、###、####），包括行首所有 # 字元\n- 關鍵詞、行星名稱、宮位用 **詞語** 標示粗體\n- 每個觀察必須明確引用具體的行星位置或宮位作為依據（如：**水星10宮**、**月亮旺相金牛8宮**、**土星3宮**）\n- 給出真實、具體、有深度的解析，不泛泛而談，不過度鼓勵\n\n【核心個性】\n整合太陽、月亮、上升三角的核心配置，深入描述此人的性格結構與外在氣場（5-6句）。分別說明：上升星座決定的外在呈現方式與防衛機制、太陽星座的核心驅動力、月亮星座的情緒反應模式，以及三者之間的內在矛盾或張力。每個觀察需引用具體行星位置。\n\n【天賦強項】\n列出 3-4 項此星盤的天然優勢，每項含 2-3 句說明。每項必須：（1）引用賦予此天賦的具體行星/宮位；（2）說明在職場或生活中如何具體展現；（3）說明此配置賦予的獨特能力與一般人的差異。\n\n【成長課題】\n列出 3-4 項需要面對的挑戰或盲點，每項含 2-3 句說明。每項必須：（1）引用造成此挑戰的具體行星/宮位根源；（2）說明此課題在現實中的具體表現方式；（3）提供符合此星盤特質的具體突破方向。\n\n【關係模式】\n分析此人在親密關係、友誼、家庭中的互動模式（4-5句）。引用具體行星配置說明：依附風格的星盤成因、在關係中最深層的需求、最容易出現的困境，以及與他人建立深度連結時的特殊方式。\n\n【溝通風格】\n根據水星位置及相位，描述此人的思考方式與溝通習慣（4-5句）。說明：此水星配置如何影響表達邏輯與說話風格、在壓力下的溝通變化、以及此人溝通上相較一般星盤的獨特之處。\n\n【人生主軸】\n從整體星盤格局（包含 Rahu/Ketu 或北南交點的業力指標）說明此人的靈魂課題（4-5句）。說明：此生最重要的轉化方向、靈魂需要學習的核心功課，以及最能讓此人感到活著意義的人生領域。\n\n${useVision?'印度星盤圖片（共'+imgs.length+'張）見附圖。請在以上每個段落中整合印度吠陀占星的觀點（Dasha、宮位、行星旺相/弱陷）作為補充或對照分析。\n\n':''}`;
+    const _now = new Date();
+    const _todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
+    const promptText = `你是精通西方占星與印度吠陀占星（Jyotish）的專業占星師。今日日期：${_todayStr}。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式全面解析此星盤。\n\n格式要求（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止使用任何 Markdown 標題符號（#、##、###、####），包括行首所有 # 字元\n- 關鍵詞、行星名稱、宮位用 **詞語** 標示粗體\n- 每個觀察必須明確引用具體的行星位置或宮位作為依據（如：**水星10宮**、**月亮旺相金牛8宮**）\n- 不同觀點之間用換行分段，不要全部擠成一段\n- 給出真實、具體、有深度的解析，不泛泛而談，不過度鼓勵\n\n【核心個性】\n整合太陽、月亮、上升三角的核心配置，深入描述此人的性格結構與外在氣場（5-6句）。分別說明：上升星座決定的外在呈現方式與防衛機制、太陽星座的核心驅動力、月亮星座的情緒反應模式，以及三者之間的內在矛盾或張力。每個觀察需引用具體行星位置，不同要點換行。\n\n【天賦強項】\n列出 3-4 項此星盤的天然優勢，每項單獨一段。每項必須：（1）引用賦予此天賦的具體行星/宮位；（2）說明在職場或生活中如何具體展現；（3）說明此配置賦予的獨特能力與一般人的差異。\n\n【工作 & 事業】\n結合本命盤事業指標與當前流年行星過境（今日 ${_todayStr}）進行分析（4-5句）。引用具體宮位/行星說明：本命盤中最強的職場競爭優勢與適合的工作類型、當前流年最重要的行星過境對職涯的具體影響（如木星、土星換座時間點）、以及未來 3-6 個月值得把握的關鍵機遇。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項需要面對的挑戰或盲點，每項單獨一段。每項必須：（1）引用造成此挑戰的具體行星/宮位根源；（2）說明此課題在現實中的具體表現方式；（3）提供符合此星盤特質的具體突破方向。\n\n【關係模式】\n分析此人在親密關係、友誼、家庭中的互動模式（4-5句）。引用具體行星配置說明：依附風格的星盤成因、在關係中最深層的需求、最容易出現的困境，以及與他人建立深度連結時的特殊方式。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述此人的思考方式與溝通習慣（4-5句）。說明：此水星配置如何影響表達邏輯與說話風格、在壓力下的溝通變化、以及此人溝通上相較一般星盤的獨特之處。\n\n【人生主軸】\n從整體星盤格局（包含 Rahu/Ketu 或北南交點的業力指標）說明此人的靈魂課題（4-5句）。說明：此生最重要的轉化方向、靈魂需要學習的核心功課，以及最能讓此人感到活著意義的人生領域。\n\n${useVision?'印度星盤圖片（共'+imgs.length+'張）見附圖。請在以上每個段落中整合印度吠陀占星的觀點（Dasha、宮位、行星旺相/弱陷）作為補充或對照分析。\n\n':''}`;
 
     let messages;
     if(useVision){
@@ -493,10 +497,13 @@ function renderMyself(){
 
   out.innerHTML = MYSELF_SECTIONS.map(({key,label})=>{
     const content = sections[label] || '';
-    return `<div class="myself-section">
-      <div class="card-label">${label}</div>
-      <p>${content ? mdToHtml(content) : '<span style="color:var(--faint)">（未能解析此段落）</span>'}</p>
-    </div>`;
+    const bodyHtml = content
+      ? stripMdHeaders(content).trim().split(/\n{2,}/).map(para=>{
+          const h = esc(para.trim()).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+          return `<p>${h}</p>`;
+        }).join('')
+      : `<p><span style="color:var(--faint)">（未能解析此段落）</span></p>`;
+    return `<div class="myself-section"><div class="card-label">${label}</div>${bodyHtml}</div>`;
   }).join('');
 }
 
