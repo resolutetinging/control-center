@@ -72,8 +72,27 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .month-btn.active{background:var(--astro-tint2);border-color:var(--astro);color:var(--astro);font-weight:600}
 .month-btn.has-cache{border-color:rgba(61,82,122,.3);color:var(--astro)}
 .month-btn:hover:not(.active){border-color:var(--astro-l);color:var(--astro)}
-.forecast-out{background:var(--bg2);border:.5px solid var(--bstr);border-radius:10px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;min-height:60px;color:var(--ink)}
-.forecast-out strong{color:var(--astro)}
+
+/* filter pills */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filter-pill{padding:5px 12px;border-radius:20px;border:1px solid var(--bstr);background:rgba(40,38,32,.04);color:var(--sub);font-size:12px;cursor:pointer;transition:all .18s;font-family:inherit;white-space:nowrap}
+.filter-pill.active{background:var(--astro);border-color:var(--astro);color:#fff;font-weight:600}
+.filter-pill:hover:not(.active){border-color:var(--astro-l);color:var(--astro)}
+
+/* forecast section cards */
+.forecast-sections{display:flex;flex-direction:column;gap:10px}
+.forecast-section{background:var(--card);border:.5px solid var(--bstr);border-radius:10px;overflow:hidden}
+.forecast-section-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--astro);padding:9px 14px;background:var(--bg2);border-bottom:.5px solid var(--border)}
+.forecast-section-body{padding:12px 14px;font-size:13px;line-height:1.78;color:var(--ink)}
+.forecast-section-body strong{color:var(--astro);font-weight:600}
+
+/* timeline (year view) */
+.timeline-list{display:flex;flex-direction:column}
+.timeline-row{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);align-items:baseline}
+.timeline-row:last-child{border-bottom:none}
+.timeline-month{font-size:11px;font-weight:700;color:var(--astro);white-space:nowrap}
+.timeline-body{font-size:12.5px;line-height:1.65;color:var(--sub)}
+.timeline-body strong{color:var(--ink);font-weight:600}
 
 /* ── CHAT ── */
 .chat-messages{height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--bg2);border:.5px solid var(--bstr);border-radius:10px;margin-bottom:12px}
@@ -90,7 +109,8 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 @media(max-width:600px){.myself-grid{grid-template-columns:1fr}.month-grid{grid-template-columns:repeat(4,1fr)}}
 .myself-section{background:var(--card);border:.5px solid var(--bstr);border-radius:10px;padding:14px;box-shadow:var(--shadow)}
 .myself-section .card-label{color:var(--astro)}
-.myself-section p{font-size:13px;line-height:1.75;color:var(--sub)}
+.myself-section p{font-size:13px;line-height:1.78;color:var(--sub)}
+.myself-section p strong{color:var(--astro);font-weight:600}
 
 /* ── MISC ── */
 .divider{height:.5px;background:var(--bstr);margin:14px 0}
@@ -179,12 +199,21 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
   <div id="forecast-loading" style="display:none" class="loading">推算中，請稍候…</div>
 
   <div id="forecast-result" style="display:none">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
       <div id="forecast-period-label" style="font-size:13px;font-weight:700;color:var(--astro)"></div>
       <button class="btn btn-ghost btn-sm" onclick="regenForecast()">重新生成</button>
       <button class="btn btn-ghost btn-sm" onclick="clearForecast()">清除</button>
     </div>
-    <div class="forecast-out" id="forecast-out"></div>
+    <div class="filter-bar">
+      <button class="filter-pill active" data-cat="all" onclick="filterForecast('all')">全部</button>
+      <button class="filter-pill" data-cat="work" onclick="filterForecast('work')">工作 & 事業</button>
+      <button class="filter-pill" data-cat="relationship" onclick="filterForecast('relationship')">感情 & 人際</button>
+      <button class="filter-pill" data-cat="finance" onclick="filterForecast('finance')">財務</button>
+      <button class="filter-pill" data-cat="health" onclick="filterForecast('health')">健康</button>
+      <button class="filter-pill" data-cat="side" onclick="filterForecast('side')">副業</button>
+      <button class="filter-pill" data-cat="summary" onclick="filterForecast('summary')">整體 & 建議</button>
+    </div>
+    <div class="forecast-sections" id="forecast-sections"></div>
   </div>
 </div>
 
@@ -214,7 +243,7 @@ const KEY_CHAT     = 'astro_chat';
 const KEY_IMAGES   = 'astro_vedic_images';
 
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-let selYear = null, selMonth = null;
+let selYear = null, selMonth = null, selCategory = 'all';
 let chatHistory = [];
 
 // ── Groq API ──
@@ -222,14 +251,14 @@ function getGroqKey(){
   return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||'';
 }
 
-async function callGroq(messages, useVision=false){
+async function callGroq(messages, useVision=false, maxTokens=2000){
   const key = getGroqKey();
   if(!key) throw new Error('未設定 Groq API Key（請在 CC 主頁設定）');
   const model = useVision ? MODEL_VISION : MODEL_TEXT;
   const resp = await fetch(GROQ, {
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body: JSON.stringify({model, messages, temperature:0.65, max_tokens:1200})
+    body: JSON.stringify({model, messages, temperature:0.7, max_tokens:maxTokens})
   });
   if(!resp.ok){
     const err = await resp.json().catch(()=>({}));
@@ -380,7 +409,7 @@ async function genMyself(){
     const imgs = getImages();
     const useVision = imgs.length > 0;
 
-    const promptText = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式分析此星盤，以下列結構輸出，每個【標題】獨立一行：\n\n【核心個性】\n根據太陽/月亮/上升組合，描述此人的核心性格（3-4句）\n\n【天賦強項】\n此星盤顯示的天然優勢與才能（2-3項）\n\n【成長課題】\n此星盤中的挑戰與成長方向（2-3項）\n\n【關係模式】\n此人在親密關係與人際互動中的傾向\n\n【溝通風格】\n水星位置所呈現的溝通與思考方式\n\n【人生主軸】\n此星盤的整體主題與核心任務（1-2句）\n\n語氣直接，給出真實觀察，不過度鼓勵。${useVision?'\n\n圖片為此人的印度星盤（共'+imgs.length+'張），請整合西洋與印度占星進行全面分析。':''}`;
+    const promptText = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式全面解析此星盤。嚴格使用【標題】格式，禁止使用 ### 標題符號。關鍵詞用 **詞語** 標示粗體。每個段落給出真實、具體的觀察，不泛泛而談，不過度鼓勵。\n\n【核心個性】\n根據太陽、月亮、上升三角組合，深入描述此人的核心性格結構、驅動力與內在矛盾（5-6句）。說明外在呈現與內在真實的落差。\n\n【天賦強項】\n列出 3-4 項此星盤的天然優勢，每項含 2-3 句說明具體展現方式與適用場景。\n\n【成長課題】\n列出 3-4 項需要面對的挑戰或盲點，每項含 2-3 句說明根源與突破方向。\n\n【關係模式】\n分析此人在親密關係、友誼、家庭中的互動模式（4-5句）。包含依附風格、在關係中的需求與常見困境。\n\n【溝通風格】\n根據水星位置及相位，描述此人的思考方式、溝通習慣與說話特點（4-5句）。說明在不同情境下的表達差異。\n\n【人生主軸】\n從整體星盤格局說明此人的靈魂課題與人生核心主題（4-5句）。說明此生需要完成的重要轉化。\n\n${useVision?'圖片為此人的印度星盤（共'+imgs.length+'張），請整合印度命盤對以上各段落進行補充分析。\n\n':''}`;
 
     let messages;
     if(useVision){
@@ -395,7 +424,7 @@ async function genMyself(){
       messages = [{role:'user', content: promptText}];
     }
 
-    const result = await callGroq(messages, useVision);
+    const result = await callGroq(messages, useVision, 2800);
     const cache = {text: result, ts: Date.now()};
     localStorage.setItem(KEY_MYSELF, JSON.stringify(cache));
     renderMyself();
@@ -445,7 +474,7 @@ function renderMyself(){
     const content = sections[label] || '';
     return `<div class="myself-section">
       <div class="card-label">${label}</div>
-      <p>${content ? esc(content).replace(/\n/g,'<br>') : '<span style="color:var(--faint)">（未能解析此段落）</span>'}</p>
+      <p>${content ? esc(content).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>') : '<span style="color:var(--faint)">（未能解析此段落）</span>'}</p>
     </div>`;
   }).join('');
 }
@@ -489,17 +518,66 @@ function selectMonth(m){
   loadForecastResult();
 }
 
+// ── Forecast section helpers ──
+function getCat(title){
+  if(/時間軸/.test(title)) return 'timeline';
+  if(/工作|事業/.test(title)) return 'work';
+  if(/感情|人際/.test(title)) return 'relationship';
+  if(/財務|資源/.test(title)) return 'finance';
+  if(/健康|能量/.test(title)) return 'health';
+  if(/副業|收入/.test(title)) return 'side';
+  if(/建議|整體|方向/.test(title)) return 'summary';
+  return 'other';
+}
+
+function renderForecastSections(text){
+  const sections = [];
+  const re = /【([^】]+)】\n?([\s\S]*?)(?=\n【[^】]+】|$)/g;
+  let m;
+  while((m = re.exec(text)) !== null){
+    const t = m[1].trim(), b = m[2].trim();
+    if(t) sections.push({title:t, body:b});
+  }
+  if(!sections.length){
+    return `<div class="forecast-section"><div class="forecast-section-body">${esc(text).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div></div>`;
+  }
+  return sections.map(({title, body})=>{
+    const cat = getCat(title);
+    let bodyHtml;
+    if(cat === 'timeline'){
+      const rows = body.split('\n').filter(l=>l.trim()).map(line=>{
+        const mm = line.match(/^(\d{1,2}月)[：:]\s*(.*)/);
+        if(mm) return `<div class="timeline-row"><div class="timeline-month">${esc(mm[1])}</div><div class="timeline-body">${esc(mm[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+        return `<div class="timeline-row"><div class="timeline-month"></div><div class="timeline-body">${esc(line).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+      }).join('');
+      bodyHtml = `<div class="timeline-list">${rows}</div>`;
+    } else {
+      bodyHtml = esc(body).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    }
+    return `<div class="forecast-section" data-cat="${cat}"><div class="forecast-section-title">${esc(title)}</div><div class="forecast-section-body">${bodyHtml}</div></div>`;
+  }).join('');
+}
+
+function filterForecast(cat){
+  selCategory = cat;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.toggle('active', p.dataset.cat===cat));
+  document.querySelectorAll('#forecast-sections .forecast-section').forEach(s=>{
+    const c = s.dataset.cat;
+    s.style.display = (cat==='all' || c==='timeline' || c===cat) ? '' : 'none';
+  });
+}
+
 function loadForecastResult(){
   const key = selMonth ? `${selYear}_${selMonth}` : selYear ? String(selYear) : null;
   if(!key){ document.getElementById('forecast-result').style.display='none'; return; }
   const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
   const cache = forecasts[key];
   const resultDiv = document.getElementById('forecast-result');
-  const outDiv = document.getElementById('forecast-out');
   const label = document.getElementById('forecast-period-label');
   if(cache){
     label.textContent = selMonth ? `${selYear}年 ${MONTHS[selMonth-1]}` : `${selYear}年`;
-    outDiv.innerHTML = esc(cache.text).replace(/【([^】]+)】/g,'<strong>【$1】</strong>').replace(/\n/g,'<br>');
+    document.getElementById('forecast-sections').innerHTML = renderForecastSections(cache.text);
+    filterForecast(selCategory);
     resultDiv.style.display='block';
   } else {
     resultDiv.style.display='none';
@@ -507,11 +585,64 @@ function loadForecastResult(){
   }
 }
 
-async function genForecast(cacheKey){
-  if(!hasChart()){
-    alert('請先在設定頁貼入星盤資料');
-    return;
+function buildForecastPrompt(name, ctx, useVision, imgs){
+  const isYearly = !selMonth;
+  const period = selMonth ? `${selYear}年${MONTHS[selMonth-1]}` : `${selYear}年`;
+  const visionNote = useVision ? `\n\n圖片為印度星盤（共${imgs.length}張），請整合印度占星觀點。` : '';
+  const base = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請根據此本命盤，分析 ${period} 的走勢，以繁體中文輸出。嚴格使用【標題】格式，禁止使用 ### 標題符號。關鍵詞用 **詞語** 標示粗體。語氣直接真實，給出有深度的具體觀察，避免泛泛而談。\n\n`;
+
+  if(isYearly){
+    return base +
+`【年度時間軸】
+以「M月：一句話主題，說明主要轉折或能量」格式逐月列出1月到12月，例如：
+1月：緩和調整期，**工作維穩**；感情宜主動表達
+2月：...
+（每月一行，12行完整列出）
+
+【工作 & 事業】
+全年工作機遇、關鍵轉折期與建議行動方向（3-5句，標示具體月份）
+
+【感情 & 人際】
+全年感情走勢與人際互動模式（3-4句）
+
+【財務 & 資源】
+全年財務機遇、風險與適合時機（2-3句）
+
+【健康 & 能量】
+全年身心能量的週期規律與需注意的低谷（3-4句）
+
+【副業 & 第二收入】
+副業機遇、適合啟動的時間窗口與方向建議（2-3句）
+
+【年度建議】
+2-3個此年度最值得優先執行的核心行動或心態調整${visionNote}`;
+  } else {
+    return base +
+`【整體能量方向】
+本月整體主題與核心能量（2-3句）
+
+【工作 & 事業】
+本月工作機會、挑戰與適合的行動時機（3-4句）
+
+【感情 & 人際】
+本月感情狀態與人際互動傾向（2-3句）
+
+【財務 & 資源】
+本月財務機遇或需注意事項（2-3句）
+
+【健康 & 能量】
+本月身心狀態的具體提醒（2-3句）
+
+【副業 & 第二收入】
+本月副業機遇與最佳行動窗口（2-3句）
+
+【本月建議】
+2個本月最值得優先執行的具體行動${visionNote}`;
   }
+}
+
+async function genForecast(cacheKey){
+  if(!hasChart()){ alert('請先在設定頁貼入星盤資料'); return; }
   const loading = document.getElementById('forecast-loading');
   loading.style.display='flex';
   try{
@@ -519,29 +650,25 @@ async function genForecast(cacheKey){
     const ctx = chartContext();
     const imgs = getImages();
     const useVision = imgs.length > 0;
-    const period = selMonth ? `${selYear}年${MONTHS[selMonth-1]}` : `${selYear}年`;
-    const granularity = selMonth ? '當月（約30天）' : '全年';
-
-    const promptText = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請根據此本命盤，分析 ${period} 對此人的影響（${granularity}維度），以繁體中文輸出，結構如下：\n\n【整體能量方向】\n此時期的整體主題與核心能量（2-3句）\n\n【工作 & 事業】\n機會、挑戰與適合的行動方向\n\n【感情 & 人際】\n感情狀態、關係互動的傾向\n\n【財務 & 資源】\n財務機遇或需注意的方向\n\n【健康 & 能量】\n身心狀態的提醒\n\n【本期建議】\n1-2個此時期最值得優先執行的具體行動\n\n語氣直接，給出真實、有深度的觀察，避免泛泛而談。${useVision?'\n\n圖片為印度星盤，請整合印度占星觀點。':''}`;
+    const promptText = buildForecastPrompt(name, ctx, useVision, imgs);
+    const maxTok = !selMonth ? 3000 : 2000;
 
     let messages;
     if(useVision){
-      messages = [{role:'user', content:[
-        {type:'text', text:promptText},
-        ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))
-      ]}];
+      messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
     } else {
       messages = [{role:'user', content:promptText}];
     }
 
-    const result = await callGroq(messages, useVision);
+    const result = await callGroq(messages, useVision, maxTok);
     const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
     forecasts[cacheKey] = {text:result, ts:Date.now()};
     localStorage.setItem(KEY_FORECAST, JSON.stringify(forecasts));
 
     const label = document.getElementById('forecast-period-label');
     label.textContent = selMonth ? `${selYear}年 ${MONTHS[selMonth-1]}` : `${selYear}年`;
-    document.getElementById('forecast-out').innerHTML = esc(result).replace(/【([^】]+)】/g,'<strong>【$1】</strong>').replace(/\n/g,'<br>');
+    document.getElementById('forecast-sections').innerHTML = renderForecastSections(result);
+    filterForecast(selCategory);
     document.getElementById('forecast-result').style.display='block';
     renderMonthGrid();
   }catch(e){
