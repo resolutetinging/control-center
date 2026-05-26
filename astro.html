@@ -73,6 +73,12 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .month-btn.has-cache{border-color:rgba(61,82,122,.3);color:var(--astro)}
 .month-btn:hover:not(.active){border-color:var(--astro-l);color:var(--astro)}
 
+/* chart source toggle */
+.chart-src-row{display:flex;gap:6px;margin-bottom:14px}
+.chart-src-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--bstr);background:rgba(40,38,32,.04);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit}
+.chart-src-btn.active{background:var(--astro);border-color:var(--astro);color:#fff}
+.chart-src-btn:hover:not(.active){border-color:var(--astro-l);color:var(--astro)}
+
 /* filter pills */
 .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .filter-pill{padding:5px 12px;border-radius:20px;border:1px solid var(--bstr);background:rgba(40,38,32,.04);color:var(--sub);font-size:12px;cursor:pointer;transition:all .18s;font-family:inherit;white-space:nowrap}
@@ -188,6 +194,10 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 <div class="page" id="page-forecast">
   <div class="panel">
     <div class="panel-title">選擇時間段</div>
+    <div class="chart-src-row">
+      <button class="chart-src-btn active" id="btn-western" onclick="selectChartType('western')">西方星盤</button>
+      <button class="chart-src-btn" id="btn-vedic" onclick="selectChartType('vedic')">印度星盤</button>
+    </div>
     <div class="year-row" id="year-row"></div>
     <div id="month-section" style="display:none">
       <div class="divider"></div>
@@ -243,7 +253,7 @@ const KEY_CHAT     = 'astro_chat';
 const KEY_IMAGES   = 'astro_vedic_images';
 
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-let selYear = null, selMonth = null, selCategory = 'all';
+let selYear = null, selMonth = null, selCategory = 'all', selChartType = 'western';
 let chatHistory = [];
 
 // ── Groq API ──
@@ -485,7 +495,7 @@ function renderMyself(){
     const content = sections[label] || '';
     return `<div class="myself-section">
       <div class="card-label">${label}</div>
-      <p>${content ? esc(content).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>') : '<span style="color:var(--faint)">（未能解析此段落）</span>'}</p>
+      <p>${content ? mdToHtml(content) : '<span style="color:var(--faint)">（未能解析此段落）</span>'}</p>
     </div>`;
   }).join('');
 }
@@ -518,7 +528,8 @@ function renderMonthGrid(){
   document.getElementById('month-section').style.display='block';
   const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
   document.getElementById('month-grid').innerHTML = MONTHS.map((m,i)=>{
-    const hasC = !!(forecasts[`${selYear}_${i+1}`]);
+    const k = fKey(selYear, i+1);
+    const hasC = !!(forecasts[k]);
     return `<button class="month-btn${selMonth===i+1?' active':''}${hasC?' has-cache':''}" onclick="selectMonth(${i+1})">${m}</button>`;
   }).join('');
 }
@@ -529,7 +540,20 @@ function selectMonth(m){
   loadForecastResult();
 }
 
-// ── Forecast section helpers ──
+// ── Forecast helpers ──
+function fKey(y, m){
+  const base = m ? `${y}_${m}` : String(y);
+  return selChartType === 'vedic' ? base + '_vedic' : base;
+}
+function selectChartType(type){
+  selChartType = type;
+  document.getElementById('btn-western').classList.toggle('active', type==='western');
+  document.getElementById('btn-vedic').classList.toggle('active', type==='vedic');
+  document.getElementById('forecast-result').style.display = 'none';
+  renderMonthGrid();
+  if(selYear) loadForecastResult();
+}
+
 function getCat(title){
   if(/時間軸/.test(title)) return 'timeline';
   if(/工作|事業/.test(title)) return 'work';
@@ -587,7 +611,7 @@ function filterForecast(cat){
 }
 
 function loadForecastResult(){
-  const key = selMonth ? `${selYear}_${selMonth}` : selYear ? String(selYear) : null;
+  const key = selYear ? fKey(selYear, selMonth) : null;
   if(!key){ document.getElementById('forecast-result').style.display='none'; return; }
   const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
   const cache = forecasts[key];
@@ -604,25 +628,37 @@ function loadForecastResult(){
   }
 }
 
-function buildForecastPrompt(name, ctx, useVision, imgs){
+function buildForecastPrompt(name, ctx, chartType, imgs){
   const isYearly = !selMonth;
   const period = selMonth ? `${selYear}年${MONTHS[selMonth-1]}` : `${selYear}年`;
-  const visionNote = useVision ? `\n\n圖片為印度星盤（共${imgs.length}張），請整合印度占星觀點。` : '';
-  const base = `你是專業占星師。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請根據此本命盤，分析 ${period} 的走勢，以繁體中文輸出。嚴格使用【標題】格式，絕對禁止使用 #、##、###、#### 等 Markdown 標題符號。關鍵詞用 **詞語** 標示粗體。語氣直接真實，給出有深度的具體觀察，避免泛泛而談。\n\n`;
+  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止使用 #、##、###、#### 等 Markdown 標題符號。關鍵詞用 **詞語** 標示粗體。每個觀察必須引用具體的行星位置、宮位或相位作為依據（例如：木星過境第10宮、月亮在8宮等）。語氣直接真實，給出有深度的具體預測，避免泛泛而談。`;
+
+  let dataIntro;
+  if(chartType === 'vedic'){
+    const bgNote = ctx ? `\n\n【西洋星盤補充背景（僅供參考）】\n${ctx}` : '';
+    dataIntro = `你是精通印度占星（Jyotish）的專業占星師。以下是 ${name} 的印度星盤圖片（共${imgs.length}張）${bgNote}`;
+  } else {
+    dataIntro = `你是專業占星師。以下是 ${name} 的西洋星盤資料：\n\n${ctx}`;
+  }
+  const analysisBase = chartType === 'vedic'
+    ? `以印度占星（Jyotish）原則，包含 Dasha/Antardasha 大小限、行星過境（Gochara）及宮位影響`
+    : `根據此本命盤的行星位置、宮位與相位`;
+
+  const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}\n\n`;
 
   if(isYearly){
     return base +
 `【年度時間軸】
 以「M月：一句話主題，說明主要轉折或能量」格式逐月列出1月到12月，例如：
-1月：緩和調整期，**工作維穩**；感情宜主動表達
+1月：緩和調整期，**木星過境第2宮**帶來資源整合機會
 2月：...
-（每月一行，12行完整列出）
+（每月一行，12行完整列出，每行必須引用至少一個具體星象依據）
 
 【工作 & 事業】
-全年工作機遇、關鍵轉折期與建議行動方向（3-5句，標示具體月份）
+全年工作機遇、關鍵轉折期與建議行動方向（3-5句，標示具體月份與星象依據）
 
 【感情 & 人際】
-全年感情走勢與人際互動模式（3-4句）
+全年感情走勢與人際互動模式（3-4句，引用具體相位或宮位）
 
 【財務 & 資源】
 全年財務機遇、風險與適合時機（2-3句）
@@ -634,14 +670,14 @@ function buildForecastPrompt(name, ctx, useVision, imgs){
 副業機遇、適合啟動的時間窗口與方向建議（2-3句）
 
 【年度建議】
-2-3個此年度最值得優先執行的核心行動或心態調整${visionNote}`;
+2-3個此年度最值得優先執行的核心行動或心態調整`;
   } else {
     return base +
 `【整體能量方向】
-本月整體主題與核心能量（2-3句）
+本月整體主題與核心能量（2-3句，引用主要行星過境）
 
 【工作 & 事業】
-本月工作機會、挑戰與適合的行動時機（3-4句）
+本月工作機會、挑戰與適合的行動時機（3-4句，引用具體宮位或相位）
 
 【感情 & 人際】
 本月感情狀態與人際互動傾向（2-3句）
@@ -656,23 +692,34 @@ function buildForecastPrompt(name, ctx, useVision, imgs){
 本月副業機遇與最佳行動窗口（2-3句）
 
 【本月建議】
-2個本月最值得優先執行的具體行動${visionNote}`;
+2個本月最值得優先執行的具體行動`;
   }
 }
 
 async function genForecast(cacheKey){
   if(!hasChart()){ alert('請先在設定頁貼入星盤資料'); return; }
+  const imgs = getImages();
+  if(selChartType === 'vedic' && !imgs.length){
+    alert('請先在設定頁上傳印度星盤圖片'); return;
+  }
+  if(selChartType === 'western' && !loadSettings().western){
+    alert('請先在設定頁貼入西方星盤文字'); return;
+  }
   const loading = document.getElementById('forecast-loading');
   loading.style.display='flex';
   try{
     const name = getName();
     const ctx = chartContext();
-    const imgs = getImages();
-    // 人生預測固定用文字模型，避免 Vision TPM 超限
-    const promptText = buildForecastPrompt(name, ctx, false, imgs);
+    const useVision = selChartType === 'vedic';
+    const promptText = buildForecastPrompt(name, ctx, selChartType, imgs);
     const maxTok = !selMonth ? 3000 : 2000;
-    const messages = [{role:'user', content:promptText}];
-    const result = await callGroq(messages, false, maxTok);
+    let messages;
+    if(useVision){
+      messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
+    } else {
+      messages = [{role:'user', content:promptText}];
+    }
+    const result = await callGroq(messages, useVision, maxTok);
     const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
     forecasts[cacheKey] = {text:result, ts:Date.now()};
     localStorage.setItem(KEY_FORECAST, JSON.stringify(forecasts));
@@ -692,7 +739,7 @@ async function genForecast(cacheKey){
 
 function regenForecast(){
   if(!selYear) return;
-  const key = selMonth ? `${selYear}_${selMonth}` : String(selYear);
+  const key = fKey(selYear, selMonth);
   const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
   delete forecasts[key];
   localStorage.setItem(KEY_FORECAST, JSON.stringify(forecasts));
@@ -702,7 +749,7 @@ function regenForecast(){
 
 function clearForecast(){
   if(!selYear) return;
-  const key = selMonth ? `${selYear}_${selMonth}` : String(selYear);
+  const key = fKey(selYear, selMonth);
   const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
   delete forecasts[key];
   localStorage.setItem(KEY_FORECAST, JSON.stringify(forecasts));
