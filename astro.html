@@ -9,7 +9,7 @@
   --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
   --ink:#28261f;--sub:#55514a;--faint:#7a7570;
   --border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
-  --astro:#6b4fa8;--astro-l:#8060c0;--astro-tint:rgba(107,79,168,.08);--astro-tint2:rgba(107,79,168,.14);
+  --astro:#3d527a;--astro-l:#506898;--astro-tint:rgba(61,82,122,.08);--astro-tint2:rgba(61,82,122,.14);
   --shadow:0 1px 4px rgba(40,38,32,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -45,7 +45,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .btn{padding:9px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit}
 .btn-primary{background:var(--astro);color:#fff}
 .btn-primary:hover{background:var(--astro-l);transform:translateY(-1px)}
-.btn-primary:disabled{background:rgba(107,79,168,.3);color:rgba(107,79,168,.5);cursor:not-allowed;transform:none}
+.btn-primary:disabled{background:rgba(61,82,122,.3);color:rgba(61,82,122,.5);cursor:not-allowed;transform:none}
 .btn-sm{padding:6px 12px;font-size:11px;border-radius:6px}
 .btn-ghost{background:rgba(40,38,32,.06);border:1px solid var(--bstr);color:var(--sub)}
 .btn-ghost:hover{background:rgba(40,38,32,.1);color:var(--ink)}
@@ -70,7 +70,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
 .month-btn{padding:7px 4px;border-radius:7px;border:.5px solid var(--border);background:var(--bg2);color:var(--faint);font-size:12px;cursor:pointer;transition:all .18s;text-align:center;font-family:inherit}
 .month-btn.active{background:var(--astro-tint2);border-color:var(--astro);color:var(--astro);font-weight:600}
-.month-btn.has-cache{border-color:rgba(107,79,168,.3);color:var(--astro)}
+.month-btn.has-cache{border-color:rgba(61,82,122,.3);color:var(--astro)}
 .month-btn:hover:not(.active){border-color:var(--astro-l);color:var(--astro)}
 .forecast-out{background:var(--bg2);border:.5px solid var(--bstr);border-radius:10px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;min-height:60px;color:var(--ink)}
 .forecast-out strong{color:var(--astro)}
@@ -95,9 +95,9 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 /* ── MISC ── */
 .divider{height:.5px;background:var(--bstr);margin:14px 0}
 .dim{color:var(--faint);font-size:12px}
-.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--astro-tint);color:var(--astro);border:1px solid rgba(107,79,168,.2)}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--astro-tint);color:var(--astro);border:1px solid rgba(61,82,122,.2)}
 .loading{color:var(--astro);font-size:13px;padding:8px 0;display:flex;align-items:center;gap:6px}
-.loading::before{content:'';width:14px;height:14px;border:2px solid rgba(107,79,168,.2);border-top-color:var(--astro);border-radius:50%;animation:spin .7s linear infinite}
+.loading::before{content:'';width:14px;height:14px;border:2px solid rgba(61,82,122,.2);border-top-color:var(--astro);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty-hint{text-align:center;padding:32px;color:var(--faint);font-size:13px;line-height:1.8}
 .save-bar{display:flex;align-items:center;gap:10px;margin-top:14px}
@@ -135,7 +135,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
     <div class="img-upload-area" onclick="document.getElementById('vedic-file').click()">
       <input type="file" id="vedic-file" accept="image/*" multiple onchange="handleVedicUpload(event)">
       <div style="font-size:22px;margin-bottom:6px">🪐</div>
-      <div style="font-size:13px;color:#9080c0">點擊上傳圖片（支援 JPG / PNG，最多 3 張）</div>
+      <div style="font-size:13px;color:var(--sub)">點擊上傳圖片（支援 JPG / PNG，最多 3 張）</div>
       <div class="img-upload-hint">圖片將壓縮後儲存在本機</div>
     </div>
     <div class="img-previews" id="vedic-previews"></div>
@@ -171,7 +171,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
     <div class="year-row" id="year-row"></div>
     <div id="month-section" style="display:none">
       <div class="divider"></div>
-      <div style="font-size:11px;color:#7060a0;margin-bottom:8px">選擇月份（點選年份即分析全年；選月份分析當月）</div>
+      <div style="font-size:11px;color:var(--faint);margin-bottom:8px">選擇月份（點選年份即分析全年；選月份分析當月）</div>
       <div class="month-grid" id="month-grid"></div>
     </div>
   </div>
@@ -180,7 +180,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 
   <div id="forecast-result" style="display:none">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div id="forecast-period-label" style="font-size:13px;font-weight:700;color:#c8a8f0"></div>
+      <div id="forecast-period-label" style="font-size:13px;font-weight:700;color:var(--astro)"></div>
       <button class="btn btn-ghost btn-sm" onclick="regenForecast()">重新生成</button>
       <button class="btn btn-ghost btn-sm" onclick="clearForecast()">清除</button>
     </div>
@@ -445,7 +445,7 @@ function renderMyself(){
     const content = sections[label] || '';
     return `<div class="myself-section">
       <div class="card-label">${label}</div>
-      <p>${content ? esc(content).replace(/\n/g,'<br>') : '<span style="color:#5050a0">（未能解析此段落）</span>'}</p>
+      <p>${content ? esc(content).replace(/\n/g,'<br>') : '<span style="color:var(--faint)">（未能解析此段落）</span>'}</p>
     </div>`;
   }).join('');
 }
