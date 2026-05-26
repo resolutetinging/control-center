@@ -438,10 +438,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="d-box">⛩️</div>
       <span class="d-lbl">Worship</span>
     </div>
-    <div class="d-icon" data-id="astro" onclick="dClick(this,'astro')">
-      <div class="d-box">⭐</div>
-      <span class="d-lbl">Astro</span>
-    </div>
   </div>
 </div>
 
@@ -680,7 +676,6 @@ const DEFAULT_LINKS={
   'podcast':   'notion://www.notion.so',
   'oasis':     './oasis.html',
   'worship':   './worship.html',
-  'astro':     './astro.html',
 };
 function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
@@ -831,16 +826,15 @@ function buildTT(id){
         }
       }catch(e){}
       const cpSingle=LIVE.sleep?.combatSingle??null;
-      const cpWeightedRaw=parseInt(localStorage.getItem('sas_combat_weighted')||'0')||parseInt(localStorage.getItem('sas_combat')||'0')||null;
+      const cpWeighted=sleepCp;
       let combatRows='';
-      if(cpSingle!=null&&cpWeightedRaw!=null){
-        const diff=cpSingle-cpWeightedRaw;
-        const absDiff=Math.abs(diff);
-        const diffColor=absDiff<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)';
-        const diffLabel=absDiff<5?'穩定':diff>0?`單夜高 +${diff}`:`加權高 +${absDiff}`;
+      if(cpSingle!=null&&cpWeighted!=null){
+        const diff=cpSingle-cpWeighted;
+        const diffStr=diff>0?`+${diff}`:String(diff);
+        const diffColor=Math.abs(diff)<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)';
         combatRows=row('單夜戰力',String(cpSingle),cpSingle>=75?'g':cpSingle>=50?'a':'r')
-          +row('3夜加權',String(cpWeightedRaw),cpWeightedRaw>=75?'g':cpWeightedRaw>=50?'a':'r')
-          +`<div class="tt-row"><span class="tt-k">差距</span><span style="font-size:11px;color:${diffColor};font-weight:600;">${diffLabel}</span></div>`;
+          +row('3夜加權',String(cpWeighted),cpWeighted>=75?'g':cpWeighted>=50?'a':'r')
+          +`<div class="tt-row"><span class="tt-k">單夜 vs 加權</span><span style="font-size:11px;color:${diffColor};font-weight:600;">${diffStr}</span></div>`;
       } else {
         combatRows=row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'));
       }
@@ -950,16 +944,6 @@ function buildTT(id){
       if(!wl)return h('⛩️ Worship')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無參拜紀錄，點擊新增</div>`;
       return h('⛩️ Worship')+row('最近參拜',wl.temple)+row('日期',wl.date+(wl.time?' '+wl.time:''),'g');
     }
-    case 'astro':{
-      let as=null;try{as=JSON.parse(localStorage.getItem('astro_settings')||'null');}catch{}
-      const hasW=!!(as&&as.western);
-      const hasV=(()=>{try{return JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length>0;}catch{return false;}})();
-      if(!as||(!hasW&&!hasV))return h('⭐ Astro Bot')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定星盤資料，點擊進入</div>`;
-      return h('⭐ Astro Bot')+
-        row('西洋星盤',hasW?'已設定':'未設定',hasW?'g':'')+
-        row('印度星盤',hasV?`${JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length} 張`:'未設定',hasV?'g':'')+
-        (as.name?row('對象',as.name):'');
-    }
     default:return'';
   }
 }
@@ -1040,7 +1024,6 @@ function renderTab(tab){
       {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
       {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
       {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
-      {id:'astro',lbl:'⭐ Astro Bot',ph:'./astro.html'},
     ];
     el.innerHTML=`
       <div class="s-title">連結管理</div>
@@ -1223,7 +1206,14 @@ function checkGuard(){
   if(localStorage.getItem('guard_snooze_'+TODAY)){
     dot.className='warn';txt.textContent='Guard · 低戰力（今日靜默）';gState='monitoring';return;
   }
-  if(!newDay&&(stamina<40||now>end2)){triggerGuard();}
+  // 體能續航觸發：繞過 newDay（日間指標，不受睡眠截止時間限制）
+  const _enduranceStr=localStorage.getItem('sas_endurance');
+  const pastEndurance=_enduranceStr&&(()=>{
+    const[_h,_m]=_enduranceStr.split(':').map(Number);
+    const _t=new Date();_t.setHours(_h,_m,0,0);return now>_t;
+  })();
+  if(pastEndurance){triggerGuard('endurance');}
+  else if(!newDay&&(stamina<40||now>end2)){triggerGuard('low');}
   else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
 }
@@ -1238,11 +1228,12 @@ function renderCatDisplay(){
     el.innerHTML=CAT_SVG;
   }
 }
-function triggerGuard(){
+function triggerGuard(reason='low'){
   if(gState==='alerting'||gState==='resting')return;
   gState='alerting';
   const{stamina,endTime,workTime}=getEffective();
-  const msgs=stamina<40?'戰力剩 '+stamina+'%，需要充電了！':'已過 '+endTime+'，該歇歇了！';
+  const msgs=reason==='endurance'?'體能續航已結束，建議切換輕量任務或短暫休息 🔋'
+    :stamina<40?'戰力剩 '+stamina+'%，需要充電了！':'已過 '+endTime+'，該歇歇了！';
   const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
   renderCatDisplay();
   const cat=document.getElementById('big-cat');
