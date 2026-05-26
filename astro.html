@@ -708,6 +708,8 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
 
   const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）。關鍵詞、行星、宮位用 **詞語** 粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星事件（含大約日期）。真實有深度，不同面向換行分段，不泛泛而談。全程以「你」稱呼。`;
 
+  const ANALYSIS_LOGIC = `\n分析邏輯準則（必須貫穿全文）：\n① 時間線雙軌制：遇到重大吉星（如木星）換座，若西盤與印盤觸發時間不一致，必須明確拆分陳述：「西盤代表機會敲門、心智開窗（時間A）；印盤代表現實物質全面顯化與定錨（時間B）」，不可混為一談。\n② 落地行動導向：解讀凶星施壓或轉型焦慮期時，必須將心理演化的「排毒過程」轉化為具體物理行動建議（例如金牛座能量對應的自然接觸、感官療癒；整備期對應的實際文書準備、技能盤點），不可停留在心理層次的泛述。\n③ 性格與流年互鎖：流年事件（如人際汰換、職場轉換）必須結合本命人格特質——天蠍上升的防禦機制 vs 天秤上升的外交本能——給出具體的「應對行為指南」，而非純粹的事件預測。`;
+
   let dataIntro;
   if(chartType === 'vedic'){
     const bgNote = ctx ? `\n\n【西洋星盤補充背景（僅供參考）】\n${ctx}` : '';
@@ -719,7 +721,7 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
     ? `以古典印度吠陀占星原則，主軸為大運（Vimshottari Dasha）與流年行星（Gochar）對各宮位的實質催化，語氣客觀結構化，給出具體事件時間點推導`
     : `以現代西方占星原則，結合流年行星過境（Transits）與二次推運（Secondary Progressions），語氣溫和療癒且賦能，著重心理轉變與能量週期`;
 
-  const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}\n\n`;
+  const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}${ANALYSIS_LOGIC}\n\n`;
 
   if(isYearly){
     return base +
