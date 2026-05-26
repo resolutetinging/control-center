@@ -455,20 +455,31 @@ function renderMyself(){
   const text = cache.text;
   const sections = {};
   const sectionKeys = MYSELF_SECTIONS.map(s=>s.label);
-  let currentKey = null, currentLines = [];
-  text.split('\n').forEach(line=>{
-    const trimmed = line.trim();
-    const matched = sectionKeys.find(k=>trimmed===`【${k}】`||trimmed.startsWith(`【${k}】`));
-    if(matched){
-      if(currentKey) sections[currentKey] = currentLines.join('\n').trim();
-      currentKey = matched; currentLines = [];
-      const inline = trimmed.replace(`【${matched}】`,'').trim();
-      if(inline) currentLines.push(inline);
-    } else if(currentKey){
-      currentLines.push(line);
-    }
-  });
-  if(currentKey) sections[currentKey] = currentLines.join('\n').trim();
+
+  // regex-based parsing：容忍 **【標題】** 或行首有其他符號的格式
+  const re = /【([^】]+)】[^\n]*\n([\s\S]*?)(?=\n?【[^】]+】|$)/g;
+  let m;
+  while((m = re.exec(text)) !== null){
+    const title = m[1].trim();
+    if(sectionKeys.includes(title)) sections[title] = m[2].trim();
+  }
+  // fallback：regex 無結果時用逐行模式（更寬鬆，剝去 ** 後比對）
+  if(!Object.keys(sections).length){
+    let currentKey = null, currentLines = [];
+    text.split('\n').forEach(line=>{
+      const stripped = line.trim().replace(/^\*+|\*+$/g,'');
+      const matched = sectionKeys.find(k=>stripped===`【${k}】`||stripped.includes(`【${k}】`));
+      if(matched){
+        if(currentKey) sections[currentKey] = currentLines.join('\n').trim();
+        currentKey = matched; currentLines = [];
+        const inline = stripped.replace(`【${matched}】`,'').replace(/^\*+|\*+$/g,'').trim();
+        if(inline) currentLines.push(inline);
+      } else if(currentKey){
+        currentLines.push(line);
+      }
+    });
+    if(currentKey) sections[currentKey] = currentLines.join('\n').trim();
+  }
 
   out.innerHTML = MYSELF_SECTIONS.map(({key,label})=>{
     const content = sections[label] || '';
