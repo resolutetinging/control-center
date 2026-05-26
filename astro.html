@@ -258,6 +258,28 @@ const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','
 let selYear = null, selMonth = null, selCategory = 'all', selChartType = 'western';
 let chatHistory = [];
 
+// ── 雙系統角色定義（固定此用戶星盤配置）──
+const ASTRO_SYSTEM_ROLE = `你是同時精通「現代西方占星學（Western Tropical Astrology）」與「古典印度吠陀占星學（Vedic / Jyotish）」的跨領域占星大師，深刻理解兩套系統在計算方式、解盤邏輯與語境上的本質差異。
+
+【此用戶雙系統核心配置】
+
+系統 A｜現代西方占星（Tropical / Placidus 分宮）
+上升：天蠍座 ／ 太陽：巨蟹座（第9宮）／ 月亮・金星：雙子座（第8宮）／ 木星：巨蟹座（第9宮）
+解讀風格：心理學占星、內在潛能、靈魂演化；語氣溫和療癒、具同理心且賦能（Empowerment）
+流年工具：流年行星相位（Transits）＋ 二次推運（Secondary Progressions）
+
+系統 B｜印度吠陀占星（Sidereal / Lahiri Ayanamsha / Whole Sign 整宮制）
+上升 Lagna：天秤座（第1宮，主星金星）／ 月亮：金牛座（第8宮，旺相 Exaltation）
+太陽・木星：巨蟹座（第10宮，事業核心宮位）／ 火星：金牛座（第8宮）
+解讀風格：業力顯化（Karma）、廟旺平陷（Dignity）、格局（Yogas）；語氣客觀結構化、直擊痛點、現實操作指導
+流年工具：大運（Vimshottari Dasha）＋ 流年行星（Gochar）
+
+【嚴格分流規則】
+1. 解析西方星盤時：嚴禁提及上升天秤或月亮金牛（那是吠陀配置）
+2. 解析印度星盤時：嚴禁提及上升天蠍或月亮雙子（那是西方配置）
+3. 整合分析時：分段陳述，先西盤心理底蘊，再印盤現實業力，最後找出兩系統共振交集
+4. 每次輸出開頭第一行須標註：【解析視角：現代西方占星】或【解析視角：古典印度占星】或【解析視角：雙系統整合】`;
+
 // ── Groq API ──
 function getGroqKey(){
   return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||'';
@@ -274,7 +296,13 @@ async function callGroq(messages, useVision=false, maxTokens=2000){
   });
   if(!resp.ok){
     const err = await resp.json().catch(()=>({}));
-    throw new Error(err.error?.message||'HTTP '+resp.status);
+    const msg = err.error?.message||'HTTP '+resp.status;
+    if(resp.status===429||msg.includes('Rate limit')){
+      const wait = msg.match(/try again in ([\d.]+)s/i);
+      const sec = wait ? Math.ceil(parseFloat(wait[1])) : 30;
+      throw new Error(`請求過於頻繁，請稍候 ${sec} 秒後再試（Vision 模型 TPM 限制）`);
+    }
+    throw new Error(msg);
   }
   const data = await resp.json();
   return data.choices?.[0]?.message?.content||'';
@@ -424,7 +452,24 @@ async function genMyself(){
 
     const _now = new Date();
     const _todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
-    const promptText = `你是精通西方占星與印度吠陀占星（Jyotish）的專業占星師。今日日期：${_todayStr}。以下是 ${name} 的星盤資料：\n\n${ctx}\n\n請用繁體中文，以深度、個人化的方式全面解析此星盤。\n\n格式要求（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止使用任何 Markdown 標題符號（#、##、###、####），包括行首所有 # 字元\n- 關鍵詞、行星名稱、宮位用 **詞語** 標示粗體\n- 每個觀察必須明確引用具體的行星位置或宮位作為依據（如：**水星10宮**、**月亮旺相金牛8宮**）\n- 不同觀點之間用換行分段，不要全部擠成一段\n- 給出真實、具體、有深度的解析，不泛泛而談，不過度鼓勵\n\n【核心個性】\n整合太陽、月亮、上升三角的核心配置，深入描述此人的性格結構與外在氣場（5-6句）。分別說明：上升星座決定的外在呈現方式與防衛機制、太陽星座的核心驅動力、月亮星座的情緒反應模式，以及三者之間的內在矛盾或張力。每個觀察需引用具體行星位置，不同要點換行。\n\n【天賦強項】\n列出 3-4 項此星盤的天然優勢，每項單獨一段。每項必須：（1）引用賦予此天賦的具體行星/宮位；（2）說明在職場或生活中如何具體展現；（3）說明此配置賦予的獨特能力與一般人的差異。\n\n【工作 & 事業】\n結合本命盤事業指標與當前流年行星過境（今日 ${_todayStr}）進行分析（4-5句）。引用具體宮位/行星說明：本命盤中最強的職場競爭優勢與適合的工作類型、當前流年最重要的行星過境對職涯的具體影響（如木星、土星換座時間點）、以及未來 3-6 個月值得把握的關鍵機遇。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項需要面對的挑戰或盲點，每項單獨一段。每項必須：（1）引用造成此挑戰的具體行星/宮位根源；（2）說明此課題在現實中的具體表現方式；（3）提供符合此星盤特質的具體突破方向。\n\n【關係模式】\n分析此人在親密關係、友誼、家庭中的互動模式（4-5句）。引用具體行星配置說明：依附風格的星盤成因、在關係中最深層的需求、最容易出現的困境，以及與他人建立深度連結時的特殊方式。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述此人的思考方式與溝通習慣（4-5句）。說明：此水星配置如何影響表達邏輯與說話風格、在壓力下的溝通變化、以及此人溝通上相較一般星盤的獨特之處。\n\n【人生主軸】\n從整體星盤格局（包含 Rahu/Ketu 或北南交點的業力指標）說明此人的靈魂課題（4-5句）。說明：此生最重要的轉化方向、靈魂需要學習的核心功課，以及最能讓此人感到活著意義的人生領域。\n\n${useVision?'印度星盤圖片（共'+imgs.length+'張）見附圖。請在以上每個段落中整合印度吠陀占星的觀點（Dasha、宮位、行星旺相/弱陷）作為補充或對照分析。\n\n':''}`;
+    const hasWestern = !!ctx;
+    const hasVedic = imgs.length > 0;
+    const myselfMode = (hasWestern && hasVedic) ? 'both' : hasVedic ? 'vedic' : 'western';
+
+    const FMT = `格式規定（嚴格遵守）：\n- 開頭第一行輸出對應的【解析視角：...】標籤\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
+
+    const SECTIONS_W = `【核心個性】\n整合上升天蠍、太陽巨蟹9宮、月亮雙子8宮三角，從心理占星視角深入描述你的核心性格結構（5-6句）。分別說明：上升天蠍賦予的外在防衛機制與神祕氣場、太陽巨蟹的情感驅動力與安全感需求、月亮雙子8宮的思維情緒運作方式，以及三者之間的內在張力與矛盾。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的本命盤天賦優勢，每項單獨一段。每項引用具體行星/宮位配置，說明在職場或生活中的具體展現方式，以及此配置賦予你的獨特能力。\n\n【工作 & 事業】\n以西方占星流年視角（今日 ${_todayStr}）分析你的職涯天賦與當前能量週期（4-5句）。引用事業相關行星（第10宮、木星、太陽）與當前流年行星過境（Transits）對職涯的心理轉變與機遇窗口。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項你的心理課題或盲點，每項單獨一段。以心理占星視角分析：星盤根源、在生活中的具體表現、符合你靈魂演化方向的突破路徑。\n\n【關係模式】\n從心理占星視角分析你在親密關係、友誼、家庭中的互動模式（4-5句）。引用第7宮、金星雙子8宮、月亮雙子8宮說明你的依附風格、最深層的關係需求與常見困境。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述你的思考方式與溝通習慣（4-5句）。說明此配置如何影響你的表達邏輯、在壓力下的溝通變化，以及你溝通上的獨特性。\n\n【人生主軸】\n從整體星盤格局與靈魂演化視角（引用北交點/南交點業力方向）說明你的核心靈魂課題（4-5句）。說明你此生最重要的轉化主題與靈魂成長路徑。`;
+
+    const SECTIONS_V = `【核心個性】\n從吠陀占星視角，整合上升天秤（主星金星）、月亮金牛8宮旺相、太陽巨蟹10宮的業力格局，深入描述你的性格結構（5-6句）。分別說明：天秤上升帶來的外交人格與平衡追求、月亮金牛8宮旺相的情緒穩定性與潛在轉化能力、太陽10宮的事業業力使命，以及各配置的廟旺平陷狀態對你實際行為的影響。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的吠陀星盤天賦格局（Yogas），每項單獨一段。每項說明：格局名稱或宮位依據、業力顯化的方式，以及此格局在你現實生活中最直接的展現。\n\n【工作 & 事業】\n以吠陀占星視角（今日 ${_todayStr}）分析你的事業業力格局與當前大運（Dasha）對職涯的催化（4-5句）。引用太陽/木星匯聚第10宮的核心格局，說明當前 Dasha 主星、Gochar 流年行星對事業宮的影響，以及未來 3-6 個月的具體事件時間點推導。\n\n【成長課題】\n列出 3-4 項你在業力層面需要面對的課題，每項單獨一段。以吠陀占星視角分析：業力根源（宮位或行星弱陷/逆行等）、在現實生活中的具體顯化，以及對應的業力修行方向。\n\n【關係模式】\n從吠陀占星視角分析你在親密關係與人際互動中的業力模式（4-5句）。引用第7宮、第8宮、金星主星位置，說明你在關係中的業力課題、最深層的情感需求，以及感情業力的修行重點。不同面向換行分段。\n\n【溝通風格】\n根據吠陀星盤水星位置及其廟旺平陷狀態，描述你的思維模式與溝通習慣（4-5句）。說明此配置帶來的業力特質、在不同情境下的溝通表現。\n\n【人生主軸】\n從 Rahu/Ketu（羅睺/計都）的業力軸線說明你此生最核心的靈魂課題（4-5句）。說明 Rahu 指向的今生業力成長方向、Ketu 帶來的前世業力積累，以及最能讓你完成業力使命的人生領域。`;
+
+    let promptText;
+    if(myselfMode === 'western'){
+      promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：現代西方占星】進行本命盤分析。今日日期：${_todayStr}。\n\n以下是 ${name} 的西洋星盤資料：\n${ctx}\n\n${FMT}\n\n${SECTIONS_W}`;
+    } else if(myselfMode === 'vedic'){
+      promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：古典印度占星】進行本命盤分析。今日日期：${_todayStr}。印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}\n\n${SECTIONS_V}`;
+    } else {
+      promptText = `${ASTRO_SYSTEM_ROLE}\n\n本次為【解析視角：雙系統整合】分析。今日日期：${_todayStr}。\n\n西洋星盤資料：\n${ctx}\n\n印度星盤圖片（共${imgs.length}張）見附圖。\n\n${FMT}\n請在以下每個段落中，先以西方占星視角（心理底蘊），再以印度占星視角（業力現實），最後給出兩系統共振的整合洞見。子視角標記用 **西方視角**、**印度視角**、**共振交集**（不用【】格式，避免解析錯誤）。\n\n${SECTIONS_W}`;
+    }
 
     let messages;
     if(useVision){
@@ -644,18 +689,18 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
   const _now = new Date();
   const todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
 
-  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止使用任何 Markdown 標題符號（#、##、###、####）。關鍵詞、行星、宮位用 **詞語** 標示粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星過境事件（含大約日期）。預測要真實有深度，不同面向換行分段，不泛泛而談。`;
+  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）。關鍵詞、行星、宮位用 **詞語** 粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星事件（含大約日期）。真實有深度，不同面向換行分段，不泛泛而談。全程以「你」稱呼。`;
 
   let dataIntro;
   if(chartType === 'vedic'){
     const bgNote = ctx ? `\n\n【西洋星盤補充背景（僅供參考）】\n${ctx}` : '';
-    dataIntro = `你是精通印度占星（Jyotish）的專業占星師。今日日期：${todayStr}。以下是 ${name} 的印度星盤圖片（共${imgs.length}張）${bgNote}`;
+    dataIntro = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：古典印度占星】進行流年預測。今日日期：${todayStr}。以下是 ${name} 的印度星盤圖片（共${imgs.length}張）${bgNote}`;
   } else {
-    dataIntro = `你是精通西方占星與流年推運的專業占星師。今日日期：${todayStr}。以下是 ${name} 的西洋星盤資料：\n\n${ctx}`;
+    dataIntro = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：現代西方占星】進行流年預測。今日日期：${todayStr}。以下是 ${name} 的西洋星盤資料：\n\n${ctx}`;
   }
   const analysisBase = chartType === 'vedic'
-    ? `以印度占星（Jyotish）原則，包含 Dasha/Antardasha 大小限、行星過境（Gochara）及宮位影響`
-    : `根據本命盤的行星位置、宮位與相位，結合 ${period} 的實際行星過境（Transit）事件`;
+    ? `以古典印度吠陀占星原則，主軸為大運（Vimshottari Dasha）與流年行星（Gochar）對各宮位的實質催化，語氣客觀結構化，給出具體事件時間點推導`
+    : `以現代西方占星原則，結合流年行星過境（Transits）與二次推運（Secondary Progressions），語氣溫和療癒且賦能，著重心理轉變與能量週期`;
 
   const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}\n\n`;
 
@@ -817,7 +862,10 @@ async function sendChat(){
     const imgs = getImages();
     const useVision = imgs.length > 0 && chatHistory.length === 1;
 
-    const systemMsg = {role:'system', content:`你是 ${name} 的專屬占星師顧問。\n以下是她的完整星盤資料：\n${ctx}\n\n請用繁體中文回答，給出針對星盤特質的具體觀察，不說泛泛廢話。回答簡明有深度。`};
+    const imgs2 = getImages();
+    const chatMode = (ctx && imgs2.length) ? '雙系統整合' : imgs2.length ? '古典印度占星' : '現代西方占星';
+    const chartRef = ctx ? `\n\n西洋星盤資料：\n${ctx}` : '';
+    const systemMsg = {role:'system', content:`${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：${chatMode}】回答。${chartRef}\n\n請用繁體中文，全程以「你」稱呼，給出針對此星盤配置的具體觀察，不說泛泛廢話。回答簡明有深度。`};
 
     let messages = [systemMsg, ...chatHistory.map(m=>({role:m.role, content:m.content}))];
 
