@@ -213,6 +213,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
     <div class="chart-src-row">
       <button class="chart-src-btn active" id="btn-western" onclick="selectChartType('western')">西方星盤</button>
       <button class="chart-src-btn" id="btn-vedic" onclick="selectChartType('vedic')">印度星盤</button>
+      <button class="chart-src-btn" id="btn-combined" onclick="selectChartType('combined')">整合資訊</button>
     </div>
     <div class="year-row" id="year-row"></div>
     <div id="month-section" style="display:none">
@@ -655,12 +656,15 @@ function selectMonth(m){
 // ── Forecast helpers ──
 function fKey(y, m){
   const base = m ? `${y}_${m}` : String(y);
-  return selChartType === 'vedic' ? base + '_vedic' : base;
+  if(selChartType === 'vedic') return base + '_vedic';
+  if(selChartType === 'combined') return base + '_combined';
+  return base;
 }
 function selectChartType(type){
   selChartType = type;
-  document.getElementById('btn-western').classList.toggle('active', type==='western');
-  document.getElementById('btn-vedic').classList.toggle('active', type==='vedic');
+  ['western','vedic','combined'].forEach(t =>
+    document.getElementById('btn-'+t).classList.toggle('active', t===type)
+  );
   document.getElementById('forecast-result').style.display = 'none';
   renderMonthGrid();
   if(selYear) loadForecastResult();
@@ -691,7 +695,7 @@ function renderForecastSections(text){
   let m;
   while((m = re.exec(text)) !== null){
     const t = m[1].trim(), b = m[2].trim();
-    if(t) sections.push({title:t, body:b});
+    if(t && !/^解析視角/.test(t)) sections.push({title:t, body:b});
   }
   if(!sections.length){
     return `<div class="forecast-section"><div class="forecast-section-body">${mdToHtml(text)}</div></div>`;
@@ -746,7 +750,7 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
   const _now = new Date();
   const todayStr = `${_now.getFullYear()}年${_now.getMonth()+1}月${_now.getDate()}日`;
 
-  const FORMAT_RULE = `嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）。關鍵詞、行星、宮位用 **詞語** 粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星事件（日期格式一律使用「月/日」，如 5/20，不使用日期範圍）。全程以「你」稱呼，不泛泛而談。\n解析視角：本命盤是出生時即已訂定的生命藍圖，行星過境是激活本命潛藏事件的時間開關，絕非評斷運勢好壞。所有描述以「本命盤揭示此期間的必然生命節點」視角呈現，給出最佳回應方式。`;
+  const FORMAT_RULE = `禁止輸出任何開場白、問候語或前言，直接從第一個【標題】段落開始輸出。嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）。關鍵詞、行星、宮位用 **詞語** 粗體。每個預測必須同時引用：（1）本命盤的具體行星位置/宮位；（2）該時段的實際行星事件（日期格式一律使用「月/日」，如 5/20，不使用日期範圍）。全程以「你」稱呼，不泛泛而談。\n解析視角：本命盤是出生時即已訂定的生命藍圖，行星過境是激活本命潛藏事件的時間開關，絕非評斷運勢好壞。所有描述以「本命盤揭示此期間的必然生命節點」視角呈現，給出最佳回應方式。`;
 
   const ANALYSIS_LOGIC = `\n分析邏輯準則（必須貫穿全文）：\n① 時間線雙軌制：遇到重大吉星（如木星）換座，若西盤與印盤觸發時間不一致，必須明確拆分陳述：「西盤代表機會敲門、心智開窗（時間A）；印盤代表現實物質全面顯化與定錨（時間B）」，不可混為一談。\n② 落地行動導向：解讀凶星施壓或轉型焦慮期時，必須將心理演化的「排毒過程」轉化為具體物理行動建議（例如金牛座能量對應的自然接觸、感官療癒；整備期對應的實際文書準備、技能盤點），不可停留在心理層次的泛述。\n③ 性格與流年互鎖：流年事件（如人際汰換、職場轉換）必須結合本命人格特質——天蠍上升的防禦機制 vs 天秤上升的外交本能——給出具體的「應對行為指南」，而非純粹的事件預測。`;
 
@@ -754,11 +758,15 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
   if(chartType === 'vedic'){
     const bgNote = ctx ? `\n\n【西洋星盤補充背景（僅供參考）】\n${ctx}` : '';
     dataIntro = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：古典印度占星】進行流年預測。今日日期：${todayStr}。以下是 ${name} 的印度星盤圖片（共${imgs.length}張）${bgNote}`;
+  } else if(chartType === 'combined'){
+    dataIntro = `${ASTRO_SYSTEM_ROLE}\n\n本次為【解析視角：雙系統整合】，同時參考西方占星與吠陀占星進行 ${period} 流年預測。今日日期：${todayStr}。\n\n${name} 的西洋星盤資料：\n${ctx}\n\n印度星盤圖片（共${imgs.length}張）見附圖。`;
   } else {
     dataIntro = `${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：現代西方占星】進行流年預測。今日日期：${todayStr}。以下是 ${name} 的西洋星盤資料：\n\n${ctx}`;
   }
   const analysisBase = chartType === 'vedic'
     ? `以古典印度吠陀占星原則，主軸為大運（Vimshottari Dasha）與流年行星（Gochar）對各宮位的實質催化，語氣客觀結構化，給出具體事件時間點推導`
+    : chartType === 'combined'
+    ? `以雙系統整合視角，對每個主題先以西方 Transits/Progressions 呈現心理能量轉化，再以吠陀 Dasha/Gochar 呈現業力顯化時機，最後點出兩系統共振的核心行動窗口`
     : `以現代西方占星原則，結合流年行星過境（Transits）與二次推運（Secondary Progressions），語氣溫和療癒且賦能，著重心理轉變與能量週期`;
 
   const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}${ANALYSIS_LOGIC}\n\n`;
@@ -828,12 +836,17 @@ async function genForecast(cacheKey){
   if(selChartType === 'western' && !loadSettings().western){
     alert('請先在設定頁貼入西方星盤文字'); return;
   }
+  if(selChartType === 'combined'){
+    if(!loadSettings().western){ alert('整合分析需要西方星盤文字，請先在設定頁貼入'); return; }
+    if(!imgs.length){ alert('整合分析需要印度星盤圖片，請先在設定頁上傳'); return; }
+  }
   const loading = document.getElementById('forecast-loading');
+  loading.textContent = '推算中，請稍候…';
   loading.style.display='flex';
   try{
     const name = getName();
     const ctx = chartContext();
-    const useVision = selChartType === 'vedic';
+    const useVision = selChartType === 'vedic' || selChartType === 'combined';
     const promptText = buildForecastPrompt(name, ctx, selChartType, imgs);
     const maxTok = !selMonth ? 3500 : 2800;
     let messages;
@@ -842,7 +855,18 @@ async function genForecast(cacheKey){
     } else {
       messages = [{role:'user', content:promptText}];
     }
-    const result = await callGroq(messages, useVision, maxTok);
+    let result;
+    for(let attempt = 0; attempt < 2; attempt++){
+      try{ result = await callGroq(messages, useVision, maxTok); break; }
+      catch(e){
+        if(attempt === 0 && e.message.includes('請稍候')){
+          const sec = parseInt(e.message.match(/(\d+) 秒/)?.[1] || 30);
+          loading.textContent = `TPM 限制，${sec} 秒後自動重試…`;
+          await new Promise(r => setTimeout(r, sec * 1000));
+          loading.textContent = '重試中，請稍候…';
+        } else { throw e; }
+      }
+    }
     const forecasts = JSON.parse(localStorage.getItem(KEY_FORECAST)||'{}');
     forecasts[cacheKey] = {text:result, ts:Date.now()};
     localStorage.setItem(KEY_FORECAST, JSON.stringify(forecasts));
