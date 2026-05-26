@@ -631,6 +631,7 @@ function fetchSleepData(){
     // Primary: read from localStorage (written by sleep_dashboard.html on load)
     const stored=JSON.parse(localStorage.getItem('sas_sleep_latest')||'null');
     const cp=parseInt(localStorage.getItem('sas_combat')||'0')||null;
+    const cpSingle=parseInt(localStorage.getItem('sas_combat_single')||'0')||null;
     if(stored||cp){
       const deepP=stored?.deepP??0,remP=stored?.remP??0,coreP=stored?.coreP??0,awakeP=stored?.awakeP??0;
       const combatPower=cp??(()=>{
@@ -643,6 +644,7 @@ function fetchSleepData(){
       LIVE.sleep={
         date:stored?.date||'—',deepP,remP,coreP,awakeP,
         combatPower,
+        combatSingle:cpSingle,
         pace:combatPower>=80?'高效能 · 火力全開 🔥':combatPower>=70?'穩定輸出 ⚡':combatPower>=60?'注意 · 稍作保留 ⚠':'恢復優先 · 輕量任務 💤',
         endTime:localStorage.getItem('sas_endurance')||null,
         trend7
@@ -823,7 +825,20 @@ function buildTT(id){
           recapHtml=hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:3px 0;"><span class="tt-k">📋 上週回顧</span><span style="font-size:10.5px;color:var(--ink);line-height:1.55;margin-top:3px;">${rc.text}</span></div>`;
         }
       }catch(e){}
-      return h('SAS Hub')+row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'))+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`+recapHtml;
+      const cpSingle=LIVE.sleep?.combatSingle??null;
+      const cpWeighted=sleepCp;
+      let combatRows='';
+      if(cpSingle!=null&&cpWeighted!=null){
+        const diff=cpSingle-cpWeighted;
+        const diffStr=diff>0?`+${diff}`:String(diff);
+        const diffColor=Math.abs(diff)<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)';
+        combatRows=row('單夜戰力',String(cpSingle),cpSingle>=75?'g':cpSingle>=50?'a':'r')
+          +row('3夜加權',String(cpWeighted),cpWeighted>=75?'g':cpWeighted>=50?'a':'r')
+          +`<div class="tt-row"><span class="tt-k">單夜 vs 加權</span><span style="font-size:11px;color:${diffColor};font-weight:600;">${diffStr}</span></div>`;
+      } else {
+        combatRows=row('今日戰力',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'));
+      }
+      return h('SAS Hub')+combatRows+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`+recapHtml;
     }
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
