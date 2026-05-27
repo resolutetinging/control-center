@@ -579,7 +579,7 @@ function renderMyself(){
       const content = cols[c];
       const body = content
         ? renderParas(content)
-        : `<p style="color:var(--faint);font-size:11px">${mode === 'both' ? '（未解析）' : mode === c ? '（未解析）' : '—'}</p>`;
+        : `<p style="color:var(--faint);font-size:11px">—</p>`;
       return `<div class="myself-tri-col"><div class="myself-tri-label">${COL_LABELS[c]}</div>${body}</div>`;
     }).join('');
     return `<div class="myself-section"><div class="card-label">${label}</div><div class="myself-tri">${triCols}</div></div>`;
@@ -740,10 +740,14 @@ function renderCombinedBody(body){
 }
 
 function renderForecastSections(text){
+  // 去掉第一個【...】之前的前言文字（AI 有時會在段落標記前加說明句）
+  const firstBracket = text.indexOf('【');
+  const cleanText = firstBracket > 0 ? text.slice(firstBracket) : text;
   const sections = [];
-  const re = /【([^】]+)】[^\n]*\n([\s\S]*?)(?=\n?【[^】]+】|$)/g;
+  // 接受 **【...】** 或 【...】 兩種格式
+  const re = /\*{0,2}【([^】]+)】\*{0,2}[^\n]*\n([\s\S]*?)(?=\n?\*{0,2}【[^】]+】|$)/g;
   let m;
-  while((m = re.exec(text)) !== null){
+  while((m = re.exec(cleanText)) !== null){
     const t = m[1].trim(), b = m[2].trim();
     if(t && !/^解析視角/.test(t)) sections.push({title:t, body:b});
   }
