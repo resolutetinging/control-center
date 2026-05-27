@@ -438,6 +438,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="d-box">⛩️</div>
       <span class="d-lbl">Worship</span>
     </div>
+    <div class="d-icon" data-id="astro" onclick="dClick(this,'astro')">
+      <div class="d-box">⭐</div>
+      <span class="d-lbl">Astro</span>
+    </div>
   </div>
 </div>
 
@@ -676,6 +680,7 @@ const DEFAULT_LINKS={
   'podcast':   'notion://www.notion.so',
   'oasis':     './oasis.html',
   'worship':   './worship.html',
+  'astro':     './astro.html',
 };
 function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
@@ -944,6 +949,16 @@ function buildTT(id){
       if(!wl)return h('⛩️ Worship')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無參拜紀錄，點擊新增</div>`;
       return h('⛩️ Worship')+row('最近參拜',wl.temple)+row('日期',wl.date+(wl.time?' '+wl.time:''),'g');
     }
+    case 'astro':{
+      let as=null;try{as=JSON.parse(localStorage.getItem('astro_settings')||'null');}catch{}
+      const hasW=!!(as&&as.western);
+      const hasV=(()=>{try{return JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length>0;}catch{return false;}})();
+      if(!as||(!hasW&&!hasV))return h('⭐ Astro Bot')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定星盤資料，點擊進入</div>`;
+      return h('⭐ Astro Bot')+
+        row('西洋星盤',hasW?'已設定':'未設定',hasW?'g':'')+
+        row('印度星盤',hasV?`${JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length} 張`:'未設定',hasV?'g':'')+
+        (as.name?row('對象',as.name):'');
+    }
     default:return'';
   }
 }
@@ -1024,6 +1039,7 @@ function renderTab(tab){
       {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
       {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
       {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
+      {id:'astro',lbl:'⭐ Astro Bot',ph:'./astro.html'},
     ];
     el.innerHTML=`
       <div class="s-title">連結管理</div>
@@ -1122,7 +1138,7 @@ function onWPFile(inp){
   r.readAsDataURL(f);
 }
 function saveAllLinks(){
-  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast'];
+  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast','astro'];
   const l={};
   ids.forEach(id=>{const el=document.getElementById('lnk-'+id);if(el)l[id]=(el.value||'').trim();});
   saveLinks(l);updateUnsetFlags();closeSettings();
