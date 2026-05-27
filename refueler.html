@@ -159,15 +159,17 @@ body{
 .cost-bar-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .cost-bar{height:100%;border-radius:3px;transition:width .4s ease;}
 .cost-cat-amt{font-size:11.5px;font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;}
-.cost-breakdown{margin-top:14px;display:flex;flex-direction:column;gap:14px;}
-.cost-bd-group{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:10px 13px;}
-.cost-bd-title{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px;}
-.cost-bd-row{display:grid;grid-template-columns:1fr 90px 72px;align-items:center;gap:8px;margin-bottom:6px;}
-.cost-bd-row:last-of-type{margin-bottom:0;}
-.cost-bd-lbl{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cost-bd-amt{font-size:11.5px;font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;}
-.cost-bd-total{font-size:11px;color:var(--faint);text-align:right;padding-top:7px;margin-top:7px;border-top:.5px solid var(--border);}
-.cost-bd-meta{font-size:10px;font-weight:400;color:var(--faint);margin-left:4px;}
+.cost-breakdown{margin-top:12px;display:flex;flex-direction:column;gap:10px;}
+.cost-bd-group{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:9px 11px;}
+.cost-bd-title{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+.cost-tree-row{display:flex;align-items:baseline;gap:6px;padding:3px 0;border-bottom:.5px solid var(--border);min-width:0;}
+.cost-tree-row:last-child{border-bottom:none;}
+.cost-tree-prefix{font-size:10px;color:var(--faint);flex-shrink:0;font-family:monospace;}
+.cost-tree-lbl{font-size:12px;color:var(--sub);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cost-tree-parent .cost-tree-lbl{font-weight:600;color:var(--ink);}
+.cost-tree-stats{font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;flex-shrink:0;}
+.cost-tree-meta{font-size:10px;font-weight:400;color:var(--faint);margin-left:5px;}
+.cost-bd-total{font-size:10.5px;color:var(--faint);text-align:right;padding-top:6px;margin-top:4px;border-top:.5px solid var(--border);}
 
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
@@ -679,31 +681,41 @@ function renderCostAnalysis(){
 
   // ── Breakdown helpers ──
   const _x=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function bdGroup(entries, keyFn, priceFn, title, color){
-    const map={}, cnt={};
+  function buildTree(entries, shopKeyFn, itemKeyFn, priceFn){
+    const shops={};
     entries.forEach(e=>{
-      const k=keyFn(e)||'（未填）';
-      map[k]=(map[k]||0)+priceFn(e);
-      cnt[k]=(cnt[k]||0)+1;
+      const shop=shopKeyFn(e)||'（未填店名）';
+      const item=itemKeyFn(e)||'（未填）';
+      const p=priceFn(e);
+      if(!shops[shop]) shops[shop]={total:0,count:0,items:{}};
+      shops[shop].total+=p; shops[shop].count++;
+      if(!shops[shop].items[item]) shops[shop].items[item]={total:0,count:0};
+      shops[shop].items[item].total+=p; shops[shop].items[item].count++;
     });
-    const rows=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-    if(!rows.length) return '';
-    const maxV=rows[0][1];
-    const total=rows.reduce((s,[,v])=>s+v,0);
-    const rowsHtml=rows.map(([k,v])=>{
-      const pct=total>0?Math.round(v/total*100):0;
-      const n=cnt[k]||0;
-      return `
-      <div class="cost-bd-row">
-        <span class="cost-bd-lbl">${_x(k)}</span>
-        <div class="cost-bar-wrap"><div class="cost-bar" style="width:${Math.round(v/maxV*100)}%;background:${color};"></div></div>
-        <span class="cost-bd-amt">NT$${v}<span class="cost-bd-meta"> ${pct}% · ${n}次</span></span>
-      </div>`;
+    return shops;
+  }
+  function renderTree(title, shops){
+    const grandTotal=Object.values(shops).reduce((s,v)=>s+v.total,0);
+    if(!grandTotal) return '';
+    const rows=Object.entries(shops).sort((a,b)=>b[1].total-a[1].total).map(([shop,data])=>{
+      const sPct=Math.round(data.total/grandTotal*100);
+      const childRows=Object.entries(data.items).sort((a,b)=>b[1].total-a[1].total).map(([item,d])=>{
+        const iPct=data.total>0?Math.round(d.total/data.total*100):0;
+        return `<div class="cost-tree-row">
+          <span class="cost-tree-prefix">|──</span>
+          <span class="cost-tree-lbl">${_x(item)}</span>
+          <span class="cost-tree-stats">NT$${d.total}<span class="cost-tree-meta">${iPct}% · ${d.count}次</span></span>
+        </div>`;
+      }).join('');
+      return `<div class="cost-tree-row cost-tree-parent">
+        <span class="cost-tree-lbl">${_x(shop)}</span>
+        <span class="cost-tree-stats">NT$${data.total}<span class="cost-tree-meta">${sPct}% · ${data.count}次</span></span>
+      </div>${childRows}`;
     }).join('');
     return `<div class="cost-bd-group">
       <div class="cost-bd-title">${title}</div>
-      ${rowsHtml}
-      <div class="cost-bd-total">合計 NT$${total}</div>
+      ${rows}
+      <div class="cost-bd-total">合計 NT$${grandTotal}</div>
     </div>`;
   }
 
@@ -745,9 +757,8 @@ function renderCostAnalysis(){
       </div>
     </div>
     <div class="cost-breakdown">
-      ${bdGroup(monthEntries, e=>e.cafe, e=>(e.coffeePrice??e.price??0)+(e.dessertPrice??0), '🏪 店家（咖啡 + 甜點）', 'var(--coffee-l)')}
-      ${bdGroup(monthEntries, e=>e.item, e=>(e.coffeePrice??e.price??0), '🥤 品項（咖啡飲品）', 'var(--coffee)')}
-      ${bdGroup(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.dessert, e=>(e.dessertPrice??0), '🍰 甜點', '#c4aa7c')}
+      ${renderTree('☕ 咖啡 — 店家 → 品項', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
+      ${renderTree('🍰 甜點 — 店家 → 品項', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
     </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
   `;
 }
