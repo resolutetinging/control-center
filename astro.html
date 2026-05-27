@@ -144,6 +144,14 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .save-bar{display:flex;align-items:center;gap:10px;margin-top:14px}
 .saved-note{font-size:11px;color:var(--faint);opacity:0}
 .saved-note.show{opacity:1;transition:opacity .3s}
+
+/* ── COLLAPSIBLE PANEL ── */
+.collapsible-panel .cpanel-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.collapsible-panel .cpanel-hdr .panel-title{margin-bottom:0}
+.collapsible-panel .cpanel-body{margin-top:14px}
+.collapsible-panel.collapsed .cpanel-body{display:none}
+.cpanel-chevron{font-size:11px;color:var(--faint);transition:transform .2s;flex-shrink:0;margin-left:8px}
+.collapsible-panel.collapsed .cpanel-chevron{transform:rotate(-90deg)}
 </style>
 </head>
 <body>
@@ -165,21 +173,31 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
     <input type="text" id="s-name" placeholder="Tina" style="max-width:200px;margin-bottom:14px">
   </div>
 
-  <div class="panel">
-    <div class="panel-title">西洋星盤 — 文字資料</div>
-    <label>將星盤文字完整貼入（Astro.com 或其他來源均可）</label>
-    <textarea id="s-western" rows="10" placeholder="貼入完整星盤文字，包含行星位置、宮位、相位等資料..."></textarea>
+  <div class="panel collapsible-panel" id="cpanel-western">
+    <div class="cpanel-hdr" onclick="togglePanel('cpanel-western')">
+      <div class="panel-title">西洋星盤 — 文字資料</div>
+      <span class="cpanel-chevron">▾</span>
+    </div>
+    <div class="cpanel-body">
+      <label>將星盤文字完整貼入（Astro.com 或其他來源均可）</label>
+      <textarea id="s-western" rows="10" placeholder="貼入完整星盤文字，包含行星位置、宮位、相位等資料..."></textarea>
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-title">印度星盤 — 圖片（最多 3 張）</div>
-    <div class="img-upload-area" onclick="document.getElementById('vedic-file').click()">
-      <input type="file" id="vedic-file" accept="image/*" multiple onchange="handleVedicUpload(event)">
-      <div style="font-size:22px;margin-bottom:6px">🪐</div>
-      <div style="font-size:13px;color:var(--sub)">點擊上傳圖片（支援 JPG / PNG，最多 3 張）</div>
-      <div class="img-upload-hint">圖片將壓縮後儲存在本機</div>
+  <div class="panel collapsible-panel" id="cpanel-vedic">
+    <div class="cpanel-hdr" onclick="togglePanel('cpanel-vedic')">
+      <div class="panel-title">印度星盤 — 圖片（最多 3 張）</div>
+      <span class="cpanel-chevron">▾</span>
     </div>
-    <div class="img-previews" id="vedic-previews"></div>
+    <div class="cpanel-body">
+      <div class="img-upload-area" onclick="document.getElementById('vedic-file').click()">
+        <input type="file" id="vedic-file" accept="image/*" multiple onchange="handleVedicUpload(event)">
+        <div style="font-size:22px;margin-bottom:6px">🪐</div>
+        <div style="font-size:13px;color:var(--sub)">點擊上傳圖片（支援 JPG / PNG，最多 3 張）</div>
+        <div class="img-upload-hint">圖片將壓縮後儲存在本機</div>
+      </div>
+      <div class="img-previews" id="vedic-previews"></div>
+    </div>
   </div>
 
   <div class="panel">
@@ -353,8 +371,13 @@ function switchTab(id){
   document.getElementById('page-'+id).classList.add('active');
   const idx = ['setting','myself','forecast','chat'].indexOf(id);
   document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  localStorage.setItem('astro_active_tab', id);
   if(id==='forecast') renderYearRow();
   if(id==='myself') renderMyself();
+}
+
+function togglePanel(id){
+  document.getElementById(id).classList.toggle('collapsed');
 }
 
 // ══ SETTING ══
@@ -435,6 +458,9 @@ function loadSettingForm(){
   if(s.western) document.getElementById('s-western').value = s.western;
   if(s.notes) document.getElementById('s-notes').value = s.notes;
   renderImagePreviews();
+  // 已有資料時自動收合
+  if(s.western) document.getElementById('cpanel-western').classList.add('collapsed');
+  if(getImages().length) document.getElementById('cpanel-vedic').classList.add('collapsed');
 }
 
 // ══ MYSELF ══
@@ -448,10 +474,16 @@ const MYSELF_SECTIONS = [
   {key:'life_theme',  label:'人生主軸'},
 ];
 
-// ── 段落文字渲染（每行各自成 <p>，敘述主軸轉換自然換段）
+// ── 段落文字渲染（每行各自成 <p>；第N項：title 自動樣式化）
 function renderParas(text){
   return stripMdHeaders(text).split('\n').filter(l=>l.trim()).map(line=>{
-    const h = esc(line.trim()).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+    const t = line.trim();
+    const itemM = t.match(/^第([一二三四五六七八九十百\d]+)項[：:]\s*(.*)/);
+    if(itemM){
+      const rest = esc(itemM[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+      return `<p style="margin-top:8px"><strong style="color:var(--astro)">第${esc(itemM[1])}項：</strong>${rest}</p>`;
+    }
+    const h = esc(t).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
     return `<p>${h}</p>`;
   }).join('');
 }
@@ -575,7 +607,7 @@ async function genMyself(){
   const useVision = (mode === 'vedic' || mode === 'both');
   progress.textContent = {western:'西方占星分析中…', vedic:'印度占星分析中…', both:'雙系統整合分析中…'}[mode];
 
-  const FMT = `格式規定（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 七個段落標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
+  const FMT = `格式規定（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 七個段落標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵\n- 列舉多項時（如天賦強項、成長課題），每項必須從「第一項：特質名稱」開始，依序標記第一項、第二項…，不得省略第一項`;
 
   const SECTIONS_W = `【核心個性】\n整合上升天蠍、太陽巨蟹9宮、月亮雙子8宮三角，從心理占星視角深入描述你的核心性格結構（5-6句）。分別說明：上升天蠍賦予的外在防衛機制與神祕氣場、太陽巨蟹的情感驅動力與安全感需求、月亮雙子8宮的思維情緒運作方式，以及三者之間的內在張力與矛盾。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的本命盤天賦優勢，每項單獨一段。每項引用具體行星/宮位配置，說明在職場或生活中的具體展現方式，以及此配置賦予你的獨特能力。\n\n【工作 & 事業】\n以西方占星流年視角（今日 ${_todayStr}）分析你的職涯天賦與當前能量週期（4-5句）。引用事業相關行星（第10宮、木星、太陽）與當前流年行星過境（Transits）對職涯的本命生命節點顯化。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項你的心理課題或盲點，每項單獨一段。以心理占星視角分析：星盤根源、在生活中的具體表現、符合你靈魂演化方向的突破路徑。\n\n【關係模式】\n從心理占星視角分析你在親密關係、友誼、家庭中的互動模式（4-5句）。引用第7宮、金星雙子8宮、月亮雙子8宮說明你的依附風格、最深層的關係需求與常見困境。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述你的思考方式與溝通習慣（4-5句）。說明此配置如何影響你的表達邏輯、在壓力下的溝通變化，以及你溝通上的獨特性。\n\n【人生主軸】\n從整體星盤格局與靈魂演化視角（引用北交點/南交點業力方向）說明你的核心靈魂課題（4-5句）。說明你此生最重要的轉化主題與靈魂成長路徑。`;
 
@@ -689,6 +721,24 @@ function mdToHtml(s){
   return esc(stripMdHeaders(s)).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
 }
 
+function renderCombinedBody(body){
+  const PERSP = {'西方視角':'#3d527a','印度視角':'#8a5e2a','共振交集':'#3d7a5a'};
+  const lines = stripMdHeaders(body).split('\n');
+  let html = '';
+  lines.forEach(line => {
+    const t = line.trim();
+    const mk = t.match(/^\*{0,2}(西方視角|印度視角|共振交集)\*{0,2}[：:]\s*(.*)/);
+    if(mk && PERSP[mk[1]]){
+      const col = PERSP[mk[1]];
+      html += `<div style="margin:10px 0 3px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding-left:6px">${esc(mk[1])}</div>`;
+      if(mk[2].trim()) html += `<p style="margin-top:2px">${esc(mk[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</p>`;
+    } else if(t){
+      html += `<p>${esc(t).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</p>`;
+    }
+  });
+  return html || renderParas(body);
+}
+
 function renderForecastSections(text){
   const sections = [];
   const re = /【([^】]+)】[^\n]*\n([\s\S]*?)(?=\n?【[^】]+】|$)/g;
@@ -710,6 +760,8 @@ function renderForecastSections(text){
         return `<div class="timeline-row"><div class="timeline-month">${esc(mm[1])}</div><div class="timeline-body">${esc(mm[2]).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
       }).filter(Boolean).join('');
       bodyHtml = `<div class="timeline-list">${rows}</div>`;
+    } else if(selChartType === 'combined'){
+      bodyHtml = renderCombinedBody(body);
     } else {
       bodyHtml = renderParas(body);
     }
@@ -995,6 +1047,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 // ── Init ──
 loadSettingForm();
 loadChatHistory();
+switchTab(localStorage.getItem('astro_active_tab') || 'setting');
 </script>
 </body>
 </html>
