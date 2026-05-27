@@ -575,6 +575,10 @@ function renderMyself(){
     const raw = sections[label] || '';
     const cols = raw ? splitToColumns(raw, mode)
       : {western:'', vedic:'', both:''};
+    // mode='both' 但 AI 未輸出子視角 marker → 退化成單欄顯示，避免出現一堆 —
+    if(mode === 'both' && cols.western && !cols.vedic.trim() && !cols.both.trim()){
+      return `<div class="myself-section"><div class="card-label">${label}</div>${renderParas(cols.western)}</div>`;
+    }
     const triCols = ['western','vedic','both'].map(c=>{
       const content = cols[c];
       const body = content
@@ -607,7 +611,7 @@ async function genMyself(){
   const useVision = (mode === 'vedic' || mode === 'both');
   progress.textContent = {western:'西方占星分析中…', vedic:'印度占星分析中…', both:'雙系統整合分析中…'}[mode];
 
-  const FMT = `格式規定（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 七個段落標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵\n- 列舉多項時（如天賦強項、成長課題），每項必須從「第一項：特質名稱」開始，依序標記第一項、第二項…，不得省略第一項`;
+  const FMT = `格式規定（嚴格遵守）：\n- 嚴格使用【標題】格式，絕對禁止任何 Markdown 標題符號（#、##、###）\n- 七個段落標題必須完全照以下文字輸出（不得更改任何字元）：【核心個性】【天賦強項】【工作 & 事業】【成長課題】【關係模式】【溝通風格】【人生主軸】\n- 關鍵詞、行星、宮位用 **詞語** 粗體\n- 每個觀察引用具體行星位置/宮位依據\n- 不同觀點換行分段，全程以「你」稱呼\n- 真實有深度，不泛泛而談，不過度鼓勵`;
 
   const SECTIONS_W = `【核心個性】\n整合上升天蠍、太陽巨蟹9宮、月亮雙子8宮三角，從心理占星視角深入描述你的核心性格結構（5-6句）。分別說明：上升天蠍賦予的外在防衛機制與神祕氣場、太陽巨蟹的情感驅動力與安全感需求、月亮雙子8宮的思維情緒運作方式，以及三者之間的內在張力與矛盾。不同要點換行。\n\n【天賦強項】\n列出 3-4 項你的本命盤天賦優勢，每項單獨一段。每項引用具體行星/宮位配置，說明在職場或生活中的具體展現方式，以及此配置賦予你的獨特能力。\n\n【工作 & 事業】\n以西方占星流年視角（今日 ${_todayStr}）分析你的職涯天賦與當前能量週期（4-5句）。引用事業相關行星（第10宮、木星、太陽）與當前流年行星過境（Transits）對職涯的本命生命節點顯化。不同觀點換行分段。\n\n【成長課題】\n列出 3-4 項你的心理課題或盲點，每項單獨一段。以心理占星視角分析：星盤根源、在生活中的具體表現、符合你靈魂演化方向的突破路徑。\n\n【關係模式】\n從心理占星視角分析你在親密關係、友誼、家庭中的互動模式（4-5句）。引用第7宮、金星雙子8宮、月亮雙子8宮說明你的依附風格、最深層的關係需求與常見困境。不同面向換行分段。\n\n【溝通風格】\n根據水星位置及相位，描述你的思考方式與溝通習慣（4-5句）。說明此配置如何影響你的表達邏輯、在壓力下的溝通變化，以及你溝通上的獨特性。\n\n【人生主軸】\n從整體星盤格局與靈魂演化視角（引用北交點/南交點業力方向）說明你的核心靈魂課題（4-5句）。說明你此生最重要的轉化主題與靈魂成長路徑。`;
 
@@ -825,7 +829,10 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
     ? `以雙系統整合視角，對每個主題先以西方 Transits/Progressions 呈現心理能量轉化，再以吠陀 Dasha/Gochar 呈現業力顯化時機，最後點出兩系統共振的核心行動窗口`
     : `以現代西方占星原則，結合流年行星過境（Transits）與二次推運（Secondary Progressions），語氣溫和療癒且賦能，著重心理轉變與能量週期`;
 
-  const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}${ANALYSIS_LOGIC}\n\n`;
+  const COMBINED_MARKER_RULE = chartType === 'combined'
+    ? `\n在每個段落的內容中，依序以以下三個子視角標記分段（標記從行首開始，後接全形冒號，不得省略任何一個）：\n**西方視角**：[Transits/Progressions 心理能量轉化說明]\n**印度視角**：[Dasha/Gochar 業力顯化時機說明]\n**共振交集**：[兩系統共同指向的核心行動窗口（1-2句）]`
+    : '';
+  const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}${COMBINED_MARKER_RULE}${ANALYSIS_LOGIC}\n\n`;
 
   if(isYearly){
     return base +
