@@ -698,12 +698,16 @@ function renderCoffeeChart(){
     const price=(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
     monthData[m][shop]=(monthData[m][shop]||0)+price;
   });
-  const monthTotals=Array.from({length:maxMonth},(_,i)=>Object.values(monthData[i+1]||{}).reduce((s,v)=>s+v,0));
+  // 從第一個有資料的月份開始，跳過前面空白月份
+  let minMonth=1;
+  for(let m=1;m<=maxMonth;m++){if(Object.keys(monthData[m]).length>0){minMonth=m;break;}}
+  const spanMonths=maxMonth-minMonth+1;
+  const monthTotals=Array.from({length:spanMonths},(_,i)=>Object.values(monthData[minMonth+i]||{}).reduce((s,v)=>s+v,0));
   const maxVal=Math.max(...monthTotals,1);
   const W=Math.max(wrap.offsetWidth||wrap.clientWidth||260,160);
   const H=130;const padL=36,padR=6,padT=8,padB=24;
   const chartW=W-padL-padR;const chartH=H-padT-padB;
-  const gap=chartW/maxMonth;
+  const gap=chartW/spanMonths;
   const barW=Math.max(6,Math.min(26,Math.floor(gap*0.65)));
   const step=maxVal<=500?100:maxVal<=1000?200:maxVal<=2000?500:maxVal<=5000?1000:2000;
   const yMax=Math.ceil(maxVal/step)*step||step;
@@ -714,8 +718,9 @@ function renderCoffeeChart(){
     const lbl=v>=1000?Math.round(v/100)/10+'k':v;
     svgGrid+=`<text x="${padL-3}" y="${y+3}" text-anchor="end" font-size="8" fill="#7a7570">${lbl}</text>`;
   }
-  for(let m=1;m<=maxMonth;m++){
-    const cx=padL+(m-0.5)*gap;
+  for(let i=0;i<spanMonths;i++){
+    const m=minMonth+i;
+    const cx=padL+(i+0.5)*gap;
     const shopsInMonth=allShops.filter(s=>(monthData[m][s]||0)>0);
     let barY=H-padB;
     shopsInMonth.forEach(shop=>{
@@ -842,8 +847,8 @@ function renderCostAnalysis(){
         <div id="cost-chart-wrap" style="min-height:60px;"></div>
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
       </div>
-      ${renderTree('☕ 咖啡 — 店家 → 品項', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
-      ${renderTree('🍰 甜點 — 店家 → 品項', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
+      ${renderTree('☕ 咖啡', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
+      ${renderTree('🍰 點心', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
     </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
   `;
   renderCoffeeChart();
