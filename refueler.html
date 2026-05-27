@@ -159,6 +159,14 @@ body{
 .cost-bar-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .cost-bar{height:100%;border-radius:3px;transition:width .4s ease;}
 .cost-cat-amt{font-size:11.5px;font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;}
+.cost-breakdown{margin-top:14px;display:flex;flex-direction:column;gap:14px;}
+.cost-bd-group{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:10px 13px;}
+.cost-bd-title{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px;}
+.cost-bd-row{display:grid;grid-template-columns:1fr 90px 72px;align-items:center;gap:8px;margin-bottom:6px;}
+.cost-bd-row:last-of-type{margin-bottom:0;}
+.cost-bd-lbl{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cost-bd-amt{font-size:11.5px;font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;}
+.cost-bd-total{font-size:11px;color:var(--faint);text-align:right;padding-top:7px;margin-top:7px;border-top:.5px solid var(--border);}
 
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
@@ -668,6 +676,31 @@ function renderCostAnalysis(){
   const coffeeP=monthTotal>0?Math.round(monthCoffee/monthTotal*100):0;
   const dessertP=monthTotal>0?100-coffeeP:0;
 
+  // ── Breakdown helpers ──
+  const _x=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function bdGroup(entries, keyFn, priceFn, title, color){
+    const map={};
+    entries.forEach(e=>{
+      const k=keyFn(e)||'（未填）';
+      map[k]=(map[k]||0)+priceFn(e);
+    });
+    const rows=Object.entries(map).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    if(!rows.length) return '';
+    const maxV=rows[0][1];
+    const total=rows.reduce((s,[,v])=>s+v,0);
+    const rowsHtml=rows.map(([k,v])=>`
+      <div class="cost-bd-row">
+        <span class="cost-bd-lbl">${_x(k)}</span>
+        <div class="cost-bar-wrap"><div class="cost-bar" style="width:${Math.round(v/maxV*100)}%;background:${color};"></div></div>
+        <span class="cost-bd-amt">NT$${v}</span>
+      </div>`).join('');
+    return `<div class="cost-bd-group">
+      <div class="cost-bd-title">${title}</div>
+      ${rowsHtml}
+      <div class="cost-bd-total">合計 NT$${total}</div>
+    </div>`;
+  }
+
   const el=document.getElementById('cost-analysis');if(!el)return;
   el.innerHTML=`
     <div class="cost-grid">
@@ -704,6 +737,11 @@ function renderCostAnalysis(){
         <div class="cost-bar-wrap"><div class="cost-bar" style="width:${dessertP}%;background:#c4aa7c;"></div></div>
         <span class="cost-cat-amt">NT$${monthDessert} <span style="color:var(--faint);font-weight:400;">(${dessertP}%)</span></span>
       </div>
+    </div>
+    <div class="cost-breakdown">
+      ${bdGroup(monthEntries, e=>e.cafe, e=>(e.coffeePrice??e.price??0)+(e.dessertPrice??0), '🏪 按店家（咖啡 + 甜點）', 'var(--coffee-l)')}
+      ${bdGroup(monthEntries, e=>e.item, e=>(e.coffeePrice??e.price??0), '🥤 按品項（咖啡飲品）', 'var(--coffee)')}
+      ${bdGroup(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.dessert, e=>(e.dessertPrice??0), '🍰 按甜點', '#c4aa7c')}
     </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
   `;
 }
