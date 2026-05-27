@@ -173,6 +173,13 @@ body{
 .cost-tree-trend{width:20px;} /* 保留：長期趨勢箭頭 */
 .cost-bd-total{font-size:10.5px;color:var(--faint);text-align:right;padding-top:6px;margin-top:4px;border-top:.5px solid var(--border);}
 
+/* ── Coffee Chart ── */
+.cost-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cost-chart-year-sel{font-size:11px;color:var(--sub);background:var(--bg2);border:.5px solid var(--border);border-radius:6px;padding:2px 6px;font-family:inherit;cursor:pointer;outline:none;}
+.cost-chart-legend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:7px;}
+.cost-chart-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.cost-chart-leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
 .ai-title{font-size:15px;font-weight:700;color:var(--ink);}
@@ -525,6 +532,7 @@ function addCoffee(){
 
 // ── WATER ──
 let selW=250;
+let selChartYear=new Date().getFullYear();
 function pickW(v){
   selW=v;
   document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('sel'));
@@ -662,6 +670,67 @@ function showDayDetail(key,type){
 }
 function closeDayDetail(){document.getElementById('day-detail').style.display='none';}
 
+// ── HELPERS ──
+const _x=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const CHART_COLORS=['#c47a3a','#5a8a9a','#7a9a5a','#8a6a7a','#9a7a4a','#5a7a8a','#c4a43a','#6a5a4a'];
+
+// ── COFFEE CHART ──
+function renderCoffeeChart(){
+  const wrap=document.getElementById('cost-chart-wrap');
+  const yearSel=document.getElementById('cost-chart-year');
+  if(!wrap)return;
+  const d=loadRF();const all=d.entries||[];
+  const coffeeAll=all.filter(e=>e.type==='coffee');
+  const curYear=new Date().getFullYear();
+  const years=[...new Set(coffeeAll.map(e=>new Date(e.timestamp).getFullYear()))].sort((a,b)=>b-a);
+  if(!years.includes(curYear))years.unshift(curYear);
+  if(!years.includes(selChartYear))selChartYear=curYear;
+  if(yearSel)yearSel.innerHTML=years.map(y=>`<option value="${y}"${y===selChartYear?' selected':''}>${y}</option>`).join('');
+  const yearEntries=coffeeAll.filter(e=>new Date(e.timestamp).getFullYear()===selChartYear);
+  const maxMonth=selChartYear===curYear?new Date().getMonth()+1:12;
+  const allShops=[...new Set(yearEntries.map(e=>e.cafe||'（未填店名）'))].sort();
+  const shopColor={};allShops.forEach((s,i)=>shopColor[s]=CHART_COLORS[i%CHART_COLORS.length]);
+  const monthData={};
+  for(let m=1;m<=maxMonth;m++)monthData[m]={};
+  yearEntries.forEach(e=>{
+    const m=new Date(e.timestamp).getMonth()+1;
+    const shop=e.cafe||'（未填店名）';
+    const price=(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
+    monthData[m][shop]=(monthData[m][shop]||0)+price;
+  });
+  const monthTotals=Array.from({length:maxMonth},(_,i)=>Object.values(monthData[i+1]||{}).reduce((s,v)=>s+v,0));
+  const maxVal=Math.max(...monthTotals,1);
+  const W=Math.max(wrap.offsetWidth||wrap.clientWidth||260,160);
+  const H=130;const padL=36,padR=6,padT=8,padB=24;
+  const chartW=W-padL-padR;const chartH=H-padT-padB;
+  const gap=chartW/maxMonth;
+  const barW=Math.max(6,Math.min(26,Math.floor(gap*0.65)));
+  const step=maxVal<=500?100:maxVal<=1000?200:maxVal<=2000?500:maxVal<=5000?1000:2000;
+  const yMax=Math.ceil(maxVal/step)*step||step;
+  let svgGrid='',svgBars='';
+  for(let v=0;v<=yMax;v+=step){
+    const y=H-padB-Math.round(v/yMax*chartH);
+    svgGrid+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="rgba(40,38,32,.07)" stroke-width="1"/>`;
+    const lbl=v>=1000?Math.round(v/100)/10+'k':v;
+    svgGrid+=`<text x="${padL-3}" y="${y+3}" text-anchor="end" font-size="8" fill="#7a7570">${lbl}</text>`;
+  }
+  for(let m=1;m<=maxMonth;m++){
+    const cx=padL+(m-0.5)*gap;
+    const shopsInMonth=allShops.filter(s=>(monthData[m][s]||0)>0);
+    let barY=H-padB;
+    shopsInMonth.forEach(shop=>{
+      const val=monthData[m][shop];
+      const bh=Math.max(1,Math.round(val/yMax*chartH));
+      barY-=bh;
+      svgBars+=`<rect x="${Math.round(cx-barW/2)}" y="${barY}" width="${barW}" height="${bh}" fill="${shopColor[shop]}" rx="2"/>`;
+    });
+    svgBars+=`<text x="${Math.round(cx)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#7a7570">${m}月</text>`;
+  }
+  wrap.innerHTML=`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}</svg>`;
+  const lg=document.getElementById('cost-chart-legend');
+  if(lg)lg.innerHTML=allShops.length?allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join(''):'';
+}
+
 // ── COST ANALYSIS ──
 function renderCostAnalysis(){
   const d=loadRF();const all=d.entries||[];
@@ -682,7 +751,6 @@ function renderCostAnalysis(){
   const dessertP=monthTotal>0?100-coffeeP:0;
 
   // ── Breakdown helpers ──
-  const _x=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   function buildTree(entries, shopKeyFn, itemKeyFn, priceFn){
     const shops={};
     entries.forEach(e=>{
@@ -766,10 +834,19 @@ function renderCostAnalysis(){
       </div>
     </div>
     <div class="cost-breakdown">
+      <div class="cost-bd-group">
+        <div class="cost-chart-header">
+          <div class="cost-bd-title">📊 月度消費走勢（NT$）</div>
+          <select class="cost-chart-year-sel" id="cost-chart-year" onchange="selChartYear=parseInt(this.value);renderCoffeeChart()"></select>
+        </div>
+        <div id="cost-chart-wrap" style="min-height:60px;"></div>
+        <div class="cost-chart-legend" id="cost-chart-legend"></div>
+      </div>
       ${renderTree('☕ 咖啡 — 店家 → 品項', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
       ${renderTree('🍰 甜點 — 店家 → 品項', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
     </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
   `;
+  renderCoffeeChart();
 }
 
 // ── AI STATS ──
