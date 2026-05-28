@@ -151,6 +151,9 @@ body{position:relative;}
 .tt-v.g{color:#7d9e85;}.tt-v.a{color:#b09870;}.tt-v.r{color:#a87868;}
 .tt-hr{height:.5px;background:var(--border);margin:7px 0;}
 .tt-spark{font-size:11px;letter-spacing:1.5px;font-weight:600;}
+.tt-adv{padding:2px 0;display:flex;gap:7px;align-items:baseline}
+.tt-adv-k{font-size:10px;font-weight:700;color:var(--faint);white-space:nowrap;min-width:56px;letter-spacing:.02em}
+.tt-adv-v{font-size:11.5px;color:var(--ink);line-height:1.4;flex:1}
 
 /* ── Settings Modal ── */
 #settings-overlay{
@@ -811,6 +814,7 @@ function updateUnsetFlags(){
 const ttp=document.getElementById('tooltip');
 let ttT;
 function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
+function advRow(k,v){return`<div class="tt-adv"><span class="tt-adv-k">${k}</span><span class="tt-adv-v">${v}</span></div>`;}
 function hr(){return`<div class="tt-hr"></div>`;}
 function spark(vals){
   const B='▁▂▃▄▅▆▇█';
@@ -966,10 +970,34 @@ function buildTT(id){
       const hasW=!!(as&&as.western);
       const hasV=(()=>{try{return JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length>0;}catch{return false;}})();
       if(!as||(!hasW&&!hasV))return h('⭐ Astro Bot')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定星盤資料，點擊進入</div>`;
-      return h('⭐ Astro Bot')+
-        row('西洋星盤',hasW?'已設定':'未設定',hasW?'g':'')+
-        row('印度星盤',hasV?`${JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length} 張`:'未設定',hasV?'g':'')+
-        (as.name?row('對象',as.name):'');
+      // Try today's brief
+      let brief=null;
+      try{
+        const b=JSON.parse(localStorage.getItem('astro_cc_brief')||'null');
+        if(b){
+          const _t=new Date();
+          const ds=`${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+          if(b.date===ds)brief=b;
+        }
+      }catch{}
+      if(!brief){
+        return h('⭐ Astro Bot')+
+          row('西洋星盤',hasW?'已設定':'未設定',hasW?'g':'')+
+          row('印度星盤',hasV?`${JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length} 張`:'未設定',hasV?'g':'')+
+          (as.name?row('對象',as.name):'')+
+          hr()+
+          `<div style="font-size:11px;color:var(--faint);padding:2px 0;">前往 Astro Bot 生成今日建議</div>`;
+      }
+      const _n=new Date();
+      const dateLbl=`${_n.getMonth()+1}/${_n.getDate()}`;
+      const monthLbl=`${_n.getMonth()+1}月`;
+      let out=h(`⭐ Astro  ${monthLbl} & 今日`);
+      out+=`<div class="tt-head" style="margin-bottom:5px">本月</div>`;
+      (brief.thisMonth||[]).forEach(l=>{const p=l.split('|');out+=advRow((p[0]||l).trim(),(p[1]||'').trim());});
+      out+=hr();
+      out+=`<div class="tt-head" style="margin-bottom:5px">今日 ${dateLbl}</div>`;
+      (brief.today||[]).forEach(l=>{const p=l.split('|');out+=advRow((p[0]||l).trim(),(p[1]||'').trim());});
+      return out;
     }
     default:return'';
   }

@@ -101,6 +101,13 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
 .timeline-body{font-size:13px;line-height:1.75;color:var(--sub)}
 .timeline-body strong{color:var(--ink);font-weight:600}
 
+/* combined perspective sub-labels */
+.persp-lbl{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin:14px 0 4px;padding-left:7px;border-left:2px solid;display:block}
+.persp-lbl--first{margin-top:0}
+.persp-w{color:var(--astro);border-color:var(--astro)}
+.persp-v{color:#7a5d3d;border-color:#7a5d3d}
+.persp-c{color:#3a6b52;border-color:#3a6b52}
+
 /* ── CHAT ── */
 .chat-messages{height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--bg2);border:.5px solid var(--bstr);border-radius:10px;margin-bottom:12px}
 .msg{max-width:80%;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.65;word-break:break-word;white-space:pre-wrap}
@@ -286,6 +293,7 @@ const KEY_MYSELF   = 'astro_myself';
 const KEY_FORECAST = 'astro_forecast';
 const KEY_CHAT     = 'astro_chat';
 const KEY_IMAGES   = 'astro_vedic_images';
+const KEY_CC_BRIEF = 'astro_cc_brief';
 
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 let selYear = null, selMonth = null, selCategory = 'all', selChartType = 'western';
@@ -726,16 +734,17 @@ function mdToHtml(s){
 }
 
 function renderCombinedBody(body){
-  const PERSP = {'西方視角':'#3d527a','印度視角':'#8a5e2a','共振交集':'#3d7a5a'};
+  const PERSP_CLS = {'西方視角':'persp-w','印度視角':'persp-v','共振交集':'persp-c'};
   const lines = stripMdHeaders(body).split('\n');
-  let html = '';
+  let html = '', isFirst = true;
   lines.forEach(line => {
     const t = line.trim();
     const mk = t.match(/^\*{0,2}(西方視角|印度視角|共振交集)\*{0,2}[：:]\s*(.*)/);
-    if(mk && PERSP[mk[1]]){
-      const col = PERSP[mk[1]];
-      html += `<div style="margin:10px 0 3px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:${col};border-left:2px solid ${col};padding-left:6px">${esc(mk[1])}</div>`;
-      if(mk[2].trim()) html += `<p style="margin-top:2px">${esc(mk[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</p>`;
+    if(mk && PERSP_CLS[mk[1]]){
+      const cls = PERSP_CLS[mk[1]];
+      html += `<span class="persp-lbl ${cls}${isFirst?' persp-lbl--first':''}">${esc(mk[1])}</span>`;
+      if(mk[2].trim()) html += `<p style="margin-top:3px">${esc(mk[2]).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</p>`;
+      isFirst = false;
     } else if(t){
       html += `<p>${esc(t).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')}</p>`;
     }
@@ -767,7 +776,7 @@ function renderForecastSections(text){
         if(!mm) return '';
         return `<div class="timeline-row"><div class="timeline-month">${esc(mm[1])}</div><div class="timeline-body">${esc(mm[2]).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}</div></div>`;
       }).filter(Boolean).join('');
-      bodyHtml = `<div class="timeline-list">${rows}</div>`;
+      bodyHtml = rows ? `<div class="timeline-list">${rows}</div>` : (selChartType === 'combined' ? renderCombinedBody(body) : renderParas(body));
     } else if(selChartType === 'combined'){
       bodyHtml = renderCombinedBody(body);
     } else {
@@ -830,16 +839,16 @@ function buildForecastPrompt(name, ctx, chartType, imgs){
     : `以現代西方占星原則，結合流年行星過境（Transits）與二次推運（Secondary Progressions），語氣溫和療癒且賦能，著重心理轉變與能量週期`;
 
   const COMBINED_MARKER_RULE = chartType === 'combined'
-    ? `\n在每個段落的內容中，依序以以下三個子視角標記分段（標記從行首開始，後接全形冒號，不得省略任何一個）：\n**西方視角**：[Transits/Progressions 心理能量轉化說明]\n**印度視角**：[Dasha/Gochar 業力顯化時機說明]\n**共振交集**：[兩系統共同指向的核心行動窗口（1-2句）]`
+    ? `\n在每個段落的內容中（【年度時間軸】段落例外，該段落不使用三視角標記，仍按逐月格式輸出），依序以以下三個子視角標記分段（標記從行首開始，後接全形冒號，不得省略任何一個）：\n**西方視角**：[Transits/Progressions 心理能量轉化說明]\n**印度視角**：[Dasha/Gochar 業力顯化時機說明]\n**共振交集**：[兩系統共同指向的核心行動窗口（1-2句）]`
     : '';
   const base = `${dataIntro}\n\n請${analysisBase}，分析 ${name} 的 ${period} 走勢，以繁體中文輸出。${FORMAT_RULE}${COMBINED_MARKER_RULE}${ANALYSIS_LOGIC}\n\n`;
 
   if(isYearly){
     return base +
 `【年度時間軸】
-逐月輸出 1月 到 12月 的年度概覽，每月嚴格一行（禁止換行、禁止加分類標籤）：
-M月：[本月核心主題（8-12字）+ 最關鍵1個星象節點]
-（依序輸出 1月到12月，不加空行）
+逐月輸出 1月 到 12月 的年度概覽，每月嚴格一行（禁止換行、禁止加分類標籤、禁止三視角標記）：
+M月：[${chartType === 'combined' ? '雙系統共振核心主題（8-14字）+ 最關鍵1個星象節點' : '本月核心主題（8-12字）+ 最關鍵1個星象節點'}]
+（依序輸出 1月到12月，不加空行，不加任何視角標記）
 
 【工作 & 事業】
 從年度整體角度分析 ${selYear} 年工作事業走勢（6-8句）：說明全年最關鍵的轉折月份（月/日格式精確標注）、本命盤事業指標的核心激活時機、最值得把握的行動窗口，以及年度事業主軸策略。
@@ -911,7 +920,7 @@ async function genForecast(cacheKey){
     const ctx = chartContext();
     const useVision = selChartType === 'vedic' || selChartType === 'combined';
     const promptText = buildForecastPrompt(name, ctx, selChartType, imgs);
-    const maxTok = !selMonth ? 3500 : 2800;
+    const maxTok = !selMonth ? (selChartType === 'combined' ? 4500 : 3500) : (selChartType === 'combined' ? 3500 : 2800);
     let messages;
     if(useVision){
       messages = [{role:'user', content:[{type:'text', text:promptText}, ...imgs.map(src=>({type:'image_url', image_url:{url:src}}))]}];
@@ -1055,10 +1064,42 @@ function clearChat(){
 // ── Util ──
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+// ── CC Brief (background, silent) ──
+async function genCCBrief(){
+  if(!hasChart()) return;
+  const ctx = chartContext();
+  if(!ctx) return;
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  try{
+    const ex = JSON.parse(localStorage.getItem(KEY_CC_BRIEF)||'null');
+    if(ex && ex.date === todayStr) return;
+  }catch{}
+  const name = getName();
+  const dayNames = ['日','一','二','三','四','五','六'];
+  const todayDisplay = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${dayNames[now.getDay()]}）`;
+  const monthDisplay = `${now.getFullYear()}年${now.getMonth()+1}月`;
+  const prompt = `${ASTRO_SYSTEM_ROLE}\n\n以下是 ${name} 的西洋星盤資料：\n${ctx}\n\n請以現代西方占星視角（Transits + Progressions），針對今日 ${todayDisplay} 和 ${monthDisplay} 各給出 3-4 條簡短建議。\n\n以純 JSON 輸出，不加任何說明：\n{"today":["面向 | 建議（8-14字）",...],"month":["面向 | 建議（8-14字）",...]}`;
+  try{
+    const result = await callGroq([{role:'user',content:prompt}], false, 700);
+    const jm = result.match(/\{[\s\S]*?\}/);
+    if(!jm) return;
+    const p = JSON.parse(jm[0]);
+    if(!Array.isArray(p.today)||!Array.isArray(p.month)) return;
+    localStorage.setItem(KEY_CC_BRIEF, JSON.stringify({
+      date: todayStr,
+      today: p.today,
+      thisMonth: p.month,
+      ts: Date.now()
+    }));
+  }catch(e){ /* silent */ }
+}
+
 // ── Init ──
 loadSettingForm();
 loadChatHistory();
 switchTab(localStorage.getItem('astro_active_tab') || 'setting');
+setTimeout(genCCBrief, 2000);
 </script>
 </body>
 </html>
