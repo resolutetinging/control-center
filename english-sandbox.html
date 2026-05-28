@@ -129,11 +129,14 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 /* ── FEEDBACK CARD ── */
 .fb-card{background:var(--bg2);border:.5px solid var(--bstr);border-radius:12px;padding:13px 17px;margin-bottom:10px;box-shadow:var(--shadow)}
 .fb-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
-.fb-orig{font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px;padding:7px 11px;background:rgba(40,38,32,.05);border-radius:7px;border-left:2px solid var(--bstr);line-height:1.6}
-.fb-row{font-size:13px;line-height:1.55;display:flex;gap:7px;align-items:baseline;margin-top:5px}
-.fb-mark{font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
-.fb-ok .fb-mark{color:var(--en)}.fb-ok span:last-child{color:var(--en)}
-.fb-tip .fb-mark{color:#9a5a2a}.fb-tip span:last-child{color:#7a4520}
+.fb-orig{font-size:13px;color:var(--faint);font-style:italic;margin-bottom:12px;padding:7px 11px;background:rgba(40,38,32,.05);border-radius:7px;border-left:2px solid var(--bstr);line-height:1.6}
+.fb-block{margin-top:9px}
+.fb-block-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.fb-block-body{font-size:13px;line-height:1.65;padding-left:3px}
+.fb-issue .fb-block-lbl{color:#9a4a20}
+.fb-issue .fb-block-body{color:#7a3a18}
+.fb-add .fb-block-lbl{color:var(--en)}
+.fb-add .fb-block-body{color:var(--sub)}
 
 /* ── IDIOM ARCADE ── */
 .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
@@ -258,8 +261,14 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="fb-card" id="fb-card" style="display:none">
       <div class="fb-tag">📝 你的接球分析</div>
       <div class="fb-orig" id="fb-orig"></div>
-      <div class="fb-row fb-ok"><span class="fb-mark">✓</span><span id="fb-ok-text"></span></div>
-      <div class="fb-row fb-tip"><span class="fb-mark">→</span><span id="fb-tip-text"></span></div>
+      <div class="fb-block fb-issue" id="fb-issue-block">
+        <div class="fb-block-lbl">⚠ 哪裡不適合</div>
+        <div class="fb-block-body" id="fb-issue-text"></div>
+      </div>
+      <div class="fb-block fb-add">
+        <div class="fb-block-lbl">💡 建議補充</div>
+        <div class="fb-block-body" id="fb-add-text"></div>
+      </div>
     </div>
 
     <div class="result-hdr">AI 三階潤飾 — Three-Level Polish</div>
@@ -535,8 +544,9 @@ Situation: ${sit.en}
 Native speaker's opener: "${curOpener}"
 Learner's reply: "${userResp}"
 
-TASK 1 — Feedback on the learner's reply (fb_ok, fb_tip):
-Briefly comment on what they did well and one thing to improve. Traditional Chinese, casual tone.
+TASK 1 — Analyze the learner's reply (fb_issue, fb_add):
+- fb_issue: 用繁體中文直接說這句回覆哪裡不適合這個場合（語氣太正式/太隨便、用詞不自然、沒有接住對方的點、等等）。若沒有明顯問題就說「整體語感自然」。限25字。
+- fb_add: 用繁體中文說還可以加什麼讓這句回覆更完整或更自然（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。限25字。
 
 TASK 2 — Write 3 model English responses to the opener (safe, pro, ball):
 These are COMPLETELY INDEPENDENT example responses — do NOT quote, correct, or reference the learner's text at all.
@@ -544,8 +554,8 @@ Write each as a fluent native speaker naturally replying to the opener.
 
 Output ONLY valid JSON:
 {
-  "fb_ok": "繁體中文（≤12字）：學習者回覆中做得好或方向對的一點",
-  "fb_tip": "繁體中文（≤18字）：最值得改進的一點，直接點出",
+  "fb_issue": "繁體中文：哪裡不適合（≤25字）",
+  "fb_add": "繁體中文：建議補充什麼（≤25字）",
   "safe": "Model reply to opener — clean and professional (≤22 words, no corrections of learner text)",
   "pro": "Model reply to opener — natural idiomatic American English (≤25 words, no corrections of learner text)",
   "ball": "Model reply to opener + one follow-up question to extend the conversation (≤28 words, no corrections of learner text)"
@@ -559,8 +569,9 @@ Output ONLY valid JSON:
     // Feedback card
     if(inp){
       $('fb-orig').textContent = inp;
-      $('fb-ok-text').textContent = results.fb_ok||'';
-      $('fb-tip-text').textContent = results.fb_tip||'';
+      $('fb-issue-text').textContent = results.fb_issue||'';
+      $('fb-issue-block').style.display = results.fb_issue ? 'block' : 'none';
+      $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
     } else {
       $('fb-card').style.display='none';
