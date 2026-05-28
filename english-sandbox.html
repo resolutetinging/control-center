@@ -323,6 +323,18 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     </div>
   </div>
 
+  <!-- Idiom library (固定在主題選擇下方) -->
+  <div id="idiom-lib-section" style="background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:14px 17px;margin-bottom:14px;box-shadow:var(--shadow)">
+    <div class="saved-hdr" onclick="toggleLib()">
+      <span class="saved-hdr-lbl">📚 我的字庫</span>
+      <div class="saved-meta">
+        <span class="saved-badge" id="lib-badge">0</span>
+        <span class="saved-chevron" id="lib-chevron">▾</span>
+      </div>
+    </div>
+    <div id="lib-list" style="display:none"></div>
+  </div>
+
   <!-- Loading: generating question -->
   <div class="loading-card" id="loading-question">
     <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
@@ -349,18 +361,6 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="btn btn-ghost btn-sm" id="add-lib-btn" onclick="addToLib()">📚 加入字庫</button>
       <button class="btn btn-primary btn-sm" onclick="genQuestion()">下一題 →</button>
     </div>
-  </div>
-
-  <!-- Idiom library -->
-  <div id="idiom-lib-section" style="display:none;background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:14px 17px;margin-bottom:14px;box-shadow:var(--shadow)">
-    <div class="saved-hdr" onclick="toggleLib()">
-      <span class="saved-hdr-lbl">📚 我的字庫</span>
-      <div class="saved-meta">
-        <span class="saved-badge" id="lib-badge">0</span>
-        <span class="saved-chevron" id="lib-chevron">▾</span>
-      </div>
-    </div>
-    <div id="lib-list" style="display:none"></div>
   </div>
 
 </div><!-- /page-idiom -->
@@ -783,21 +783,20 @@ function addToLib(){
 
 function renderLib(autoOpen=false){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
-  const sec = $('idiom-lib-section');
   $('lib-badge').textContent = lib.length;
-  sec.style.display = lib.length ? 'block' : 'none';
-  if(!lib.length){ $('lib-list').innerHTML=''; return; }
   if(autoOpen&&!libOpen) toggleLib();
   if(!libOpen) return;
-  $('lib-list').innerHTML = lib.map((item,i)=>`
-    <div class="saved-item">
-      <div class="saved-body">
-        <div class="saved-text" style="font-weight:600">${esc(item.idiom)}</div>
-        <div class="saved-context" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:3px">${esc(item.sentence)}</div>
-        <div class="saved-context">${esc(item.topic)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</div>
-      </div>
-      <button class="del-btn" onclick="delLib(${i})" title="移除">✕</button>
-    </div>`).join('');
+  $('lib-list').innerHTML = lib.length
+    ? lib.map((item,i)=>`
+        <div class="saved-item">
+          <div class="saved-body">
+            <div class="saved-text" style="font-weight:600">${esc(item.idiom)}</div>
+            <div class="saved-context" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:3px">${esc(item.sentence)}</div>
+            <div class="saved-context">${esc(item.topic)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</div>
+          </div>
+          <button class="del-btn" onclick="delLib(${i})" title="移除">✕</button>
+        </div>`).join('')
+    : '<div class="saved-empty">尚無收藏，答題後點「加入字庫」</div>';
 }
 
 function delLib(i){
