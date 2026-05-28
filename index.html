@@ -425,6 +425,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="d-box">📖</div>
       <span class="d-lbl">WordVault</span>
     </div>
+    <div class="d-icon" data-id="english" onclick="dClick(this,'english')">
+      <div class="d-box">🎯</div>
+      <span class="d-lbl">English</span>
+    </div>
     <div class="d-icon" data-id="mentaltool" onclick="dClick(this,'mentaltool')">
       <div class="d-box">🧘</div>
       <span class="d-lbl">Ziwei</span>
@@ -692,6 +696,7 @@ const DEFAULT_LINKS={
   'oasis':     './oasis.html',
   'worship':   './worship.html',
   'astro':     './astro.html',
+  'english':   './english-sandbox.html',
 };
 function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
@@ -999,6 +1004,19 @@ function buildTT(id){
       (brief.today||[]).forEach(l=>{const p=l.split('|');out+=advRow((p[0]||l).trim(),(p[1]||'').trim());});
       return out;
     }
+    case 'english':{
+      const lib=JSON.parse(localStorage.getItem('es_idiom_lib')||'[]');
+      const saved=JSON.parse(localStorage.getItem('es_saved_phrases')||'[]');
+      let out=ttHead('🎯 English Sandbox');
+      out+=row('Small Talk','破冰接球 + AI 三階潤飾');
+      out+=row('Idiom Arcade','道地片語克漏字拆彈');
+      if(lib.length||saved.length){
+        out+=hr();
+        if(lib.length) out+=row('字庫',lib.length+' 個片語');
+        if(saved.length) out+=row('精華句',saved.length+' 句收藏');
+      }
+      return out;
+    }
     default:return'';
   }
 }
@@ -1080,6 +1098,7 @@ function renderTab(tab){
       {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
       {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
       {id:'astro',lbl:'⭐ Astro Bot',ph:'./astro.html'},
+      {id:'english',lbl:'🎯 English Sandbox',ph:'./english-sandbox.html'},
     ];
     el.innerHTML=`
       <div class="s-title">連結管理</div>
@@ -1178,7 +1197,7 @@ function onWPFile(inp){
   r.readAsDataURL(f);
 }
 function saveAllLinks(){
-  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast','astro'];
+  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast','astro','english'];
   const l={};
   ids.forEach(id=>{const el=document.getElementById('lnk-'+id);if(el)l[id]=(el.value||'').trim();});
   saveLinks(l);updateUnsetFlags();closeSettings();
