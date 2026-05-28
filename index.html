@@ -663,7 +663,12 @@ function fetchSleepData(){
       LIVE.sleep={
         date:stored?.date||'—',deepP,remP,coreP,awakeP,
         combatPower,
-        combatSingle:cpSingle,
+        combatSingle:  stored?.combatSingle   ?? cpSingle,
+        combatWeighted:stored?.combatWeighted ?? cp,
+        nightsWeighted:stored?.nightsWeighted ?? 1,
+        totalMin:  stored?.totalMin  ?? null,
+        bedtime:   stored?.bedtime   ?? null,
+        wake:      stored?.wake      ?? null,
         pace:combatPower>=80?'高效能 · 火力全開 🔥':combatPower>=70?'穩定輸出 ⚡':combatPower>=60?'注意 · 稍作保留 ⚠':'恢復優先 · 輕量任務 💤',
         endTime:localStorage.getItem('sas_endurance')||null,
         trend7
@@ -684,7 +689,7 @@ async function initLiveData(){
 // ── DEFAULT LINKS ──
 const DEFAULT_LINKS={
   'sas-hub':   'https://resolutetinging.github.io/sleep-dashboard/',
-  'sleep':     'https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard.html',
+  'sleep':     'https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v2.html',
   'mental':    'https://resolutetinging.github.io/wellness-tracker/mental-dashboard.html',
   'optimizer': 'https://resolutetinging.github.io/daily-optimizer/daily_optimizer.html',
   'refueler':  './refueler.html',
@@ -848,7 +853,7 @@ function buildTT(id){
         }
       }catch(e){}
       const cpSingle=LIVE.sleep?.combatSingle??null;
-      const cpWeighted=sleepCp;
+      const cpWeighted=LIVE.sleep?.combatWeighted??sleepCp;
       let combatRows='';
       if(cpSingle!=null&&cpWeighted!=null){
         const diff=cpSingle-cpWeighted;
@@ -863,14 +868,35 @@ function buildTT(id){
       return h('SAS Hub')+combatRows+enduranceHtml+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`+recapHtml;
     }
     case 'sleep':{
-      if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 SAS Hub 以更新資料</div>`;
+      if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 Sleep Dashboard 以更新資料</div>`;
       const s=LIVE.sleep;
       const dot=(c)=>`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c};margin-right:4px;vertical-align:middle;opacity:.85;"></span>`;
-      let out=h('睡眠分期 · '+s.date)
-        +row(dot('#8aabcc')+'Deep',s.deepP+'%',s.deepP>=18?'g':s.deepP>=12?'a':'r')
-        +row(dot('#a898b8')+'REM',s.remP+'%',s.remP>=18?'g':s.remP>=12?'a':'r')
-        +row(dot('#8fac94')+'Core',s.coreP+'%')
-        +row(dot('#c4aa7c')+'Awake',s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+      let out=h('睡眠紀錄 · '+s.date);
+      // 時長 + 起止
+      if(s.totalMin){
+        const durH=Math.floor(s.totalMin/60),durM=s.totalMin%60;
+        const durStr=durH+'h'+(durM?durM+'m':'');
+        out+=row('時長',durStr,durH>=7?'g':durH>=6?'a':'r');
+      }
+      if(s.bedtime&&s.wake) out+=row('起止',s.bedtime+' → '+s.wake);
+      out+=hr();
+      // 睡眠分期
+      out+=row(dot('#8aabcc')+'Deep', s.deepP+'%', s.deepP>=18?'g':s.deepP>=12?'a':'r')
+         +row(dot('#a898b8')+'REM',   s.remP+'%',  s.remP>=18?'g':s.remP>=12?'a':'r')
+         +row(dot('#8fac94')+'Core',  s.coreP+'%')
+         +row(dot('#c4aa7c')+'Awake', s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+      // 單夜 vs 加權戰力
+      if(s.combatSingle!=null&&s.combatWeighted!=null){
+        const diff=s.combatSingle-s.combatWeighted;
+        const diffStr=(diff>0?'+':'')+diff;
+        const nightLbl=s.nightsWeighted>=3?'3夜加權':`${s.nightsWeighted}夜加權`;
+        out+=hr()
+          +`<div style="font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;">單夜 vs ${nightLbl}</div>`
+          +row('單夜戰力',String(s.combatSingle),s.combatSingle>=80?'g':s.combatSingle>=60?'a':'r')
+          +row(nightLbl,String(s.combatWeighted),s.combatWeighted>=80?'g':s.combatWeighted>=60?'a':'r')
+          +`<div class="tt-row"><span class="tt-k">差距</span><span style="font-size:11px;font-weight:600;color:${Math.abs(diff)<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)'}">${diffStr}</span></div>`;
+      }
+      // 近7日趨勢
       if(s.trend7&&s.trend7.length>2){
         const deepVals=s.trend7.map(n=>n.deepP);
         const remVals=s.trend7.map(n=>n.remP);
