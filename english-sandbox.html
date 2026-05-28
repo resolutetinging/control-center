@@ -229,9 +229,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="panel-lbl">
       <span>你的接球 — Your response</span>
       <div class="mode-row">
-        <button class="mode-btn active" id="mode-15" onclick="setMode(15)">15 秒</button>
-        <button class="mode-btn" id="mode-8" onclick="setMode(8)">8 秒</button>
-        <button class="mode-btn" id="mode-5" onclick="setMode(5)">5 秒 🔥</button>
+        <button class="mode-btn active" id="mode-30" onclick="setMode(30)">30 秒</button>
+        <button class="mode-btn" id="mode-15" onclick="setMode(15)">15 秒</button>
+        <button class="mode-btn" id="mode-8" onclick="setMode(8)">8 秒 🔥</button>
       </div>
     </div>
     <div class="timer-row">
@@ -379,8 +379,8 @@ const SITS = {
 let curSit = null;
 let curOpener = '';
 let timerInterval = null;
-let timerSec = 15;
-let timerMode = 15;
+let timerSec = 30;
+let timerMode = 30;
 let results = {};
 let savedOpen = false;
 
@@ -481,7 +481,7 @@ function speakText(type){ speak(results[type]||''); }
 // ── Timer ──
 function setMode(s){
   timerMode=s;
-  [15,8,5].forEach(n=>document.getElementById('mode-'+n).classList.toggle('active',n===s));
+  [30,15,8].forEach(n=>document.getElementById('mode-'+n).classList.toggle('active',n===s));
   clearTimer(); initTimer(); startTimer();
 }
 function initTimer(){
