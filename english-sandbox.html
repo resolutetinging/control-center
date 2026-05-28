@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Sandbox</title>
+<style>
+/* ── BASE: CC 共用色系 ── */
+:root{
+  --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
+  --ink:#28261f;--sub:#55514a;--faint:#7a7570;
+  --border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
+  --shadow:0 1px 4px rgba(40,38,32,.07);
+  --en:#3d6a52;--en-l:#4d8a6a;--en-tint:rgba(61,106,82,.08);--en-tint2:rgba(61,106,82,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px}
+.nav-title{font-size:14px;font-weight:700;color:var(--en);padding:13px 0;margin-right:18px;letter-spacing:.02em;white-space:nowrap}
+.tab-btn{padding:13px 15px;background:none;border:none;color:var(--faint);font-size:12.5px;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;font-family:inherit;line-height:1}
+.tab-btn.active{color:var(--en);border-bottom-color:var(--en);font-weight:600}
+.tab-btn:hover:not(.active){color:var(--sub)}
+.back-link{margin-left:auto;font-size:11.5px;color:var(--faint);text-decoration:none;padding:5px 9px;border-radius:6px;transition:background .15s;white-space:nowrap}
+.back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
+
+/* ── PAGE ── */
+.page{display:none;padding:20px 16px;max-width:700px;margin:0 auto}
+.page.active{display:block}
+
+/* ── PANELS ── */
+.panel{background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.panel-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--en);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit}
+.btn-primary{background:var(--en);color:#fff}
+.btn-primary:hover{background:var(--en-l)}
+.btn-primary:disabled{background:rgba(61,106,82,.3);color:rgba(61,106,82,.5);cursor:not-allowed}
+.btn-ghost{background:rgba(40,38,32,.06);border:1px solid var(--bstr);color:var(--sub)}
+.btn-ghost:hover{background:rgba(40,38,32,.11);color:var(--ink)}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:7px}
+
+/* ── SITUATION PILLS ── */
+.sit-row{display:flex;gap:8px;flex-wrap:wrap}
+.sit-btn{padding:9px 15px;border:1.5px solid var(--bstr);border-radius:10px;background:var(--bg2);color:var(--sub);font-size:13px;cursor:pointer;transition:all .18s;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:5px}
+.sit-btn:hover{border-color:rgba(61,106,82,.4);color:var(--en);background:var(--en-tint)}
+.sit-btn.active{border-color:var(--en);background:var(--en-tint2);color:var(--en);font-weight:600}
+.sit-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── OPENER CARD ── */
+#opener-card{display:none}
+.opener-en{font-size:21px;font-weight:600;color:var(--ink);line-height:1.5;margin-bottom:14px;letter-spacing:.01em}
+.opener-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tts-btn{background:var(--en-tint2);border:1px solid rgba(61,106,82,.25);border-radius:8px;color:var(--en);padding:6px 13px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .18s}
+.tts-btn:hover{background:var(--en-tint)}
+.tts-btn.speaking{background:var(--en);color:#fff}
+.sit-tag{font-size:11px;color:var(--faint);background:rgba(40,38,32,.05);border-radius:6px;padding:3px 8px;font-weight:500}
+.regen-btn{background:none;border:1px solid var(--bstr);border-radius:7px;padding:5px 11px;font-size:11.5px;color:var(--faint);cursor:pointer;font-family:inherit;transition:all .18s}
+.regen-btn:hover{border-color:rgba(61,106,82,.35);color:var(--en)}
+
+/* ── INPUT + COUNTDOWN ── */
+#input-section{display:none}
+.timer-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.timer-bar-wrap{flex:1;height:5px;background:rgba(40,38,32,.1);border-radius:3px;overflow:hidden}
+.timer-bar{height:100%;width:100%;background:var(--en);border-radius:3px;transition:width .1s linear,background .25s}
+.timer-bar.urgent{background:#b06a3a}
+.timer-num{font-size:13px;font-weight:700;color:var(--en);min-width:26px;text-align:right;font-variant-numeric:tabular-nums;transition:color .25s}
+.timer-num.urgent{color:#b06a3a}
+.mode-row{display:flex;gap:4px}
+.mode-btn{padding:3px 9px;border:1px solid var(--bstr);border-radius:6px;background:transparent;color:var(--faint);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.mode-btn.active{background:var(--en-tint2);border-color:rgba(61,106,82,.35);color:var(--en);font-weight:600}
+textarea{width:100%;background:var(--bg2);border:1.5px solid transparent;border-radius:9px;padding:11px 13px;color:var(--ink);font-size:14px;font-family:inherit;outline:none;resize:none;transition:border .18s,background .18s;line-height:1.65;min-height:70px}
+textarea:focus{border-color:rgba(61,106,82,.55);background:#fff}
+textarea:disabled{opacity:.5;cursor:not-allowed}
+.input-footer{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
+.input-hint{font-size:11px;color:var(--faint)}
+.input-hint.urgent{color:#b06a3a}
+
+/* ── LOADING ── */
+.loading-card{display:none;background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:26px 20px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--en);margin:0 3px;animation:ld .9s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes ld{0%,80%,100%{transform:scale(.55);opacity:.35}40%{transform:scale(1);opacity:1}}
+.loading-lbl{font-size:12px;color:var(--faint);margin-top:9px}
+
+/* ── RESULT CARDS ── */
+#result-section{display:none}
+.result-hdr{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.resp-card{background:var(--card);border:.5px solid var(--bstr);border-radius:12px;padding:15px 17px;margin-bottom:10px;box-shadow:var(--shadow)}
+.resp-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.resp-tag.safe{color:var(--en)}
+.resp-tag.pro{color:var(--ink)}
+.resp-tag.ball{color:#3d527a}
+.resp-en{font-size:15px;color:var(--ink);line-height:1.65;font-weight:500}
+.resp-footer{display:flex;justify-content:flex-end;margin-top:10px;gap:7px}
+.save-btn{background:none;border:1px solid var(--bstr);border-radius:7px;padding:5px 11px;font-size:11.5px;color:var(--faint);cursor:pointer;font-family:inherit;transition:all .18s;display:flex;align-items:center;gap:4px;line-height:1}
+.save-btn:hover{border-color:rgba(160,130,50,.4);color:#9a7a3a;background:rgba(160,130,50,.06)}
+.save-btn.saved{border-color:rgba(160,130,50,.4);color:#9a7a3a;background:rgba(160,130,50,.06)}
+.speak-resp-btn{background:none;border:1px solid var(--bstr);border-radius:7px;padding:5px 10px;font-size:11.5px;color:var(--faint);cursor:pointer;font-family:inherit;transition:all .18s}
+.speak-resp-btn:hover{border-color:rgba(61,106,82,.35);color:var(--en)}
+.result-footer{text-align:center;margin-top:4px;padding-bottom:4px}
+
+/* ── SAVED PHRASES ── */
+#saved-section{display:none;background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:14px 17px;margin-bottom:14px;box-shadow:var(--shadow)}
+.saved-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.saved-hdr-lbl{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.saved-meta{display:flex;align-items:center;gap:7px}
+.saved-badge{font-size:10px;background:var(--en-tint2);color:var(--en);border-radius:10px;padding:2px 8px;font-weight:700}
+.saved-chevron{font-size:11px;color:var(--faint);transition:transform .2s;display:inline-block}
+.saved-list{margin-top:11px}
+.saved-item{padding:9px 0;border-bottom:.5px solid var(--border);display:flex;align-items:start;gap:10px}
+.saved-item:last-child{border-bottom:none;padding-bottom:2px}
+.saved-body{flex:1}
+.saved-text{font-size:13px;color:var(--ink);line-height:1.55}
+.saved-context{font-size:10.5px;color:var(--faint);margin-top:3px}
+.del-btn{background:none;border:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;border-radius:4px;transition:color .15s;flex-shrink:0;line-height:1.2;opacity:.6}
+.del-btn:hover{color:#b06a3a;opacity:1}
+.saved-empty{font-size:12px;color:var(--faint);text-align:center;padding:10px 0}
+
+/* ── KEY NOTICE ── */
+#key-notice{display:none;background:rgba(176,96,50,.07);border:.5px solid rgba(176,96,50,.2);border-radius:10px;padding:11px 14px;margin-bottom:13px}
+.key-notice-text{font-size:12px;color:#8a5030;line-height:1.55}
+.key-input-row{display:flex;gap:7px;margin-top:8px}
+input[type=password]{flex:1;background:rgba(255,255,255,.6);border:1.5px solid rgba(176,96,50,.25);border-radius:7px;padding:7px 10px;color:var(--ink);font-size:12.5px;font-family:inherit;outline:none}
+input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
+
+/* ── IDIOM ARCADE ── */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
+.opt-btn{background:var(--bg2);border:1.5px solid var(--bstr);border-radius:10px;padding:11px 13px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--sub);transition:all .18s;text-align:left;display:flex;align-items:center;gap:9px;line-height:1.4;width:100%}
+.opt-btn:hover:not(:disabled){border-color:rgba(61,106,82,.4);background:var(--en-tint);color:var(--en)}
+.opt-btn:disabled{cursor:not-allowed;opacity:.75}
+.opt-btn.correct{background:rgba(61,106,82,.13);border-color:var(--en);color:var(--en);font-weight:600;opacity:1!important}
+.opt-btn.wrong{background:rgba(176,96,50,.09);border-color:rgba(176,96,50,.4);color:#9a4020;opacity:1!important}
+.opt-ltr{font-size:10.5px;font-weight:700;background:rgba(40,38,32,.08);border-radius:5px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opt-btn.correct .opt-ltr{background:rgba(61,106,82,.22)}
+.opt-btn.wrong .opt-ltr{background:rgba(176,96,50,.18);color:#9a4020}
+.idiom-sentence{font-size:19px;font-weight:500;line-height:1.7;color:var(--ink);margin-bottom:18px}
+.idiom-blank{background:rgba(61,106,82,.1);border-bottom:2px solid var(--en);color:var(--en);padding:1px 7px;border-radius:4px;font-weight:600;letter-spacing:.03em}
+.reveal-verdict{font-size:13.5px;font-weight:700;margin-bottom:12px;padding:10px 14px;border-radius:9px;display:flex;align-items:center;gap:7px}
+.reveal-verdict.v-correct{background:rgba(61,106,82,.1);color:var(--en)}
+.reveal-verdict.v-wrong{background:rgba(176,96,50,.08);color:#8a4020}
+.reveal-idiom{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:7px;letter-spacing:.01em}
+.reveal-explain{font-size:13px;color:var(--sub);line-height:1.72;margin-bottom:10px}
+.reveal-example{font-size:12.5px;color:var(--faint);background:rgba(40,38,32,.04);border-radius:8px;padding:9px 13px;font-style:italic;border-left:2.5px solid var(--bstr);margin-bottom:14px;line-height:1.6}
+.reveal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+
+/* ── PLACEHOLDER ── */
+.placeholder{padding:70px 20px;text-align:center}
+.ph-icon{font-size:44px;margin-bottom:14px;opacity:.35}
+.ph-title{font-size:15px;font-weight:700;color:var(--sub);margin-bottom:7px}
+.ph-sub{font-size:13px;color:var(--faint);line-height:1.65}
+
+@media(max-width:520px){
+  .sit-row{gap:6px}
+  .sit-btn{font-size:12px;padding:8px 12px}
+  .opener-en{font-size:18px}
+  .opts-grid{grid-template-columns:1fr}
+  .idiom-sentence{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-title">🎯 English Sandbox</div>
+  <button class="tab-btn active" id="tab-talk" onclick="switchTab('talk')">Small Talk 破冰接球</button>
+  <button class="tab-btn" id="tab-idiom" onclick="switchTab('idiom')">Idiom 拆彈遊戲</button>
+  <a href="./index.html" class="back-link">← CC</a>
+</nav>
+
+<!-- ════════════ PAGE 1: SMALL TALK ════════════ -->
+<div class="page active" id="page-talk">
+
+  <!-- API key notice -->
+  <div id="key-notice">
+    <div class="key-notice-text">
+      ⚠️ 找不到 Groq API Key，無法呼叫 AI。請前往 Control Center ⚙️ 設定填入，或直接在下方貼入。
+      <div class="key-input-row">
+        <input type="password" id="inline-key" placeholder="貼上 Groq API Key…">
+        <button class="btn btn-sm" style="background:rgba(176,96,50,.15);border:1px solid rgba(176,96,50,.3);color:#8a5030;border-radius:7px;font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer" onclick="saveInlineKey()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Situation selector -->
+  <div class="panel">
+    <div class="panel-lbl">選擇情境 — Pick your scene</div>
+    <div class="sit-row" id="sit-row">
+      <button class="sit-btn" id="sit-coffee"  onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
+      <button class="sit-btn" id="sit-meeting" onclick="pickSit('meeting')">⏰ 會議前三分鐘</button>
+      <button class="sit-btn" id="sit-lunch"   onclick="pickSit('lunch')">🍱 與客戶等外送</button>
+      <button class="sit-btn" id="sit-event"   onclick="pickSit('event')">🤝 業界活動場合</button>
+    </div>
+  </div>
+
+  <!-- Loading: generating opener -->
+  <div class="loading-card" id="loading-opener">
+    <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="loading-lbl">AI 正在想老外會怎麼開口…</div>
+  </div>
+
+  <!-- Opener display -->
+  <div class="panel" id="opener-card">
+    <div class="panel-lbl">
+      <span>他們這樣說 — They said…</span>
+      <button class="regen-btn" onclick="regenOpener()">↻ 換一句</button>
+    </div>
+    <div class="opener-en" id="opener-text"></div>
+    <div class="opener-footer">
+      <button class="tts-btn" id="tts-btn" onclick="speakOpener()">🔊 再聽一次</button>
+      <span class="sit-tag" id="opener-sit-tag"></span>
+    </div>
+  </div>
+
+  <!-- Input + countdown -->
+  <div class="panel" id="input-section">
+    <div class="panel-lbl">
+      <span>你的接球 — Your response</span>
+      <div class="mode-row">
+        <button class="mode-btn active" id="mode-5" onclick="setMode(5)">5 秒</button>
+        <button class="mode-btn" id="mode-3" onclick="setMode(3)">3 秒 🔥</button>
+      </div>
+    </div>
+    <div class="timer-row">
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+      <span class="timer-num" id="timer-num">5</span>
+    </div>
+    <textarea id="user-input" rows="3" placeholder="Type your response here… 不完美也沒關係，先反應！"></textarea>
+    <div class="input-footer">
+      <span class="input-hint" id="input-hint">計時中，打完直接送出 ↓</span>
+      <button class="btn btn-primary btn-sm" id="submit-btn" onclick="submitResp()">送出接球</button>
+    </div>
+  </div>
+
+  <!-- Loading: generating feedback -->
+  <div class="loading-card" id="loading-result">
+    <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="loading-lbl">AI 正在分析你的回應…</div>
+  </div>
+
+  <!-- Result cards -->
+  <div id="result-section">
+    <div class="result-hdr">AI 三階潤飾 — Three-Level Polish</div>
+
+    <div class="resp-card">
+      <div class="resp-tag safe">🛡 Safe — 安全版</div>
+      <div class="resp-en" id="text-safe"></div>
+      <div class="resp-footer">
+        <button class="speak-resp-btn" onclick="speakText('safe')" title="朗讀">🔊</button>
+        <button class="save-btn" id="save-safe" onclick="savePhrase('safe')">⭐ 收藏</button>
+      </div>
+    </div>
+
+    <div class="resp-card">
+      <div class="resp-tag pro">💼 Pro — 道地商務版</div>
+      <div class="resp-en" id="text-pro"></div>
+      <div class="resp-footer">
+        <button class="speak-resp-btn" onclick="speakText('pro')" title="朗讀">🔊</button>
+        <button class="save-btn" id="save-pro" onclick="savePhrase('pro')">⭐ 收藏</button>
+      </div>
+    </div>
+
+    <div class="resp-card">
+      <div class="resp-tag ball">🎾 Ball-tosser — 拋球版</div>
+      <div class="resp-en" id="text-ball"></div>
+      <div class="resp-footer">
+        <button class="speak-resp-btn" onclick="speakText('ball')" title="朗讀">🔊</button>
+        <button class="save-btn" id="save-ball" onclick="savePhrase('ball')">⭐ 收藏</button>
+      </div>
+    </div>
+
+    <div class="result-footer">
+      <button class="btn btn-ghost btn-sm" onclick="resetAll()">↩ 再來一句</button>
+    </div>
+  </div>
+
+  <!-- Saved phrases -->
+  <div id="saved-section">
+    <div class="saved-hdr" onclick="toggleSaved()">
+      <span class="saved-hdr-lbl">⭐ 精華字句庫</span>
+      <div class="saved-meta">
+        <span class="saved-badge" id="saved-badge">0</span>
+        <span class="saved-chevron" id="saved-chevron">▾</span>
+      </div>
+    </div>
+    <div id="saved-list" style="display:none"></div>
+  </div>
+
+</div><!-- /page-talk -->
+
+<!-- ════════════ PAGE 2: IDIOM ARCADE ════════════ -->
+<div class="page" id="page-idiom">
+
+  <!-- Topic selector -->
+  <div class="panel">
+    <div class="panel-lbl">選擇主題 — Pick a topic</div>
+    <div class="sit-row" id="topic-row">
+      <button class="sit-btn" id="topic-meeting" onclick="pickTopic('meeting')">📊 商務開會</button>
+      <button class="sit-btn" id="topic-emotion" onclick="pickTopic('emotion')">💬 情緒表達</button>
+      <button class="sit-btn" id="topic-project" onclick="pickTopic('project')">🚀 專案推進</button>
+    </div>
+  </div>
+
+  <!-- Loading: generating question -->
+  <div class="loading-card" id="loading-question">
+    <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="loading-lbl">AI 正在埋地雷…</div>
+  </div>
+
+  <!-- Question card -->
+  <div class="panel" id="idiom-question-card" style="display:none">
+    <div class="panel-lbl">
+      <span>拆彈題目 — Fill in the blank</span>
+      <button class="regen-btn" id="skip-btn" onclick="genQuestion()">↻ 換一題</button>
+    </div>
+    <div class="idiom-sentence" id="idiom-sentence"></div>
+    <div class="opts-grid" id="opts-grid"></div>
+  </div>
+
+  <!-- Reveal panel -->
+  <div class="panel" id="idiom-reveal" style="display:none">
+    <div id="reveal-verdict" class="reveal-verdict"></div>
+    <div class="reveal-idiom" id="reveal-idiom"></div>
+    <div class="reveal-explain" id="reveal-explain"></div>
+    <div class="reveal-example" id="reveal-example"></div>
+    <div class="reveal-actions">
+      <button class="btn btn-ghost btn-sm" id="add-lib-btn" onclick="addToLib()">📚 加入字庫</button>
+      <button class="btn btn-primary btn-sm" onclick="genQuestion()">下一題 →</button>
+    </div>
+  </div>
+
+  <!-- Idiom library -->
+  <div id="idiom-lib-section" style="display:none;background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:14px 17px;margin-bottom:14px;box-shadow:var(--shadow)">
+    <div class="saved-hdr" onclick="toggleLib()">
+      <span class="saved-hdr-lbl">📚 我的字庫</span>
+      <div class="saved-meta">
+        <span class="saved-badge" id="lib-badge">0</span>
+        <span class="saved-chevron" id="lib-chevron">▾</span>
+      </div>
+    </div>
+    <div id="lib-list" style="display:none"></div>
+  </div>
+
+</div><!-- /page-idiom -->
+
+<script>
+// ── Constants ──
+const SAVED_KEY = 'es_saved_phrases';
+const SITS = {
+  coffee:  { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
+  meeting: { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
+  lunch:   { label: '🍱 等外送', en: 'waiting for a food delivery order with a client' },
+  event:   { label: '🤝 業界活動', en: 'at a professional networking event or conference' }
+};
+
+// ── State ──
+let curSit = null;
+let curOpener = '';
+let timerInterval = null;
+let timerSec = 5;
+let timerMode = 5;
+let results = {};
+let savedOpen = false;
+
+// ── API ──
+function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
+async function callGroq(prompt, max=600){
+  const k = getKey();
+  if(!k){ checkKey(); throw new Error('No API key'); }
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:max,temperature:.85})
+  });
+  if(!r.ok) throw new Error('API '+r.status);
+  const j = await r.json();
+  return j.choices?.[0]?.message?.content||'';
+}
+
+// ── Key check ──
+function checkKey(){
+  document.getElementById('key-notice').style.display = getKey() ? 'none' : 'block';
+}
+function saveInlineKey(){
+  const v = document.getElementById('inline-key').value.trim();
+  if(!v) return;
+  localStorage.setItem('groq_key', v);
+  document.getElementById('key-notice').style.display = 'none';
+}
+
+// ── Situation ──
+function pickSit(key){
+  if(curSit === key) return;
+  curSit = key;
+  document.querySelectorAll('.sit-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sit-'+key).classList.add('active');
+  genOpener();
+}
+
+// ── Generate opener ──
+async function genOpener(){
+  if(!curSit) return;
+  const sit = SITS[curSit];
+  clearTimer();
+  $show('loading-opener');
+  $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-result');
+  disableSitBtns(true);
+  try{
+    const prompt = `You are creating realistic small talk for English conversation practice.
+
+Situation: Two people are ${sit.en}.
+
+Generate ONE natural, conversational opening line that a native American English speaker would realistically say in this exact situation.
+
+Rules:
+- Under 18 words
+- Sound genuinely casual and spontaneous — NOT like a textbook example
+- Can be a comment, observation, question, or light complaint about the situation
+- Output ONLY the single sentence, with no quotes or explanations
+
+Output the sentence only.`;
+    const raw = await callGroq(prompt, 60);
+    curOpener = raw.replace(/^["'`]|["'`]$/g,'').trim();
+    document.getElementById('opener-text').textContent = curOpener;
+    document.getElementById('opener-sit-tag').textContent = sit.label;
+    $hide('loading-opener'); $show('opener-card');
+    speakOpener();
+    setTimeout(()=>{ $show('input-section'); initTimer(); startTimer(); }, 1400);
+  }catch(e){
+    $hide('loading-opener');
+    disableSitBtns(false);
+    alert('生成失敗：'+e.message);
+  }
+  disableSitBtns(false);
+}
+
+function regenOpener(){ if(curSit) genOpener(); }
+function disableSitBtns(v){ document.querySelectorAll('.sit-btn').forEach(b=>b.disabled=v); }
+
+// ── TTS ──
+const synth = window.speechSynthesis;
+if(synth && speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = ()=>synth.getVoices();
+function speak(text){
+  if(!synth) return;
+  synth.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang='en-US'; utt.rate=0.87; utt.pitch=1.0;
+  const vs = synth.getVoices();
+  const v = vs.find(v=>v.lang==='en-US'&&/Samantha|Alex|Karen/i.test(v.name))
+          || vs.find(v=>v.lang==='en-US') || null;
+  if(v) utt.voice=v;
+  const btn = document.getElementById('tts-btn');
+  if(btn){ btn.classList.add('speaking'); utt.onend=()=>btn.classList.remove('speaking'); }
+  synth.speak(utt);
+}
+function speakOpener(){ speak(curOpener); }
+function speakText(type){ speak(results[type]||''); }
+
+// ── Timer ──
+function setMode(s){
+  timerMode=s;
+  document.getElementById('mode-5').classList.toggle('active',s===5);
+  document.getElementById('mode-3').classList.toggle('active',s===3);
+  clearTimer(); initTimer(); startTimer();
+}
+function initTimer(){
+  timerSec=timerMode;
+  const bar=document.getElementById('timer-bar');
+  const num=document.getElementById('timer-num');
+  bar.style.width='100%'; bar.classList.remove('urgent');
+  num.textContent=timerMode; num.classList.remove('urgent');
+  const inp=document.getElementById('user-input');
+  const hint=document.getElementById('input-hint');
+  inp.disabled=false; inp.value='';
+  hint.textContent='計時中，打完直接送出 ↓'; hint.classList.remove('urgent');
+  document.getElementById('submit-btn').disabled=false;
+}
+function startTimer(){
+  const total=timerMode;
+  timerInterval = setInterval(()=>{
+    timerSec = Math.max(0, timerSec-0.1);
+    const pct = timerSec/total*100;
+    const bar=document.getElementById('timer-bar');
+    const num=document.getElementById('timer-num');
+    bar.style.width=pct+'%';
+    const disp=Math.ceil(timerSec);
+    num.textContent=disp===0?'時間到':disp;
+    if(timerSec<=1.5){ bar.classList.add('urgent'); num.classList.add('urgent'); }
+    if(timerSec<=0){
+      clearInterval(timerInterval); timerInterval=null;
+      const hint=document.getElementById('input-hint');
+      hint.textContent='時間到！繼續補充後送出也可以。'; hint.classList.add('urgent');
+      document.getElementById('user-input').focus();
+    }
+  },100);
+}
+function clearTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null; } }
+
+// ── Submit response ──
+async function submitResp(){
+  clearTimer();
+  const inp = document.getElementById('user-input').value.trim();
+  inp === '' && (document.getElementById('user-input').placeholder='（留空也可以，AI 會幫你補）');
+  $('user-input').disabled=true;
+  $('submit-btn').disabled=true;
+  $show('loading-result'); $hide('result-section');
+
+  try{
+    const sit = SITS[curSit];
+    const prompt = `English small talk practice feedback.
+
+Situation: ${sit.en}
+Opener: "${curOpener}"
+Learner's response: "${inp||'(no response — they froze)'}"
+
+Give 3 improved versions of the learner's response. Be direct. No grammar lectures. No intro text. Output ONLY valid JSON:
+
+{"safe":"Professional, grammatically correct (max 22 words)","pro":"Natural idiomatic American business English with a smooth connector (max 25 words)","ball":"Response + a natural follow-up question that keeps the conversation going (max 28 words)"}`;
+
+    const raw = await callGroq(prompt, 300);
+    const jm = raw.match(/\{[\s\S]*\}/);
+    if(!jm) throw new Error('格式解析失敗，請重試');
+    results = JSON.parse(jm[0]);
+    $('text-safe').textContent = results.safe||'—';
+    $('text-pro').textContent  = results.pro||'—';
+    $('text-ball').textContent = results.ball||'—';
+    ['safe','pro','ball'].forEach(t=>{ const b=$('save-'+t); b.textContent='⭐ 收藏'; b.classList.remove('saved'); });
+    $hide('loading-result'); $show('result-section');
+    window.scrollTo({top:document.getElementById('result-section').offsetTop-80,behavior:'smooth'});
+  }catch(e){
+    $hide('loading-result');
+    $('user-input').disabled=false; $('submit-btn').disabled=false;
+    alert('分析失敗：'+e.message);
+  }
+}
+
+// ── Save ──
+function savePhrase(type){
+  const text = results[type];
+  if(!text) return;
+  const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+  const typeLabel = {safe:'🛡 Safe',pro:'💼 Pro',ball:'🎾 Ball-tosser'};
+  saved.unshift({ text, type:typeLabel[type], sit:SITS[curSit]?.label||'', opener:curOpener, ts:Date.now() });
+  if(saved.length>60) saved.pop();
+  localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
+  const btn=$('save-'+type);
+  btn.textContent='✓ 已收藏'; btn.classList.add('saved');
+  renderSaved(true);
+}
+
+function renderSaved(autoOpen=false){
+  const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+  const sec=document.getElementById('saved-section');
+  const badge=document.getElementById('saved-badge');
+  badge.textContent=saved.length;
+  sec.style.display = saved.length ? 'block' : 'none';
+  if(!saved.length){ document.getElementById('saved-list').innerHTML=''; return; }
+  if(autoOpen && !savedOpen){ toggleSaved(); }
+  if(!savedOpen) return;
+  document.getElementById('saved-list').innerHTML = saved.map((item,i)=>`
+    <div class="saved-item">
+      <div class="saved-body">
+        <div class="saved-text">"${esc(item.text)}"</div>
+        <div class="saved-context">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</div>
+      </div>
+      <button class="del-btn" onclick="delSaved(${i})" title="移除">✕</button>
+    </div>`).join('');
+}
+
+function delSaved(i){
+  const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+  saved.splice(i,1);
+  localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
+  renderSaved();
+}
+
+function toggleSaved(){
+  savedOpen=!savedOpen;
+  document.getElementById('saved-list').style.display=savedOpen?'block':'none';
+  document.getElementById('saved-chevron').style.transform=savedOpen?'rotate(180deg)':'rotate(0deg)';
+  if(savedOpen) renderSaved();
+}
+
+// ── Reset ──
+function resetAll(){
+  clearTimer();
+  $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-opener'); $hide('loading-result');
+  document.querySelectorAll('.sit-btn').forEach(b=>b.classList.remove('active'));
+  $('user-input').disabled=false; $('user-input').value='';
+  $('submit-btn').disabled=false;
+  curSit=null; curOpener=''; results={};
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Tab switch ──
+function switchTab(tab){
+  ['talk','idiom'].forEach(t=>{
+    document.getElementById('page-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+}
+
+// ── Helpers ──
+function $(id){ return document.getElementById(id); }
+function $show(id){ $(id).style.display='block'; }
+function $hide(id){ $(id).style.display='none'; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ══════════════ IDIOM ARCADE ══════════════
+const IDIOM_LIB_KEY = 'es_idiom_lib';
+const IDIOM_TOPICS = {
+  meeting: { label:'📊 商務開會', en:'business meetings, presentations, and boardroom discussions' },
+  emotion: { label:'💬 情緒表達', en:'expressing emotions, reactions, and attitudes professionally' },
+  project: { label:'🚀 專案推進', en:'project management, deadlines, milestones, and team coordination' }
+};
+
+let curTopic = null;
+let curQ = null;
+let libOpen = false;
+let addedToLib = false;
+
+function pickTopic(key){
+  curTopic = key;
+  document.querySelectorAll('#topic-row .sit-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('topic-'+key).classList.add('active');
+  genQuestion();
+}
+
+async function genQuestion(){
+  if(!curTopic) return;
+  addedToLib = false;
+  $hide('idiom-reveal'); $hide('idiom-question-card'); $show('loading-question');
+  disableTopicBtns(true);
+  const skipBtn = $('skip-btn');
+  if(skipBtn) skipBtn.disabled = true;
+  try{
+    const topic = IDIOM_TOPICS[curTopic];
+    const prompt = `You are creating a business English vocabulary quiz.
+
+Topic: ${topic.en}
+
+Generate ONE natural business sentence with a key idiom/collocation replaced by "______".
+
+Return ONLY valid JSON, no markdown, no extra text:
+{"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
+
+Rules:
+- sentence: realistic business English; blank fits exactly one idiom (2-4 words)
+- correct: the one right answer
+- distractors: exactly 3 — real English phrases that sound plausible but are wrong in context
+- explain_zh: Traditional Chinese ONLY; max 3 short casual sentences; no grammar labels; plain everyday tone
+- example: a different natural sentence using the same correct idiom`;
+
+    const raw = await callGroq(prompt, 400);
+    const jm = raw.match(/\{[\s\S]*\}/);
+    if(!jm) throw new Error('格式解析失敗，請重試');
+    curQ = JSON.parse(jm[0]);
+
+    // Shuffle options
+    const allOpts = [curQ.correct, ...(curQ.distractors||[]).slice(0,3)];
+    for(let i=allOpts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [allOpts[i],allOpts[j]]=[allOpts[j],allOpts[i]]; }
+    curQ._shuffled = allOpts;
+
+    // Render sentence with styled blank
+    const parts = curQ.sentence.split(/_{4,}/);
+    $('idiom-sentence').innerHTML = parts.length===2
+      ? esc(parts[0])+'<span class="idiom-blank">______</span>'+esc(parts[1])
+      : esc(curQ.sentence);
+
+    // Render option buttons
+    const letters = ['A','B','C','D'];
+    $('opts-grid').innerHTML = allOpts.map((opt,i)=>
+      `<button class="opt-btn" id="opt-${i}" onclick="selectOpt(${i})">
+        <span class="opt-ltr">${letters[i]}</span>
+        <span>${esc(opt)}</span>
+      </button>`
+    ).join('');
+
+    $hide('loading-question'); $show('idiom-question-card');
+    if(skipBtn) skipBtn.disabled = false;
+  }catch(e){
+    $hide('loading-question');
+    alert('生成失敗：'+e.message);
+  }
+  disableTopicBtns(false);
+}
+
+function selectOpt(idx){
+  if(!curQ||!curQ._shuffled) return;
+  const chosen = curQ._shuffled[idx];
+  const isCorrect = chosen === curQ.correct;
+
+  // Disable all, mark correct/wrong
+  curQ._shuffled.forEach((opt,i)=>{
+    const btn = $('opt-'+i);
+    if(!btn) return;
+    btn.disabled = true;
+    if(opt===curQ.correct) btn.classList.add('correct');
+    else if(i===idx) btn.classList.add('wrong');
+  });
+  const skipBtn=$('skip-btn'); if(skipBtn) skipBtn.disabled=true;
+
+  // Verdict
+  const verdict = $('reveal-verdict');
+  verdict.className = 'reveal-verdict '+(isCorrect?'v-correct':'v-wrong');
+  verdict.innerHTML = isCorrect
+    ? '✅ 答對了！'
+    : `❌ 不對，正確答案是 <strong>"${esc(curQ.correct)}"</strong>`;
+
+  $('reveal-idiom').textContent = curQ.correct;
+  $('reveal-explain').textContent = curQ.explain_zh||'';
+  const exEl=$('reveal-example');
+  exEl.textContent = curQ.example ? `"${curQ.example}"` : '';
+  exEl.style.display = curQ.example ? 'block' : 'none';
+
+  const addBtn=$('add-lib-btn');
+  if(addBtn){ addBtn.textContent='📚 加入字庫'; addBtn.disabled=false; }
+  addedToLib=false;
+
+  $show('idiom-reveal');
+  setTimeout(()=>window.scrollTo({top:$('idiom-reveal').offsetTop-80,behavior:'smooth'}),150);
+}
+
+function addToLib(){
+  if(!curQ||addedToLib) return;
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  lib.unshift({
+    idiom: curQ.correct,
+    sentence: curQ.sentence.replace(/_{4,}/,`[${curQ.correct}]`),
+    explain_zh: curQ.explain_zh||'',
+    example: curQ.example||'',
+    topic: IDIOM_TOPICS[curTopic]?.label||'',
+    ts: Date.now()
+  });
+  if(lib.length>100) lib.pop();
+  localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib));
+  addedToLib=true;
+  const addBtn=$('add-lib-btn');
+  if(addBtn){ addBtn.textContent='✓ 已加入'; addBtn.disabled=true; }
+  renderLib(true);
+}
+
+function renderLib(autoOpen=false){
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  const sec = $('idiom-lib-section');
+  $('lib-badge').textContent = lib.length;
+  sec.style.display = lib.length ? 'block' : 'none';
+  if(!lib.length){ $('lib-list').innerHTML=''; return; }
+  if(autoOpen&&!libOpen) toggleLib();
+  if(!libOpen) return;
+  $('lib-list').innerHTML = lib.map((item,i)=>`
+    <div class="saved-item">
+      <div class="saved-body">
+        <div class="saved-text" style="font-weight:600">${esc(item.idiom)}</div>
+        <div class="saved-context" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:3px">${esc(item.sentence)}</div>
+        <div class="saved-context">${esc(item.topic)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</div>
+      </div>
+      <button class="del-btn" onclick="delLib(${i})" title="移除">✕</button>
+    </div>`).join('');
+}
+
+function delLib(i){
+  const lib=JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  lib.splice(i,1);
+  localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib));
+  renderLib();
+}
+
+function toggleLib(){
+  libOpen=!libOpen;
+  $('lib-list').style.display=libOpen?'block':'none';
+  $('lib-chevron').style.transform=libOpen?'rotate(180deg)':'rotate(0deg)';
+  if(libOpen) renderLib();
+}
+
+function disableTopicBtns(v){ document.querySelectorAll('#topic-row .sit-btn').forEach(b=>b.disabled=v); }
+
+// ── Init ──
+checkKey();
+renderSaved();
+renderLib();
+if(synth) synth.getVoices();
+</script>
+</body>
+</html>
