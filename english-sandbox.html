@@ -529,22 +529,27 @@ async function submitResp(){
   try{
     const sit = SITS[curSit];
     const userResp = inp||'(no response — they froze)';
-    const prompt = `English small talk practice feedback.
+    const prompt = `You are a business English conversation coach doing two separate tasks.
 
 Situation: ${sit.en}
-Opener: "${curOpener}"
-Learner's response: "${userResp}"
+Native speaker's opener: "${curOpener}"
+Learner's reply: "${userResp}"
 
-Output ONLY valid JSON, no extra text:
+TASK 1 — Feedback on the learner's reply (fb_ok, fb_tip):
+Briefly comment on what they did well and one thing to improve. Traditional Chinese, casual tone.
+
+TASK 2 — Write 3 model English responses to the opener (safe, pro, ball):
+These are COMPLETELY INDEPENDENT example responses — do NOT quote, correct, or reference the learner's text at all.
+Write each as a fluent native speaker naturally replying to the opener.
+
+Output ONLY valid JSON:
 {
-  "fb_ok": "繁體中文一句：回覆中做得好或方向對的地方（自然說話語氣，12字以內）",
-  "fb_tip": "繁體中文一句：最需要調整的一點，具體指出並說明為何（自然說話語氣，18字以內）",
-  "safe": "grammatically correct, professional (max 22 words)",
-  "pro": "natural idiomatic American business English with smooth connector (max 25 words)",
-  "ball": "response + natural follow-up question to keep conversation going (max 28 words)"
-}
-
-Rules: fb_ok/fb_tip in Traditional Chinese only; if learner froze, fb_ok = acknowledge the situation naturally; no grammar labels; no lectures.`;
+  "fb_ok": "繁體中文（≤12字）：學習者回覆中做得好或方向對的一點",
+  "fb_tip": "繁體中文（≤18字）：最值得改進的一點，直接點出",
+  "safe": "Model reply to opener — clean and professional (≤22 words, no corrections of learner text)",
+  "pro": "Model reply to opener — natural idiomatic American English (≤25 words, no corrections of learner text)",
+  "ball": "Model reply to opener + one follow-up question to extend the conversation (≤28 words, no corrections of learner text)"
+}`;
 
     const raw = await callGroq(prompt, 480);
     const jm = raw.match(/\{[\s\S]*\}/);
