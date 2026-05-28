@@ -1404,7 +1404,31 @@ async function runSAS(){
   if(!key){el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.35);text-align:center;padding:16px;">請先在 ⚙️ API設定 填入 Groq API Key</div>';return;}
   el.innerHTML='<div style="text-align:center;padding:24px;"><div style="font-size:28px;animation:pulse-s 1.5s infinite;">✨</div><div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:8px;">分析中…</div></div>';
   const rf=rfToday();const{stamina,endTime}=getEffective();
-  const prompt=`你是整合健康顧問。分析多維度身心數據：睡眠${MOCK.sleep.dur}（品質${MOCK.sleep.q}%），情緒${MOCK.mental.score}/10（${MOCK.mental.trend}），戰力${stamina}%，任務${MOCK.opt.done}/${MOCK.opt.total}，續航至${endTime}，咖啡${rf.coffee}杯，水${rf.water}ml。\n請全程使用繁體中文，嚴禁夾雜英文或其他語言詞彙。語氣溫暖，每段2-3句：\n1. 🔗 數據間的關聯性\n2. ⚡ 能量管理評估\n3. 🎯 三個具體行動建議\n4. 💬 今天一句話`;
+  // ── 組裝真實 LIVE 資料 ──
+  const _s=LIVE.sleep;
+  const _m=LIVE.mental;
+  const _o=LIVE.optimizer;
+  const _durStr=_s?.totalMin?(Math.floor(_s.totalMin/60)+'h'+(_s.totalMin%60?_s.totalMin%60+'m':'')):'—';
+  const _timeStr=(_s?.bedtime&&_s?.wake)?` ${_s.bedtime}→${_s.wake}`:'';
+  const _sleepLine=_s
+    ?`${_durStr}${_timeStr}，Deep ${_s.deepP}% · REM ${_s.remP}% · Awake ${_s.awakeP}%，單夜戰力 ${_s.combatSingle??'—'} / ${_s.nightsWeighted??3}夜加權 ${_s.combatWeighted??'—'}`
+    :'未載入（請先開啟 Sleep Dashboard）';
+  const _menScores=_m?.entries?.length?_m.entries.map(e=>e.score+'分（'+e.time+'）').join('、'):'今日尚無記錄';
+  const _menAvg=_m?.entries?.length?((_m.entries.reduce((a,e)=>a+e.score,0)/_m.entries.length).toFixed(1)+'/10'):'—';
+  const _taskLine=_o?`完成 ${_o.done}/${_o.total} 項${_o.rest?' [休假模式]':''}`:'未載入';
+  const prompt=`你是整合健康顧問，請分析以下真實身心數據：
+
+睡眠（${_s?.date||'—'}）：${_sleepLine}
+情緒：${_menScores}，均值 ${_menAvg}
+今日戰力：${stamina}（體能續航至 ${endTime}）
+任務：${_taskLine}
+攝取：咖啡 ${rf.coffee}杯，水分 ${rf.water}ml
+
+請全程使用繁體中文，嚴禁夾雜英文。語氣溫暖直接，每段2-3句：
+1. 🔗 今日數據間的關聯性與互相影響
+2. ⚡ 能量管理評估：現在應該衝還是保
+3. 🎯 三個今日具體行動建議（含時間點）
+4. 💬 今天一句話`;
   try{
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
     if(!resp.ok)throw new Error('API '+resp.status);
