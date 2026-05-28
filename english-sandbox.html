@@ -126,6 +126,15 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 input[type=password]{flex:1;background:rgba(255,255,255,.6);border:1.5px solid rgba(176,96,50,.25);border-radius:7px;padding:7px 10px;color:var(--ink);font-size:12.5px;font-family:inherit;outline:none}
 input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
+/* ── FEEDBACK CARD ── */
+.fb-card{background:var(--bg2);border:.5px solid var(--bstr);border-radius:12px;padding:13px 17px;margin-bottom:10px;box-shadow:var(--shadow)}
+.fb-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+.fb-orig{font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px;padding:7px 11px;background:rgba(40,38,32,.05);border-radius:7px;border-left:2px solid var(--bstr);line-height:1.6}
+.fb-row{font-size:13px;line-height:1.55;display:flex;gap:7px;align-items:baseline;margin-top:5px}
+.fb-mark{font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.fb-ok .fb-mark{color:var(--en)}.fb-ok span:last-child{color:var(--en)}
+.fb-tip .fb-mark{color:#9a5a2a}.fb-tip span:last-child{color:#7a4520}
+
 /* ── IDIOM ARCADE ── */
 .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
 .opt-btn{background:var(--bg2);border:1.5px solid var(--bstr);border-radius:10px;padding:11px 13px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--sub);transition:all .18s;text-align:left;display:flex;align-items:center;gap:9px;line-height:1.4;width:100%}
@@ -220,8 +229,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="panel-lbl">
       <span>你的接球 — Your response</span>
       <div class="mode-row">
-        <button class="mode-btn active" id="mode-5" onclick="setMode(5)">5 秒</button>
-        <button class="mode-btn" id="mode-3" onclick="setMode(3)">3 秒 🔥</button>
+        <button class="mode-btn active" id="mode-15" onclick="setMode(15)">15 秒</button>
+        <button class="mode-btn" id="mode-8" onclick="setMode(8)">8 秒</button>
+        <button class="mode-btn" id="mode-5" onclick="setMode(5)">5 秒 🔥</button>
       </div>
     </div>
     <div class="timer-row">
@@ -243,6 +253,15 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
   <!-- Result cards -->
   <div id="result-section">
+
+    <!-- Feedback card -->
+    <div class="fb-card" id="fb-card" style="display:none">
+      <div class="fb-tag">📝 你的接球分析</div>
+      <div class="fb-orig" id="fb-orig"></div>
+      <div class="fb-row fb-ok"><span class="fb-mark">✓</span><span id="fb-ok-text"></span></div>
+      <div class="fb-row fb-tip"><span class="fb-mark">→</span><span id="fb-tip-text"></span></div>
+    </div>
+
     <div class="result-hdr">AI 三階潤飾 — Three-Level Polish</div>
 
     <div class="resp-card">
@@ -360,8 +379,8 @@ const SITS = {
 let curSit = null;
 let curOpener = '';
 let timerInterval = null;
-let timerSec = 5;
-let timerMode = 5;
+let timerSec = 15;
+let timerMode = 15;
 let results = {};
 let savedOpen = false;
 
@@ -462,8 +481,7 @@ function speakText(type){ speak(results[type]||''); }
 // ── Timer ──
 function setMode(s){
   timerMode=s;
-  document.getElementById('mode-5').classList.toggle('active',s===5);
-  document.getElementById('mode-3').classList.toggle('active',s===3);
+  [15,8,5].forEach(n=>document.getElementById('mode-'+n).classList.toggle('active',n===s));
   clearTimer(); initTimer(); startTimer();
 }
 function initTimer(){
@@ -510,20 +528,39 @@ async function submitResp(){
 
   try{
     const sit = SITS[curSit];
+    const userResp = inp||'(no response — they froze)';
     const prompt = `English small talk practice feedback.
 
 Situation: ${sit.en}
 Opener: "${curOpener}"
-Learner's response: "${inp||'(no response — they froze)'}"
+Learner's response: "${userResp}"
 
-Give 3 improved versions of the learner's response. Be direct. No grammar lectures. No intro text. Output ONLY valid JSON:
+Output ONLY valid JSON, no extra text:
+{
+  "fb_ok": "繁體中文一句：回覆中做得好或方向對的地方（自然說話語氣，12字以內）",
+  "fb_tip": "繁體中文一句：最需要調整的一點，具體指出並說明為何（自然說話語氣，18字以內）",
+  "safe": "grammatically correct, professional (max 22 words)",
+  "pro": "natural idiomatic American business English with smooth connector (max 25 words)",
+  "ball": "response + natural follow-up question to keep conversation going (max 28 words)"
+}
 
-{"safe":"Professional, grammatically correct (max 22 words)","pro":"Natural idiomatic American business English with a smooth connector (max 25 words)","ball":"Response + a natural follow-up question that keeps the conversation going (max 28 words)"}`;
+Rules: fb_ok/fb_tip in Traditional Chinese only; if learner froze, fb_ok = acknowledge the situation naturally; no grammar labels; no lectures.`;
 
-    const raw = await callGroq(prompt, 300);
+    const raw = await callGroq(prompt, 480);
     const jm = raw.match(/\{[\s\S]*\}/);
     if(!jm) throw new Error('格式解析失敗，請重試');
     results = JSON.parse(jm[0]);
+
+    // Feedback card
+    if(inp){
+      $('fb-orig').textContent = inp;
+      $('fb-ok-text').textContent = results.fb_ok||'';
+      $('fb-tip-text').textContent = results.fb_tip||'';
+      $('fb-card').style.display='block';
+    } else {
+      $('fb-card').style.display='none';
+    }
+
     $('text-safe').textContent = results.safe||'—';
     $('text-pro').textContent  = results.pro||'—';
     $('text-ball').textContent = results.ball||'—';
@@ -588,6 +625,7 @@ function toggleSaved(){
 function resetAll(){
   clearTimer();
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-opener'); $hide('loading-result');
+  $('fb-card').style.display='none';
   document.querySelectorAll('.sit-btn').forEach(b=>b.classList.remove('active'));
   $('user-input').disabled=false; $('user-input').value='';
   $('submit-btn').disabled=false;
