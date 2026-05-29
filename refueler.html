@@ -104,6 +104,11 @@ body{
 .log-thumb{width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;}
 .log-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:5px;flex-shrink:0;}
 .log-del:hover{color:var(--danger);background:rgba(192,57,43,.07);}
+.log-edit{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:5px;flex-shrink:0;}
+.log-edit:hover{color:var(--accent);background:rgba(100,130,180,.07);}
+.log-edit-form{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-bottom:.5px solid var(--border);}
+.log-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.log-edit-actions{display:flex;gap:8px;}
 .log-empty{font-size:12px;color:var(--faint);text-align:center;padding:12px 0;}
 
 /* ── Photo Box ── */
@@ -555,18 +560,45 @@ function delEntry(id){
 }
 
 // ── RENDER LOGS ──
-function renderCoffeeLog(){
+let _ddKey=null,_ddType=null;
+function renderCoffeeLog(editId=null){
   const te=todayEntries().filter(e=>e.type==='coffee').sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const el=document.getElementById('coffee-log');
   if(!te.length){el.innerHTML='<div class="log-empty">今天還沒有咖啡記錄 ☕</div>';return;}
   el.innerHTML=te.map(e=>{
     const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    const cp=e.coffeePrice??e.price??0;const dp=e.dessertPrice??0;
+    if(e.id===editId){
+      return`<div class="log-edit-form">
+        <div class="log-edit-grid">
+          <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
+          <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
+          <div><label class="f-lbl">甜點</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+          <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
+          <div><label class="f-lbl">甜點 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
+        </div>
+        <div class="log-edit-actions">
+          <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
+          <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="renderCoffeeLog()">取消</button>
+        </div>
+      </div>`;
+    }
     const desc=[e.cafe,e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
     const photoHtml=e.photo?`<img src="${e.photo}" class="log-thumb"/>`:'';
-    const cp=e.coffeePrice??e.price??0;const dp=e.dessertPrice??0;
     const priceHtml=[cp?`<span class="log-price" title="咖啡">☕$${cp}</span>`:'',dp?`<span class="log-price" title="甜點">🍰$${dp}</span>`:''].filter(Boolean).join('');
-    return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${desc}</span>${priceHtml}<button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
+    return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${desc}</span>${priceHtml}<button class="log-edit" onclick="renderCoffeeLog('${e.id}')">✏️</button><button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
   }).join('');
+}
+function saveCoffeeEdit(id){
+  const d=loadRF();const e=(d.entries||[]).find(x=>x.id===id);if(!e)return;
+  e.cafe=document.getElementById('ec-cafe').value.trim();
+  e.item=document.getElementById('ec-item').value.trim();
+  e.dessert=document.getElementById('ec-dessert').value.trim();
+  const cp=parseFloat(document.getElementById('ec-cprice').value)||0;
+  const dp=parseFloat(document.getElementById('ec-dprice').value)||0;
+  e.coffeePrice=cp;e.price=cp;e.dessertPrice=dp;
+  saveRF(d);
+  if(_ddKey)showDayDetail(_ddKey,_ddType);else refresh();
 }
 function renderWaterLog(){
   const te=todayEntries().filter(e=>e.type==='water').sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
@@ -642,7 +674,8 @@ function wCalPrev(){wCalM--;if(wCalM<0){wCalM=11;wCalY--;}renderWaterCalendar();
 function wCalNext(){wCalM++;if(wCalM>11){wCalM=0;wCalY++;}renderWaterCalendar();}
 
 // ── DAY DETAIL ──
-function showDayDetail(key,type){
+function showDayDetail(key,type,editId=null){
+  _ddKey=key;_ddType=type;
   const d=loadRF();
   const es=(d.entries||[]).filter(e=>e.type===type&&new Date(e.timestamp).toDateString()===key).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const dateLabel=new Date(key).toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
@@ -650,9 +683,24 @@ function showDayDetail(key,type){
   if(type==='coffee'){
     rows=es.map(e=>{
       const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+      const cp=e.coffeePrice??e.price??0;const dp=e.dessertPrice??0;
+      if(e.id===editId){
+        return`<div class="log-edit-form" style="margin-bottom:8px;">
+          <div class="log-edit-grid">
+            <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
+            <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
+            <div><label class="f-lbl">甜點</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+            <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
+            <div><label class="f-lbl">甜點 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
+          </div>
+          <div class="log-edit-actions">
+            <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
+            <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="showDayDetail('${key}','coffee')">取消</button>
+          </div>
+        </div>`;
+      }
       const parts=[e.cafe,e.item,e.dessert].filter(Boolean);
-      return`<div class="dd-entry"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>${e.price?` <span style="color:var(--faint);">NT$${e.price}</span>`:''}${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}
-      </div>`;
+      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">NT$${cp+dp}</span>`:''}${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}</div><button class="log-edit" onclick="showDayDetail('${key}','coffee','${e.id}')">✏️</button></div>`;
     }).join('');
   }else{
     const total=es.reduce((s,e)=>s+(e.amount||0),0);
