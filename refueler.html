@@ -252,6 +252,13 @@ body{
   </div>
 </div>
 
+<!-- Date selector bar -->
+<div style="display:flex;align-items:center;gap:10px;padding:10px 0 4px;">
+  <label class="f-lbl" style="margin:0;white-space:nowrap;">記錄日期</label>
+  <input type="date" id="rf-date" class="f-inp" style="width:auto;flex:1;max-width:180px;" onchange="onRFDateChange()"/>
+  <button onclick="setRFDate(new Date())" style="font-size:11px;padding:5px 12px;border-radius:var(--rsm);border:.5px solid var(--border);background:var(--bg2);color:var(--sub);cursor:pointer;white-space:nowrap;">今天</button>
+</div>
+
 <!-- Main 2-Column Grid (4 direct children → auto-aligned rows) -->
 <div id="main">
 
@@ -296,7 +303,7 @@ body{
         <button class="add-btn add-btn-coffee" onclick="addCoffee()">+ 記錄咖啡</button>
       </div>
       <div class="card-sep" style="margin:13px -18px;"></div>
-      <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
+      <div id="coffee-log-lbl" style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
       <div class="log-wrap" id="coffee-log"></div>
     </div>
   </div>
@@ -320,7 +327,7 @@ body{
         <button class="add-btn add-btn-water" onclick="addWater()">+ 記錄水分</button>
       </div>
       <div class="card-sep" style="margin:13px -18px;"></div>
-      <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
+      <div id="water-log-lbl" style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">今日記錄</div>
       <div class="log-wrap" id="water-log"></div>
     </div>
   </div>
@@ -439,6 +446,18 @@ function saveRF(d){
 function todayStr(){return new Date().toDateString();}
 function todayEntries(){const d=loadRF();return(d.entries||[]).filter(e=>new Date(e.timestamp).toDateString()===todayStr());}
 
+// ── SELECTED DATE ──
+function isoDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function setRFDate(d){const el=document.getElementById('rf-date');if(el)el.value=isoDate(d);onRFDateChange();}
+function getRFDate(){const v=document.getElementById('rf-date')?.value;return v?new Date(v+'T12:00:00'):new Date();}
+function getRFDateStr(){return getRFDate().toDateString();}
+function isToday(){return getRFDateStr()===todayStr();}
+function onRFDateChange(){
+  const lbl=isToday()?'今日記錄':getRFDate().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})+'記錄';
+  ['coffee-log-lbl','water-log-lbl'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
+  renderCoffeeLog();renderWaterLog();
+}
+
 // ── GIST SYNC ──
 function setSyncStatus(state,msg){
   const p=document.getElementById('sync-pill');
@@ -525,7 +544,8 @@ function addCoffee(){
   const coffeePrice=parseFloat(document.getElementById('c-price').value)||0;
   const dessertPrice=parseFloat(document.getElementById('c-dprice').value)||0;
   const d=loadRF();
-  d.entries.push({id:'rf_'+Date.now(),type:'coffee',cafe,item,dessert,coffeePrice,dessertPrice,photo:pendingPhoto||null,timestamp:new Date().toISOString()});
+  const ts=getRFDate();ts.setHours(new Date().getHours(),new Date().getMinutes(),0,0);
+  d.entries.push({id:'rf_'+Date.now(),type:'coffee',cafe,item,dessert,coffeePrice,dessertPrice,photo:pendingPhoto||null,timestamp:ts.toISOString()});
   saveRF(d);
   ['c-cafe','c-item','c-dessert','c-price','c-dprice'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   pendingPhoto=null;
@@ -547,7 +567,8 @@ function pickW(v){
 function addWater(){
   const amount=parseInt(document.getElementById('w-amount').value)||selW||250;
   const d=loadRF();
-  d.entries.push({id:'rf_'+Date.now(),type:'water',amount,timestamp:new Date().toISOString()});
+  const tsW=getRFDate();tsW.setHours(new Date().getHours(),new Date().getMinutes(),0,0);
+  d.entries.push({id:'rf_'+Date.now(),type:'water',amount,timestamp:tsW.toISOString()});
   saveRF(d);
   refresh();
 }
@@ -562,7 +583,9 @@ function delEntry(id){
 // ── RENDER LOGS ──
 let _ddKey=null,_ddType=null,_shopName=null;
 function renderCoffeeLog(editId=null){
-  const te=todayEntries().filter(e=>e.type==='coffee').sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  const selDs=getRFDateStr();
+  const d=loadRF();
+  const te=(d.entries||[]).filter(e=>e.type==='coffee'&&new Date(e.timestamp).toDateString()===selDs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const el=document.getElementById('coffee-log');
   if(!te.length){el.innerHTML='<div class="log-empty">今天還沒有咖啡記錄 ☕</div>';return;}
   el.innerHTML=te.map(e=>{
@@ -634,9 +657,11 @@ function showShopDetail(shop,editId=null){
   document.getElementById('day-detail').style.display='flex';
 }
 function renderWaterLog(){
-  const te=todayEntries().filter(e=>e.type==='water').sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  const selDs=getRFDateStr();
+  const dw=loadRF();
+  const te=(dw.entries||[]).filter(e=>e.type==='water'&&new Date(e.timestamp).toDateString()===selDs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const el=document.getElementById('water-log');
-  if(!te.length){el.innerHTML='<div class="log-empty">今天還沒有水分記錄 💧</div>';return;}
+  if(!te.length){el.innerHTML='<div class="log-empty">這天還沒有水分記錄 💧</div>';return;}
   el.innerHTML=te.map(e=>{
     const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
     return`<div class="log-row"><span class="log-time">${t}</span><span class="log-desc">💧 ${e.amount||250} cc</span><button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
@@ -1106,6 +1131,7 @@ function refresh(){
 }
 
 // ── INIT ──
+setRFDate(new Date()); // 預設今天
 refresh(); // 先從 localStorage 立即渲染
 loadFromGist().then(refresh); // 再從 Gist 更新最新資料
 checkWaterSchedule(); // 頁面載入時立即檢查是否在提醒時間窗內
