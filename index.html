@@ -1022,12 +1022,12 @@ function buildTT(id){
       const _n=new Date();
       const dateLbl=`${_n.getMonth()+1}/${_n.getDate()}`;
       const monthLbl=`${_n.getMonth()+1}月`;
-      let out=h(`⭐ Astro  ${monthLbl} & 今日`);
+      let out=h(`⭐ Astro  ${monthLbl} & ${dateLbl}`);
       out+=`<div class="tt-head" style="margin-bottom:5px">本月</div>`;
       (brief.thisMonth||[]).forEach(l=>{const p=l.split('|');out+=advRow((p[0]||l).trim(),(p[1]||'').trim());});
       out+=hr();
-      out+=`<div class="tt-head" style="margin-bottom:5px">今日 ${dateLbl}</div>`;
-      (brief.today||[]).forEach(l=>{const p=l.split('|');out+=advRow((p[0]||l).trim(),(p[1]||'').trim());});
+      out+=`<div class="tt-head" style="margin-bottom:5px">${dateLbl}</div>`;
+      (brief.today||[]).forEach(l=>{const p=l.split('|');const k=(p[0]||l).trim().replace(/^本日\s*/,dateLbl+' ');out+=advRow(k,(p[1]||'').trim());});
       return out;
     }
     case 'english':{
