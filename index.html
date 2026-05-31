@@ -896,17 +896,6 @@ function buildTT(id){
          +row(dot('#a898b8')+'REM',   s.remP+'%',  s.remP>=18?'g':s.remP>=12?'a':'r')
          +row(dot('#8fac94')+'Core',  s.coreP+'%')
          +row(dot('#c4aa7c')+'Awake', s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
-      // 單夜 vs 加權戰力
-      if(s.combatSingle!=null&&s.combatWeighted!=null){
-        const diff=s.combatSingle-s.combatWeighted;
-        const diffStr=(diff>0?'+':'')+diff;
-        const nightLbl=s.nightsWeighted>=3?'3夜加權':`${s.nightsWeighted}夜加權`;
-        out+=hr()
-          +`<div style="font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;">單夜 vs ${nightLbl}</div>`
-          +row('單夜戰力',String(s.combatSingle),s.combatSingle>=80?'g':s.combatSingle>=60?'a':'r')
-          +row(nightLbl,String(s.combatWeighted),s.combatWeighted>=80?'g':s.combatWeighted>=60?'a':'r')
-          +`<div class="tt-row"><span class="tt-k">差距</span><span style="font-size:11px;font-weight:600;color:${Math.abs(diff)<5?'var(--ok)':diff>0?'var(--warn)':'var(--danger)'}">${diffStr}</span></div>`;
-      }
       // 近7日趨勢
       if(s.trend7&&s.trend7.length>2){
         const deepVals=s.trend7.map(n=>n.deepP);
