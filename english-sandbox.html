@@ -158,6 +158,15 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .reveal-example{font-size:12.5px;color:var(--faint);background:rgba(40,38,32,.04);border-radius:8px;padding:9px 13px;font-style:italic;border-left:2.5px solid var(--bstr);margin-bottom:14px;line-height:1.6}
 .reveal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
 
+/* ── OPENER ZH CARD ── */
+.opener-zh-card{background:rgba(61,106,82,.07);border:.5px solid rgba(61,106,82,.22);border-radius:12px;padding:13px 17px;margin-bottom:10px;box-shadow:var(--shadow)}
+.opener-zh-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--en);margin-bottom:7px}
+.opener-zh-og{font-size:11.5px;color:var(--faint);font-style:italic;margin-bottom:6px;line-height:1.5}
+.opener-zh-body{font-size:13.5px;color:var(--ink);line-height:1.7}
+
+/* ── ENHANCED FEEDBACK ── */
+.fb-section{margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)}
+
 /* ── PLACEHOLDER ── */
 .placeholder{padding:70px 20px;text-align:center}
 .ph-icon{font-size:44px;margin-bottom:14px;opacity:.35}
@@ -261,14 +270,25 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="fb-card" id="fb-card" style="display:none">
       <div class="fb-tag">📝 你的接球分析</div>
       <div class="fb-orig" id="fb-orig"></div>
-      <div class="fb-block fb-issue" id="fb-issue-block">
-        <div class="fb-block-lbl">⚠ 哪裡不適合</div>
-        <div class="fb-block-body" id="fb-issue-text"></div>
+      <div class="fb-block fb-issue" id="fb-tone-block">
+        <div class="fb-block-lbl">🎭 語氣 &amp; 場合契合度</div>
+        <div class="fb-block-body" id="fb-tone-text"></div>
       </div>
-      <div class="fb-block fb-add">
-        <div class="fb-block-lbl">💡 建議補充</div>
+      <div class="fb-block fb-issue fb-section" id="fb-content-block">
+        <div class="fb-block-lbl">🎾 有沒有接住對方的球</div>
+        <div class="fb-block-body" id="fb-content-text"></div>
+      </div>
+      <div class="fb-block fb-add fb-section">
+        <div class="fb-block-lbl">💡 可以再補充什麼</div>
         <div class="fb-block-body" id="fb-add-text"></div>
       </div>
+    </div>
+
+    <!-- Opener 中文說明卡（永遠顯示）-->
+    <div class="opener-zh-card" id="opener-zh-card" style="display:none">
+      <div class="opener-zh-tag">💬 對方說這句話的意思</div>
+      <div class="opener-zh-og" id="opener-zh-og"></div>
+      <div class="opener-zh-body" id="opener-zh-text"></div>
     </div>
 
     <div class="result-hdr">AI 三階潤飾 — Three-Level Polish</div>
@@ -392,6 +412,7 @@ let timerSec = 30;
 let timerMode = 30;
 let results = {};
 let savedOpen = false;
+let usedOpeners = []; // 追蹤已出現的 opener，避免重複
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
@@ -437,23 +458,39 @@ async function genOpener(){
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-result');
   disableSitBtns(true);
   try{
+    const recent = usedOpeners.slice(-8);
+    const avoidClause = recent.length
+      ? `\n\nAVOID — do NOT generate these or close variations:\n${recent.map(s=>`- "${s}"`).join('\n')}`
+      : '';
+    // Cycle through different opener styles to ensure variety
+    const styles = [
+      'a casual observation or comment about the immediate environment',
+      'a light complaint or mild frustration about something relatable',
+      'a question that shows genuine curiosity about the other person',
+      'a quick share about something that happened to the speaker recently',
+      'a humorous or self-deprecating remark',
+      'a comment referencing shared context (weather, day of week, recent event)',
+      'a compliment or positive observation',
+      'an open-ended question to invite the other person in',
+    ];
+    const style = styles[usedOpeners.length % styles.length];
     const prompt = `You are creating realistic small talk for English conversation practice.
 
 Situation: Two people are ${sit.en}.
 
-Generate ONE natural, conversational opening line that a native American English speaker would realistically say in this exact situation.
+Generate ONE natural opening line using this style: ${style}.
 
 Rules:
 - Under 18 words
-- Sound genuinely casual and spontaneous — NOT like a textbook example
-- Can be a comment, observation, question, or light complaint about the situation
-- Output ONLY the single sentence, with no quotes or explanations
-
-Output the sentence only.`;
+- Sound genuinely casual and spontaneous — NOT textbook English
+- Fits naturally in the exact situation described
+- Output ONLY the single sentence, no quotes or explanations${avoidClause}`;
     const raw = await callGroq(prompt, 60);
     curOpener = raw.replace(/^["'`]|["'`]$/g,'').trim();
     document.getElementById('opener-text').textContent = curOpener;
     document.getElementById('opener-sit-tag').textContent = sit.label;
+    usedOpeners.push(curOpener);
+    if(usedOpeners.length > 24) usedOpeners.shift();
     $hide('loading-opener'); $show('opener-card');
     speakOpener();
     setTimeout(()=>{ $show('input-section'); initTimer(); startTimer(); }, 1400);
@@ -544,21 +581,29 @@ Situation: ${sit.en}
 Native speaker's opener: "${curOpener}"
 Learner's reply: "${userResp}"
 
-TASK 1 — Analyze the learner's reply (fb_issue, fb_add):
-- fb_issue: 用繁體中文直接說這句回覆哪裡不適合這個場合（語氣太正式/太隨便、用詞不自然、沒有接住對方的點、等等）。若沒有明顯問題就說「整體語感自然」。限25字。
-- fb_add: 用繁體中文說還可以加什麼讓這句回覆更完整或更自然（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。限25字。
+TASK 1 — Four JSON fields about the learner's reply AND the opener:
+
+opener_zh: 用繁體中文白話解釋：(1)對方這句話的意思是什麼，(2)在這個場景下說這句話的社交用意或暗示。語氣輕鬆，像在跟朋友解釋。限45字。
+
+fb_tone: 用繁體中文分析這句回覆的語氣——偏正式還是偏隨便？是否符合「${sit.en}」這個場合的語氣要求？如果合適就說「語氣符合場合」並給一句具體理由；如果不合適，說清楚是哪種語氣偏差、為什麼在這個場合不好用。限40字。
+
+fb_content: 用繁體中文分析這句回覆有沒有「接住」對方的球——有無呼應對方說的內容或情緒？有無推進話題？還是只是自說自話？給出具體觀察，例如「有接到對方說的 X，但沒有接著追問」或「完全沒回應對方的 Y，話題停在原地」。限40字。
+
+fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「可以直接加一句問句帶入你自己的話題」。限35字。
 
 TASK 2 — Write 3 model English responses to the opener (safe, pro, ball):
-These are COMPLETELY INDEPENDENT example responses — do NOT quote, correct, or reference the learner's text at all.
-Write each as a fluent native speaker naturally replying to the opener.
+COMPLETELY INDEPENDENT — do NOT quote, correct, or reference the learner's text.
+Write each as a fluent native speaker naturally replying to the opener in this exact situation.
 
 Output ONLY valid JSON:
 {
-  "fb_issue": "繁體中文：哪裡不適合（≤25字）",
-  "fb_add": "繁體中文：建議補充什麼（≤25字）",
-  "safe": "Model reply to opener — clean and professional (≤22 words, no corrections of learner text)",
-  "pro": "Model reply to opener — natural idiomatic American English (≤25 words, no corrections of learner text)",
-  "ball": "Model reply to opener + one follow-up question to extend the conversation (≤28 words, no corrections of learner text)"
+  "opener_zh": "繁體中文（≤45字）",
+  "fb_tone": "繁體中文語氣分析（≤40字）",
+  "fb_content": "繁體中文接球分析（≤40字）",
+  "fb_add": "繁體中文補充建議（≤35字）",
+  "safe": "Model reply — clean and professional (≤22 words)",
+  "pro": "Model reply — natural idiomatic American English (≤25 words)",
+  "ball": "Model reply + one follow-up question to extend the conversation (≤28 words)"
 }`;
 
     const raw = await callGroq(prompt, 480);
@@ -566,11 +611,22 @@ Output ONLY valid JSON:
     if(!jm) throw new Error('格式解析失敗，請重試');
     results = JSON.parse(jm[0]);
 
-    // Feedback card
+    // Opener 中文說明（永遠顯示）
+    if(results.opener_zh){
+      $('opener-zh-og').textContent = `"${curOpener}"`;
+      $('opener-zh-text').textContent = results.opener_zh;
+      $('opener-zh-card').style.display='block';
+    } else {
+      $('opener-zh-card').style.display='none';
+    }
+
+    // Feedback card（三維分析）
     if(inp){
       $('fb-orig').textContent = inp;
-      $('fb-issue-text').textContent = results.fb_issue||'';
-      $('fb-issue-block').style.display = results.fb_issue ? 'block' : 'none';
+      $('fb-tone-text').textContent  = results.fb_tone||'';
+      $('fb-tone-block').style.display = results.fb_tone ? 'block' : 'none';
+      $('fb-content-text').textContent = results.fb_content||'';
+      $('fb-content-block').style.display = results.fb_content ? 'block' : 'none';
       $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
     } else {
@@ -642,6 +698,7 @@ function resetAll(){
   clearTimer();
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-opener'); $hide('loading-result');
   $('fb-card').style.display='none';
+  $('opener-zh-card').style.display='none';
   document.querySelectorAll('.sit-btn').forEach(b=>b.classList.remove('active'));
   $('user-input').disabled=false; $('user-input').value='';
   $('submit-btn').disabled=false;
