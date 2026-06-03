@@ -135,8 +135,16 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .fb-block-body{font-size:13px;line-height:1.65;padding-left:3px}
 .fb-issue .fb-block-lbl{color:#9a4a20}
 .fb-issue .fb-block-body{color:#7a3a18}
+.fb-caught .fb-block-lbl{color:var(--en)}
+.fb-caught .fb-block-body{color:#2a5a38}
+.fb-partial .fb-block-lbl{color:#7a6020}
+.fb-partial .fb-block-body{color:#5a4818}
 .fb-add .fb-block-lbl{color:var(--en)}
 .fb-add .fb-block-body{color:var(--sub)}
+.ball-verdict{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:6px;padding:3px 9px;margin-bottom:7px;letter-spacing:.04em}
+.ball-verdict.v-caught{background:rgba(61,106,82,.13);color:var(--en)}
+.ball-verdict.v-partial{background:rgba(160,130,50,.12);color:#7a6020}
+.ball-verdict.v-missed{background:rgba(176,96,50,.1);color:#8a4020}
 
 /* ── IDIOM ARCADE ── */
 .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
@@ -276,6 +284,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       </div>
       <div class="fb-block fb-issue fb-section" id="fb-content-block">
         <div class="fb-block-lbl">🎾 有沒有接住對方的球</div>
+        <div id="fb-ball-verdict"></div>
         <div class="fb-block-body" id="fb-content-text"></div>
       </div>
       <div class="fb-block fb-add fb-section">
@@ -320,9 +329,6 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       </div>
     </div>
 
-    <div class="result-footer">
-      <button class="btn btn-ghost btn-sm" onclick="resetAll()">↩ 再來一句</button>
-    </div>
   </div>
 
   <!-- Saved phrases -->
@@ -416,13 +422,16 @@ let usedOpeners = []; // 追蹤已出現的 opener，避免重複
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
-async function callGroq(prompt, max=600){
+async function callGroq(prompt, max=600, sys=''){
   const k = getKey();
   if(!k){ checkKey(); throw new Error('No API key'); }
+  const msgs = sys
+    ? [{role:'system',content:sys},{role:'user',content:prompt}]
+    : [{role:'user',content:prompt}];
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:max,temperature:.85})
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:msgs,max_tokens:max,temperature:.85})
   });
   if(!r.ok) throw new Error('API '+r.status);
   const j = await r.json();
@@ -587,7 +596,9 @@ opener_zh: 用繁體中文白話解釋：(1)對方這句話的意思是什麼，
 
 fb_tone: 用繁體中文分析這句回覆的語氣——偏正式還是偏隨便？是否符合「${sit.en}」這個場合的語氣要求？如果合適就說「語氣符合場合」並給一句具體理由；如果不合適，說清楚是哪種語氣偏差、為什麼在這個場合不好用。限40字。
 
-fb_content: 用繁體中文分析這句回覆有沒有「接住」對方的球——有無呼應對方說的內容或情緒？有無推進話題？還是只是自說自話？給出具體觀察，例如「有接到對方說的 X，但沒有接著追問」或「完全沒回應對方的 Y，話題停在原地」。限40字。
+fb_ball_verdict: Evaluate whether the learner's reply kept the conversation going. Reply with EXACTLY one word: "caught" (clearly responded AND added something), "partial" (responded but no follow-through), or "missed" (ignored the opener or gave a dead-end answer).
+
+fb_content: 用繁體中文說明接球狀況，格式固定兩句：第一句說具體問題（例：「完全沒回應對方說的 X，話題沒有延伸」）；第二句必須給一個可直接說出口的英文例句（例：「可以接著說：That always happens on Mondays — you doing okay?」）。不准只說大方向，一定要有具體英文例句。限80字。
 
 fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「可以直接加一句問句帶入你自己的話題」。限35字。
 
@@ -602,14 +613,15 @@ Output ONLY valid JSON:
 {
   "opener_zh": "繁體中文（≤45字）",
   "fb_tone": "繁體中文語氣分析（≤40字）",
-  "fb_content": "繁體中文接球分析（≤40字）",
-  "fb_add": "繁體中文補充建議（≤35字）",
+  "fb_ball_verdict": "caught|partial|missed",
+  "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
+  "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節",
   "safe": "Model reply — clean and professional (≤22 words, no echoing opener)",
   "pro": "Model reply — natural idiomatic American English (≤25 words, no echoing opener)",
   "ball": "Model reply + one follow-up question to extend the conversation (≤28 words, no echoing opener)"
 }`;
 
-    const raw = await callGroq(prompt, 480);
+    const raw = await callGroq(prompt, 480, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.');
     const jm = raw.match(/\{[\s\S]*\}/);
     if(!jm) throw new Error('格式解析失敗，請重試');
     results = JSON.parse(jm[0]);
@@ -630,6 +642,23 @@ Output ONLY valid JSON:
       $('fb-tone-block').style.display = results.fb_tone ? 'block' : 'none';
       $('fb-content-text').textContent = results.fb_content||'';
       $('fb-content-block').style.display = results.fb_content ? 'block' : 'none';
+      // verdict badge
+      const verdict = (results.fb_ball_verdict||'').trim().toLowerCase();
+      const verdictEl = $('fb-ball-verdict');
+      const verdictMap = {
+        caught:  { cls:'v-caught',  text:'✅ 接住了！' },
+        partial: { cls:'v-partial', text:'⚠️ 勉強接到' },
+        missed:  { cls:'v-missed',  text:'❌ 沒接到' }
+      };
+      if(verdictMap[verdict]){
+        const vm = verdictMap[verdict];
+        verdictEl.innerHTML = `<span class="ball-verdict ${vm.cls}">${vm.text}</span>`;
+        const block = $('fb-content-block');
+        block.classList.remove('fb-issue','fb-caught','fb-partial');
+        block.classList.add(verdict==='caught' ? 'fb-caught' : verdict==='partial' ? 'fb-partial' : 'fb-issue');
+      } else {
+        verdictEl.innerHTML='';
+      }
       $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
     } else {
