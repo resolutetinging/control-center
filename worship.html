@@ -352,6 +352,31 @@ async function groqCall(messages,model,maxTokens){
   throw new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
 }
 
+async function groqVisionCall(temple,imageDataUrl){
+  var key=localStorage.getItem(GROQ_STORE)||'';
+  if(!key)throw new Error('找不到 Groq API Key（localStorage: tina_groq）');
+  var body={
+    model:VIS_MDL,
+    messages:[{role:'user',content:[
+      {type:'text',text:'這是一張'+temple+'籤詩照片。請辨識並回傳：\n【籤號】\n（數字或未知）\n【籤詩】\n（完整原文，逐句）\n【意涵】\n（白話意涵）\n若部分看不清楚，請標注（？）並盡力辨識。'},
+      {type:'image_url',image_url:{url:imageDataUrl,detail:'auto'}}
+    ]}],
+    temperature:1,
+    max_tokens:1024,
+    top_p:1,
+    stream:false
+  };
+  var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify(body)
+  });
+  var txt=await res.text();var d;
+  try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
+  if(d.choices&&d.choices[0])return d.choices[0].message.content;
+  throw new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
+}
+
 // ── 籤號帶入 ──
 async function fetchSlipByNumber(){
   var num=parseInt($('slip-num').value);
@@ -385,10 +410,7 @@ async function analyzePhoto(){
   var btn=$('photo-btn'),sp=$('photo-sp');
   btn.disabled=true;sp.style.display='block';
   try{
-    var r=await groqCall([{role:'user',content:[
-      {type:'image_url',image_url:{url:photoB64}},
-      {type:'text',text:'這是一張'+temple+'籤詩照片。請辨識並回傳：\n【籤號】\n（數字或未知）\n【籤詩】\n（完整原文，逐句）\n【意涵】\n（白話意涵）\n若部分看不清楚，請標注（？）並盡力辨識。'}
-    ]}],VIS_MDL,600);
+    var r=await groqVisionCall(temple,photoB64);
     var nm=r.match(/【籤號】\s*([^\n]+)/);
     var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=【意涵】|$)/);
     var mm=r.match(/【意涵】\s*([\s\S]+)/);
