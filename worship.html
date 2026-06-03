@@ -217,8 +217,13 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
       <div class="poem-ai-note" id="poem-ai-note"></div>
       <label class="lbl">籤詩原文</label>
       <textarea class="poem-text" id="poem-text" rows="4" placeholder="籤詩原文（可直接修正）…"></textarea>
-      <label class="lbl" style="margin-top:.5rem">基本意涵</label>
-      <textarea class="poem-meaning" id="poem-meaning" rows="2" placeholder="意涵說明（可直接修正）…"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.5rem">
+        <label class="lbl" style="margin:0">基本意涵</label>
+        <button type="button" class="btn btn-outline" id="gen-meaning-btn" style="font-size:.7rem;padding:.18rem .55rem" onclick="genMeaning()">
+          <span class="sp" id="gen-meaning-sp" style="border-top-color:var(--temple);border-color:rgba(107,79,168,.3)"></span>✨ 生成意涵
+        </button>
+      </div>
+      <textarea class="poem-meaning" id="poem-meaning" rows="2" placeholder="原文確認後點「✨ 生成意涵」，或直接手動填寫…"></textarea>
     </div>
 
     <!-- 求籤問題 -->
@@ -358,7 +363,7 @@ async function groqVisionCall(temple,imageDataUrl){
   var body={
     model:VIS_MDL,
     messages:[{role:'user',content:[
-      {type:'text',text:'這是一張'+temple+'籤詩照片。請辨識並回傳：\n【籤號】\n（數字或未知）\n【籤詩】\n（完整原文，逐句）\n【意涵】\n（白話意涵）\n若部分看不清楚，請標注（？）並盡力辨識。'},
+      {type:'text',text:'請仔細辨識這張'+temple+'籤詩照片中的所有文字。\n\n嚴格依照以下格式回傳：\n\n【籤號】\n（數字，如「42」；看不清楚請填「未知」）\n\n【籤詩】\n（逐字辨識每行詩句，一行一句；傳統籤詩通常為四句七言或五言；看不清楚的字用「□」代替，不要猜測或補全；請勿合並行）\n\n注意：請優先辨識實際圖片中的文字，繁體中文為主；不要根據常識補全未看清楚的部分。'},
       {type:'image_url',image_url:{url:imageDataUrl,detail:'auto'}}
     ]}],
     temperature:1,
@@ -393,7 +398,7 @@ async function fetchSlipByNumber(){
     var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=【意涵】|$)/);
     var mm=r.match(/【意涵】\s*([\s\S]+)/);
     curSlip={number:num,poem:pm?pm[1].trim():r.trim(),basicMeaning:mm?mm[1].trim():''};
-    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning,true);
+    showPoem(temple,num,curSlip.poem,'',true,false);
   }catch(e){alert(e.message);}
   btn.disabled=false;sp.style.display='none';
 }
@@ -412,16 +417,32 @@ async function analyzePhoto(){
   try{
     var r=await groqVisionCall(temple,photoB64);
     var nm=r.match(/【籤號】\s*([^\n]+)/);
-    var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=【意涵】|$)/);
-    var mm=r.match(/【意涵】\s*([\s\S]+)/);
+    var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=$)/);
     var num=nm?nm[1].trim().replace(/第|籤/g,'').trim():'?';
-    curSlip={number:num,poem:pm?pm[1].trim():'',basicMeaning:mm?mm[1].trim():'',photoData:photoB64};
-    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning,false);
+    curSlip={number:num,poem:pm?pm[1].trim():'',basicMeaning:'',photoData:photoB64};
+    showPoem(temple,num,curSlip.poem,'',false,false);
   }catch(e){
     var fmt=photoB64?photoB64.slice(5,30):'無圖';
     var sz=photoB64?Math.round(photoB64.length*0.75/1024)+'KB':'';
     alert('AI 辨識失敗：'+e.message+'\n格式：'+fmt+'\n大小：'+sz+'\n\n若持續失敗，請改用籤號帶入後手動輸入籤詩。');
   }
+  btn.disabled=false;sp.style.display='none';
+}
+
+async function genMeaning(){
+  var poem=$('poem-text').value.trim();
+  if(!poem)return alert('請先填入籤詩原文');
+  var temple=$('inp-temple').value.trim()||'廟宇';
+  var num=curSlip?curSlip.number:'?';
+  var btn=$('gen-meaning-btn'),sp=$('gen-meaning-sp');
+  btn.disabled=true;sp.style.display='inline-block';
+  try{
+    var r=await groqCall([
+      {role:'system',content:'你是台灣廟宇籤詩專家，精通傳統籤詩解讀，全程繁體中文。'},
+      {role:'user',content:'廟宇：'+temple+'，籤號：第'+num+'籤\n\n籤詩原文：\n'+poem+'\n\n請提供2-3句白話意涵，說明整體吉凶走向與神明指引重點，不要重複籤詩原文。'}
+    ],TEXT_MDL,200);
+    $('poem-meaning').value=r.trim();
+  }catch(e){alert('生成失敗：'+e.message);}
   btn.disabled=false;sp.style.display='none';
 }
 
@@ -435,11 +456,13 @@ function clearPoem(){
   $('photo-hint').textContent='📸 點擊選取或拖曳上傳籤詩照片';
   $('photo-btn').style.display='none';$('photo-input').value='';
 }
-function showPoem(temple,num,poem,meaning,isAiRef){
+function showPoem(temple,num,poem,meaning,isAiRef,fillMeaning){
   $('poem-num-lbl').textContent='⛩ '+temple+' · 第 '+num+' 籤';
   $('poem-text').value=poem;
-  $('poem-meaning').value=meaning;
-  $('poem-ai-note').textContent=isAiRef?'⚠️ AI 參考內容，非實際籤詩資料庫——請對照手上的籤詩確認並修正後再解析':'✓ 照片辨識結果，如有錯字請直接修正';
+  $('poem-meaning').value=(fillMeaning&&meaning)?meaning:'';
+  $('poem-ai-note').textContent=isAiRef
+    ?'⚠️ AI 參考，非實際資料庫——請對照實體籤詩修正後點「✨ 生成意涵」'
+    :'✓ 照片辨識完成——如有錯字請修正，確認後點「✨ 生成意涵」';
   $('poem-box').style.display='block';
 }
 
@@ -588,7 +611,7 @@ function editEntry(id){
     $('slip-num').value=e.slip.number;
     $('slip-question').value=e.slip.question||'';
     aiRaw=e.slip.aiRaw||null;
-    showPoem(e.temple,e.slip.number,e.slip.poem,e.slip.basicMeaning);
+    showPoem(e.temple,e.slip.number,e.slip.poem,e.slip.basicMeaning,false,true);
     if(aiRaw){
       var r=aiRaw;var secs={};
       ['籤詩意涵','籤意解析','問題綜合解析'].forEach(function(n){
