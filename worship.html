@@ -497,23 +497,31 @@ async function analyzeSlip(){
   try{
     var poemVal=$('poem-text').value.trim();
     var meaningVal=$('poem-meaning').value.trim();
-    var prompt='你是廟宇籤詩解析專家，請以繁體中文提供三層解析。\n\n廟宇：'+temple+'\n籤號：第'+slipNum+'籤\n籤詩原文：\n'+poemVal+'\n'+(meaningVal?'基本意涵：'+meaningVal+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n近期交代事項：\n'+rptLines+'\n\n請嚴格依以下格式回覆，各段落不可省略：\n\n## 籤詩意涵\n[白話翻譯與聖意，2-3句，說明這張籤的整體神意]\n\n## 籤意解析\n[單純解讀籤詩含意與運勢走向，不帶入個人問題，3-4句，直白清晰]\n\n## 問題綜合解析\n[嚴格比對求籤問題與近期交代事項，給出客製化深度解答與具體行動建議，4-6句]';
+    // 整理有填寫的分類清單（用於逐項指引）
+    var allCats=Object.entries({'正職':rpts.work,'副業':rpts.side,'健康':rpts.health,'財務':rpts.finance,'家務':rpts.chores})
+      .filter(function(e){return e[1];}).map(function(e){return e[0]+'：'+e[1];});
+    customRpts.filter(function(c){return c.content;}).forEach(function(c){allCats.push(c.label+'：'+c.content);});
+    var catsBlock=allCats.length?allCats.map(function(c){return'- '+c;}).join('\n'):'（未填寫）';
+    var catsGuide=allCats.length
+      ?allCats.map(function(c){var lbl=c.split('：')[0];return'**'+lbl+'**：（依籤意給出1-2句具體指引）';}).join('\n')
+      :'（無分類，給出整體建議）';
+    var prompt='廟宇：'+temple+'　籤號：第'+slipNum+'籤\n\n籤詩原文：\n'+poemVal+'\n'+(meaningVal?'聖意：'+meaningVal+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n近期各項事務：\n'+catsBlock+'\n\n請嚴格依以下格式回覆：\n\n## 籤詩意涵\n[整體神意白話說明，2句]\n\n## 各項指引\n'+catsGuide+'\n\n## 綜合建議\n[結合籤意與求籤問題，給出最關鍵行動方向，2-3句]';
     var r=await groqCall([
-      {role:'system',content:'你是精通易理與廟宇文化的籤詩解析顧問，分析具體有深度，不說空話，全程繁體中文。'},
+      {role:'system',content:'你是廟宇籤詩解析顧問，擅長將籤詩智慧對應到求籤者的具體生活分類。每一項指引必須直接引用籤詩意象或聖意內容來支撐，不說空話，全程繁體中文。'},
       {role:'user',content:prompt}
     ],TEXT_MDL,900);
     aiRaw=r;
     var secs={};
-    ['籤詩意涵','籤意解析','問題綜合解析'].forEach(function(n){
+    ['籤詩意涵','各項指引','綜合建議'].forEach(function(n){
       var m=r.match(new RegExp('##\\s*'+n+'\\s*([\\s\\S]+?)(?=##|$)'));
       secs[n]=m?m[1].trim():'';
     });
     res.innerHTML=[
-      {t:'一、籤詩意涵',b:secs['籤詩意涵']},
-      {t:'二、籤意解析',b:secs['籤意解析']},
-      {t:'三、問題綜合解析',b:secs['問題綜合解析']}
+      {t:'籤詩意涵',b:secs['籤詩意涵']},
+      {t:'各項指引',b:secs['各項指引']},
+      {t:'綜合建議',b:secs['綜合建議']}
     ].filter(function(s){return s.b;}).map(function(s){
-      return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+s.b.replace(/\n/g,'<br>')+'</div></div>';
+      return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+s.b.replace(/\n/g,'<br>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</div></div>';
     }).join('');
   }catch(e){res.innerHTML='<span style="color:var(--danger)">'+e.message+'</span>';}
   btn.disabled=false;sp.style.display='none';
