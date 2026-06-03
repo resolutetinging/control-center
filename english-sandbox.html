@@ -201,6 +201,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <div class="nav-title">🎯 English Sandbox</div>
   <button class="tab-btn active" id="tab-talk" onclick="switchTab('talk')">Small Talk 破冰接球</button>
   <button class="tab-btn" id="tab-idiom" onclick="switchTab('idiom')">Idiom 拆彈遊戲</button>
+  <button class="tab-btn" id="tab-lib" onclick="switchTab('lib')">📚 字庫 <span id="lib-tab-count" style="font-size:10px;background:rgba(61,106,82,.15);color:var(--en);border-radius:9px;padding:1px 5px;margin-left:2px;font-weight:700"></span></button>
   <a href="./index.html" class="back-link">← CC</a>
 </nav>
 
@@ -373,18 +374,6 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     </div>
   </div>
 
-  <!-- Idiom library (固定在主題選擇下方) -->
-  <div id="idiom-lib-section" style="background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:14px 17px;margin-bottom:14px;box-shadow:var(--shadow)">
-    <div class="saved-hdr" onclick="toggleLib()">
-      <span class="saved-hdr-lbl">📚 我的字庫</span>
-      <div class="saved-meta">
-        <span class="saved-badge" id="lib-badge">0</span>
-        <span class="saved-chevron" id="lib-chevron">▾</span>
-      </div>
-    </div>
-    <div id="lib-list" style="display:none"></div>
-  </div>
-
   <!-- Loading: generating question -->
   <div class="loading-card" id="loading-question">
     <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
@@ -414,6 +403,15 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   </div>
 
 </div><!-- /page-idiom -->
+
+<!-- ── 字庫分頁 ── -->
+<div class="page" id="page-lib">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">📚 我的 Idiom 字庫</div>
+    <button class="btn btn-ghost btn-sm" onclick="clearLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空字庫</button>
+  </div>
+  <div id="lib-list"><div class="saved-empty">尚無收藏，在拆彈遊戲答題後點「加入字庫」</div></div>
+</div><!-- /page-lib -->
 
 <script>
 // ── Constants ──
@@ -810,10 +808,11 @@ function resetAll(){
 
 // ── Tab switch ──
 function switchTab(tab){
-  ['talk','idiom'].forEach(t=>{
+  ['talk','idiom','lib'].forEach(t=>{
     document.getElementById('page-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
+  if(tab==='lib') renderLib();
 }
 
 // ── Helpers ──
@@ -832,7 +831,6 @@ const IDIOM_TOPICS = {
 
 let curTopic = null;
 let curQ = null;
-let libOpen = false;
 let addedToLib = false;
 let usedIdioms = [];   // 追蹤已出現的 idiom，避免重複
 
@@ -970,8 +968,7 @@ function addToLib(){
 
 function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
-  $('lib-badge').textContent = lib.length;
-  if(!libOpen) return;
+  const tc=$('lib-tab-count'); if(tc) tc.textContent=lib.length||'';
   $('lib-list').innerHTML = lib.length
     ? lib.map((item,i)=>`
         <div class="saved-item">
@@ -995,11 +992,10 @@ function delLib(i){
   renderLib();
 }
 
-function toggleLib(){
-  libOpen=!libOpen;
-  $('lib-list').style.display=libOpen?'block':'none';
-  $('lib-chevron').style.transform=libOpen?'rotate(180deg)':'rotate(0deg)';
-  if(libOpen) renderLib();
+function clearLib(){
+  if(!confirm('確定清空全部字庫？')) return;
+  localStorage.removeItem(IDIOM_LIB_KEY);
+  renderLib();
 }
 
 function disableTopicBtns(v){ document.querySelectorAll('#topic-row .sit-btn').forEach(b=>b.disabled=v); }
