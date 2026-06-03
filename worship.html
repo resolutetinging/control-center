@@ -68,8 +68,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 /* Poem box */
 .poem-box{background:var(--gold-tint);border:1px solid rgba(139,98,24,.2);border-radius:var(--rsm);padding:.9rem 1rem;margin-top:.8rem;display:none;}
 .poem-num{font-size:.63rem;color:var(--gold);font-weight:700;letter-spacing:.09em;margin-bottom:.4rem;}
-.poem-text{font-size:.95rem;line-height:2;color:var(--gold-dark);font-weight:600;white-space:pre-line;}
-.poem-meaning{font-size:.8rem;color:var(--sub);margin-top:.5rem;line-height:1.6;border-top:1px solid rgba(139,98,24,.15);padding-top:.5rem;}
+.poem-text{font-size:.92rem;line-height:1.9;color:var(--gold-dark);font-weight:600;background:rgba(255,255,255,.55);border-color:rgba(139,98,24,.25);}
+.poem-text:focus{border-color:var(--gold);}
+.poem-meaning{font-size:.82rem;color:var(--sub);margin-top:.5rem;background:rgba(255,255,255,.45);border-color:rgba(139,98,24,.2);}
+.poem-meaning:focus{border-color:var(--gold);}
+.poem-ai-note{font-size:.7rem;color:var(--warn);margin:.25rem 0 .5rem;line-height:1.5;}
 
 /* AI result */
 .ai-card{background:var(--temple-tint);border:1px solid rgba(107,79,168,.18);border-radius:var(--rsm);padding:1rem;margin-top:.8rem;display:none;}
@@ -205,11 +208,14 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
       </div>
     </div>
 
-    <!-- 籤詩顯示 -->
+    <!-- 籤詩顯示（可編輯） -->
     <div class="poem-box" id="poem-box">
       <div class="poem-num" id="poem-num-lbl"></div>
-      <div class="poem-text" id="poem-text"></div>
-      <div class="poem-meaning" id="poem-meaning"></div>
+      <div class="poem-ai-note" id="poem-ai-note"></div>
+      <label class="lbl">籤詩原文</label>
+      <textarea class="poem-text" id="poem-text" rows="4" placeholder="籤詩原文（可直接修正）…"></textarea>
+      <label class="lbl" style="margin-top:.5rem">基本意涵</label>
+      <textarea class="poem-meaning" id="poem-meaning" rows="2" placeholder="意涵說明（可直接修正）…"></textarea>
     </div>
 
     <!-- 求籤問題 -->
@@ -268,10 +274,22 @@ function loadWP(){try{return JSON.parse(localStorage.getItem(WP_KEY)||'null')||{
 function saveWP(d){localStorage.setItem(WP_KEY,JSON.stringify(d));}
 
 // ── Toggle & Tabs ──
+var _dropBound=false;
 function toggleSlip(){
   slipOn=!slipOn;
   slipOn?$('slip-toggle').classList.add('on'):$('slip-toggle').classList.remove('on');
   $('slip-section').style.display=slipOn?'block':'none';
+  if(slipOn&&!_dropBound){
+    _dropBound=true;
+    var drop=$('photo-drop');
+    drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('drag-over');});
+    drop.addEventListener('dragleave',function(){drop.classList.remove('drag-over');});
+    drop.addEventListener('drop',function(e){
+      e.preventDefault();drop.classList.remove('drag-over');
+      var f=e.dataTransfer.files[0];
+      if(f&&f.type.startsWith('image/'))readPhoto(f);
+    });
+  }
 }
 function setSlipTab(t){
   slipTab=t;
@@ -307,17 +325,6 @@ function readPhoto(file){
   };
   r.readAsDataURL(file);
 }
-(function(){
-  var drop=$('photo-drop');
-  drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('drag-over');});
-  drop.addEventListener('dragleave',function(){drop.classList.remove('drag-over');});
-  drop.addEventListener('drop',function(e){
-    e.preventDefault();drop.classList.remove('drag-over');
-    var f=e.dataTransfer.files[0];
-    if(f&&f.type.startsWith('image/'))readPhoto(f);
-  });
-})();
-
 // ── Groq ──
 async function groqCall(messages,model,maxTokens){
   var key=localStorage.getItem(GROQ_STORE)||'';
@@ -349,7 +356,7 @@ async function fetchSlipByNumber(){
     var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=【意涵】|$)/);
     var mm=r.match(/【意涵】\s*([\s\S]+)/);
     curSlip={number:num,poem:pm?pm[1].trim():r.trim(),basicMeaning:mm?mm[1].trim():''};
-    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning);
+    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning,true);
   }catch(e){alert(e.message);}
   btn.disabled=false;sp.style.display='none';
 }
@@ -370,21 +377,24 @@ async function analyzePhoto(){
     var mm=r.match(/【意涵】\s*([\s\S]+)/);
     var num=nm?nm[1].trim().replace(/第|籤/g,'').trim():'?';
     curSlip={number:num,poem:pm?pm[1].trim():'',basicMeaning:mm?mm[1].trim():'',photoData:photoB64};
-    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning);
+    showPoem(temple,num,curSlip.poem,curSlip.basicMeaning,false);
   }catch(e){alert('AI 辨識失敗：'+e.message+'\n可改用籤號帶入後手動對照。');}
   btn.disabled=false;sp.style.display='none';
 }
 
-function showPoem(temple,num,poem,meaning){
+function showPoem(temple,num,poem,meaning,isAiRef){
   $('poem-num-lbl').textContent='⛩ '+temple+' · 第 '+num+' 籤';
-  $('poem-text').textContent=poem;
-  $('poem-meaning').textContent=meaning;
+  $('poem-text').value=poem;
+  $('poem-meaning').value=meaning;
+  $('poem-ai-note').textContent=isAiRef?'⚠️ AI 參考內容，非實際籤詩資料庫——請對照手上的籤詩確認並修正後再解析':'✓ 照片辨識結果，如有錯字請直接修正';
   $('poem-box').style.display='block';
 }
 
 // ── AI 三階解析 ──
 async function analyzeSlip(){
-  if(!curSlip||!curSlip.poem)return alert('請先取得籤詩內容（籤號帶入或照片辨識）');
+  var poem=($('poem-text')||{}).value&&$('poem-text').value.trim();
+  if(!poem)return alert('請先取得籤詩內容，並確認籤詩原文欄位有內容');
+  if(!curSlip)curSlip={number:$('slip-num').value||'?'};
   var temple=$('inp-temple').value.trim()||'廟宇';
   var question=$('slip-question').value.trim();
   var rpts={work:$('rpt-work').value.trim(),side:$('rpt-side').value.trim(),health:$('rpt-health').value.trim(),finance:$('rpt-finance').value.trim(),chores:$('rpt-chores').value.trim()};
@@ -397,7 +407,9 @@ async function analyzeSlip(){
   btn.disabled=true;sp.style.display='block';
   res.innerHTML='<span style="color:var(--faint)">AI 解析中…</span>';res.style.display='block';
   try{
-    var prompt='你是廟宇籤詩解析專家，請以繁體中文提供三層解析。\n\n廟宇：'+temple+'\n籤號：第'+curSlip.number+'籤\n籤詩原文：\n'+curSlip.poem+'\n'+(curSlip.basicMeaning?'基本意涵：'+curSlip.basicMeaning+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n近期交代事項：\n'+rptLines+'\n\n請嚴格依以下格式回覆，各段落不可省略：\n\n## 籤詩意涵\n[白話翻譯與聖意，2-3句，說明這張籤的整體神意]\n\n## 籤意解析\n[單純解讀籤詩含意與運勢走向，不帶入個人問題，3-4句，直白清晰]\n\n## 問題綜合解析\n[嚴格比對求籤問題與近期交代事項，給出客製化深度解答與具體行動建議，4-6句]';
+    var poemVal=$('poem-text').value.trim();
+    var meaningVal=$('poem-meaning').value.trim();
+    var prompt='你是廟宇籤詩解析專家，請以繁體中文提供三層解析。\n\n廟宇：'+temple+'\n籤號：第'+curSlip.number+'籤\n籤詩原文：\n'+poemVal+'\n'+(meaningVal?'基本意涵：'+meaningVal+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n近期交代事項：\n'+rptLines+'\n\n請嚴格依以下格式回覆，各段落不可省略：\n\n## 籤詩意涵\n[白話翻譯與聖意，2-3句，說明這張籤的整體神意]\n\n## 籤意解析\n[單純解讀籤詩含意與運勢走向，不帶入個人問題，3-4句，直白清晰]\n\n## 問題綜合解析\n[嚴格比對求籤問題與近期交代事項，給出客製化深度解答與具體行動建議，4-6句]';
     var r=await groqCall([
       {role:'system',content:'你是精通易理與廟宇文化的籤詩解析顧問，分析具體有深度，不說空話，全程繁體中文。'},
       {role:'user',content:prompt}
@@ -432,7 +444,7 @@ function saveEntry(){
     reports:{work:$('rpt-work').value.trim(),side:$('rpt-side').value.trim(),health:$('rpt-health').value.trim(),finance:$('rpt-finance').value.trim(),chores:$('rpt-chores').value.trim()},
     customReports:getCustomReports(),
     hasSlip:slipOn,
-    slip:slipOn&&curSlip?{number:curSlip.number,poem:curSlip.poem,basicMeaning:curSlip.basicMeaning,photoData:curSlip.photoData||null,question:$('slip-question').value.trim(),aiRaw:aiRaw||''}:null
+    slip:slipOn&&curSlip?{number:curSlip.number,poem:($('poem-text')||{}).value||curSlip.poem,basicMeaning:($('poem-meaning')||{}).value||curSlip.basicMeaning||'',photoData:curSlip.photoData||null,question:$('slip-question').value.trim(),aiRaw:aiRaw||''}:null
   };
   if(editId){d.entries=d.entries.map(function(e){return e.id===editId?entry:e;});}
   else d.entries.push(entry);
@@ -444,6 +456,7 @@ function saveEntry(){
 function clearForm(){
   editId=null;
   $('form-title').textContent='新增參拜紀錄';
+  _dropBound=false;
   clearCustomFields();
   var n=new Date();$('inp-date').value=dkey(n);$('inp-time').value=n.toTimeString().slice(0,5);
   $('inp-temple').value='';
@@ -452,7 +465,7 @@ function clearForm(){
   $('slip-toggle').classList.remove('on');$('slip-section').style.display='none';
   $('slip-num').value='';$('slip-question').value='';
   photoB64=null;curSlip=null;aiRaw=null;
-  $('poem-box').style.display='none';
+  $('poem-box').style.display='none';$('poem-text').value='';$('poem-meaning').value='';$('poem-ai-note').textContent='';
   $('ai-result').style.display='none';$('ai-result').innerHTML='';
   $('photo-preview').style.display='none';$('photo-preview').src='';
   $('photo-hint').textContent='📸 點擊選取或拖曳上傳籤詩照片';
@@ -511,6 +524,7 @@ function editEntry(id){
   if(e.customReports)e.customReports.forEach(function(cr){addCustomField(cr.label,cr.content);});
   // 籤
   if(slipOn)toggleSlip();
+  _dropBound=false;
   curSlip=null;aiRaw=null;
   $('slip-num').value='';$('slip-question').value='';
   $('poem-box').style.display='none';$('ai-result').style.display='none';$('ai-result').innerHTML='';
