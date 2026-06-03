@@ -287,11 +287,11 @@ body{
             <input class="f-inp" id="c-item" placeholder="拿鐵、美式…"/>
           </div>
           <div>
-            <label class="f-lbl">甜點 Dessert</label>
+            <label class="f-lbl">甜點/餐食 Dessert</label>
             <input class="f-inp" id="c-dessert" placeholder="馬卡龍、司康…"/>
           </div>
           <div>
-            <label class="f-lbl">甜點價格 (NT$)</label>
+            <label class="f-lbl">甜點/餐食 價格 (NT$)</label>
             <input class="f-inp" id="c-dprice" type="number" min="0" placeholder="65"/>
           </div>
           <div>
@@ -596,9 +596,9 @@ function renderCoffeeLog(editId=null){
         <div class="log-edit-grid">
           <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
           <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-          <div><label class="f-lbl">甜點</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+          <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
           <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
-          <div><label class="f-lbl">甜點 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
+          <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
         </div>
         <div class="log-edit-actions">
           <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
@@ -608,7 +608,7 @@ function renderCoffeeLog(editId=null){
     }
     const desc=[e.cafe,e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
     const photoHtml=e.photo?`<img src="${e.photo}" class="log-thumb"/>`:'';
-    const priceHtml=[cp?`<span class="log-price" title="咖啡">☕$${cp}</span>`:'',dp?`<span class="log-price" title="甜點">🍰$${dp}</span>`:''].filter(Boolean).join('');
+    const priceHtml=[cp?`<span class="log-price" title="咖啡">☕$${cp}</span>`:'',dp?`<span class="log-price" title="甜點/餐食">🍰$${dp}</span>`:''].filter(Boolean).join('');
     return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${desc}</span>${priceHtml}<button class="log-edit" onclick="renderCoffeeLog('${e.id}')">✏️</button><button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
   }).join('');
 }
@@ -640,9 +640,9 @@ function showShopDetail(shop,editId=null){
         <div class="log-edit-grid">
           <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
           <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-          <div><label class="f-lbl">甜點</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+          <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
           <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
-          <div><label class="f-lbl">甜點 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
+          <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
         </div>
         <div class="log-edit-actions">
           <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
@@ -702,8 +702,8 @@ function renderCoffeeCalendar(){
   }).join('');
   document.getElementById('c-cal-grid').innerHTML=blanks+cells;
 }
-function cCalPrev(){cCalM--;if(cCalM<0){cCalM=11;cCalY--;}renderCoffeeCalendar();}
-function cCalNext(){cCalM++;if(cCalM>11){cCalM=0;cCalY++;}renderCoffeeCalendar();}
+function cCalPrev(){cCalM--;if(cCalM<0){cCalM=11;cCalY--;}renderCoffeeCalendar();renderCostAnalysis();}
+function cCalNext(){cCalM++;if(cCalM>11){cCalM=0;cCalY++;}renderCoffeeCalendar();renderCostAnalysis();}
 
 function renderWaterCalendar(){
   const map=buildDateMap('water');
@@ -747,9 +747,9 @@ function showDayDetail(key,type,editId=null){
           <div class="log-edit-grid">
             <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
             <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-            <div><label class="f-lbl">甜點</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+            <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
             <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
-            <div><label class="f-lbl">甜點 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
+            <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
           </div>
           <div class="log-edit-actions">
             <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
@@ -846,7 +846,10 @@ function renderCoffeeChart(){
 function renderCostAnalysis(){
   const d=loadRF();const all=d.entries||[];
   const now=new Date();const todayStr=now.toDateString();
-  const thisM=now.getMonth(),thisY=now.getFullYear();
+  // 跟著咖啡 calendar 顯示對應月份
+  const thisM=cCalM,thisY=cCalY;
+  const isCurrentMonth=(thisM===now.getMonth()&&thisY===now.getFullYear());
+  const monthLabel=isCurrentMonth?'本月':MN[thisM];
 
   const coffeeEntriesToday=all.filter(e=>e.type==='coffee'&&new Date(e.timestamp).toDateString()===todayStr);
   const todayCoffee=coffeeEntriesToday.reduce((s,e)=>s+(e.coffeePrice??e.price??0),0);
@@ -856,7 +859,7 @@ function renderCostAnalysis(){
   const monthCoffee=monthEntries.reduce((s,e)=>s+(e.coffeePrice??e.price??0),0);
   const monthDessert=monthEntries.reduce((s,e)=>s+(e.dessertPrice??0),0);
   const monthTotal=monthCoffee+monthDessert;
-  const daysElapsed=now.getDate();
+  const daysElapsed=isCurrentMonth?now.getDate():new Date(thisY,thisM+1,0).getDate();
   const dailyAvg=daysElapsed>0?Math.round(monthTotal/daysElapsed):0;
   const coffeeP=monthTotal>0?Math.round(monthCoffee/monthTotal*100):0;
   const dessertP=monthTotal>0?100-coffeeP:0;
@@ -917,17 +920,17 @@ function renderCostAnalysis(){
         <div class="cost-sub">${coffeeEntriesToday.length} 杯</div>
       </div>
       <div class="cost-stat" style="border-left:2.5px solid #c4aa7c;">
-        <div class="cost-lbl">今日 🍰 甜點</div>
+        <div class="cost-lbl">今日 🍰 甜點/餐食</div>
         <div class="cost-val">NT$${todayDessert}</div>
         <div class="cost-sub">${coffeeEntriesToday.filter(e=>(e.dessertPrice??0)>0||e.dessert).length} 項</div>
       </div>
       <div class="cost-stat" style="border-left:2.5px solid var(--ink);">
-        <div class="cost-lbl">本月總計</div>
+        <div class="cost-lbl">${monthLabel}總計</div>
         <div class="cost-val" style="color:${monthTotal>3000?'var(--danger)':monthTotal>1500?'var(--warn)':'var(--ink)'};">NT$${monthTotal}</div>
         <div class="cost-sub">${monthEntries.length} 筆</div>
       </div>
       <div class="cost-stat">
-        <div class="cost-lbl">本月日均</div>
+        <div class="cost-lbl">${monthLabel}日均</div>
         <div class="cost-val">NT$${dailyAvg}</div>
         <div class="cost-sub">前 ${daysElapsed} 天</div>
       </div>
@@ -940,7 +943,7 @@ function renderCostAnalysis(){
         <span class="cost-cat-amt">NT$${monthCoffee} <span style="color:var(--faint);font-weight:400;">(${coffeeP}%)</span></span>
       </div>
       <div class="cost-cat-row">
-        <span class="cost-cat-lbl">🍰 甜點</span>
+        <span class="cost-cat-lbl">🍰 甜點/餐食</span>
         <div class="cost-bar-wrap"><div class="cost-bar" style="width:${dessertP}%;background:#c4aa7c;"></div></div>
         <span class="cost-cat-amt">NT$${monthDessert} <span style="color:var(--faint);font-weight:400;">(${dessertP}%)</span></span>
       </div>
@@ -955,7 +958,7 @@ function renderCostAnalysis(){
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
       </div>
       ${renderTree('☕ 咖啡', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
-      ${renderTree('🍰 點心', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
+      ${renderTree('🍰 甜點/餐食', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
     </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
   `;
   renderCoffeeChart();
