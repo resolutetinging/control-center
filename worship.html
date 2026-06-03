@@ -196,7 +196,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 
     <!-- 照片流 -->
     <div class="slip-panel" id="panel-photo">
-      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+      <input type="file" id="photo-input" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:none" onchange="handlePhotoSelect(event)">
       <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-input').click()">
         <div class="photo-hint" id="photo-hint">📸 點擊選取或拖曳上傳籤詩照片</div>
         <img id="photo-preview" class="photo-preview">
@@ -312,10 +312,11 @@ function compressImage(dataUrl,maxW,maxH,quality,cb){
       if(w>maxW||h>maxH){var ratio=Math.min(maxW/w,maxH/h);w=Math.round(w*ratio);h=Math.round(h*ratio);}
       var c=document.createElement('canvas');c.width=w;c.height=h;
       c.getContext('2d').drawImage(img,0,0,w,h);
-      cb(c.toDataURL('image/jpeg',quality));
-    }catch(err){cb(dataUrl);}
+      var result=c.toDataURL('image/jpeg',quality);
+      cb(result);
+    }catch(err){cb(null);}
   };
-  img.onerror=function(){cb(dataUrl);};
+  img.onerror=function(){cb(null);};
   img.src=dataUrl;
 }
 function handlePhotoSelect(e){if(e.target.files[0])readPhoto(e.target.files[0]);}
@@ -323,6 +324,11 @@ function readPhoto(file){
   var r=new FileReader();
   r.onload=function(ev){
     compressImage(ev.target.result,1024,1024,0.82,function(compressed){
+      if(!compressed){
+        alert('無法處理此圖片格式。\n請將照片轉存為 JPG 或 PNG 後再試。\n（iPhone 可在「照片」App 中分享→轉換格式）');
+        $('photo-input').value='';
+        return;
+      }
       photoB64=compressed;
       $('photo-preview').src=compressed;$('photo-preview').style.display='block';
       $('photo-hint').textContent='✓ 照片已選取，點擊更換';
@@ -370,6 +376,11 @@ async function fetchSlipByNumber(){
 // ── 照片辨識 ──
 async function analyzePhoto(){
   if(!photoB64)return;
+  if(!photoB64.startsWith('data:image/jpeg')&&!photoB64.startsWith('data:image/png')&&!photoB64.startsWith('data:image/webp')){
+    alert('圖片格式不符（'+photoB64.slice(5,25)+'）\n請選取 JPG 或 PNG 格式的照片。');return;
+  }
+  var sizeKB=Math.round(photoB64.length*0.75/1024);
+  if(sizeKB>3800){alert('圖片太大（'+sizeKB+'KB），請縮小後再試。');return;}
   var temple=$('inp-temple').value.trim()||'廟宇';
   var btn=$('photo-btn'),sp=$('photo-sp');
   btn.disabled=true;sp.style.display='block';
@@ -384,7 +395,11 @@ async function analyzePhoto(){
     var num=nm?nm[1].trim().replace(/第|籤/g,'').trim():'?';
     curSlip={number:num,poem:pm?pm[1].trim():'',basicMeaning:mm?mm[1].trim():'',photoData:photoB64};
     showPoem(temple,num,curSlip.poem,curSlip.basicMeaning,false);
-  }catch(e){alert('AI 辨識失敗：'+e.message+'\n可改用籤號帶入後手動對照。');}
+  }catch(e){
+    var fmt=photoB64?photoB64.slice(5,30):'無圖';
+    var sz=photoB64?Math.round(photoB64.length*0.75/1024)+'KB':'';
+    alert('AI 辨識失敗：'+e.message+'\n格式：'+fmt+'\n大小：'+sz+'\n\n若持續失敗，請改用籤號帶入後手動輸入籤詩。');
+  }
   btn.disabled=false;sp.style.display='none';
 }
 
