@@ -156,6 +156,10 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .opt-ltr{font-size:10.5px;font-weight:700;background:rgba(40,38,32,.08);border-radius:5px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .opt-btn.correct .opt-ltr{background:rgba(61,106,82,.22)}
 .opt-btn.wrong .opt-ltr{background:rgba(176,96,50,.18);color:#9a4020}
+.result-action-bar{display:flex;gap:10px;justify-content:center;margin-top:18px;padding-top:14px;border-top:.5px solid var(--bstr)}
+.overall-section{background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.overall-hdr{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+.overall-body{font-size:13.5px;line-height:1.75;color:var(--ink);white-space:pre-wrap}
 .idiom-sentence{font-size:19px;font-weight:500;line-height:1.7;color:var(--ink);margin-bottom:18px}
 .idiom-blank{background:rgba(61,106,82,.1);border-bottom:2px solid var(--en);color:var(--en);padding:1px 7px;border-radius:4px;font-weight:600;letter-spacing:.03em}
 .reveal-verdict{font-size:13.5px;font-weight:700;margin-bottom:12px;padding:10px 14px;border-radius:9px;display:flex;align-items:center;gap:7px}
@@ -329,6 +333,17 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       </div>
     </div>
 
+    <div class="result-action-bar">
+      <button class="btn btn-ghost" onclick="resetAll()">↩ 換下一句</button>
+      <button class="btn btn-ghost" id="overall-btn" onclick="runOverallAnalysis()" style="display:none">📊 綜合分析</button>
+    </div>
+  </div>
+
+  <!-- Overall Analysis -->
+  <div class="overall-section" id="overall-section" style="display:none">
+    <div class="overall-hdr">📊 本次練習綜合分析</div>
+    <div id="overall-loading" style="display:none;font-size:13px;color:var(--faint);padding:8px 0;">AI 分析中…</div>
+    <div class="overall-body" id="overall-body"></div>
   </div>
 
   <!-- Saved phrases -->
@@ -419,6 +434,7 @@ let timerMode = 30;
 let results = {};
 let savedOpen = false;
 let usedOpeners = []; // 追蹤已出現的 opener，避免重複
+let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
@@ -669,6 +685,15 @@ Output ONLY valid JSON:
     $('text-pro').textContent  = results.pro||'—';
     $('text-ball').textContent = results.ball||'—';
     ['safe','pro','ball'].forEach(t=>{ const b=$('save-'+t); b.textContent='⭐ 收藏'; b.classList.remove('saved'); });
+    // 記錄本輪至 sessionLog
+    if(inp){
+      sessionLog.push({
+        sit: curSit?.zh||'', opener: curOpener, reply: inp,
+        verdict: (results.fb_ball_verdict||'').trim().toLowerCase(),
+        fbTone: results.fb_tone||'', fbAdd: results.fb_add||''
+      });
+      if(sessionLog.length>=2) $('overall-btn').style.display='inline-flex';
+    }
     $hide('loading-result'); $show('result-section');
     window.scrollTo({top:document.getElementById('result-section').offsetTop-80,behavior:'smooth'});
   }catch(e){
@@ -726,6 +751,51 @@ function toggleSaved(){
 }
 
 // ── Reset ──
+async function runOverallAnalysis(){
+  if(sessionLog.length<2) return;
+  const sec=$('overall-section'), body=$('overall-body'), loading=$('overall-loading');
+  sec.style.display='block';
+  loading.style.display='block'; body.textContent='';
+  sec.scrollIntoView({behavior:'smooth', block:'start'});
+  const lines = sessionLog.map((r,i)=>`Round ${i+1}｜場合：${r.sit}
+  對方：${r.opener}
+  學員回覆：${r.reply}
+  接球結果：${r.verdict}
+  語氣分析：${r.fbTone}
+  補充建議：${r.fbAdd}`).join('\n\n');
+  const caught = sessionLog.filter(r=>r.verdict==='caught').length;
+  const partial = sessionLog.filter(r=>r.verdict==='partial').length;
+  const missed = sessionLog.filter(r=>r.verdict==='missed').length;
+  const prompt = `You are an English conversation coach. Analyze this learner's Small Talk practice session (${sessionLog.length} rounds, catch rate: ${caught} caught / ${partial} partial / ${missed} missed).
+
+${lines}
+
+Write a concise performance report in Traditional Chinese (繁體中文). Structure:
+
+## 整體表現
+（2句，說明接球率與整體模式）
+
+## 做得好的地方
+- （具體舉例，引用學員實際回覆）
+- （具體舉例）
+
+## 需要加強
+- （具體說明問題模式，引用例子）
+- （具體說明）
+
+## 本週練習重點
+1. （具體可執行的練習建議）
+2. （具體建議）
+3. （具體建議）`;
+  try{
+    const r = await callGroq(prompt, 600, 'You are an English conversation coach. Output in Traditional Chinese (繁體中文) only.');
+    body.textContent = r;
+  }catch(e){
+    body.textContent = '分析失敗：'+e.message;
+  }
+  loading.style.display='none';
+}
+
 function resetAll(){
   clearTimer();
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-opener'); $hide('loading-result');
@@ -764,6 +834,7 @@ let curTopic = null;
 let curQ = null;
 let libOpen = false;
 let addedToLib = false;
+let usedIdioms = [];   // 追蹤已出現的 idiom，避免重複
 
 function pickTopic(key){
   curTopic = key;
@@ -781,11 +852,17 @@ async function genQuestion(){
   if(skipBtn) skipBtn.disabled = true;
   try{
     const topic = IDIOM_TOPICS[curTopic];
+    const skipList = usedIdioms.slice(-10).join(', ');
     const prompt = `You are creating a business English vocabulary quiz.
 
 Topic: ${topic.en}
-
+${skipList?`\nDo NOT use any of these as the correct answer: ${skipList}\n`:''}
 Generate ONE natural business sentence with a key idiom/collocation replaced by "______".
+
+CRITICAL BLANK RULES (violation = bad question):
+1. The blank must contain the COMPLETE idiom — no part of the idiom should appear outside the blank in the surrounding sentence.
+2. NEVER split a phrasal verb across the blank and surrounding text. BAD: "really ______ me off" (because "me off" is part of "tick me off"). GOOD: "He was really ______ about the feedback" (blank = "worked up").
+3. After inserting the correct answer into the blank, the full sentence must be grammatically natural.
 
 Return ONLY valid JSON, no markdown, no extra text:
 {"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
@@ -862,6 +939,11 @@ function selectOpt(idx){
   const addBtn=$('add-lib-btn');
   if(addBtn){ addBtn.textContent='📚 加入字庫'; addBtn.disabled=false; }
   addedToLib=false;
+  // 追蹤已出現 idiom，避免重複
+  if(curQ.correct && !usedIdioms.includes(curQ.correct)){
+    usedIdioms.push(curQ.correct);
+    if(usedIdioms.length>15) usedIdioms.shift();
+  }
 
   $show('idiom-reveal');
   setTimeout(()=>window.scrollTo({top:$('idiom-reveal').offsetTop-80,behavior:'smooth'}),150);
@@ -883,13 +965,12 @@ function addToLib(){
   addedToLib=true;
   const addBtn=$('add-lib-btn');
   if(addBtn){ addBtn.textContent='✓ 已加入'; addBtn.disabled=true; }
-  renderLib(true);
+  renderLib();   // 不自動展開，只更新 badge
 }
 
-function renderLib(autoOpen=false){
+function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   $('lib-badge').textContent = lib.length;
-  if(autoOpen&&!libOpen) toggleLib();
   if(!libOpen) return;
   $('lib-list').innerHTML = lib.length
     ? lib.map((item,i)=>`
