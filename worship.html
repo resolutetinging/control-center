@@ -283,14 +283,27 @@ function setSlipTab(t){
 }
 
 // ── Photo ──
+function compressImage(dataUrl,maxW,maxH,quality,cb){
+  var img=new Image();
+  img.onload=function(){
+    var w=img.width,h=img.height;
+    if(w>maxW||h>maxH){var ratio=Math.min(maxW/w,maxH/h);w=Math.round(w*ratio);h=Math.round(h*ratio);}
+    var c=document.createElement('canvas');c.width=w;c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);
+    cb(c.toDataURL('image/jpeg',quality));
+  };
+  img.src=dataUrl;
+}
 function handlePhotoSelect(e){if(e.target.files[0])readPhoto(e.target.files[0]);}
 function readPhoto(file){
   var r=new FileReader();
   r.onload=function(ev){
-    photoB64=ev.target.result;
-    $('photo-preview').src=photoB64;$('photo-preview').style.display='block';
-    $('photo-hint').textContent='✓ 照片已選取，點擊更換';
-    $('photo-btn').style.display='inline-flex';
+    compressImage(ev.target.result,1024,1024,0.82,function(compressed){
+      photoB64=compressed;
+      $('photo-preview').src=compressed;$('photo-preview').style.display='block';
+      $('photo-hint').textContent='✓ 照片已選取，點擊更換';
+      $('photo-btn').style.display='inline-flex';
+    });
   };
   r.readAsDataURL(file);
 }
