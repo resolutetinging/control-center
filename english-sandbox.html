@@ -976,9 +976,12 @@ function renderLib(){
     ? lib.map((item,i)=>`
         <div class="saved-item">
           <div class="saved-body">
-            <div class="saved-text" style="font-weight:600">${esc(item.idiom)}</div>
-            <div class="saved-context" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:3px">${esc(item.sentence)}</div>
-            <div class="saved-context">${esc(item.topic)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+              <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}</span>
+              <span style="font-size:10.5px;color:var(--faint);white-space:nowrap;flex-shrink:0">${esc(item.topic||'')}</span>
+            </div>
+            ${item.example?`<div style="font-size:12px;color:var(--sub);margin-top:5px;font-style:italic;line-height:1.55">${esc(item.example)}</div>`:''}
+            ${item.explain_zh?`<div style="font-size:11.5px;color:var(--faint);margin-top:4px;line-height:1.6">${esc(item.explain_zh)}</div>`:''}
           </div>
           <button class="del-btn" onclick="delLib(${i})" title="移除">✕</button>
         </div>`).join('')
