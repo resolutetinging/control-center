@@ -196,11 +196,11 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 
     <!-- 照片流 -->
     <div class="slip-panel" id="panel-photo">
-      <label class="photo-drop" for="photo-input" id="photo-drop">
-        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-input').click()">
         <div class="photo-hint" id="photo-hint">📸 點擊選取或拖曳上傳籤詩照片</div>
         <img id="photo-preview" class="photo-preview">
-      </label>
+      </div>
       <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
         <button class="btn btn-temple" id="photo-btn" onclick="analyzePhoto()" style="display:none">
           <span class="sp" id="photo-sp"></span>AI 辨識照片
@@ -210,7 +210,10 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 
     <!-- 籤詩顯示（可編輯） -->
     <div class="poem-box" id="poem-box">
-      <div class="poem-num" id="poem-num-lbl"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
+        <div class="poem-num" id="poem-num-lbl"></div>
+        <button type="button" class="btn btn-outline" style="font-size:.68rem;padding:.15rem .5rem" onclick="clearPoem()">重設</button>
+      </div>
       <div class="poem-ai-note" id="poem-ai-note"></div>
       <label class="lbl">籤詩原文</label>
       <textarea class="poem-text" id="poem-text" rows="4" placeholder="籤詩原文（可直接修正）…"></textarea>
@@ -304,12 +307,15 @@ function setSlipTab(t){
 function compressImage(dataUrl,maxW,maxH,quality,cb){
   var img=new Image();
   img.onload=function(){
-    var w=img.width,h=img.height;
-    if(w>maxW||h>maxH){var ratio=Math.min(maxW/w,maxH/h);w=Math.round(w*ratio);h=Math.round(h*ratio);}
-    var c=document.createElement('canvas');c.width=w;c.height=h;
-    c.getContext('2d').drawImage(img,0,0,w,h);
-    cb(c.toDataURL('image/jpeg',quality));
+    try{
+      var w=img.width,h=img.height;
+      if(w>maxW||h>maxH){var ratio=Math.min(maxW/w,maxH/h);w=Math.round(w*ratio);h=Math.round(h*ratio);}
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',quality));
+    }catch(err){cb(dataUrl);}
   };
+  img.onerror=function(){cb(dataUrl);};
   img.src=dataUrl;
 }
 function handlePhotoSelect(e){if(e.target.files[0])readPhoto(e.target.files[0]);}
@@ -382,6 +388,16 @@ async function analyzePhoto(){
   btn.disabled=false;sp.style.display='none';
 }
 
+function clearPoem(){
+  curSlip=null;aiRaw=null;photoB64=null;
+  $('slip-num').value='';
+  $('poem-box').style.display='none';
+  $('poem-text').value='';$('poem-meaning').value='';$('poem-ai-note').textContent='';
+  $('ai-result').style.display='none';$('ai-result').innerHTML='';
+  $('photo-preview').style.display='none';$('photo-preview').src='';
+  $('photo-hint').textContent='📸 點擊選取或拖曳上傳籤詩照片';
+  $('photo-btn').style.display='none';$('photo-input').value='';
+}
 function showPoem(temple,num,poem,meaning,isAiRef){
   $('poem-num-lbl').textContent='⛩ '+temple+' · 第 '+num+' 籤';
   $('poem-text').value=poem;
@@ -527,7 +543,8 @@ function editEntry(id){
   _dropBound=false;
   curSlip=null;aiRaw=null;
   $('slip-num').value='';$('slip-question').value='';
-  $('poem-box').style.display='none';$('ai-result').style.display='none';$('ai-result').innerHTML='';
+  $('poem-box').style.display='none';$('poem-text').value='';$('poem-meaning').value='';$('poem-ai-note').textContent='';
+  $('ai-result').style.display='none';$('ai-result').innerHTML='';
   if(e.hasSlip&&e.slip){
     if(!slipOn)toggleSlip();
     curSlip={number:e.slip.number,poem:e.slip.poem,basicMeaning:e.slip.basicMeaning,photoData:e.slip.photoData||null};
