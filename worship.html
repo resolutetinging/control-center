@@ -689,7 +689,7 @@ function renderTimeline(){
     return '<div class="tl-node"><div class="tl-dot"></div><div class="tl-content">'+
       '<div class="tl-meta">'+e.date+(e.time?' '+e.time:'')+'</div>'+
       '<div class="tl-temple">⛩ '+e.temple+'</div>'+
-      '<div class="tl-report">'+(isCustom?(customLabel+'：'+((e.customReports.find(function(cr){return cr.label===customLabel;})||{}).content||'')):(CAT_LABELS[cat]+'：'+e.reports[cat])).replace(/\n/g,'<br>')+'</div>'+
+      (function(){var lbl=isCustom?customLabel:CAT_LABELS[cat];var body=isCustom?((e.customReports.find(function(cr){return cr.label===customLabel;})||{}).content||''):e.reports[cat];return'<div class="tl-report"><span style="font-size:.72rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;">'+lbl+'</span><br>'+body.replace(/\n/g,'<br>')+'</div>';})()+'
       slipHtml+'</div></div>';
   }).join('');
 }
