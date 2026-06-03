@@ -497,15 +497,14 @@ async function analyzeSlip(){
   try{
     var poemVal=$('poem-text').value.trim();
     var meaningVal=$('poem-meaning').value.trim();
-    // 整理有填寫的分類清單（用於逐項指引）
-    var allCats=Object.entries({'正職':rpts.work,'副業':rpts.side,'健康':rpts.health,'財務':rpts.finance,'家務':rpts.chores})
-      .filter(function(e){return e[1];}).map(function(e){return e[0]+'：'+e[1];});
-    customRpts.filter(function(c){return c.content;}).forEach(function(c){allCats.push(c.label+'：'+c.content);});
-    var catsBlock=allCats.length?allCats.map(function(c){return'- '+c;}).join('\n'):'（未填寫）';
-    var catsGuide=allCats.length
-      ?allCats.map(function(c){var lbl=c.split('：')[0];return'**'+lbl+'**：（依籤意給出1-2句具體指引）';}).join('\n')
+    // 有填值的分類名稱（只取 label，不帶 input 內容）
+    var filledCats=Object.entries({'正職':rpts.work,'副業':rpts.side,'健康':rpts.health,'財務':rpts.finance,'家務':rpts.chores})
+      .filter(function(e){return e[1];}).map(function(e){return e[0];});
+    customRpts.filter(function(c){return c.content;}).forEach(function(c){filledCats.push(c.label);});
+    var catsGuide=filledCats.length
+      ?filledCats.map(function(lbl){return'**'+lbl+'**：（此籤在'+lbl+'方面的指引，1-2句，直接引用籤意）';}).join('\n')
       :'（無分類，給出整體建議）';
-    var prompt='廟宇：'+temple+'　籤號：第'+slipNum+'籤\n\n籤詩原文：\n'+poemVal+'\n'+(meaningVal?'聖意：'+meaningVal+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n近期各項事務：\n'+catsBlock+'\n\n請嚴格依以下格式回覆：\n\n## 籤詩意涵\n[整體神意白話說明，2句]\n\n## 各項指引\n'+catsGuide+'\n\n## 綜合建議\n[結合籤意與求籤問題，給出最關鍵行動方向，2-3句]';
+    var prompt='廟宇：'+temple+'　籤號：第'+slipNum+'籤\n\n籤詩原文：\n'+poemVal+'\n'+(meaningVal?'聖意：'+meaningVal+'\n':'')+'\n求籤問題：'+(question||'（未指定）')+'\n\n請嚴格依以下格式回覆：\n\n## 籤詩意涵\n[整體神意白話說明，2句]\n\n## 各項指引\n'+catsGuide+'\n\n## 綜合建議\n[結合籤意與求籤問題，給出最關鍵行動方向，2-3句]';
     var r=await groqCall([
       {role:'system',content:'你是廟宇籤詩解析顧問，擅長將籤詩智慧對應到求籤者的具體生活分類。每一項指引必須直接引用籤詩意象或聖意內容來支撐，不說空話，全程繁體中文。'},
       {role:'user',content:prompt}
