@@ -127,6 +127,12 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 .hist-del{font-size:.7rem;color:var(--faint);cursor:pointer;padding:.18rem .4rem;border-radius:4px;border:1px solid transparent;transition:all .15s;}
 .hist-del:hover{color:var(--danger);border-color:var(--danger);}
 .empty{text-align:center;color:var(--faint);padding:2rem;font-size:.84rem;}
+.hist-edit{font-size:.7rem;color:var(--faint);cursor:pointer;padding:.18rem .4rem;border-radius:4px;border:1px solid transparent;transition:all .15s;}
+.hist-edit:hover{color:var(--temple);border-color:var(--temple);}
+.custom-frow{display:grid;grid-template-columns:88px 1fr auto;gap:.4rem;align-items:start;margin-top:.45rem;}
+.custom-frow input[type=text]{width:100%;}
+.del-custom{padding:.42rem .55rem;background:rgba(40,38,32,.05);border:1px solid var(--border);border-radius:var(--rsm);cursor:pointer;color:var(--faint);font-size:.78rem;line-height:1;transition:all .15s;}
+.del-custom:hover{color:var(--danger);border-color:var(--danger);}
 </style>
 </head>
 <body>
@@ -136,7 +142,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 <!-- ── 新增紀錄 ── -->
 <div class="card">
   <div class="sec-lbl">
-    <span>新增參拜紀錄</span>
+    <span id="form-title">新增參拜紀錄</span>
     <button class="btn btn-outline" style="font-size:.72rem;padding:.22rem .6rem" onclick="loadLastReports()">沿用上次交代事項</button>
   </div>
   <div class="grid3">
@@ -156,6 +162,10 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
   <div class="fg" style="margin-top:.6rem">
     <label class="lbl">家務</label>
     <textarea id="rpt-chores" placeholder="家務或生活事務…" rows="2"></textarea>
+  </div>
+  <div id="custom-fields-wrap"></div>
+  <div style="margin-top:.5rem">
+    <button type="button" class="btn btn-outline" style="font-size:.72rem;padding:.22rem .6rem" onclick="addCustomField()">＋ 新增分類</button>
   </div>
 
   <hr class="sep">
@@ -250,7 +260,7 @@ const WP_KEY='worship_v1', GROQ_STORE='tina_groq';
 const TEXT_MDL='llama-3.1-8b-instant', VIS_MDL='meta-llama/llama-4-scout-17b-16e-instruct';
 const CAT_LABELS={work:'正職',side:'副業',health:'健康',finance:'財務',chores:'家務'};
 
-var slipOn=false,slipTab='num',photoB64=null,curSlip=null,aiRaw=null,editId=null;
+var slipOn=false,slipTab='num',photoB64=null,curSlip=null,aiRaw=null,editId=null,_customIdx=0;
 
 function $(id){return document.getElementById(id);}
 function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -365,7 +375,11 @@ async function analyzeSlip(){
   var temple=$('inp-temple').value.trim()||'廟宇';
   var question=$('slip-question').value.trim();
   var rpts={work:$('rpt-work').value.trim(),side:$('rpt-side').value.trim(),health:$('rpt-health').value.trim(),finance:$('rpt-finance').value.trim(),chores:$('rpt-chores').value.trim()};
-  var rptLines=Object.entries({'正職':rpts.work,'副業':rpts.side,'健康':rpts.health,'財務':rpts.finance,'家務':rpts.chores}).filter(function(e){return e[1];}).map(function(e){return'- '+e[0]+'：'+e[1];}).join('\n')||'（未填寫）';
+  var customRpts=getCustomReports();
+  var rptLines=[
+    Object.entries({'正職':rpts.work,'副業':rpts.side,'健康':rpts.health,'財務':rpts.finance,'家務':rpts.chores}).filter(function(e){return e[1];}).map(function(e){return'- '+e[0]+'：'+e[1];}).join('\n'),
+    customRpts.filter(function(cr){return cr.content;}).map(function(cr){return'- '+cr.label+'：'+cr.content;}).join('\n')
+  ].filter(Boolean).join('\n')||'（未填寫）';
   var btn=$('analyze-btn'),sp=$('analyze-sp'),res=$('ai-result');
   btn.disabled=true;sp.style.display='block';
   res.innerHTML='<span style="color:var(--faint)">AI 解析中…</span>';res.style.display='block';
@@ -403,6 +417,7 @@ function saveEntry(){
     time:$('inp-time').value,
     temple:temple,
     reports:{work:$('rpt-work').value.trim(),side:$('rpt-side').value.trim(),health:$('rpt-health').value.trim(),finance:$('rpt-finance').value.trim(),chores:$('rpt-chores').value.trim()},
+    customReports:getCustomReports(),
     hasSlip:slipOn,
     slip:slipOn&&curSlip?{number:curSlip.number,poem:curSlip.poem,basicMeaning:curSlip.basicMeaning,photoData:curSlip.photoData||null,question:$('slip-question').value.trim(),aiRaw:aiRaw||''}:null
   };
@@ -415,6 +430,8 @@ function saveEntry(){
 
 function clearForm(){
   editId=null;
+  $('form-title').textContent='新增參拜紀錄';
+  clearCustomFields();
   var n=new Date();$('inp-date').value=dkey(n);$('inp-time').value=n.toTimeString().slice(0,5);
   $('inp-temple').value='';
   ['work','side','health','finance','chores'].forEach(function(k){$('rpt-'+k).value='';});
@@ -435,13 +452,111 @@ function loadLastReports(){
   if(!last||!last.reports)return alert('尚無歷史紀錄可沿用');
   ['work','side','health','finance','chores'].forEach(function(k){if(last.reports[k])$('rpt-'+k).value=last.reports[k];});
   if(last.temple&&!$('inp-temple').value)$('inp-temple').value=last.temple;
+  clearCustomFields();
+  if(last.customReports)last.customReports.forEach(function(cr){addCustomField(cr.label,cr.content);});
+}
+
+// ── 自訂分類 ──
+function addCustomField(label,content){
+  label=label||'';content=content||'';
+  var idx=_customIdx++;
+  var wrap=document.createElement('div');
+  wrap.className='custom-frow';wrap.id='custom-row-'+idx;
+  var li=document.createElement('input');
+  li.type='text';li.id='custom-lbl-'+idx;li.placeholder='分類名稱';li.value=label;
+  var ta=document.createElement('textarea');
+  ta.id='custom-val-'+idx;ta.placeholder='內容…';ta.rows=2;ta.value=content;
+  var db=document.createElement('button');
+  db.type='button';db.className='del-custom';db.textContent='✕';
+  db.onclick=(function(i){return function(){var r=$('custom-row-'+i);if(r)r.remove();};})(idx);
+  wrap.appendChild(li);wrap.appendChild(ta);wrap.appendChild(db);
+  $('custom-fields-wrap').appendChild(wrap);
+}
+function getCustomReports(){
+  var res=[];
+  $('custom-fields-wrap').querySelectorAll('[id^="custom-row-"]').forEach(function(row){
+    var idx=row.id.replace('custom-row-','');
+    var lbl=($('custom-lbl-'+idx)||{}).value||'';
+    var val=($('custom-val-'+idx)||{}).value||'';
+    if(lbl.trim()||val.trim())res.push({label:lbl.trim(),content:val.trim()});
+  });
+  return res;
+}
+function clearCustomFields(){$('custom-fields-wrap').innerHTML='';_customIdx=0;}
+
+// ── 編輯已有紀錄 ──
+function editEntry(id){
+  var d=loadWP();
+  var e=d.entries.find(function(x){return x.id===id;});
+  if(!e)return;
+  editId=e.id;
+  $('inp-date').value=e.date;
+  $('inp-time').value=e.time||'';
+  $('inp-temple').value=e.temple;
+  ['work','side','health','finance','chores'].forEach(function(k){$('rpt-'+k).value=(e.reports&&e.reports[k])||'';});
+  clearCustomFields();
+  if(e.customReports)e.customReports.forEach(function(cr){addCustomField(cr.label,cr.content);});
+  // 籤
+  if(slipOn)toggleSlip();
+  curSlip=null;aiRaw=null;
+  $('slip-num').value='';$('slip-question').value='';
+  $('poem-box').style.display='none';$('ai-result').style.display='none';$('ai-result').innerHTML='';
+  if(e.hasSlip&&e.slip){
+    if(!slipOn)toggleSlip();
+    curSlip={number:e.slip.number,poem:e.slip.poem,basicMeaning:e.slip.basicMeaning,photoData:e.slip.photoData||null};
+    $('slip-num').value=e.slip.number;
+    $('slip-question').value=e.slip.question||'';
+    aiRaw=e.slip.aiRaw||null;
+    showPoem(e.temple,e.slip.number,e.slip.poem,e.slip.basicMeaning);
+    if(aiRaw){
+      var r=aiRaw;var secs={};
+      ['籤詩意涵','籤意解析','問題綜合解析'].forEach(function(n){
+        var m=r.match(new RegExp('##\\s*'+n+'\\s*([\\s\\S]+?)(?=##|$)'));
+        secs[n]=m?m[1].trim():'';
+      });
+      $('ai-result').innerHTML=[
+        {t:'一、籤詩意涵',b:secs['籤詩意涵']},
+        {t:'二、籤意解析',b:secs['籤意解析']},
+        {t:'三、問題綜合解析',b:secs['問題綜合解析']}
+      ].filter(function(s){return s.b;}).map(function(s){
+        return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+s.b.replace(/\n/g,'<br>')+'</div></div>';
+      }).join('');
+      $('ai-result').style.display='block';
+    }
+  }
+  $('form-title').textContent='✏️ 編輯紀錄';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── 自訂分類 select 更新 ──
+function updateCatSelect(){
+  var d=loadWP();
+  var customLabels=[];
+  d.entries.forEach(function(e){
+    if(e.customReports)e.customReports.forEach(function(cr){
+      if(cr.label&&cr.content&&customLabels.indexOf(cr.label)<0)customLabels.push(cr.label);
+    });
+  });
+  var sel=$('cat-select');
+  while(sel.options.length>5)sel.remove(5);
+  customLabels.forEach(function(lbl){
+    var opt=document.createElement('option');opt.value='custom:'+lbl;opt.textContent=lbl;sel.appendChild(opt);
+  });
 }
 
 // ── 分類時間軸 ──
 function renderTimeline(){
-  var cat=$('cat-select').value;
+  var val=$('cat-select').value;
+  var isCustom=val.indexOf('custom:')=== 0;
+  var customLabel=isCustom?val.slice(7):'';
+  var cat=isCustom?'':val;
   var d=loadWP();
-  var rel=d.entries.filter(function(e){return e.reports&&e.reports[cat];}).sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);});
+  var rel;
+  if(isCustom){
+    rel=d.entries.filter(function(e){return e.customReports&&e.customReports.some(function(cr){return cr.label===customLabel&&cr.content;});}).sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);});
+  } else {
+    rel=d.entries.filter(function(e){return e.reports&&e.reports[cat];}).sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);});
+  }
   $('timeline-card').style.display=rel.length?'block':'none';
   if(!rel.length){$('timeline').innerHTML='<div class="empty">此分類尚無紀錄</div>';return;}
   $('timeline').innerHTML=rel.map(function(e,i){
@@ -458,7 +573,7 @@ function renderTimeline(){
     return '<div class="tl-node"><div class="tl-dot"></div><div class="tl-content">'+
       '<div class="tl-meta">'+e.date+(e.time?' '+e.time:'')+'</div>'+
       '<div class="tl-temple">⛩ '+e.temple+'</div>'+
-      '<div class="tl-report">'+CAT_LABELS[cat]+'：'+e.reports[cat]+'</div>'+
+      '<div class="tl-report">'+(isCustom?(customLabel+'：'+(e.customReports.find(function(cr){return cr.label===customLabel;})||{}).content):(CAT_LABELS[cat]+'：'+e.reports[cat]))+'</div>'+
       slipHtml+'</div></div>';
   }).join('');
 }
@@ -481,6 +596,7 @@ function renderHistory(){
     return '<div class="hist-item">'+
       '<div class="hist-top"><span class="hist-temple">⛩ '+e.temple+'</span>'+
       '<div style="display:flex;align-items:center;gap:.4rem">'+
+      '<span class="hist-edit" onclick="editEntry(\''+e.id+'\')">✏️</span>'+
       '<span class="hist-del" onclick="delEntry(event,\''+e.id+'\')">✕</span>'+
       '<span class="hist-date">'+e.date+(e.time?' '+e.time:'')+'</span></div></div>'+
       '<div class="hist-tags">'+cats+slip+'</div></div>';
@@ -493,7 +609,7 @@ function delEntry(evt,id){
   var d=loadWP();d.entries=d.entries.filter(function(e){return e.id!==id;});saveWP(d);renderAll();
 }
 
-function renderAll(){renderHistory();renderTimeline();}
+function renderAll(){updateCatSelect();renderHistory();renderTimeline();}
 
 // ── Init ──
 (function(){
