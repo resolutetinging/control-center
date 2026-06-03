@@ -444,7 +444,7 @@ async function genMeaning(){
   var poem=$('poem-text').value.trim();
   if(!poem)return alert('請先填入籤詩原文');
   var temple=$('inp-temple').value.trim()||'廟宇';
-  var num=curSlip?curSlip.number:'?';
+  var num=($('slip-num').value||'').trim()||(curSlip?String(curSlip.number||'?'):'?');
   var btn=$('gen-meaning-btn'),sp=$('gen-meaning-sp');
   btn.disabled=true;sp.style.display='inline-block';
   try{
