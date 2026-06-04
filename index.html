@@ -397,6 +397,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   #lab-mobile-card{display:block;}
   .lab-icon-grid{grid-template-columns:repeat(4,1fr);}
 
+  /* Guard: snooze btn 向上移，避免與 guard-group 水平重疊 */
+  #guard-snooze-btn{bottom:calc(env(safe-area-inset-bottom,0px) + 72px)!important;}
+
   /* Tooltip not usable on touch; hide it */
   #tooltip{display:none!important;}
 }
@@ -424,6 +427,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
 <button id="lab-btn" onclick="openLab()" title="實驗中">🧪</button>
+
+<!-- Lab Mobile Card (visible only on touch devices, between header and dock) -->
+<div id="lab-mobile-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)">🧪 實驗中</div>
+    <button onclick="openLab();switchLabTab('links')" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--faint);padding:2px 6px;border-radius:7px;line-height:1;" title="管理連結">⚙️</button>
+  </div>
+  <div class="lab-icon-grid" id="lab-mobile-grid"></div>
+</div>
 
 <!-- DOCK -->
 <div id="dock-outer">
@@ -495,15 +507,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <span class="d-lbl">Astro</span>
     </div>
   </div>
-</div>
-
-<!-- Lab Mobile Card -->
-<div id="lab-mobile-card">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)">🧪 實驗中</div>
-    <button onclick="openLab();switchLabTab('links')" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--faint);padding:2px 6px;border-radius:7px;line-height:1;" title="管理連結">⚙️</button>
-  </div>
-  <div class="lab-icon-grid" id="lab-mobile-grid"></div>
 </div>
 
 <!-- Lab Overlay -->
