@@ -120,6 +120,12 @@ body{position:relative;}
 .lab-inp:focus{border-color:var(--accent);}
 .lab-add-btn{padding:8px 16px;border-radius:9px;background:var(--ink);color:var(--card);border:none;font-size:13px;font-family:inherit;cursor:pointer;transition:background .15s;}
 .lab-add-btn:hover{background:#3a352e;}
+.lab-emoji-btn{width:46px;height:38px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;}
+.lab-emoji-btn:hover{background:rgba(255,255,255,.9);}
+.lab-emoji-picker{display:none;position:absolute;z-index:100;background:rgba(244,241,236,.98);border:.5px solid var(--bstr);border-radius:12px;padding:8px;box-shadow:0 8px 30px rgba(40,38,32,.15);display:grid;grid-template-columns:repeat(5,1fr);gap:4px;width:194px;}
+.lab-emoji-picker.hidden{display:none!important;}
+.ep-opt{font-size:22px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;border:none;background:none;transition:background .12s;}
+.ep-opt:hover{background:rgba(40,38,32,.08);}
 /* Mobile lab card */
 #lab-mobile-card{display:none;margin:16px 12px 0;padding:16px;background:rgba(244,241,236,.82);border:.5px solid var(--bstr);border-radius:18px;}
 
@@ -1659,11 +1665,18 @@ function renderLabContent(){
       :'<div style="color:var(--faint);font-size:.8rem;text-align:center;padding-top:40px">尚無專案，切換到「連結管理」新增。</div>';
   }else{
     const inp='style="width:100%;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;display:block"';
+    const EP_EMOJIS=['🌐','📱','💻','🚀','⚡','💡','🎯','🎨','📚','📊','🎵','🌊','✨','🏆','🎮','🧩','📝','🌟','🔮','🌱'];
     el.innerHTML=`<div style="margin-bottom:14px">
       <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:10px">新增專案</div>
-      <input id="lab-new-name" ${inp} placeholder="名稱（如：WordVault Kids）">
+      <input id="lab-new-name" ${inp} placeholder="名稱（如：WordVault Kids）" oninput="labAutoEmoji(this.value)">
       <input id="lab-new-url" ${inp} placeholder="URL（如：https://...）">
-      <div style="display:flex;gap:8px;margin-bottom:8px"><input id="lab-new-emoji" style="width:72px;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;text-align:center" placeholder="Emoji"><button class="lab-add-btn" onclick="addLabProject()">➕ 新增</button></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;position:relative">
+        <button class="lab-emoji-btn" id="lab-ep-btn" onclick="labTogglePicker(event)" title="選擇 Emoji">🌐</button>
+        <div class="lab-emoji-picker hidden" id="lab-ep-picker">
+          ${EP_EMOJIS.map(e=>`<button class="ep-opt" onclick="labPickEmoji('${e}')">${e}</button>`).join('')}
+        </div>
+        <button class="lab-add-btn" onclick="addLabProject()">➕ 新增</button>
+      </div>
     </div>
     <div style="border-top:.5px solid var(--bstr);padding-top:12px">
       <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:8px">已存專案</div>
@@ -1675,12 +1688,40 @@ function renderLabContent(){
     </div>`;
   }
 }
+var _labEmoji='🌐';
+function labTogglePicker(e){
+  e.stopPropagation();
+  const p=document.getElementById('lab-ep-picker');if(!p)return;
+  p.classList.toggle('hidden');
+  // 點外面關閉
+  if(!p.classList.contains('hidden')){
+    setTimeout(()=>document.addEventListener('click',function h(){p.classList.add('hidden');document.removeEventListener('click',h);},{once:true}),0);
+  }
+}
+function labPickEmoji(emoji){
+  _labEmoji=emoji;
+  const btn=document.getElementById('lab-ep-btn');if(btn)btn.textContent=emoji;
+  const p=document.getElementById('lab-ep-picker');if(p)p.classList.add('hidden');
+}
+function labAutoEmoji(name){
+  const n=name.toLowerCase();
+  const map=[
+    [/word|vocab|dict|英文/,'📚'],[/kid|child|兒童|小孩/,'🧒'],[/sleep|睡/,'😴'],
+    [/music|song|音樂/,'🎵'],[/game|遊戲/,'🎮'],[/ai|tracker|追蹤/,'🔬'],
+    [/mental|mood|情緒/,'🌱'],[/dash|stat|chart|報告/,'📊'],[/art|design|設計/,'🎨'],
+    [/oasis|relax|放鬆/,'🌊'],[/star|worship|星/,'🌟'],[/optimizer|排程/,'⚡'],
+    [/hub|center|中心/,'💻'],[/note|記錄/,'📝']
+  ];
+  for(const[rx,em]of map){if(rx.test(n)){labPickEmoji(em);return;}}
+  // 無匹配時不覆蓋，保留目前選擇
+}
 function addLabProject(){
   const name=(document.getElementById('lab-new-name').value||'').trim();
   const url=(document.getElementById('lab-new-url').value||'').trim();
-  const emoji=(document.getElementById('lab-new-emoji').value||'').trim()||'🔗';
+  const emoji=_labEmoji||'🌐';
   if(!name||!url){alert('請輸入名稱與網址');return;}
   const ps=getLabProjects();ps.push({name,url,emoji});saveLabProjects(ps);
+  _labEmoji='🌐';
   renderLabContent();renderLabMobile();
 }
 function deleteLabProject(i){
