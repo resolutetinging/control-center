@@ -283,6 +283,7 @@ function $(id){return document.getElementById(id);}
 function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function loadWP(){try{return JSON.parse(localStorage.getItem(WP_KEY)||'null')||{entries:[]};}catch{return{entries:[]};}}
 function saveWP(d){localStorage.setItem(WP_KEY,JSON.stringify(d));}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ── Toggle & Tabs ──
 var _dropBound=false;
@@ -521,9 +522,9 @@ async function analyzeSlip(){
       {t:'各項指引',b:secs['各項指引']},
       {t:'綜合建議',b:secs['綜合建議']}
     ].filter(function(s){return s.b;}).map(function(s){
-      return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+s.b.replace(/\n/g,'<br>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</div></div>';
+      return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+esc(s.b).replace(/\n/g,'<br>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</div></div>';
     }).join('');
-  }catch(e){res.innerHTML='<span style="color:var(--danger)">'+e.message+'</span>';}
+  }catch(e){res.innerHTML='<span style="color:var(--danger)">'+esc(e.message)+'</span>';}
   btn.disabled=false;sp.style.display='none';
 }
 
@@ -688,16 +689,16 @@ function renderTimeline(){
     if(e.hasSlip&&e.slip){
       var ai3='';
       if(e.slip.aiRaw){var m=e.slip.aiRaw.match(/##\s*問題綜合解析\s*([\s\S]+?)(?=##|$)/);ai3=m?m[1].trim():'';}
-      slipHtml='<div class="tl-slip">'+(e.slip.question?'<div class="tl-q">「'+e.slip.question+'」</div>':'')+
-        '<div class="tl-slip-num">第 '+e.slip.number+' 籤</div>'+
-        (e.slip.poem?'<div class="tl-poem">'+e.slip.poem.split('\n').slice(0,2).join('　')+(e.slip.poem.split('\n').length>2?'…':'')+'</div>':'')+
-        (ai3?'<div class="tl-ai3" id="ai3-'+i+'">'+ai3.replace(/\n/g,'<br>')+'</div><div class="tl-expand" onclick="toggleAI3('+i+')">▼ 展開綜合解析</div>':'')+
+      slipHtml='<div class="tl-slip">'+(e.slip.question?'<div class="tl-q">「'+esc(e.slip.question)+'」</div>':'')+
+        '<div class="tl-slip-num">第 '+esc(e.slip.number)+' 籤</div>'+
+        (e.slip.poem?'<div class="tl-poem">'+esc(e.slip.poem.split('\n').slice(0,2).join('　'))+(e.slip.poem.split('\n').length>2?'…':'')+'</div>':'')+
+        (ai3?'<div class="tl-ai3" id="ai3-'+i+'">'+esc(ai3).replace(/\n/g,'<br>')+'</div><div class="tl-expand" onclick="toggleAI3('+i+')">▼ 展開綜合解析</div>':'')+
       '</div>';
     }
     return '<div class="tl-node"><div class="tl-dot"></div><div class="tl-content">'+
-      '<div class="tl-meta">'+e.date+(e.time?' '+e.time:'')+'</div>'+
-      '<div class="tl-temple">⛩ '+e.temple+'</div>'+
-      (function(){var lbl=isCustom?customLabel:CAT_LABELS[cat];var body=isCustom?((e.customReports.find(function(cr){return cr.label===customLabel;})||{}).content||''):e.reports[cat];return'<div class="tl-report"><span style="font-size:.72rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;">'+lbl+'</span><br>'+body.replace(/\n/g,'<br>')+'</div>';})()
+      '<div class="tl-meta">'+esc(e.date)+(e.time?' '+esc(e.time):'')+'</div>'+
+      '<div class="tl-temple">⛩ '+esc(e.temple)+'</div>'+
+      (function(){var lbl=isCustom?customLabel:CAT_LABELS[cat];var body=isCustom?((e.customReports.find(function(cr){return cr.label===customLabel;})||{}).content||''):e.reports[cat];return'<div class="tl-report"><span style="font-size:.72rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;">'+esc(lbl)+'</span><br>'+esc(body).replace(/\n/g,'<br>')+'</div>';})()
       +slipHtml+'</div></div>';
   }).join('');
 }
@@ -716,13 +717,13 @@ function renderHistory(){
   if(!entries.length){$('history').innerHTML='<div class="empty">尚無參拜紀錄</div>';return;}
   $('history').innerHTML=entries.map(function(e){
     var cats=Object.entries(e.reports||{}).filter(function(r){return r[1];}).map(function(r){return'<span class="hist-tag">'+CAT_LABELS[r[0]]+'</span>';}).join('');
-    var slip=e.hasSlip&&e.slip?'<span class="hist-slip-badge">第 '+e.slip.number+' 籤</span>':'';
+    var slip=e.hasSlip&&e.slip?'<span class="hist-slip-badge">第 '+esc(e.slip.number)+' 籤</span>':'';
     return '<div class="hist-item">'+
-      '<div class="hist-top"><span class="hist-temple">⛩ '+e.temple+'</span>'+
+      '<div class="hist-top"><span class="hist-temple">⛩ '+esc(e.temple)+'</span>'+
       '<div style="display:flex;align-items:center;gap:.4rem">'+
       '<span class="hist-edit" onclick="editEntry(\''+e.id+'\')">✏️</span>'+
       '<span class="hist-del" onclick="delEntry(event,\''+e.id+'\')">✕</span>'+
-      '<span class="hist-date">'+e.date+(e.time?' '+e.time:'')+'</span></div></div>'+
+      '<span class="hist-date">'+esc(e.date)+(e.time?' '+esc(e.time):'')+'</span></div></div>'+
       '<div class="hist-tags">'+cats+slip+'</div></div>';
   }).join('');
 }

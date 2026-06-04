@@ -891,6 +891,7 @@ function updateUnsetFlags(){
 // ── LEAN TOOLTIP ──
 const ttp=document.getElementById('tooltip');
 let ttT;
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
 function advRow(k,v){return`<div class="tt-adv"><span class="tt-adv-k">${k}</span><span class="tt-adv-v">${v}</span></div>`;}
 function hr(){return`<div class="tt-hr"></div>`;}
@@ -1061,7 +1062,7 @@ function buildTT(id){
     case 'worship':{
       let wl=null;try{wl=JSON.parse(localStorage.getItem('worship_last')||'null');}catch{}
       if(!wl)return h('⛩️ Worship')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無參拜紀錄，點擊新增</div>`;
-      return h('⛩️ Worship')+row('最近參拜',wl.temple)+row('日期',wl.date+(wl.time?' '+wl.time:''),'g');
+      return h('⛩️ Worship')+row('最近參拜',esc(wl.temple))+row('日期',esc(wl.date)+(wl.time?' '+esc(wl.time):''),'g');
     }
     case 'astro':{
       let as=null;try{as=JSON.parse(localStorage.getItem('astro_settings')||'null');}catch{}
@@ -1082,7 +1083,7 @@ function buildTT(id){
         return h('⭐ Astro Bot')+
           row('西洋星盤',hasW?'已設定':'未設定',hasW?'g':'')+
           row('印度星盤',hasV?`${JSON.parse(localStorage.getItem('astro_vedic_images')||'[]').length} 張`:'未設定',hasV?'g':'')+
-          (as.name?row('對象',as.name):'')+
+          (as.name?row('對象',esc(as.name)):'')+
           hr()+
           `<div style="font-size:11px;color:var(--faint);padding:2px 0;">前往 Astro Bot 生成今日建議</div>`;
       }
@@ -1091,10 +1092,10 @@ function buildTT(id){
       const monthLbl=`${_n.getMonth()+1}月`;
       let out=h(`⭐ Astro  ${monthLbl} & ${dateLbl}`);
       out+=`<div class="tt-head" style="margin-bottom:5px">本月</div>`;
-      (brief.thisMonth||[]).forEach(l=>{const p=l.split('|');out+=advRow((p[0]||l).trim(),(p[1]||'').trim());});
+      (brief.thisMonth||[]).forEach(l=>{const p=l.split('|');out+=advRow(esc((p[0]||l).trim()),esc((p[1]||'').trim()));});
       out+=hr();
       out+=`<div class="tt-head" style="margin-bottom:5px">${dateLbl}</div>`;
-      (brief.today||[]).forEach(l=>{const p=l.split('|');const k=(p[0]||l).trim().replace(/^本日\s*/,dateLbl+' ');out+=advRow(k,(p[1]||'').trim());});
+      (brief.today||[]).forEach(l=>{const p=l.split('|');const k=esc((p[0]||l).trim().replace(/^本日\s*/,dateLbl+' '));out+=advRow(k,esc((p[1]||'').trim()));});
       return out;
     }
     case 'english':{
@@ -1500,8 +1501,8 @@ async function runSAS(){
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
     if(!resp.ok)throw new Error('API '+resp.status);
     const result=await resp.json();
-    el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${result.choices?.[0]?.message?.content||'（無回應）'}</div></div>`;
-  }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${e.message}</div>`;}
+    el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${esc(result.choices?.[0]?.message?.content||'（無回應）')}</div></div>`;
+  }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${esc(e.message)}</div>`;}
 }
 
 // ── GIST SYNC ──
