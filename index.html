@@ -93,6 +93,36 @@ body{position:relative;}
 }
 #settings-btn:hover{background:rgba(255,255,255,.9);}
 
+/* ── Lab button ── */
+#lab-btn{
+  position:fixed;top:22px;right:22px;z-index:50;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  color:var(--sub);font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+  transition:background .2s;
+}
+#lab-btn:hover{background:rgba(255,255,255,.9);}
+/* Lab overlay */
+#lab-overlay{position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;}
+#lab-panel{background:rgba(244,241,236,.97);backdrop-filter:blur(40px) saturate(180%);border:.5px solid var(--bstr);border-radius:18px;width:min(93vw,600px);max-height:88vh;overflow:hidden;display:flex;box-shadow:0 20px 70px rgba(40,38,32,.18);animation:panel-in .22s cubic-bezier(.34,1.56,.64,1);}
+#lab-sidebar{width:152px;flex-shrink:0;padding:22px 10px;border-right:.5px solid var(--bstr);background:rgba(255,255,255,.5);display:flex;flex-direction:column;gap:2px;}
+#lab-content{flex:1;padding:22px;overflow-y:auto;}
+/* Lab icons */
+.lab-icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.lab-app{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;text-decoration:none;}
+.lab-app-box{width:52px;height:52px;border-radius:14px;background:rgba(94,143,126,.15);border:.5px solid var(--bstr);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 2px 8px rgba(40,38,32,.1);transition:transform .12s cubic-bezier(.34,1.56,.64,1);}
+.lab-app-box:hover{transform:scale(1.1);}
+.lab-app-lbl{font-size:10.5px;color:var(--sub);text-align:center;line-height:1.3;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lab-inp{width:100%;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;transition:border .18s;}
+.lab-inp:focus{border-color:var(--accent);}
+.lab-add-btn{padding:8px 16px;border-radius:9px;background:var(--ink);color:var(--card);border:none;font-size:13px;font-family:inherit;cursor:pointer;transition:background .15s;}
+.lab-add-btn:hover{background:#3a352e;}
+/* Mobile lab card */
+#lab-mobile-card{display:none;margin:16px 12px 0;padding:16px;background:rgba(244,241,236,.82);border:.5px solid var(--bstr);border-radius:18px;}
+
 /* ── Dock ── */
 #dock-outer{
   position:fixed;bottom:18px;left:0;right:0;margin:0 auto;
@@ -356,6 +386,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   .d-sep{display:none!important;}
   .d-icon{width:auto;}
   .d-box{width:52px;height:52px;}
+  /* Mobile lab */
+  #lab-btn{display:none!important;}
+  #lab-mobile-card{display:block;}
+  .lab-icon-grid{grid-template-columns:repeat(4,1fr);}
 
   /* Tooltip not usable on touch; hide it */
   #tooltip{display:none!important;}
@@ -383,6 +417,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 </div>
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
+<button id="lab-btn" onclick="openLab()" title="實驗中">🧪</button>
 
 <!-- DOCK -->
 <div id="dock-outer">
@@ -453,6 +488,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="d-box">⭐</div>
       <span class="d-lbl">Astro</span>
     </div>
+  </div>
+</div>
+
+<!-- Lab Mobile Card -->
+<div id="lab-mobile-card">
+  <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:12px">🧪 實驗中</div>
+  <div class="lab-icon-grid" id="lab-mobile-grid"></div>
+</div>
+
+<!-- Lab Overlay -->
+<div id="lab-overlay" style="display:none;" onclick="if(event.target===this)closeLab()">
+  <div id="lab-panel">
+    <div id="lab-sidebar">
+      <div class="s-cat" style="font-size:10px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:0 8px;margin-bottom:5px;">實驗空間</div>
+      <button class="s-tab on" id="lab-tab-exp" onclick="switchLabTab('exp')"><span class="s-tab-ic">🧪</span>實驗中</button>
+      <button class="s-tab" id="lab-tab-links" onclick="switchLabTab('links')"><span class="s-tab-ic">🔗</span>連結管理</button>
+    </div>
+    <div id="lab-content"></div>
   </div>
 </div>
 
@@ -1581,6 +1634,65 @@ initLiveData();
 updateSyncTime();
 document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});
 setTimeout(genAstroBrief,3000);
+
+// ── 🧪 Lab ──
+const LAB_KEY='cc_lab_projects';
+const LAB_DEFAULT=[{name:'WordVault Kids',url:'https://resolutetinging.github.io/wordvault/wordvault-kids_v2.html',emoji:'🧒'}];
+function labEsc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getLabProjects(){try{const a=JSON.parse(localStorage.getItem(LAB_KEY));if(Array.isArray(a)&&a.length)return a;}catch(e){}return JSON.parse(JSON.stringify(LAB_DEFAULT));}
+function saveLabProjects(a){localStorage.setItem(LAB_KEY,JSON.stringify(a));}
+function openLab(){document.getElementById('lab-overlay').style.display='flex';switchLabTab('exp');}
+function closeLab(){document.getElementById('lab-overlay').style.display='none';}
+var _labTab='exp';
+function switchLabTab(tab){
+  _labTab=tab;
+  document.querySelectorAll('#lab-sidebar .s-tab').forEach(b=>b.classList.remove('on'));
+  const tb=document.getElementById('lab-tab-'+tab);if(tb)tb.classList.add('on');
+  renderLabContent();
+}
+function renderLabContent(){
+  const el=document.getElementById('lab-content');if(!el)return;
+  const ps=getLabProjects();
+  if(_labTab==='exp'){
+    el.innerHTML=ps.length
+      ?'<div class="lab-icon-grid">'+ps.map(p=>`<a class="lab-app" href="${labEsc(p.url)}" target="_blank" rel="noopener"><div class="lab-app-box">${p.emoji||'🔗'}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('')+'</div>'
+      :'<div style="color:var(--faint);font-size:.8rem;text-align:center;padding-top:40px">尚無專案，切換到「連結管理」新增。</div>';
+  }else{
+    const inp='style="width:100%;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;display:block"';
+    el.innerHTML=`<div style="margin-bottom:14px">
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:10px">新增專案</div>
+      <input id="lab-new-name" ${inp} placeholder="名稱（如：WordVault Kids）">
+      <input id="lab-new-url" ${inp} placeholder="URL（如：https://...）">
+      <div style="display:flex;gap:8px;margin-bottom:8px"><input id="lab-new-emoji" style="width:72px;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;text-align:center" placeholder="Emoji"><button class="lab-add-btn" onclick="addLabProject()">➕ 新增</button></div>
+    </div>
+    <div style="border-top:.5px solid var(--bstr);padding-top:12px">
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:8px">已存專案</div>
+      ${ps.length?ps.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)">
+        <span style="font-size:20px;flex-shrink:0">${p.emoji||'🔗'}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:.8rem;font-weight:600;color:var(--ink)">${labEsc(p.name)}</div><div style="font-size:.65rem;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${labEsc(p.url)}</div></div>
+        <button onclick="deleteLabProject(${i})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--faint);padding:4px;border-radius:6px;transition:color .15s" title="刪除">🗑️</button>
+      </div>`).join(''):'<div style="color:var(--faint);font-size:.8rem">尚無專案。</div>'}
+    </div>`;
+  }
+}
+function addLabProject(){
+  const name=(document.getElementById('lab-new-name').value||'').trim();
+  const url=(document.getElementById('lab-new-url').value||'').trim();
+  const emoji=(document.getElementById('lab-new-emoji').value||'').trim()||'🔗';
+  if(!name||!url){alert('請輸入名稱與網址');return;}
+  const ps=getLabProjects();ps.push({name,url,emoji});saveLabProjects(ps);
+  renderLabContent();renderLabMobile();
+}
+function deleteLabProject(i){
+  const ps=getLabProjects();ps.splice(i,1);saveLabProjects(ps);
+  renderLabContent();renderLabMobile();
+}
+function renderLabMobile(){
+  const el=document.getElementById('lab-mobile-grid');if(!el)return;
+  const ps=getLabProjects();
+  el.innerHTML=ps.map(p=>`<a class="lab-app" href="${labEsc(p.url)}" target="_blank" rel="noopener"><div class="lab-app-box">${p.emoji||'🔗'}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('');
+}
+renderLabMobile();
 </script>
 <script src="cc_autosync.js"></script>
 </body>
