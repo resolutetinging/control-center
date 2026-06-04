@@ -99,7 +99,7 @@ body{position:relative;}
   width:36px;height:36px;border-radius:50%;
   background:rgba(244,241,236,.82);border:1px solid var(--bstr);
   backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-  color:var(--sub);font-size:17px;cursor:pointer;
+  color:var(--sub);font-size:15px;line-height:1;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
   transition:background .2s;
@@ -115,7 +115,7 @@ body{position:relative;}
 .lab-app{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;text-decoration:none;}
 .lab-app-box{width:52px;height:52px;border-radius:14px;background:rgba(94,143,126,.15);border:.5px solid var(--bstr);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 2px 8px rgba(40,38,32,.1);transition:transform .12s cubic-bezier(.34,1.56,.64,1);}
 .lab-app-box:hover{transform:scale(1.1);}
-.lab-app-lbl{font-size:10.5px;color:var(--sub);text-align:center;line-height:1.3;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lab-app-lbl{font-size:10.5px;color:var(--sub);text-align:center;line-height:1.3;max-width:62px;word-break:break-word;}
 .lab-inp{width:100%;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;transition:border .18s;}
 .lab-inp:focus{border-color:var(--accent);}
 .lab-add-btn{padding:8px 16px;border-radius:9px;background:var(--ink);color:var(--card);border:none;font-size:13px;font-family:inherit;cursor:pointer;transition:background .15s;}
