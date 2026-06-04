@@ -499,7 +499,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 <!-- Lab Mobile Card -->
 <div id="lab-mobile-card">
-  <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:12px">🧪 實驗中</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)">🧪 實驗中</div>
+    <button onclick="openLab();switchLabTab('links')" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--faint);padding:2px 6px;border-radius:7px;line-height:1;" title="管理連結">⚙️</button>
+  </div>
   <div class="lab-icon-grid" id="lab-mobile-grid"></div>
 </div>
 
