@@ -995,12 +995,16 @@ function addToLib(){
 function getZhHint(item){
   if(item.zh) return item.zh;
   if(!item.explain_zh) return '';
-  // 「quoted text」
-  const q = item.explain_zh.match(/「([^」]{2,10})」/);
+  const ez = item.explain_zh;
+  // 1. 「quoted text」 e.g. 就是「快速聯絡確認一下」
+  const q = ez.match(/「([^」]{2,10})」/);
   if(q) return q[1].replace(/一下$/, '');
-  // 就是(指)X（到，或。截止）
-  const j = item.explain_zh.match(/就是[指]?([^\s，。！？「」]{2,10})(?=[，。的])/);
+  // 2. 就是(指)X
+  const j = ez.match(/就是[指]?([^\s，。！？「」]{2,10})(?=[，。的])/);
   if(j) return j[1];
+  // 3. 意思是X / 是指X / 表示X / 指的是X / 形容X
+  const k = ez.match(/(?:意思是|是指|表示|指的是|形容)([^，。！？「」\n]{2,20})/);
+  if(k) return k[1].slice(0,6);
   return '';
 }
 
