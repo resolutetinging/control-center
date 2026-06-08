@@ -103,14 +103,6 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 .speak-resp-btn:hover{border-color:rgba(61,106,82,.35);color:var(--en)}
 .result-footer{text-align:center;margin-top:4px;padding-bottom:4px}
 
-/* ── SAVED PHRASES ── */
-#saved-section{display:none;background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:14px 17px;margin-bottom:14px;box-shadow:var(--shadow)}
-.saved-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
-.saved-hdr-lbl{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
-.saved-meta{display:flex;align-items:center;gap:7px}
-.saved-badge{font-size:10px;background:var(--en-tint2);color:var(--en);border-radius:10px;padding:2px 8px;font-weight:700}
-.saved-chevron{font-size:11px;color:var(--faint);transition:transform .2s;display:inline-block}
-.saved-list{margin-top:11px}
 .saved-item{padding:9px 0;border-bottom:.5px solid var(--border);display:flex;align-items:start;gap:10px}
 .saved-item:last-child{border-bottom:none;padding-bottom:2px}
 .saved-body{flex:1}
@@ -372,18 +364,6 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="overall-body" id="overall-body"></div>
   </div>
 
-  <!-- Saved phrases -->
-  <div id="saved-section">
-    <div class="saved-hdr" onclick="toggleSaved()">
-      <span class="saved-hdr-lbl">⭐ 精華字句庫</span>
-      <div class="saved-meta">
-        <span class="saved-badge" id="saved-badge">0</span>
-        <span class="saved-chevron" id="saved-chevron">▾</span>
-      </div>
-    </div>
-    <div id="saved-list" style="display:none"></div>
-  </div>
-
 </div><!-- /page-talk -->
 
 <!-- ════════════ PAGE 2: IDIOM ARCADE ════════════ -->
@@ -455,7 +435,6 @@ let timerInterval = null;
 let timerSec = 30;
 let timerMode = 30;
 let results = {};
-let savedOpen = false;
 let usedOpeners = []; // 追蹤已出現的 opener，避免重複
 let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
 
@@ -747,26 +726,10 @@ function savePhrase(type){
   renderSaved(true);
 }
 
-function renderSaved(autoOpen=false){
+function renderSaved(){
   const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
-  const sec=document.getElementById('saved-section');
-  const badge=document.getElementById('saved-badge');
-  badge.textContent=saved.length;
-  sec.style.display = saved.length ? 'block' : 'none';
-  // update nav combo badge
   const nb=$('combo-nav-count');
   if(nb){ nb.textContent=saved.length||''; nb.style.display=saved.length?'inline':'none'; }
-  if(!saved.length){ document.getElementById('saved-list').innerHTML=''; return; }
-  if(autoOpen && !savedOpen){ toggleSaved(); }
-  if(!savedOpen) return;
-  document.getElementById('saved-list').innerHTML = saved.map((item,i)=>`
-    <div class="saved-item">
-      <div class="saved-body">
-        <div class="saved-text">"${esc(item.text)}"</div>
-        <div class="saved-context">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</div>
-      </div>
-      <button class="del-btn" onclick="delSaved(${i})" title="移除">✕</button>
-    </div>`).join('');
 }
 
 // ── Combo Modal ──
@@ -807,20 +770,6 @@ function delCombo(i){
   localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
   renderCombos();
   renderSaved();
-}
-
-function delSaved(i){
-  const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
-  saved.splice(i,1);
-  localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
-  renderSaved();
-}
-
-function toggleSaved(){
-  savedOpen=!savedOpen;
-  document.getElementById('saved-list').style.display=savedOpen?'block':'none';
-  document.getElementById('saved-chevron').style.transform=savedOpen?'rotate(180deg)':'rotate(0deg)';
-  if(savedOpen) renderSaved();
 }
 
 // ── Reset ──
@@ -940,12 +889,13 @@ CRITICAL BLANK RULES (violation = bad question):
 4. If the correct answer ends with a preposition or particle (e.g. "upset about", "interested in", "responsible for", "ahead of"), that preposition must NOT appear again in the sentence immediately after the blank. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. GOOD: "He was ______ the news" (correct="upset about").
 
 Return ONLY valid JSON, no markdown, no extra text:
-{"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
+{"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"zh":"快速聯絡確認","explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
 
 Rules:
 - sentence: realistic business English; blank fits exactly one idiom (2-4 words)
 - correct: the one right answer
 - distractors: exactly 3 — real English phrases that sound plausible but are wrong in context
+- zh: Traditional Chinese ONLY; 2-6 characters; the core meaning as a short translation (no "就是", no "的意思")
 - explain_zh: Traditional Chinese ONLY; max 3 short casual sentences; no grammar labels; plain everyday tone
 - example: a different natural sentence using the same correct idiom`;
 
@@ -1029,6 +979,7 @@ function addToLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   lib.unshift({
     idiom: curQ.correct,
+    zh: curQ.zh||'',
     sentence: curQ.sentence.replace(/_{4,}/,`[${curQ.correct}]`),
     explain_zh: curQ.explain_zh||'',
     example: curQ.example||'',
@@ -1051,7 +1002,7 @@ function renderLib(){
         <div class="saved-item">
           <div class="saved-body">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-              <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}</span>
+              <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}${item.zh?`<span style="font-weight:700;font-size:13px;color:var(--ink);margin-left:7px">· ${esc(item.zh)}</span>`:''}</span>
               <span style="font-size:10.5px;color:var(--faint);white-space:nowrap;flex-shrink:0">${esc(item.topic||'')}</span>
             </div>
             ${item.example?`<div style="font-size:12px;color:var(--sub);margin-top:5px;font-style:italic;line-height:1.55">${esc(item.example)}</div>`:''}
