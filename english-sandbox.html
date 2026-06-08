@@ -994,22 +994,37 @@ function addToLib(){
   renderLib();   // 不自動展開，只更新 badge
 }
 
+function getZhHint(item){
+  if(item.zh) return item.zh;
+  if(!item.explain_zh) return '';
+  // 「quoted text」
+  const q = item.explain_zh.match(/「([^」]{2,10})」/);
+  if(q) return q[1].replace(/一下$/, '');
+  // 就是(指)X（到，或。截止）
+  const j = item.explain_zh.match(/就是[指]?([^\s，。！？「」]{2,10})(?=[，。的])/);
+  if(j) return j[1];
+  return '';
+}
+
 function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   const tc=$('lib-tab-count'); if(tc) tc.textContent=lib.length||'';
   $('lib-list').innerHTML = lib.length
-    ? lib.map((item,i)=>`
+    ? lib.map((item,i)=>{
+        const zhHint = getZhHint(item);
+        return `
         <div class="saved-item">
           <div class="saved-body">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-              <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}${item.zh?`<span style="font-weight:700;font-size:13px;color:var(--ink);margin-left:7px">· ${esc(item.zh)}</span>`:''}</span>
+              <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}${zhHint?`<span style="font-weight:700;font-size:13px;color:var(--ink);margin-left:7px">· ${esc(zhHint)}</span>`:''}</span>
               <span style="font-size:10.5px;color:var(--faint);white-space:nowrap;flex-shrink:0">${esc(item.topic||'')}</span>
             </div>
             ${item.example?`<div style="font-size:12px;color:var(--sub);margin-top:5px;font-style:italic;line-height:1.55">${esc(item.example)}</div>`:''}
             ${item.explain_zh?`<div style="font-size:11.5px;color:var(--faint);margin-top:4px;line-height:1.6">${esc(item.explain_zh)}</div>`:''}
           </div>
           <button class="del-btn" onclick="delLib(${i})" title="移除">✕</button>
-        </div>`).join('')
+        </div>`;
+      }).join('')
     : '<div class="saved-empty">尚無收藏，答題後點「加入字庫」</div>';
 }
 
