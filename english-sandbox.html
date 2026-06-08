@@ -185,16 +185,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   .opts-grid{grid-template-columns:1fr}
   .idiom-sentence{font-size:16px}
 }
-/* ── Combo Modal ── */
-.combo-nav-btn{padding:13px 15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--faint);font-size:12.5px;cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap;line-height:1}
-.combo-nav-btn:hover{color:var(--sub)}
-#combo-modal{position:fixed;inset:0;z-index:9000;background:rgba(40,36,30,.52);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center}
-#combo-modal.open{display:flex}
-.combo-drawer{background:var(--bg);border-radius:18px 18px 0 0;width:100%;max-width:560px;max-height:82dvh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 28px rgba(40,36,30,.18)}
-.combo-drawer-hdr{padding:15px 18px 13px;border-bottom:.5px solid var(--bstr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.combo-drawer-title{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.02em}
-.combo-drawer-close{background:none;border:none;font-size:18px;color:var(--faint);cursor:pointer;padding:0 3px;line-height:1}
-.combo-drawer-body{overflow-y:auto;padding:11px 15px 24px;flex:1}
+/* ── Combo Page ── */
 .combo-card{border:.5px solid var(--bstr);border-radius:11px;padding:11px 13px;margin-bottom:9px;background:var(--card)}
 .combo-card:last-child{margin-bottom:2px}
 .combo-turn{display:flex;gap:9px;align-items:flex-start;margin-bottom:5px}
@@ -218,7 +209,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <button class="tab-btn active" id="tab-talk" onclick="switchTab('talk')">Small Talk 破冰接球</button>
   <button class="tab-btn" id="tab-idiom" onclick="switchTab('idiom')">Idiom 拆彈遊戲</button>
   <button class="tab-btn" id="tab-lib" onclick="switchTab('lib')">📚 字庫 <span id="lib-tab-count" style="font-size:10px;background:rgba(61,106,82,.15);color:var(--en);border-radius:9px;padding:1px 5px;margin-left:2px;font-weight:700"></span></button>
-  <button class="combo-nav-btn" onclick="openComboModal()">⭐ 收藏組合<span id="combo-nav-count" style="font-size:10px;background:rgba(160,130,50,.18);color:#9a7a3a;border-radius:9px;padding:1px 5px;margin-left:3px;font-weight:700;display:none"></span></button>
+  <button class="tab-btn" id="tab-combo" onclick="switchTab('combo')">⭐ 收藏組合<span id="combo-nav-count" style="font-size:10px;background:rgba(160,130,50,.18);color:#9a7a3a;border-radius:9px;padding:1px 5px;margin-left:3px;font-weight:700;display:none"></span></button>
   <a href="./index.html" class="back-link">← CC</a>
 </nav>
 
@@ -417,6 +408,15 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   </div>
   <div id="lib-list"><div class="saved-empty">尚無收藏，在拆彈遊戲答題後點「加入字庫」</div></div>
 </div><!-- /page-lib -->
+
+<!-- ════════════ PAGE 4: COMBO ════════════ -->
+<div class="page" id="page-combo">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">⭐ 收藏對話組合</div>
+    <button class="btn btn-ghost btn-sm" onclick="clearCombos()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
+  </div>
+  <div id="combo-list"></div>
+</div><!-- /page-combo -->
 
 <script>
 // ── Constants ──
@@ -732,19 +732,10 @@ function renderSaved(){
   if(nb){ nb.textContent=saved.length||''; nb.style.display=saved.length?'inline':'none'; }
 }
 
-// ── Combo Modal ──
-function openComboModal(){
-  renderCombos();
-  document.getElementById('combo-modal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeComboModal(){
-  document.getElementById('combo-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
+// ── Combo Page ──
 function renderCombos(){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
-  const body=$('combo-drawer-body');
+  const body=$('combo-list');
   if(!body) return;
   body.innerHTML=saved.length
     ? saved.map((item,i)=>`
@@ -768,6 +759,12 @@ function delCombo(i){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
   saved.splice(i,1);
   localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
+  renderCombos();
+  renderSaved();
+}
+function clearCombos(){
+  if(!confirm('確定清空全部收藏對話？')) return;
+  localStorage.removeItem(SAVED_KEY);
   renderCombos();
   renderSaved();
 }
@@ -833,11 +830,12 @@ function resetAll(){
 
 // ── Tab switch ──
 function switchTab(tab){
-  ['talk','idiom','lib'].forEach(t=>{
+  ['talk','idiom','lib','combo'].forEach(t=>{
     document.getElementById('page-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if(tab==='lib') renderLib();
+  if(tab==='combo') renderCombos();
 }
 
 // ── Helpers ──
@@ -1049,15 +1047,5 @@ renderSaved();
 renderLib();
 if(synth) synth.getVoices();
 </script>
-<!-- ════════════ COMBO MODAL ════════════ -->
-<div id="combo-modal" onclick="if(event.target===this)closeComboModal()">
-  <div class="combo-drawer">
-    <div class="combo-drawer-hdr">
-      <span class="combo-drawer-title">⭐ 收藏組合</span>
-      <button class="combo-drawer-close" onclick="closeComboModal()">✕</button>
-    </div>
-    <div class="combo-drawer-body" id="combo-drawer-body"></div>
-  </div>
-</div>
 </body>
 </html>
