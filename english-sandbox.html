@@ -547,6 +547,7 @@ function _unlockAudio(){
 
 async function speak(text){
   if(!text) return;
+  _unlockAudio();
   if(_curAudio){ _curAudio.pause(); _curAudio.src=''; _curAudio=null; }
   const btn = document.getElementById('tts-btn');
   if(btn) btn.classList.add('speaking');
@@ -567,7 +568,7 @@ async function speak(text){
         _curAudio = a;
         a.volume = 1;
         a.onended = ()=>{ URL.revokeObjectURL(blobUrl); done(); };
-        a.onerror = ()=>{ URL.revokeObjectURL(blobUrl); done(); };
+        a.onerror = ()=>{ URL.revokeObjectURL(blobUrl); done(); _speakSynth(text); };
         try{ await a.play(); }catch(e){ URL.revokeObjectURL(blobUrl); done(); _speakSynth(text); }
         return;
       }
@@ -581,15 +582,23 @@ function _speakSynth(text){
   const synth = window.speechSynthesis;
   if(!synth) return;
   synth.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang='en-US'; utt.rate=0.87; utt.pitch=1.0;
-  const vs = synth.getVoices();
-  const v = vs.find(v=>v.lang==='en-US'&&/Samantha|Alex|Karen/i.test(v.name))
-           || vs.find(v=>v.lang==='en-US') || null;
-  if(v) utt.voice=v;
-  const btn = document.getElementById('tts-btn');
-  if(btn){ btn.classList.add('speaking'); utt.onend=()=>btn.classList.remove('speaking'); }
-  synth.speak(utt);
+  const doSpeak = () => {
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang='en-US'; utt.rate=0.87; utt.pitch=1.0;
+    const vs = synth.getVoices();
+    const v = vs.find(v=>v.lang==='en-US'&&/Samantha|Alex|Karen/i.test(v.name))
+             || vs.find(v=>v.lang==='en-US') || null;
+    if(v) utt.voice=v;
+    const btn = document.getElementById('tts-btn');
+    if(btn){ btn.classList.add('speaking'); utt.onend=()=>btn.classList.remove('speaking'); }
+    synth.resume(); // Chrome 有時卡在 paused 狀態，強制 resume
+    synth.speak(utt);
+  };
+  if(synth.getVoices().length){
+    setTimeout(doSpeak, 50); // 等 cancel() 完成後再 speak（Chrome 已知 bug）
+  } else {
+    synth.onvoiceschanged = ()=>{ synth.onvoiceschanged=null; doSpeak(); };
+  }
 }
 function speakOpener(){ speak(curOpener); }
 function speakText(type){ speak(results[type]||''); }
@@ -1092,7 +1101,7 @@ function disableTopicBtns(v){ document.querySelectorAll('#topic-row .sit-btn').f
 checkKey();
 renderSaved();
 renderLib();
-if(synth) synth.getVoices();
+if(window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
 </body>
 </html>
