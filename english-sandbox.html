@@ -484,6 +484,8 @@ async function genOpener(){
   $show('loading-opener');
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-result');
   disableSitBtns(true);
+  // Unlock TTS session while still in synchronous user gesture context (before any await)
+  if(window.speechSynthesis){ const d=new SpeechSynthesisUtterance(' '); d.volume=0; window.speechSynthesis.speak(d); }
   try{
     const recent = usedOpeners.slice(-8);
     const avoidClause = recent.length
