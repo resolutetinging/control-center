@@ -484,8 +484,6 @@ async function genOpener(){
   $show('loading-opener');
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-result');
   disableSitBtns(true);
-  // Unlock TTS session while still in synchronous user gesture context (before any await)
-  if(window.speechSynthesis){ const d=new SpeechSynthesisUtterance(' '); d.volume=0; window.speechSynthesis.speak(d); }
   try{
     const recent = usedOpeners.slice(-8);
     const avoidClause = recent.length
@@ -535,9 +533,26 @@ function regenOpener(){ if(curSit) genOpener(); }
 function disableSitBtns(v){ document.querySelectorAll('.sit-btn').forEach(b=>b.disabled=v); }
 
 // ── TTS ──
-const synth = window.speechSynthesis;
-if(synth && speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = ()=>synth.getVoices();
+let _curAudio = null;
 function speak(text){
+  if(!text) return;
+  if(_curAudio){ _curAudio.pause(); _curAudio = null; }
+  const btn = document.getElementById('tts-btn');
+  if(btn) btn.classList.add('speaking');
+  // new Audio() routes through browser media channel — not ducked by YouTube like speechSynthesis
+  const url = 'https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=' + encodeURIComponent(text);
+  const a = new Audio(url);
+  _curAudio = a;
+  a.volume = 1;
+  a.onended = ()=>{ _curAudio=null; if(btn) btn.classList.remove('speaking'); };
+  a.play().catch(()=>{
+    _curAudio=null;
+    if(btn) btn.classList.remove('speaking');
+    _speakSynth(text);
+  });
+}
+function _speakSynth(text){
+  const synth = window.speechSynthesis;
   if(!synth) return;
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(text);
