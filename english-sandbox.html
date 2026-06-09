@@ -484,6 +484,7 @@ async function genOpener(){
   $show('loading-opener');
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-result');
   disableSitBtns(true);
+  _unlockAudio(); // activate iOS audio session before first await
   try{
     const recent = usedOpeners.slice(-8);
     const avoidClause = recent.length
@@ -534,23 +535,48 @@ function disableSitBtns(v){ document.querySelectorAll('.sit-btn').forEach(b=>b.d
 
 // ── TTS ──
 let _curAudio = null;
-function speak(text){
+let _audioUnlocked = false;
+
+function _unlockAudio(){
+  if(_audioUnlocked) return;
+  _audioUnlocked = true;
+  const a = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+  a.volume = 0;
+  a.play().catch(()=>{});
+}
+
+async function speak(text){
   if(!text) return;
-  if(_curAudio){ _curAudio.pause(); _curAudio = null; }
+  if(_curAudio){ _curAudio.pause(); _curAudio.src=''; _curAudio=null; }
   const btn = document.getElementById('tts-btn');
   if(btn) btn.classList.add('speaking');
-  // new Audio() routes through browser media channel — not ducked by YouTube like speechSynthesis
-  const url = 'https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=' + encodeURIComponent(text);
-  const a = new Audio(url);
-  _curAudio = a;
-  a.volume = 1;
-  a.onended = ()=>{ _curAudio=null; if(btn) btn.classList.remove('speaking'); };
-  a.play().catch(()=>{
-    _curAudio=null;
-    if(btn) btn.classList.remove('speaking');
-    _speakSynth(text);
-  });
+  const done = ()=>{ _curAudio=null; if(btn) btn.classList.remove('speaking'); };
+  const key = getKey();
+  if(key){
+    try{
+      // Groq TTS: fetch → blob → new Audio(blobUrl) — browser media channel, not ducked by iOS
+      const resp = await fetch('https://api.groq.com/openai/v1/audio/speech',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({model:'playai-tts',input:text,voice:'Fritz-PlayAI',response_format:'mp3'})
+      });
+      if(resp.ok){
+        const blob = await resp.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = new Audio(blobUrl);
+        _curAudio = a;
+        a.volume = 1;
+        a.onended = ()=>{ URL.revokeObjectURL(blobUrl); done(); };
+        a.onerror = ()=>{ URL.revokeObjectURL(blobUrl); done(); };
+        try{ await a.play(); }catch(e){ URL.revokeObjectURL(blobUrl); done(); _speakSynth(text); }
+        return;
+      }
+    }catch(e){}
+  }
+  done();
+  _speakSynth(text);
 }
+
 function _speakSynth(text){
   const synth = window.speechSynthesis;
   if(!synth) return;
@@ -559,7 +585,7 @@ function _speakSynth(text){
   utt.lang='en-US'; utt.rate=0.87; utt.pitch=1.0;
   const vs = synth.getVoices();
   const v = vs.find(v=>v.lang==='en-US'&&/Samantha|Alex|Karen/i.test(v.name))
-          || vs.find(v=>v.lang==='en-US') || null;
+           || vs.find(v=>v.lang==='en-US') || null;
   if(v) utt.voice=v;
   const btn = document.getElementById('tts-btn');
   if(btn){ btn.classList.add('speaking'); utt.onend=()=>btn.classList.remove('speaking'); }
