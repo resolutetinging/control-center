@@ -667,17 +667,17 @@ opener_zh: 用繁體中文白話解釋：(1)對方這句話的意思是什麼，
 fb_tone: 用繁體中文分析這句回覆的語氣——偏正式還是偏隨便？是否符合「${sit.en}」這個場合的語氣要求？如果合適就說「語氣符合場合」並給一句具體理由；如果不合適，說清楚是哪種語氣偏差、為什麼在這個場合不好用。限40字。
 
 fb_ball_verdict: Evaluate whether the learner's reply kept the conversation going. Use EXACTLY one of these three words:
-- "caught": learner BOTH acknowledged/answered the opener's content AND added something (e.g. follow-up question, personal detail, or new thread). Example: opener asks "how's your week?" → learner says "pretty tough, how about you?" → caught.
-- "partial": learner responded to the opener but gave no follow-through (dead end, no question, no new info). Example: "It's fine." with nothing else.
+- "caught": learner acknowledged the opener AND added forward momentum — a follow-up question, personal detail, new thread, OR an action proposal / redirecting suggestion. IMPORTANT: "yes + a redirecting question or action suggestion" fully qualifies as caught — the follow-up does NOT need to loop back to the opener's exact topic. Examples: (a) opener: "how's your week?" → "pretty tough, how about you?" → caught. (b) opener: "Looks like we're all set to start on time." → "yes, how about starting from the agenda?" → caught (acknowledged + proposed next action).
+- "partial": learner responded but left the conversation at a dead end — no question, no new info, no proposal. Example: "It's fine." or "yes." with nothing else.
 - "missed": learner ignored the opener entirely or the reply is unrelated.
 
 fb_content: 用繁體中文說明接球狀況，根據 verdict 調整語氣：
-- caught → 第一句說哪裡做得好（具體指出接球動作）；第二句給一個可讓對話更自然的升級英文例句。
-- partial → 第一句說哪裡有接到但不夠完整；第二句給一個補足缺口的英文例句。
+- caught → 第一句說哪裡做得好（具體指出接球動作）；第二句給一個可讓對話更自然的升級英文例句。CRITICAL: 若學習者已使用問句或行動提案，升級例句必須是比他們說的更進一步的版本，絕不能建議他們去做他們已經做了的事。
+- partial → 第一句說哪裡有接到但不夠完整；第二句給一個補足缺口的英文例句。CRITICAL: 絕對不能建議學習者加一個他們在原句中已經加了的問句或內容。
 - missed → 第一句說什麼沒有被接住；第二句給一個完整示範的英文例句。
 不准只說大方向，一定要有具體英文例句（不得使用 prompt 中的舉例）。限80字。
 
-fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「可以直接加一句問句帶入你自己的話題」。限35字。
+fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
 
 TASK 2 — Write 3 model English responses to the opener (safe, pro, ball):
 - COMPLETELY INDEPENDENT — do NOT quote, correct, or reference the learner's text at all.
