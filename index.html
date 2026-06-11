@@ -1605,9 +1605,11 @@ async function syncDownload(){
       try{localStorage.setItem(k,v);}
       catch(e){if(e.name==='QuotaExceededError'){skipped.push(k);}else throw e;}
     }
-    const skipNote=skipped.length?`（略過：${skipped.join(', ')}）`:'';
-    showSyncMsg(`✓ 下載完成${skipNote}，重新載入中…`);
     if(btn)btn.textContent='✓';
+    if(skipped.length){
+      alert('下載完成。以下 key 因超過裝置容量上限而略過：\n\n'+skipped.join('\n')+'\n\n（這些通常是圖片類資料，可在此裝置另行設定）');
+    }
+    showSyncMsg('✓ 下載完成，重新載入中…');
     setTimeout(()=>window.location.reload(),800);
   }catch(e){
     console.error('[Sync] download error',e);
