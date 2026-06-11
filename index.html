@@ -1605,7 +1605,7 @@ async function syncDownload(){
       try{localStorage.setItem(k,v);}
       catch(e){if(e.name==='QuotaExceededError'){skipped.push(k);}else throw e;}
     }
-    const skipNote=skipped.length?`（${skipped.length} 筆大型資料略過）`:'';
+    const skipNote=skipped.length?`（略過：${skipped.join(', ')}）`:'';
     showSyncMsg(`✓ 下載完成${skipNote}，重新載入中…`);
     if(btn)btn.textContent='✓';
     setTimeout(()=>window.location.reload(),800);
