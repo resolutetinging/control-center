@@ -1545,6 +1545,7 @@ async function syncUpload(){
       if(SKIP_KEYS.includes(k)||k.startsWith('gsk_'))continue;
       const v=localStorage.getItem(k)||'';
       if(PAT_RE.test(v))continue;
+      if(v.length>200000)continue; // skip base64 images / custom wallpaper (too large for mobile localStorage)
       snap[k]=v;
     }
     const r=await fetch('https://api.github.com/gists/'+gid,{
@@ -1598,8 +1599,14 @@ async function syncDownload(){
     let snap;
     try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤：'+e.message);}
     if(!snap||typeof snap!=='object'||Array.isArray(snap))throw new Error('資料結構錯誤，請重新 Upload');
-    for(const[k,v] of Object.entries(snap)){if(v!=null)localStorage.setItem(k,v);}
-    showSyncMsg('✓ 下載完成，重新載入中…');
+    const skipped=[];
+    for(const[k,v] of Object.entries(snap)){
+      if(v==null)continue;
+      try{localStorage.setItem(k,v);}
+      catch(e){if(e.name==='QuotaExceededError'){skipped.push(k);}else throw e;}
+    }
+    const skipNote=skipped.length?`（${skipped.length} 筆大型資料略過）`:'';
+    showSyncMsg(`✓ 下載完成${skipNote}，重新載入中…`);
     if(btn)btn.textContent='✓';
     setTimeout(()=>window.location.reload(),800);
   }catch(e){
