@@ -440,20 +440,28 @@ let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
-async function callGroq(prompt, max=600, sys=''){
+async function callGroq(prompt, max=600, sys='', jsonMode=false){
   const k = getKey();
   if(!k){ checkKey(); throw new Error('No API key'); }
   const msgs = sys
     ? [{role:'system',content:sys},{role:'user',content:prompt}]
     : [{role:'user',content:prompt}];
+  const body = {model:'llama-3.3-70b-versatile',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85};
+  if(jsonMode) body.response_format = {type:'json_object'};
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:msgs,max_tokens:max,temperature:.85})
+    body:JSON.stringify(body)
   });
   if(!r.ok) throw new Error('API '+r.status);
   const j = await r.json();
   return j.choices?.[0]?.message?.content||'';
+}
+function safeParseJson(raw){
+  const cleaned = raw.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g,' ');
+  const m = cleaned.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('格式解析失敗，請重試');
+  return JSON.parse(m[0]);
 }
 
 // ── Key check ──
@@ -698,10 +706,8 @@ Output ONLY valid JSON:
   "ball": "Model reply + one follow-up question to extend the conversation (≤28 words, no echoing opener)"
 }`;
 
-    const raw = await callGroq(prompt, 480, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.');
-    const jm = raw.match(/\{[\s\S]*\}/);
-    if(!jm) throw new Error('格式解析失敗，請重試');
-    results = JSON.parse(jm[0]);
+    const raw = await callGroq(prompt, 480, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.', true);
+    results = safeParseJson(raw);
 
     // Opener 中文說明（永遠顯示）
     if(results.opener_zh){
@@ -949,10 +955,8 @@ Rules:
 - explain_zh: Traditional Chinese ONLY; max 3 short casual sentences; no grammar labels; plain everyday tone
 - example: a different natural sentence using the same correct idiom`;
 
-    const raw = await callGroq(prompt, 400);
-    const jm = raw.match(/\{[\s\S]*\}/);
-    if(!jm) throw new Error('格式解析失敗，請重試');
-    curQ = JSON.parse(jm[0]);
+    const raw = await callGroq(prompt, 400, '', true);
+    curQ = safeParseJson(raw);
 
     // Shuffle options
     const allOpts = [curQ.correct, ...(curQ.distractors||[]).slice(0,3)];
