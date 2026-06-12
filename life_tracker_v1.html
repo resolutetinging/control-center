@@ -23,9 +23,12 @@
     /* ── STATUS PANEL ── */
     #status-panel{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg);border-right:1px solid var(--border);padding:30px 18px 24px;display:flex;flex-direction:column;gap:22px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
     .avatar-wrap{display:flex;justify-content:center;}
-    .avatar{width:68px;height:68px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--faint);}
-    .sp-name{font-size:15px;font-weight:700;color:var(--ink);text-align:center;}
-    .sp-role{font-size:10.5px;color:var(--faint);text-align:center;margin-top:3px;}
+    .avatar{width:68px;height:68px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--faint);cursor:pointer;overflow:hidden;transition:box-shadow 140ms ease;}
+    .avatar:hover{box-shadow:0 0 0 2.5px var(--border);}
+    .avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+    .sp-name{font-size:14px;font-weight:700;color:var(--ink);text-align:center;white-space:pre-line;line-height:1.5;}
+    .sp-back-btn{display:block;width:100%;margin-top:8px;padding:6px 12px;font-size:10.5px;font-weight:700;cursor:pointer;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--sub);text-align:center;transition:background 140ms ease;font-family:inherit;}
+    .sp-back-btn:hover{background:var(--border);}
     .sp-section-title{font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding-bottom:7px;border-bottom:1px solid var(--border);}
     .lens-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:4px 11px;border-radius:20px;border:1px solid var(--border);margin-top:8px;white-space:nowrap;}
     .lens-badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
@@ -62,7 +65,7 @@
     .pipe-line{position:absolute;top:50%;left:0;right:0;height:var(--pipe-h);border-radius:calc(var(--pipe-h)/2);transform:translateY(-50%);pointer-events:none;}
     .ms-node{position:absolute;top:50%;width:var(--node-d);height:var(--node-d);border-radius:50%;transform:translate(-50%,-50%);border:2.5px solid rgba(255,255,255,0.88);box-shadow:0 1px 5px rgba(0,0,0,0.18);cursor:pointer;z-index:3;transition:transform 130ms ease,box-shadow 130ms ease;}
     .ms-node:hover{transform:translate(-50%,-50%) scale(1.35);box-shadow:0 3px 10px rgba(0,0,0,0.26);}
-    .ms-label{position:absolute;top:calc(50% + 12px);font-size:8.5px;font-weight:700;letter-spacing:.04em;transform:translateX(-50%);pointer-events:none;white-space:nowrap;}
+    .ms-label{position:absolute;top:calc(50% + 12px);font-size:8.5px;font-weight:700;letter-spacing:.04em;transform:translateX(-50%);pointer-events:none;white-space:normal;max-width:56px;text-align:center;line-height:1.3;}
 
     /* ── MODAL ── */
     .modal-overlay{position:fixed;inset:0;z-index:900;background:rgba(40,38,31,0.42);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 200ms ease;}
@@ -77,11 +80,8 @@
     .modal-subtitle{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.5;}
     .modal-close-btn{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--sub);transition:background 160ms ease;margin-top:-2px;}
     .modal-close-btn:hover{background:var(--border);}
-    .modal-body{padding:16px 20px 22px;display:flex;flex-direction:column;gap:14px;}
-    .star-block{}
-    .star-key{display:flex;align-items:center;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px;}
-    .star-key::after{content:'';flex:1;height:1px;background:var(--border);margin-left:8px;}
-    .star-val{font-size:12px;color:var(--sub);line-height:1.7;}
+    .modal-body{padding:16px 20px 22px;}
+    .modal-rr-wrap{font-size:12px;color:var(--sub);line-height:1.75;}
 
     /* ── STAGE 3: CAP FILTER ── */
     .cap-filter-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
@@ -213,8 +213,8 @@
     .dm-add-btn{font-size:10.5px;font-weight:700;padding:5px 13px;border-radius:5px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:background 120ms ease;}
     .dm-add-btn:hover{background:var(--border);}
     .dm-ta.dm-rr-ta{border-radius:4px 4px 0 0;border-bottom-color:transparent;}
-    .dm-rr-preview{background:var(--bg);border:1px solid var(--border);border-radius:0 0 4px 4px;padding:7px 10px;font-size:11.5px;color:var(--ink);line-height:1.75;min-height:22px;}
-    .dm-rr-line{white-space:pre-wrap;line-height:1.75;}
+    .dm-rr-preview{background:var(--bg);border:1px solid var(--border);border-radius:0 0 4px 4px;padding:7px 10px;font-size:11.5px;color:var(--ink);min-height:22px;}
+    .dm-rr-line{line-height:1.75;white-space:pre-wrap;}
     .dm-lens-bar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
     .dm-lens-btn{font-size:9.5px;font-weight:700;padding:3px 11px;border-radius:20px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:all 120ms ease;}
     .dm-lens-btn:hover{background:var(--border);}
@@ -263,6 +263,7 @@
 <div id="modal-overlay" class="modal-overlay">
   <div id="modal-card" class="modal-card" role="dialog" aria-modal="true"></div>
 </div>
+<input type="file" id="avatar-file-input" accept="image/*" style="display:none">
 <div id="dm-overlay" class="dm-overlay">
   <div id="dm-modal" class="dm-modal" role="dialog" aria-modal="true"></div>
 </div>
@@ -409,6 +410,10 @@
       creative:    LENS_PROFILES.creative.previewCards,
       astrology:   LENS_PROFILES.astrology.previewCards,
     },
+    lensNames: {
+      public:'Yi Ting Yu / Tina Yu', photography:'', creative:'', astrology:'', engineering:'', myself:'',
+    },
+    avatarImg: '',
   };
 
   /* ── MODULE STATE (persists across re-renders) ── */
@@ -661,7 +666,7 @@
       ['photography','creative','astrology'].forEach(function(k){
         cards[k] = (_dmCardsBuf && _dmCardsBuf[k]) || TINA_DATA_MATRIX.cards[k];
       });
-      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards }));
+      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards, lensNames:TINA_DATA_MATRIX.lensNames, avatarImg:TINA_DATA_MATRIX.avatarImg }));
     } catch(e) {}
   }
   function schedulePersist() {
@@ -676,6 +681,10 @@
       if (saved.cards && typeof saved.cards === 'object') {
         Object.keys(saved.cards).forEach(function(k){ if (TINA_DATA_MATRIX.cards[k] !== undefined) TINA_DATA_MATRIX.cards[k] = saved.cards[k]; });
       }
+      if (saved.lensNames && typeof saved.lensNames === 'object') {
+        Object.keys(saved.lensNames).forEach(function(k){ if (TINA_DATA_MATRIX.lensNames[k] !== undefined) TINA_DATA_MATRIX.lensNames[k] = saved.lensNames[k]; });
+      }
+      if (typeof saved.avatarImg === 'string') TINA_DATA_MATRIX.avatarImg = saved.avatarImg;
     } catch(e) {}
   }
   function dmInitBuffers() {
@@ -695,11 +704,12 @@
     clearNode(fa);
     if (_dmTab==='nodes')  buildDmNodesTab(fa);
     else if (_dmTab==='cards') buildDmCardsTab(fa);
+    else if (_dmTab==='settings') buildDmSettingsTab(fa);
     else buildDmImportTab(fa);
   }
   function buildDmTabBar() {
     var bar = el('div',{className:'dm-tab-bar'});
-    [['nodes','里程碑節點'],['cards','預覽卡片'],['import','批次匯入']].forEach(function(pair){
+    [['nodes','里程碑節點'],['cards','預覽卡片'],['import','批次匯入'],['settings','設定']].forEach(function(pair){
       var btn = el('button',{className:'dm-tab-btn'+(_dmTab===pair[0]?' dm-tab-active':'')});
       ap(btn, txt(pair[1]));
       (function(tab, b){
@@ -783,18 +793,7 @@
       var prev3=el('div',{className:'dm-rr-preview'});
       var rrUpdate=function(){
         node.subtitle=ta3.value; schedulePersist();
-        clearNode(prev3);
-        ta3.value.split('\n').forEach(function(ln){
-          var m=ln.match(/^(\s*)-\s?(.*)/);
-          var lnEl=el('div',{className:'dm-rr-line'});
-          if(m){
-            var depth=Math.floor(m[1].length/2);
-            var bulls=['•','◦','▪'];
-            lnEl.style.paddingLeft=(Math.min(depth,3)*14+4)+'px';
-            ap(lnEl,txt(bulls[Math.min(depth,bulls.length-1)]+' '+m[2]));
-          } else { ap(lnEl,txt(ln||' ')); }
-          ap(prev3,lnEl);
-        });
+        renderBulletLines(ta3.value,prev3);
       };
       rrUpdate();
       ta3.addEventListener('input',rrUpdate);
@@ -886,6 +885,54 @@
     }
     buildCardList(cardArea);
   }
+  function renderBulletLines(text, container) {
+    clearNode(container);
+    (text||'').split('\n').forEach(function(ln){
+      var m=ln.match(/^(\s*)-\s?(.*)/);
+      var lnEl=el('div',{className:'dm-rr-line'});
+      if(m){
+        var depth=Math.floor(m[1].length/2);
+        var bulls=['•','◦','▪'];
+        lnEl.style.display='flex'; lnEl.style.alignItems='baseline';
+        lnEl.style.paddingLeft=(Math.min(depth,3)*14)+'px';
+        var bSpan=el('span',{style:{flexShrink:'0',minWidth:'14px',color:'var(--sub)'}}); ap(bSpan,txt(bulls[Math.min(depth,bulls.length-1)]));
+        var cSpan=el('span',{style:{flex:'1',whiteSpace:'pre-wrap',lineHeight:'1.75'}}); ap(cSpan,txt(m[2]));
+        ap(lnEl,bSpan,cSpan);
+      } else {
+        lnEl.style.whiteSpace='pre-wrap'; lnEl.style.lineHeight='1.75';
+        ap(lnEl,txt(ln||' '));
+      }
+      ap(container,lnEl);
+    });
+  }
+
+  function buildDmSettingsTab(container) {
+    var wrap=el('div',{});
+    var h=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginBottom:'4px'}}); ap(h,txt('各視角顯示名稱'));
+    var sub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'16px',lineHeight:'1.6'}}); ap(sub,txt('支援換行（Enter 鍵）。名稱同步至側欄、分頁標題、頁面頂部。空白時套用預設名稱。'));
+    ap(wrap,h,sub);
+    var lensKeys=['public','photography','creative','astrology','engineering','myself'];
+    var lensLabels={public:'公眾',photography:'攝影',creative:'插畫',astrology:'斗數',engineering:'工作',myself:'全觀'};
+    lensKeys.forEach(function(k){
+      var row=el('div',{className:'dm-field',style:{marginBottom:'12px'}});
+      var lbl=el('div',{className:'dm-field-lbl'}); ap(lbl,txt(lensLabels[k]));
+      var ta=el('textarea',{className:'dm-ta',rows:'2'}); ta.value=TINA_DATA_MATRIX.lensNames[k]||''; ta.placeholder='Yi Ting Yu / Tina Yu';
+      (function(key,textarea){
+        textarea.addEventListener('input',function(){TINA_DATA_MATRIX.lensNames[key]=textarea.value; schedulePersist(); var cl=parseLens(); if(cl===key){renderStatusPanel(cl);renderContent(cl);}});
+      })(k,ta);
+      ap(row,lbl,ta); ap(wrap,row);
+    });
+    var avH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(avH,txt('頭像'));
+    var avSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'10px'}}); ap(avSub,txt('點擊左側圓形頭像即可上傳；在此可移除。'));
+    ap(wrap,avH,avSub);
+    if(TINA_DATA_MATRIX.avatarImg){
+      var clearBtn=el('button',{className:'dm-add-btn'}); ap(clearBtn,txt('✕ 移除頭像'));
+      clearBtn.addEventListener('click',function(){TINA_DATA_MATRIX.avatarImg=''; persistData(); renderStatusPanel(parseLens()); clearNode(container); buildDmSettingsTab(container);});
+      ap(wrap,clearBtn);
+    }
+    ap(container,wrap);
+  }
+
   function buildDmImportTab(container) {
     var lbl=el('div',{className:'dm-label'}); ap(lbl,txt('貼入 Notion 表格（TSV/CSV）或純文字格式'));
     var hint=el('div',{className:'dm-hint'});
@@ -937,21 +984,15 @@
     var tm=TRACK_META[ms.track];
     var tag=el('span',{className:'modal-track-tag',style:{background:tm.color+'1a',color:tm.color,borderColor:tm.color+'55'}});
     ap(tag, txt(tm.label));
-    var yrEl=el('div',{className:'modal-year-label'}); ap(yrEl, txt(ms.year+' · '+ms.label));
+    var mo=ms.month?('/'+(parseInt(ms.month)<10?'0'+ms.month:ms.month)):'';
+    var yrEl=el('div',{className:'modal-year-label'}); ap(yrEl, txt(ms.year+mo+' · '+ms.label));
     var titEl=el('div',{className:'modal-title'});     ap(titEl, txt(ms.title));
-    var subEl=el('div',{className:'modal-subtitle'});  ap(subEl, txt(ms.subtitle));
-    var tblock=el('div',{className:'modal-title-block'}); ap(tblock, yrEl, titEl, subEl);
+    var tblock=el('div',{className:'modal-title-block'}); ap(tblock, yrEl, titEl);
     var closeBtn=el('button',{className:'modal-close-btn','aria-label':'關閉',tabIndex:0});
     ap(closeBtn, txt('×')); closeBtn.addEventListener('click', closeModal);
     var head=el('div',{className:'modal-head'}); ap(head, tag, tblock, closeBtn);
     var body=el('div',{className:'modal-body'});
-    [['S','Situation 情境'],['T','Task 任務'],['A','Action 行動'],['R','Result 成果']].forEach(function(pair){
-      var block=el('div',{className:'star-block'});
-      var keyEl=el('div',{className:'star-key'});
-      var ks=el('span',{style:{color:tm.color}}); ap(ks,txt(pair[1])); ap(keyEl,ks);
-      var valEl=el('div',{className:'star-val'}); ap(valEl,txt(ms.star[pair[0]]));
-      ap(block, keyEl, valEl); ap(body, block);
-    });
+    if(ms.subtitle){var rrWrap=el('div',{className:'modal-rr-wrap'}); renderBulletLines(ms.subtitle,rrWrap); ap(body,rrWrap);}
     ap(card, head, body);
     overlay.classList.add('open'); closeBtn.focus();
   }
@@ -1007,34 +1048,47 @@
   function renderStatusPanel(lens) {
     var panel=document.getElementById('status-panel'); clearNode(panel);
     var meta=LENS_META[lens];
+    /* Avatar */
     var avatarWrap=el('div',{className:'avatar-wrap'});
-    var avatar=el('div',{className:'avatar'}); ap(avatar,txt('△')); ap(avatarWrap,avatar);
-    var name=el('p',{className:'sp-name'}); ap(name,txt('Yi Ting Yu / Tina Yu'));
-    var role=el('p',{className:'sp-role'}); ap(role,txt('Stage 4 · 全視角整合'));
-    var ident=el('div',{style:{textAlign:'center'}}); ap(ident,name,role);
+    var avatar=el('div',{className:'avatar'}); avatar.title='點擊上傳頭像';
+    if(TINA_DATA_MATRIX.avatarImg){
+      var img=el('img',{alt:'avatar'}); img.src=TINA_DATA_MATRIX.avatarImg; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; img.style.borderRadius='50%'; img.style.display='block';
+      ap(avatar,img);
+    } else { ap(avatar,txt('△')); }
+    avatar.addEventListener('click',function(){ var fi=document.getElementById('avatar-file-input'); if(fi)fi.click(); });
+    ap(avatarWrap,avatar);
+    /* Name (per-lens, supports \n) */
+    var lensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||'Yi Ting Yu / Tina Yu';
+    var name=el('p',{className:'sp-name'}); ap(name,txt(lensName));
+    var ident=el('div',{style:{textAlign:'center'}}); ap(ident,name);
+    /* Lens section */
     var lensTitle=el('div',{className:'sp-section-title'}); ap(lensTitle,txt('當前視角'));
     var dot=el('span',{className:'lens-badge-dot',style:{background:meta.color}});
     var badge=el('div',{className:'lens-badge',style:{color:meta.color,borderColor:meta.border,background:meta.bg}});
     ap(badge,dot,txt(meta.icon+' '+meta.label));
     var desc=el('p',{className:'lens-desc'}); ap(desc,txt(meta.desc));
     var lensSection=el('div',{className:'sp-lens-section'});
-    ap(lensSection, lensTitle, badge, desc);
-    /* Myself-only sidebar controls */
-    if (lens === 'myself') {
-      var dmBtn=el('button',{className:'sp-dm-btn'}); ap(dmBtn,txt('📊 資料管理中樞'));
-      dmBtn.addEventListener('click',openDmModal);
-      ap(lensSection,dmBtn);
+    ap(lensSection,lensTitle,badge,desc);
+    /* Back to 全觀（非 myself 視角顯示） */
+    if(lens!=='myself'){
+      var backBtn=el('button',{className:'sp-back-btn'}); ap(backBtn,txt('← 全觀'));
+      backBtn.addEventListener('click',function(){switchLens('myself');});
+      ap(lensSection,backBtn);
     }
-    /* URL hints: DOM element only created when lens === 'myself' */
-    if (lens === 'myself') {
+    /* Myself-only controls */
+    if(lens==='myself'){
+      var dmBtn=el('button',{className:'sp-dm-btn'}); ap(dmBtn,txt('📊 資料管理中樞'));
+      dmBtn.addEventListener('click',openDmModal); ap(lensSection,dmBtn);
+    }
+    if(lens==='myself'){
       var hintWrap=el('div',{className:'sp-url-hint'}); ap(hintWrap,txt('視角切換：'));
       ['?lens=photography','?lens=creative','?lens=astrology','?lens=engineering','?lens=myself'].forEach(function(c,i,arr){
         var code=el('code',{}); ap(code,txt(c)); ap(hintWrap,code);
-        if (i<arr.length-1) ap(hintWrap,txt(' '));
+        if(i<arr.length-1) ap(hintWrap,txt(' '));
       });
-      ap(lensSection, hintWrap);
+      ap(lensSection,hintWrap);
     }
-    ap(panel, avatarWrap, ident, lensSection);
+    ap(panel,avatarWrap,ident,lensSection);
   }
 
   /* ── STANDALONE SECTION ── */
@@ -1275,13 +1329,14 @@
     var isStandalone=(STANDALONE_LENSES.indexOf(lens)!==-1);
 
     /* Header */
-    var titleEl=el('h1',{className:'content-title'}); ap(titleEl,txt('人生軌跡觀測儀'));
-    var subtitleText=isStandalone?'個人創作與生命探索記錄':'個人生命數據整合平台 · 2012–2026 里程碑水管圖';
-    var subEl=el('p',{className:'content-subtitle'}); ap(subEl,txt(subtitleText));
+    var lensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||'Yi Ting Yu / Tina Yu';
+    var firstLine=lensName.split('\n')[0];
+    document.title=firstLine;
+    var titleEl=el('h1',{className:'content-title'}); ap(titleEl,txt(firstLine));
     var dot=el('span',{className:'lens-badge-dot',style:{background:meta.color}});
     var lbadge=el('div',{className:'content-lens-badge',style:{color:meta.color,background:meta.bg,borderColor:meta.border}});
     ap(lbadge,dot,txt(meta.icon+' '+meta.label));
-    var header=el('div',{className:'content-header'}); ap(header,titleEl,subEl,lbadge); ap(area,header);
+    var header=el('div',{className:'content-header'}); ap(header,titleEl,lbadge); ap(area,header);
 
     /* Commander panel: DOM created ONLY when lens === 'myself' */
     if (lens==='myself') { ap(area,renderCommanderPanel()); }
@@ -1292,20 +1347,14 @@
       return;
     }
 
-    /* Emotion panel: myself only, before pipeline */
-    if (lens==='myself') { ap(area,renderEmotionSection()); }
-
     /* Pipeline: public, engineering, myself */
     var pipeSection=el('div',{className:'section'});
-    var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('時間軸水管圖'));
+    var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('Timeline'));
     ap(pipeSection,sLabel,renderPipeline(lens));
     ap(area,pipeSection);
 
     /* Engineering section */
     if (lens==='engineering') { ap(area,renderEngSection()); }
-
-    /* Myself bottom sections */
-    if (lens==='myself') { ap(area,renderLifeMatrix()); }
   }
 
   /* ── INIT ── */
@@ -1318,6 +1367,14 @@
     var dmOverlay=document.getElementById('dm-overlay');
     if (dmOverlay) { dmOverlay.addEventListener('click',function(e){if(e.target===dmOverlay)closeDmModal();}); }
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeDmModal();}});
+    var avatarInput=document.getElementById('avatar-file-input');
+    if(avatarInput){avatarInput.addEventListener('change',function(){
+      var file=this.files&&this.files[0]; if(!file||!file.type.startsWith('image/')) return;
+      var reader=new FileReader();
+      reader.onload=function(ev){TINA_DATA_MATRIX.avatarImg=ev.target.result; persistData(); renderStatusPanel(parseLens());};
+      reader.readAsDataURL(file);
+      this.value='';
+    });}
   }
 
   if (document.readyState==='loading') { document.addEventListener('DOMContentLoaded',init); } else { init(); }
