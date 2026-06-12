@@ -5,786 +5,615 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>人生軌跡觀測儀</title>
   <style>
-    /* ══════════════════════════════════════
-       CSS TOKENS
-    ══════════════════════════════════════ */
+    /* ── TOKENS ── */
     :root {
-      --bg:       #f4f1ec;
-      --bg2:      #eceae3;
-      --ink:      #28261f;
-      --sub:      #55514a;
-      --border:   #dcd9d2;
-      --faint:    #9e9890;
-      --bg-card:  #f8f6f1;
-
-      /* Lens accent (B≥R 原則) */
-      --c-public:      #6a6a58;
-      --c-creative:    #b8682e;
-      --c-engineering: #2e5d8a;
-      --c-myself:      #5a3878;
-
-      /* Lens tint bg */
-      --bg-public:      #f0ede8;
-      --bg-creative:    #fdf0e4;
-      --bg-engineering: #e8f0f8;
-      --bg-myself:      #f0eaf8;
-
-      /* Track dot palette */
-      --t-photo:   #5a7a5a;
-      --t-illus:   #9a6a38;
-      --t-ziwei:   #6a4a8a;
-      --t-chars:   #b85e38;
-      --t-station: #b8882e;
-      --t-supply:  #2e5d8a;
-      --t-kpi:     #3e6d9a;
-      --t-bq:      #4e7daa;
-      --t-sleep:   #7a4a28;
-      --t-emotion: #9a3858;
-      --t-defense: #483a78;
-
+      --bg:      #f4f1ec;
+      --bg2:     #eceae3;
+      --ink:     #28261f;
+      --sub:     #55514a;
+      --border:  #dcd9d2;
+      --faint:   #9e9890;
+      --bg-card: #f8f6f1;
       --sidebar-w: 238px;
-      --r:         8px;
-      --r-sm:      5px;
-      --transition: 180ms ease;
+      --r: 8px;
+      --track-label-w: 72px;
+      --track-h: 72px;
+      --pipe-h: 7px;
+      --node-d: 17px;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang TC',
-                   'Noto Sans TC', 'Noto Serif TC', sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      font-size: 13.5px;
-      line-height: 1.65;
-      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang TC', sans-serif;
+      background: var(--bg); color: var(--ink); font-size: 13.5px;
+      line-height: 1.65; min-height: 100vh;
     }
 
-    /* ══════════════════════════════════════
-       LAYOUT
-    ══════════════════════════════════════ */
-    #app {
-      display: grid;
-      grid-template-columns: var(--sidebar-w) 1fr;
-      min-height: 100vh;
-    }
+    /* ── LAYOUT ── */
+    #app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
 
-    /* ══════════════════════════════════════
-       STATUS PANEL (LEFT SIDEBAR)
-    ══════════════════════════════════════ */
+    /* ── STATUS PANEL ── */
     #status-panel {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-      background: var(--bg);
-      border-right: 1px solid var(--border);
-      padding: 30px 18px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      background: var(--bg); border-right: 1px solid var(--border);
+      padding: 30px 18px 24px; display: flex; flex-direction: column;
+      gap: 22px; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
     }
-
-    /* ── Avatar ── */
-    .avatar-wrap {
-      display: flex;
-      justify-content: center;
-    }
+    .avatar-wrap { display: flex; justify-content: center; }
     .avatar {
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background: var(--bg2);
-      border: 1.5px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 400;
-      color: var(--faint);
-      letter-spacing: .05em;
-      flex-shrink: 0;
+      width: 68px; height: 68px; border-radius: 50%; background: var(--bg2);
+      border: 1.5px solid var(--border); display: flex; align-items: center;
+      justify-content: center; font-size: 13px; color: var(--faint);
     }
-
-    /* ── Identity ── */
-    .sp-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--ink);
-      text-align: center;
-      letter-spacing: -.2px;
-    }
-    .sp-role {
-      font-size: 10.5px;
-      color: var(--faint);
-      text-align: center;
-      margin-top: 3px;
-      letter-spacing: .03em;
-    }
-
-    /* ── Section header ── */
+    .sp-name { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; }
+    .sp-role { font-size: 10.5px; color: var(--faint); text-align: center; margin-top: 3px; }
     .sp-section-title {
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--faint);
-      padding-bottom: 7px;
-      border-bottom: 1px solid var(--border);
+      font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--faint); padding-bottom: 7px; border-bottom: 1px solid var(--border);
     }
-
-    /* ── Tags ── */
-    .sp-tag-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 9px;
-    }
+    .sp-tag-group { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
     .sp-tag {
-      font-size: 10px;
-      padding: 2px 9px;
-      border-radius: 20px;
-      background: var(--bg2);
-      border: .5px solid var(--border);
-      color: var(--sub);
-      white-space: nowrap;
+      font-size: 10px; padding: 2px 9px; border-radius: 20px;
+      background: var(--bg2); border: .5px solid var(--border); color: var(--sub);
     }
-
-    /* ── Lens badge ── */
     .lens-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      padding: 4px 11px;
-      border-radius: 20px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      color: var(--sub);
-      margin-top: 8px;
-      max-width: 100%;
-      white-space: nowrap;
-      overflow: hidden;
+      display: inline-flex; align-items: center; gap: 5px; font-size: 10px;
+      font-weight: 700; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border);
+      margin-top: 8px; white-space: nowrap;
     }
-    .lens-badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .lens-desc {
-      font-size: 10px;
-      color: var(--faint);
-      margin-top: 7px;
-      line-height: 1.55;
-    }
-
-    /* ── Lens section at bottom of panel ── */
-    .sp-lens-section {
-      margin-top: auto;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-
-    /* ── Lens URL hint ── */
-    .sp-url-hint {
-      margin-top: 12px;
-      font-size: 9px;
-      color: var(--faint);
-      line-height: 1.6;
-    }
+    .lens-badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .lens-desc { font-size: 10px; color: var(--faint); margin-top: 7px; line-height: 1.55; }
+    .sp-lens-section { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+    .sp-url-hint { margin-top: 12px; font-size: 9px; color: var(--faint); line-height: 1.8; }
     .sp-url-hint code {
-      background: var(--bg2);
-      border: .5px solid var(--border);
-      border-radius: 3px;
-      padding: 0 4px;
-      font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
-      font-size: 8.5px;
-      color: var(--sub);
+      background: var(--bg2); border: .5px solid var(--border); border-radius: 3px;
+      padding: 0 4px; font-family: 'SF Mono', 'Fira Mono', monospace; font-size: 8.5px; color: var(--sub);
     }
 
-    /* ══════════════════════════════════════
-       CONTENT AREA (RIGHT)
-    ══════════════════════════════════════ */
-    #content-area {
-      padding: 30px 26px 48px;
-      min-height: 100vh;
-    }
-
-    /* ── Content header ── */
-    .content-header {
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .content-title {
-      font-size: 21px;
-      font-weight: 300;
-      color: var(--ink);
-      letter-spacing: -.4px;
-    }
-    .content-subtitle {
-      font-size: 11.5px;
-      color: var(--faint);
-      margin-top: 5px;
-      letter-spacing: .02em;
-    }
+    /* ── CONTENT AREA ── */
+    #content-area { padding: 30px 26px 48px; min-height: 100vh; }
+    .content-header { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+    .content-title { font-size: 21px; font-weight: 300; color: var(--ink); letter-spacing: -.4px; }
+    .content-subtitle { font-size: 11.5px; color: var(--faint); margin-top: 5px; }
     .content-lens-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 20px;
-      margin-top: 10px;
-      border: 1px solid transparent;
+      display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; margin-top: 10px; border: 1px solid transparent;
     }
-
-    /* ── Section label ── */
-    .section {
-      margin-bottom: 32px;
-    }
+    .section { margin-bottom: 36px; }
     .section-label {
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--faint);
-      margin-bottom: 13px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 8.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--faint); margin-bottom: 14px; display: flex; align-items: center; gap: 0;
     }
-    .section-label-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 10px; }
+
+    /* ── PIPELINE ── */
+    .pipeline-wrap {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 16px 26px;
+      overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .pipeline-inner { min-width: 540px; }
+
+    /* Each row = label spacer + content; both axis and track rows share same structure */
+    .pl-row { display: flex; }
+    .pl-label {
+      width: var(--track-label-w); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 10px;
+    }
+    .pl-content { flex: 1; position: relative; }
+
+    /* Year axis */
+    .axis-row { height: 28px; margin-bottom: 4px; align-items: flex-end; }
+    .year-tick {
+      position: absolute; bottom: 0; font-size: 9px; font-weight: 600;
+      color: var(--faint); transform: translateX(-50%); white-space: nowrap;
+    }
+    .year-tick::before {
+      content: ''; display: block; width: 1px; height: 4px;
+      background: var(--border); margin: 0 auto 2px;
     }
 
-    /* ── Track card ── */
-    .track-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-left-width: 3px;
-      border-radius: var(--r);
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      transition: box-shadow var(--transition);
-    }
-    .track-card:hover {
-      box-shadow: 0 2px 8px rgba(40,38,31,.07);
+    /* Track row */
+    .track-row { height: var(--track-h); transition: opacity 260ms ease; }
+    .track-row.vis-active  { opacity: 1; }
+    .track-row.vis-partial { opacity: 0.5; }
+    .track-row.vis-dimmed  { opacity: 0.09; pointer-events: none; }
+
+    .track-label-inner { display: flex; align-items: center; gap: 4px; }
+    .track-label-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .track-label-text { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; }
+
+    /* Guide lines */
+    .guide-line {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgba(40,38,31,0.045); pointer-events: none;
     }
 
-    .track-card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 9px;
-    }
-    .track-card-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-    }
-    .track-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .track-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--ink);
-      white-space: nowrap;
-    }
-    .track-lens-tag {
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: .05em;
-      padding: 2px 8px;
-      border-radius: 20px;
-      border: 1px solid transparent;
-      white-space: nowrap;
-      flex-shrink: 0;
-      text-transform: uppercase;
+    /* Pipe line */
+    .pipe-line {
+      position: absolute; top: 50%; left: 0; right: 0;
+      height: var(--pipe-h); border-radius: calc(var(--pipe-h) / 2);
+      transform: translateY(-50%); pointer-events: none;
     }
 
-    /* ── Placeholder body ── */
-    .track-placeholder {
-      font-size: 11.5px;
-      color: var(--faint);
-      line-height: 1.6;
-      border-top: 1px dashed var(--border);
-      padding-top: 9px;
+    /* Milestone node */
+    .ms-node {
+      position: absolute; top: 50%;
+      width: var(--node-d); height: var(--node-d); border-radius: 50%;
+      transform: translate(-50%, -50%);
+      border: 2.5px solid rgba(255,255,255,0.88);
+      box-shadow: 0 1px 5px rgba(0,0,0,0.18);
+      cursor: pointer; z-index: 3;
+      transition: transform 130ms ease, box-shadow 130ms ease;
     }
-    .stage-badge {
-      display: inline-block;
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: .06em;
-      padding: 1px 6px;
-      border-radius: 3px;
-      background: var(--bg2);
-      color: var(--faint);
-      border: .5px solid var(--border);
-      text-transform: uppercase;
-      margin-right: 6px;
-      vertical-align: middle;
+    .ms-node:hover {
+      transform: translate(-50%,-50%) scale(1.35);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.26);
     }
 
-    /* ── Empty state ── */
-    .empty-state {
-      text-align: center;
-      padding: 70px 20px;
-      color: var(--faint);
-    }
-    .empty-icon {
-      font-size: 30px;
-      margin-bottom: 14px;
-    }
-    .empty-text {
-      font-size: 13px;
-      line-height: 1.65;
+    /* Node short label below pipe */
+    .ms-label {
+      position: absolute; top: calc(50% + 12px);
+      font-size: 8.5px; font-weight: 700; letter-spacing: .04em;
+      transform: translateX(-50%); pointer-events: none; white-space: nowrap;
     }
 
-    /* ══════════════════════════════════════
-       MOBILE
-    ══════════════════════════════════════ */
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(40,38,31,0.42);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 200ms ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: calc(var(--r) * 1.5); width: 100%; max-width: 520px;
+      max-height: calc(100vh - 80px); overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(40,38,31,0.24);
+      transform: scale(0.95) translateY(8px); transition: transform 200ms ease;
+    }
+    .modal-overlay.open .modal-card { transform: scale(1) translateY(0); }
+
+    .modal-head {
+      padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .modal-track-tag {
+      flex-shrink: 0; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; padding: 2px 9px; border-radius: 20px;
+      border: 1px solid transparent; margin-top: 4px; white-space: nowrap;
+    }
+    .modal-title-block { flex: 1; min-width: 0; }
+    .modal-year-label { font-size: 10px; font-weight: 600; color: var(--faint); }
+    .modal-title { font-size: 16.5px; font-weight: 700; color: var(--ink); margin-top: 2px; line-height: 1.3; }
+    .modal-subtitle { font-size: 11.5px; color: var(--sub); margin-top: 4px; line-height: 1.5; }
+    .modal-close-btn {
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--bg2); border: 1px solid var(--border); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: var(--sub); transition: background 160ms ease; margin-top: -2px;
+    }
+    .modal-close-btn:hover { background: var(--border); }
+
+    .modal-body { padding: 16px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .star-block { }
+    .star-key {
+      display: flex; align-items: center; font-size: 8px; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase; margin-bottom: 5px;
+    }
+    .star-key::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 8px; }
+    .star-val { font-size: 12px; color: var(--sub); line-height: 1.7; }
+
+    /* ── MOBILE ── */
     @media (max-width: 680px) {
-      #app {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-      }
+      #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       #status-panel {
-        position: static;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 18px 16px;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
+        position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border);
+        padding: 16px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px;
       }
-      .avatar-wrap { flex-shrink: 0; }
-      .sp-lens-section {
-        margin-top: 0;
-        padding-top: 0;
-        border-top: none;
-        margin-left: auto;
-        flex-shrink: 0;
-      }
+      .sp-lens-section { margin-top: 0; padding-top: 0; border-top: none; margin-left: auto; }
       .sp-url-hint { display: none; }
-      #content-area { padding: 20px 16px 40px; }
-      .content-title { font-size: 18px; }
+      #content-area { padding: 18px 14px 40px; }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <aside id="status-panel"></aside>
-    <main id="content-area"></main>
-  </div>
+<div id="app">
+  <aside id="status-panel"></aside>
+  <main id="content-area"></main>
+</div>
+<div id="modal-overlay" class="modal-overlay">
+  <div id="modal-card" class="modal-card" role="dialog" aria-modal="true"></div>
+</div>
+<script>
+(function () {
+  'use strict';
 
-  <script>
-  (function () {
-    'use strict';
+  var LENS_META = {
+    public:      { label:'公眾視角',      icon:'◎', color:'#6a6a58', bg:'#f0ede8', border:'#c4c2b8', desc:'公開展示模式 · 僅顯示開放節點' },
+    creative:    { label:'藝術創作者視角', icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'插畫 · 攝影 · 文具週邊軌跡' },
+    engineering: { label:'專業工管視角',   icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
+    myself:      { label:'全觀自我視角',   icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
+  };
 
-    /* ══════════════════════════════════════
-       CONFIG
-    ══════════════════════════════════════ */
+  var TRACK_META = {
+    engineering: {
+      label:'工管專案', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)',
+      gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)',
+    },
+    creative: {
+      label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)',
+      gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)',
+    },
+    divination: {
+      label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',
+      gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)',
+    },
+  };
 
-    var LENS_META = {
-      public: {
-        label:   '公眾視角',
-        icon:    '◎',
-        color:   '#6a6a58',
-        bg:      '#f0ede8',
-        border:  '#c4c2b8',
-        desc:    '公開展示模式 · 僅顯示安全節點',
-      },
-      creative: {
-        label:   '藝術創作者視角',
-        icon:    '◈',
-        color:   '#b8682e',
-        bg:      '#fdf0e4',
-        border:  '#d4a878',
-        desc:    '插畫 · 攝影 · 文具週邊軌跡',
-      },
-      engineering: {
-        label:   '專業工管視角',
-        icon:    '◧',
-        color:   '#2e5d8a',
-        bg:      '#e8f0f8',
-        border:  '#7aaac8',
-        desc:    '13 年供應鏈與工業工程核心數據',
-      },
-      myself: {
-        label:   '全觀自我視角',
-        icon:    '◉',
-        color:   '#5a3878',
-        bg:      '#f0eaf8',
-        border:  '#a888c8',
-        desc:    '全軌道解鎖 · 含生理 / 情緒 / 防禦層',
-      },
-    };
+  var TRACK_ORDER = ['engineering','creative','divination'];
+  var YEAR_START = 2012, YEAR_END = 2026;
 
-    /* lens 陣列 = 哪些視角下此軌道可見；lensOwner = 顯示歸屬 badge 的主視角 */
-    var TRACKS = [
-      /* ── 公眾軌道 ── */
-      {
-        id:          'photography',
-        label:       '攝影作品',
-        group:       '公眾展示',
-        color:       '#5a7a5a',
-        lens:        ['public', 'creative', 'myself'],
-        lensOwner:   'public',
-        placeholder: '靜態構圖・光影田野・街頭攝影精選；Stage 2 掛載圖集牆',
-      },
-      {
-        id:          'illustration-concept',
-        label:       '插畫概念',
-        group:       '公眾展示',
-        color:       '#9a6a38',
-        lens:        ['public', 'myself'],
-        lensOwner:   'public',
-        placeholder: '設計語言介紹・概念草圖說明；Stage 2 掛載視覺展板',
-      },
-      {
-        id:          'ziwei',
-        label:       '斗數預約',
-        group:       '公眾展示',
-        color:       '#6a4a8a',
-        lens:        ['public', 'myself'],
-        lensOwner:   'public',
-        placeholder: '預約說明・服務範圍・聯絡入口；Stage 2 掛載預約表單區塊',
-      },
-      /* ── 創作軌道 ── */
-      {
-        id:          'original-characters',
-        label:       '原創角色',
-        group:       '藝術創作',
-        color:       '#b85e38',
-        lens:        ['creative', 'myself'],
-        lensOwner:   'creative',
-        placeholder: '角色設定書・世界觀背景・設計演進；Stage 2 掛載角色圖鑑',
-      },
-      {
-        id:          'stationery',
-        label:       '文具週邊',
-        group:       '藝術創作',
-        color:       '#b8882e',
-        lens:        ['creative', 'myself'],
-        lensOwner:   'creative',
-        placeholder: '週邊品項・設計稿・生產備忘；Stage 2 掛載商品展示卡',
-      },
-      /* ── 工管軌道 ── */
-      {
-        id:          'supply-chain',
-        label:       '供應鏈工管',
-        group:       '專業成就',
-        color:       '#2e5d8a',
-        lens:        ['engineering', 'myself'],
-        lensOwner:   'engineering',
-        placeholder: '13 年跨廠區管理・良率提升・交期壓縮；Stage 2 掛載時間軸與 KPI 儀表板',
-      },
-      {
-        id:          'kpi',
-        label:       'KPI 成就指標',
-        group:       '專業成就',
-        color:       '#3e6d9a',
-        lens:        ['engineering', 'myself'],
-        lensOwner:   'engineering',
-        placeholder: '量化成就數據・對比基準・改善幅度；Stage 2 掛載指標卡片組',
-      },
-      {
-        id:          'bq-stories',
-        label:       'BQ 行為故事',
-        group:       '專業成就',
-        color:       '#4e7daa',
-        lens:        ['engineering', 'myself'],
-        lensOwner:   'engineering',
-        placeholder: 'STAR 格式行為面試故事庫；Stage 2 掛載故事卡可展開閱讀',
-      },
-      /* ── 私密軌道（myself only）── */
-      {
-        id:          'sleep-variation',
-        label:       '睡眠變異因果',
-        group:       '生命防線',
-        color:       '#7a4a28',
-        lens:        ['myself'],
-        lensOwner:   'myself',
-        placeholder: '深睡比例・相位偏移・因果追蹤；Stage 2 連接 SAS Hub 資料流',
-      },
-      {
-        id:          'emotion-curve',
-        label:       '情緒去噪曲線',
-        group:       '生命防線',
-        color:       '#9a3858',
-        lens:        ['myself'],
-        lensOwner:   'myself',
-        placeholder: '情緒週期平滑化・去噪趨勢・觸發因子；Stage 2 連接 Mental Dashboard',
-      },
-      {
-        id:          'life-defense',
-        label:       '生活防線',
-        group:       '生命防線',
-        color:       '#483a78',
-        lens:        ['myself'],
-        lensOwner:   'myself',
-        placeholder: '能量防禦策略・壓力緩衝機制・日常儀軌；Stage 2 整合 Daily Optimizer',
-      },
-    ];
+  var VIS = {
+    public:      { engineering:'dimmed',  creative:'partial', divination:'partial' },
+    creative:    { engineering:'dimmed',  creative:'active',  divination:'dimmed'  },
+    engineering: { engineering:'active',  creative:'dimmed',  divination:'dimmed'  },
+    myself:      { engineering:'active',  creative:'active',  divination:'active'  },
+  };
 
-    /* ══════════════════════════════════════
-       安全 DOM 工具 — 禁用 innerHTML
-    ══════════════════════════════════════ */
+  function pct(year) {
+    return ((year - YEAR_START) / (YEAR_END - YEAR_START) * 100).toFixed(3) + '%';
+  }
 
-    function el(tag, props) {
-      var node = document.createElement(tag);
-      if (props) {
-        Object.keys(props).forEach(function (k) {
-          var v = props[k];
-          if (k === 'style' && typeof v === 'object') {
-            Object.keys(v).forEach(function (sk) { node.style[sk] = v[sk]; });
-          } else if (k === 'className') {
-            node.className = v;
-          } else {
-            node.setAttribute(k, v);
-          }
-        });
-      }
-      return node;
-    }
+  var MS = [
+    { id:'e1', year:2012, track:'engineering', label:'入行',
+      title:'半導體供應鏈入局', subtitle:'物料管控 · 生產排程 · 首次跨部門協作',
+      star:{
+        S:'受聘封測廠，物料缺失問題導致產線頻繁停工；舊機制依賴人工電話確認，無系統化追蹤。',
+        T:'三個月內建立系統化物料追蹤流程，降低停線風險，同時快速適應半導體供應鏈運作節奏。',
+        A:'自主設計 Excel 追蹤模板推廣至跨部門；建立每日料況回報機制；與採購協調安全庫存緩衝。',
+        R:'入職三個月物料缺失停線事件減少 35%，建立個人在跨部門協作上的信任基礎。',
+      }},
+    { id:'e2', year:2016, track:'engineering', label:'升級',
+      title:'跨廠區管理擴張', subtitle:'三廠同步 · 良率優化 · 跨地協調',
+      star:{
+        S:'公司擴廠至三廠區，管理層決定整合物料與生產調度於單一負責人，挑戰大幅提升。',
+        T:'接管三廠物料協調，在不增加人力的前提下維持供應穩定，並推動跨廠良率標準化。',
+        A:'建立跨廠週報制度；統一 BOM 版本管控；導入異常分級回報機制，減少 escalation 延遲。',
+        R:'跨廠物料齊套率提升至 96%，良率差異縮小至 1.5% 以內，獲授跨廠協調代表資格。',
+      }},
+    { id:'e3', year:2019, track:'engineering', label:'精進',
+      title:'良率精進專案', subtitle:'數據驅動 · 根因分析 · 製程改善',
+      star:{
+        S:'特定製程段良率連續六個月低於目標值 3%，傳統目視檢查無法定位根因，客戶壓力升高。',
+        T:'主導跨部門改善小組，透過數據分析定位根因，三個月內達成穩定良率提升目標。',
+        A:'整合 SPC 數據與人工記錄建立根因相關性矩陣；協調設備、製程、品管三部門同步驗證。',
+        R:'目標製程良率回升至 99.2%，超越季度目標；改善方法論列為廠內 Best Practice 推廣。',
+      }},
+    { id:'e4', year:2023, track:'engineering', label:'制度',
+      title:'制度化改革推動', subtitle:'標準化 SOP · 知識管理 · 交接系統',
+      star:{
+        S:'核心人員流動導致知識斷層，新人培訓時間過長，舊 SOP 文件分散且版本混亂。',
+        T:'一年內完成供應鏈核心流程標準化，建立可傳承的知識管理系統，降低替換風險。',
+        A:'主導 SOP 重寫工作坊；建立版本管控 Wiki；設計新人 30/60/90 天培訓追蹤框架。',
+        R:'新人獨立上手時間縮短 40%，SOP 覆蓋率達 87%，交接順暢度評分由 3.2 升至 4.6。',
+      }},
+    { id:'e5', year:2025, track:'engineering', label:'換軌',
+      title:'職涯主動換軌決策', subtitle:'13 年積累 · 身分重組 · 多軌啟動',
+      star:{
+        S:'13 年深耕半導體供應鏈，達個人技術與職位天花板；創作與命理探索逐漸展現自主生命力。',
+        T:'在不妥協生活品質的前提下，完成職涯轉型的規劃、資源盤點與身分重建。',
+        A:'系統評估各路徑風險與資源；建立創作收入驗證機制；啟動人生軌跡觀測儀作為決策工具。',
+        R:'決策已啟動，觀測儀 Stage 1–2 上線，供應鏈技能整理成可攜帶資產（BQ 故事庫 + KPI 卡）。',
+      }},
+    { id:'c1', year:2015, track:'creative', label:'重啟',
+      title:'插畫創作重新出發', subtitle:'停筆十年後的回歸',
+      star:{
+        S:'大學後因工作擱置創作超過十年，重新拾筆的慾望長期被「沒時間」的思維壓制。',
+        T:'在不犧牲工作表現的前提下，重建創作習慣，嘗試找到個人視覺語言的定位。',
+        A:'設定每週最低一張習作承諾；加入線上社群尋求回饋；購置數位板系統性練習。',
+        R:'連續六個月維持節奏；確立柔和線條+暖色系個人風格；收到首批陌生人正向回饋。',
+      }},
+    { id:'c2', year:2019, track:'creative', label:'週邊',
+      title:'文具週邊首批量產', subtitle:'從設計稿到實體落地',
+      star:{
+        S:'多款作品累積穩定粉絲，多次收到「有沒有實體版？」詢問，決定嘗試週邊生產。',
+        T:'在零消費品供應鏈知識的領域，完成設計到生產到配送的第一次完整流程學習。',
+        A:'運用工管背景比對多家印製廠 BOM 與交期；設計包裝規格；小批量 50 件試水溫。',
+        R:'首批週邊兩週內售罄，銷售額超預期 60%；建立個人品牌與消費者關係基礎。',
+      }},
+    { id:'c3', year:2022, track:'creative', label:'攝影',
+      title:'攝影系統化訓練', subtitle:'構圖語言建立 · 視覺風格確立',
+      star:{
+        S:'手機攝影多年但缺乏系統框架，照片隨機性高，難以複製好看的成功案例。',
+        T:'一年內建立可重複的攝影構圖原則，確立個人視覺風格，與插畫語言形成呼應。',
+        A:'購置相機系統；報名攝影師評圖課；每月主題式拍攝練習；建立個人色彩 preset 庫。',
+        R:'攝影作品獲平台演算法推薦；確立靜物+田野+光影三主題；攝影與插畫語言統一。',
+      }},
+    { id:'c4', year:2026, track:'creative', label:'公開',
+      title:'創作身分正式公開化', subtitle:'作品發表 · 創作者身分確立',
+      star:{
+        S:'創作多年但一直以「業餘興趣」自我定位，缺乏公開展示的勇氣與系統化作品呈現。',
+        T:'建立公開創作者身分，整合攝影、插畫、週邊三條線，建立持續發表的基礎設施。',
+        A:'建立作品集（觀測儀）；設計發表 SOP 與內容行事曆；30 天三平台同步實驗。',
+        R:'（進行中）Stage 2 觀測儀上線；創作軌道數據開始系統性記錄。目標：Q3 線下展。',
+      }},
+    { id:'d1', year:2019, track:'divination', label:'入門',
+      title:'紫微斗數系統入門', subtitle:'命理體系初探',
+      star:{
+        S:'長期對命理有好奇但停留在坊間碎片知識，缺乏系統性架構理解自己與他人的生命規律。',
+        T:'選定紫微斗數作為主攻體系，在工作之餘完成基礎盤面解讀的自學建構。',
+        A:'購置系統性教材；加入研習社群；以自盤為起點每週深度研讀一宮位並驗證。',
+        R:'入門六個月後可獨立解讀主要格局；開始以命理視角重新詮釋職涯選擇的底層邏輯。',
+      }},
+    { id:'d2', year:2022, track:'divination', label:'深修',
+      title:'系統化深度修習', subtitle:'正式師傳學習 · 盤面解讀實練',
+      star:{
+        S:'自學達瓶頸，部分格局判斷缺乏脈絡，容易過度詮釋；需要師傳糾偏與體系整合。',
+        T:'透過師傳指導完成進階格局研習，累積足夠案例量以建立解盤直覺。',
+        A:'報名正規師傳課程；每週三盤以上實練；建立個人解盤 SOP 與格局筆記庫。',
+        R:'完成 100 盤以上實練；格局誤判率顯著下降；確立務實心理取向的解盤風格。',
+      }},
+    { id:'d3', year:2024, track:'divination', label:'諮詢',
+      title:'開始提供個人諮詢', subtitle:'命理知識服務化的第一步',
+      star:{
+        S:'師傳認可解盤能力後，友人主動尋求諮詢，決定以正式框架承接，建立服務邊界。',
+        T:'建立清晰的服務邊界、收費機制與諮詢流程，讓命理知識以可持續的方式提供。',
+        A:'設計諮詢表單與前置問卷；制定服務說明；以月接案量上限保護服務品質。',
+        R:'首季滿意度 4.8/5；口碑轉介率 70%；建立候補名單機制，供需平衡初步成立。',
+      }},
+    { id:'d4', year:2026, track:'divination', label:'平台',
+      title:'斗數預約平台建立', subtitle:'服務流程正式化 · 公開接案',
+      star:{
+        S:'口碑諮詢已達容量上限，需要系統化預約機制，降低每次行政溝通成本。',
+        T:'建立公開預約入口，整合服務說明與個人命理觀點，形成完整的服務品牌。',
+        A:'將斗數預約整合至觀測儀公眾視角；設計預約→前置問卷→確認 SOP。',
+        R:'（進行中）預約入口 Stage 3 建設中；目標：2026 Q3 公開預約功能正式上線。',
+      }},
+  ];
 
-    function txt(s) {
-      return document.createTextNode(String(s == null ? '' : s));
-    }
+  /* ── SAFE DOM UTILS ── */
 
-    function ap(parent) {
-      var children = Array.prototype.slice.call(arguments, 1);
-      children.forEach(function (c) {
-        if (c == null) return;
-        if (c instanceof Node) {
-          parent.appendChild(c);
+  function el(tag, props) {
+    var node = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        var v = props[k];
+        if (k === 'style' && typeof v === 'object') {
+          Object.keys(v).forEach(function (sk) { node.style[sk] = v[sk]; });
+        } else if (k === 'className') {
+          node.className = v;
+        } else if (k === 'tabIndex') {
+          node.tabIndex = v;
         } else {
-          parent.appendChild(txt(c));
+          node.setAttribute(k, v);
         }
       });
-      return parent;
     }
+    return node;
+  }
+  function txt(s) { return document.createTextNode(String(s == null ? '' : s)); }
+  function ap(p) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    args.forEach(function (c) { if (c != null) p.appendChild(c instanceof Node ? c : txt(c)); });
+    return p;
+  }
+  function clearNode(n) { while (n.firstChild) n.removeChild(n.firstChild); }
 
-    function clearNode(node) {
-      while (node.firstChild) { node.removeChild(node.firstChild); }
-    }
+  /* ── ROUTING ── */
+  function parseLens() {
+    var raw = '';
+    try { raw = new URLSearchParams(window.location.search).get('lens') || ''; } catch (e) {}
+    return Object.prototype.hasOwnProperty.call(LENS_META, raw) ? raw : 'public';
+  }
 
-    /* ══════════════════════════════════════
-       ROUTING
-    ══════════════════════════════════════ */
+  /* ── MODAL ── */
+  function openModal(ms) {
+    var overlay = document.getElementById('modal-overlay');
+    var card    = document.getElementById('modal-card');
+    if (!overlay || !card) return;
+    clearNode(card);
+    var tm = TRACK_META[ms.track];
 
-    function parseLens() {
-      var raw = '';
-      try {
-        raw = new URLSearchParams(window.location.search).get('lens') || '';
-      } catch (e) {
-        raw = '';
-      }
-      return Object.prototype.hasOwnProperty.call(LENS_META, raw) ? raw : 'public';
-    }
+    var tag = el('span', { className:'modal-track-tag',
+      style:{ background: tm.color+'1a', color: tm.color, borderColor: tm.color+'55' }});
+    ap(tag, txt(tm.label));
 
-    /* ══════════════════════════════════════
-       RENDER: STATUS PANEL
-    ══════════════════════════════════════ */
+    var yrEl  = el('div', { className:'modal-year-label' }); ap(yrEl, txt(ms.year + ' · ' + ms.label));
+    var titEl = el('div', { className:'modal-title' });      ap(titEl, txt(ms.title));
+    var subEl = el('div', { className:'modal-subtitle' });   ap(subEl, txt(ms.subtitle));
+    var tblock = el('div', { className:'modal-title-block' }); ap(tblock, yrEl, titEl, subEl);
 
-    function renderStatusPanel(lens) {
-      var panel = document.getElementById('status-panel');
-      clearNode(panel);
-      var meta = LENS_META[lens];
+    var closeBtn = el('button', { className:'modal-close-btn', 'aria-label':'關閉', tabIndex:0 });
+    ap(closeBtn, txt('×'));
+    closeBtn.addEventListener('click', closeModal);
 
-      /* Avatar */
-      var avatarWrap = el('div', { className: 'avatar-wrap' });
-      var avatar = el('div', { className: 'avatar' });
-      ap(avatar, txt('△'));
-      ap(avatarWrap, avatar);
+    var head = el('div', { className:'modal-head' }); ap(head, tag, tblock, closeBtn);
 
-      /* Identity */
-      var name = el('p', { className: 'sp-name' });
-      ap(name, txt('人生軌跡觀測儀'));
-      var role = el('p', { className: 'sp-role' });
-      ap(role, txt('Stage 1 · 地基佈局'));
-      var identBlock = el('div', { style: { textAlign: 'center' } });
-      ap(identBlock, name, role);
+    var body = el('div', { className:'modal-body' });
+    [['S','Situation 情境'],['T','Task 任務'],['A','Action 行動'],['R','Result 成果']].forEach(function (pair) {
+      var block  = el('div', { className:'star-block' });
+      var keyEl  = el('div', { className:'star-key' });
+      var keySpan = el('span', { style:{ color: tm.color } }); ap(keySpan, txt(pair[1]));
+      ap(keyEl, keySpan);
+      var valEl  = el('div', { className:'star-val' }); ap(valEl, txt(ms.star[pair[0]]));
+      ap(block, keyEl, valEl); ap(body, block);
+    });
 
-      /* Tags */
-      var tagsTitle = el('div', { className: 'sp-section-title' });
-      ap(tagsTitle, txt('識別標籤'));
-      var tagGroup = el('div', { className: 'sp-tag-group' });
-      ['Stage 1', '骨架版', 'URL 視角路由', '繁體中文'].forEach(function (t) {
-        var tag = el('span', { className: 'sp-tag' });
-        ap(tag, txt(t));
-        ap(tagGroup, tag);
+    ap(card, head, body);
+    overlay.classList.add('open');
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    var ov = document.getElementById('modal-overlay');
+    if (ov) ov.classList.remove('open');
+  }
+
+  /* ── STATUS PANEL ── */
+  function renderStatusPanel(lens) {
+    var panel = document.getElementById('status-panel');
+    clearNode(panel);
+    var meta = LENS_META[lens];
+
+    var avatarWrap = el('div', { className:'avatar-wrap' });
+    var avatar = el('div', { className:'avatar' }); ap(avatar, txt('△')); ap(avatarWrap, avatar);
+
+    var name = el('p', { className:'sp-name' }); ap(name, txt('人生軌跡觀測儀'));
+    var role = el('p', { className:'sp-role' }); ap(role, txt('Stage 2 · 水管時間軸'));
+    var ident = el('div', { style:{ textAlign:'center' } }); ap(ident, name, role);
+
+    var tagsTitle = el('div', { className:'sp-section-title' }); ap(tagsTitle, txt('識別標籤'));
+    var tagGroup  = el('div', { className:'sp-tag-group' });
+    ['Stage 2','Pipeline','里程碑 STAR','三軌並行'].forEach(function (t) {
+      var tag = el('span', { className:'sp-tag' }); ap(tag, txt(t)); ap(tagGroup, tag);
+    });
+    var tagsSection = el('div', {}); ap(tagsSection, tagsTitle, tagGroup);
+
+    var lensTitle = el('div', { className:'sp-section-title' }); ap(lensTitle, txt('當前視角'));
+    var dot   = el('span', { className:'lens-badge-dot', style:{ background: meta.color } });
+    var badge = el('div', { className:'lens-badge',
+      style:{ color: meta.color, borderColor: meta.border, background: meta.bg } });
+    ap(badge, dot, txt(meta.icon + ' ' + meta.label));
+    var desc  = el('p', { className:'lens-desc' }); ap(desc, txt(meta.desc));
+
+    var hintWrap = el('div', { className:'sp-url-hint' });
+    ap(hintWrap, txt('視角切換 URL：'));
+    ['?lens=creative','?lens=engineering','?lens=myself'].forEach(function (c, i, arr) {
+      var code = el('code', {}); ap(code, txt(c)); ap(hintWrap, code);
+      if (i < arr.length - 1) ap(hintWrap, txt(' '));
+    });
+
+    var lensSection = el('div', { className:'sp-lens-section' });
+    ap(lensSection, lensTitle, badge, desc, hintWrap);
+    ap(panel, avatarWrap, ident, tagsSection, lensSection);
+  }
+
+  /* ── PIPELINE ── */
+  function renderPipeline(lens) {
+    var visMap    = VIS[lens] || VIS.public;
+    var yearMarks = [2012,2014,2016,2018,2020,2022,2024,2026];
+
+    var wrap  = el('div', { className:'pipeline-wrap' });
+    var inner = el('div', { className:'pipeline-inner' });
+
+    /* Year axis */
+    var axisRow = el('div', { className:'pl-row axis-row' });
+    ap(axisRow, el('div', { className:'pl-label' })); /* spacer */
+    var axisContent = el('div', { className:'pl-content' });
+    yearMarks.forEach(function (y) {
+      var tick = el('span', { className:'year-tick', style:{ left: pct(y) } });
+      ap(tick, txt(y));
+      ap(axisContent, tick);
+    });
+    ap(axisRow, axisContent);
+    ap(inner, axisRow);
+
+    /* Track rows */
+    TRACK_ORDER.forEach(function (trackId) {
+      var tm  = TRACK_META[trackId];
+      var vis = visMap[trackId] || 'dimmed';
+      var isActive = (vis === 'active');
+
+      var row = el('div', { className:'pl-row track-row vis-' + vis });
+
+      /* Label */
+      var labelCell = el('div', { className:'pl-label' });
+      var labelIn   = el('div', { className:'track-label-inner' });
+      var ldot  = el('span', { className:'track-label-dot', style:{ background: tm.color } });
+      var ltext = el('span', { className:'track-label-text', style:{ color: tm.color } });
+      ap(ltext, txt(tm.label)); ap(labelIn, ldot, ltext); ap(labelCell, labelIn);
+      ap(row, labelCell);
+
+      /* Pipe content */
+      var pipeContent = el('div', { className:'pl-content' });
+
+      /* Guide lines */
+      yearMarks.forEach(function (y) {
+        ap(pipeContent, el('span', { className:'guide-line', style:{ left: pct(y) } }));
       });
-      var tagsSection = el('div', {});
-      ap(tagsSection, tagsTitle, tagGroup);
 
-      /* Lens indicator（唯讀，不可切換） */
-      var lensTitle = el('div', { className: 'sp-section-title' });
-      ap(lensTitle, txt('當前視角'));
+      /* Pipe line */
+      var pipeLine = el('div', { className:'pipe-line', style:{
+        background: tm.gradient,
+        boxShadow: isActive
+          ? '0 1px 8px '+tm.glow+', 0 0 18px '+tm.glow+', inset 0 -2px 4px rgba(255,255,255,0.12), inset 0 2px 4px rgba(0,0,0,0.14)'
+          : 'inset 0 -1px 3px rgba(255,255,255,0.10), inset 0 1px 3px rgba(0,0,0,0.10)',
+      }});
+      ap(pipeContent, pipeLine);
 
-      var dot = el('span', { className: 'lens-badge-dot', style: { background: meta.color } });
-      var badge = el('div', { className: 'lens-badge', style: { color: meta.color, borderColor: meta.border, background: meta.bg } });
-      ap(badge, dot, txt(meta.icon + ' ' + meta.label));
-
-      var desc = el('p', { className: 'lens-desc' });
-      ap(desc, txt(meta.desc));
-
-      /* URL hint */
-      var hintWrap = el('div', { className: 'sp-url-hint' });
-      ap(hintWrap, txt('視角切換方式：在 URL 末尾加上'));
-      var br1 = el('br', {}), br2 = el('br', {});
-      var code1 = el('code', {}); ap(code1, txt('?lens=creative'));
-      var code2 = el('code', {}); ap(code2, txt('?lens=engineering'));
-      var code3 = el('code', {}); ap(code3, txt('?lens=myself'));
-      ap(hintWrap, br1, code1, txt(' / '), code2, br2, code3);
-
-      var lensSection = el('div', { className: 'sp-lens-section' });
-      ap(lensSection, lensTitle, badge, desc, hintWrap);
-
-      ap(panel, avatarWrap, identBlock, tagsSection, lensSection);
-    }
-
-    /* ══════════════════════════════════════
-       RENDER: CONTENT AREA
-    ══════════════════════════════════════ */
-
-    function renderContent(lens) {
-      var area = document.getElementById('content-area');
-      clearNode(area);
-      var meta = LENS_META[lens];
-
-      /* Header */
-      var titleEl = el('h1', { className: 'content-title' });
-      ap(titleEl, txt('人生軌跡觀測儀'));
-
-      var subtitleEl = el('p', { className: 'content-subtitle' });
-      ap(subtitleEl, txt('個人生命數據整合平台 · 階段性動態建設中'));
-
-      var lensTagEl = el('div', {
-        className: 'content-lens-badge',
-        style: {
-          color:           meta.color,
-          background:      meta.bg,
-          borderColor:     meta.border,
-        }
-      });
-      var lensTagDot = el('span', {
-        className: 'lens-badge-dot',
-        style: { background: meta.color }
-      });
-      ap(lensTagEl, lensTagDot, txt(meta.icon + ' ' + meta.label));
-
-      var header = el('div', { className: 'content-header' });
-      ap(header, titleEl, subtitleEl, lensTagEl);
-      ap(area, header);
-
-      /* Filter tracks */
-      var visible = TRACKS.filter(function (t) { return t.lens.indexOf(lens) !== -1; });
-
-      if (visible.length === 0) {
-        var emptyIcon = el('div', { className: 'empty-icon' }); ap(emptyIcon, txt('◌'));
-        var emptyText = el('div', { className: 'empty-text' }); ap(emptyText, txt('此視角目前無可顯示的軌道'));
-        var emptyState = el('div', { className: 'empty-state' }); ap(emptyState, emptyIcon, emptyText);
-        ap(area, emptyState);
-        return;
-      }
-
-      /* Group tracks */
-      var groups = {};
-      var groupOrder = [];
-      visible.forEach(function (t) {
-        if (!groups[t.group]) {
-          groups[t.group] = [];
-          groupOrder.push(t.group);
-        }
-        groups[t.group].push(t);
-      });
-
-      groupOrder.forEach(function (groupName) {
-        var tracks = groups[groupName];
-        var section = el('div', { className: 'section' });
-
-        /* Section label */
-        var sectionLabel = el('div', { className: 'section-label' });
-        ap(sectionLabel, txt(groupName));
-        ap(sectionLabel, el('span', { className: 'section-label-line' }));
-        ap(section, sectionLabel);
-
-        tracks.forEach(function (t) {
-          var lm = LENS_META[t.lensOwner];
-
-          /* Card */
-          var card = el('div', {
-            className: 'track-card',
-            style: { borderLeftColor: t.color }
-          });
-
-          /* Card head */
-          var dot = el('span', { className: 'track-dot', style: { background: t.color } });
-          var name = el('span', { className: 'track-name' }); ap(name, txt(t.label));
-          var cardLeft = el('div', { className: 'track-card-left' }); ap(cardLeft, dot, name);
-
-          var lensTag = el('span', {
-            className: 'track-lens-tag',
-            style: {
-              background:  lm.bg,
-              color:       lm.color,
-              borderColor: lm.border,
-            }
-          });
-          ap(lensTag, txt(lm.icon + ' ' + lm.label));
-
-          var cardHead = el('div', { className: 'track-card-head' });
-          ap(cardHead, cardLeft, lensTag);
-          ap(card, cardHead);
-
-          /* Placeholder body */
-          var stageBadge = el('span', { className: 'stage-badge' }); ap(stageBadge, txt('Stage 2'));
-          var placeholder = el('div', { className: 'track-placeholder' });
-          ap(placeholder, stageBadge, txt(t.placeholder));
-          ap(card, placeholder);
-
-          ap(section, card);
+      /* Nodes */
+      MS.filter(function (m) { return m.track === trackId; }).forEach(function (m) {
+        var canClick = (vis !== 'dimmed');
+        var node = el('div', {
+          className:'ms-node', role:'button', tabIndex: canClick ? 0 : -1,
+          'aria-label': m.year + '年 ' + m.title,
+          style:{ left: pct(m.year), background: tm.color },
         });
-
-        ap(area, section);
+        if (canClick) {
+          node.addEventListener('click', (function (ms) { return function () { openModal(ms); }; })(m));
+          node.addEventListener('keydown', (function (ms) {
+            return function (e) { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); openModal(ms); } };
+          })(m));
+        }
+        var nlabel = el('div', { className:'ms-label', style:{ left: pct(m.year), color: tm.color } });
+        ap(nlabel, txt(m.label));
+        ap(pipeContent, node, nlabel);
       });
+
+      ap(row, pipeContent);
+      ap(inner, row);
+    });
+
+    ap(wrap, inner);
+    return wrap;
+  }
+
+  /* ── CONTENT AREA ── */
+  function renderContent(lens) {
+    var area = document.getElementById('content-area');
+    clearNode(area);
+    var meta = LENS_META[lens];
+
+    var titleEl = el('h1', { className:'content-title' }); ap(titleEl, txt('人生軌跡觀測儀'));
+    var subEl   = el('p',  { className:'content-subtitle' }); ap(subEl, txt('個人生命數據整合平台 · 2012–2026 里程碑水管圖'));
+    var dot     = el('span', { className:'lens-badge-dot', style:{ background: meta.color } });
+    var lbadge  = el('div', { className:'content-lens-badge',
+      style:{ color: meta.color, background: meta.bg, borderColor: meta.border } });
+    ap(lbadge, dot, txt(meta.icon + ' ' + meta.label));
+    var header = el('div', { className:'content-header' }); ap(header, titleEl, subEl, lbadge);
+    ap(area, header);
+
+    var pipeSection = el('div', { className:'section' });
+    var sLabel = el('div', { className:'section-label' }); ap(sLabel, txt('時間軸水管圖 2012–2026'));
+    ap(pipeSection, sLabel, renderPipeline(lens));
+
+    var hint = el('p', { style:{ fontSize:'10.5px', color:'#9e9890', marginTop:'10px', lineHeight:'1.6' } });
+    ap(hint, txt('點擊軌道上的節點，展開里程碑詳細 STAR 資料。'));
+    ap(pipeSection, hint);
+    ap(area, pipeSection);
+  }
+
+  /* ── INIT ── */
+  function init() {
+    var lens = parseLens();
+    renderStatusPanel(lens);
+    renderContent(lens);
+
+    var overlay = document.getElementById('modal-overlay');
+    if (overlay) {
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
     }
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+  }
 
-    /* ══════════════════════════════════════
-       INIT
-    ══════════════════════════════════════ */
-
-    function init() {
-      var lens = parseLens();
-      renderStatusPanel(lens);
-      renderContent(lens);
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-
-  }());
-  </script>
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}());
+</script>
 </body>
 </html>
