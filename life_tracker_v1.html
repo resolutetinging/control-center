@@ -432,11 +432,12 @@
       public:'Yi Ting Yu / Tina Yu', photography:'', creative:'', astrology:'', engineering:'', myself:'',
     },
     avatarImg: '',
-    lensAvatars: { photography:'', creative:'', astrology:'' },
+    lensAvatars: { photography:'', creative:'', astrology:'', engineering:'' },
     publicText: '',
     lensProfiles: {
       photography: { headline:'光影的永恆切片', tagline:'攝影師 · 尋找安靜的語法', intro:'相信每一張好照片都是一次有意識的呼吸。靜物、田野、街頭日常，是我觀察世界的三個入口。自 2022 年起系統化訓練，確立以「低飽和暖光 × 幾何構圖」為核心的視覺語言。', instagram:'' },
       creative:    { headline:'用線條說故事',   tagline:'插畫師 · 世界觀構築者',  intro:'停筆十年後重新拾起畫筆。相信每個角色都是一個宇宙——有記憶、有習慣、有他不願說出口的秘密。以「柔和線條 × 暖色系」為風格基調，在角色設計、世界觀概念稿與文具週邊三條線上同步延伸。', instagram:'' },
+      engineering: { linkedin:'' },
     },
   };
 
@@ -732,7 +733,7 @@
       }
       if (typeof saved.publicText === 'string') TINA_DATA_MATRIX.publicText = saved.publicText;
       if (saved.lensProfiles && typeof saved.lensProfiles === 'object') {
-        ['photography','creative'].forEach(function(k){
+        ['photography','creative','engineering'].forEach(function(k){
           if (saved.lensProfiles[k] && typeof saved.lensProfiles[k] === 'object') {
             Object.assign(TINA_DATA_MATRIX.lensProfiles[k], saved.lensProfiles[k]);
           }
@@ -1013,8 +1014,16 @@
       clearBtn.addEventListener('click',function(){TINA_DATA_MATRIX.avatarImg=''; persistData(); renderStatusPanel(parseLens()); clearNode(container); buildDmSettingsTab(container);});
       ap(wrap,clearBtn);
     }
-    /* 各視角頭像（攝影/插畫/斗數） */
-    var laKeys=[['photography','攝影','▣'],['creative','插畫','◈'],['astrology','斗數','◆']];
+    /* 工作視角 LinkedIn */
+    var engH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(engH,txt('工作視角'));
+    ap(wrap,engH);
+    var liRow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
+    var liLbl=el('div',{className:'dm-field-lbl'}); ap(liLbl,txt('LinkedIn 連結'));
+    var liInp=el('input',{className:'dm-inp',type:'text'}); liInp.value=TINA_DATA_MATRIX.lensProfiles.engineering&&TINA_DATA_MATRIX.lensProfiles.engineering.linkedin||'';
+    liInp.addEventListener('input',function(){TINA_DATA_MATRIX.lensProfiles.engineering.linkedin=liInp.value; schedulePersist(); if(parseLens()==='engineering'){renderStatusPanel('engineering');}});
+    ap(liRow,liLbl,liInp); ap(wrap,liRow);
+    /* 各視角頭像（攝影/插畫/斗數/工作） */
+    var laKeys=[['photography','攝影','▣'],['creative','插畫','◈'],['astrology','斗數','◆'],['engineering','工作','◧']];
     laKeys.forEach(function(triple){
       var key=triple[0], lbl=triple[1], icon=triple[2];
       var row=el('div',{className:'lens-av-row'});
@@ -1147,6 +1156,29 @@
       ap(panel,sawWrap,sident);
       return;
     }
+    /* 工作視角：頭像 + 名稱 + LinkedIn icon */
+    if(lens==='engineering'){
+      var emeta=LENS_META[lens];
+      var eawWrap=el('div',{className:'avatar-wrap'});
+      var eav=el('div',{className:'avatar'});
+      if(TINA_DATA_MATRIX.lensAvatars[lens]){
+        var eimg=el('img',{alt:emeta.label}); eimg.src=TINA_DATA_MATRIX.lensAvatars[lens]; eimg.style.width='100%'; eimg.style.height='100%'; eimg.style.objectFit='cover'; eimg.style.borderRadius='50%'; eimg.style.display='block';
+        ap(eav,eimg);
+      } else { ap(eav,txt(emeta.icon)); }
+      ap(eawWrap,eav);
+      var elensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||emeta.label;
+      var ename=el('p',{className:'sp-name'}); ap(ename,txt(elensName));
+      var eident=el('div',{style:{textAlign:'center'}}); ap(eident,ename);
+      var eprof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
+      var liUrl=eprof.linkedin||'';
+      if(liUrl){
+        var liA=el('a',{className:'ig-btn',href:liUrl,target:'_blank',rel:'noopener noreferrer',title:'LinkedIn'});
+        liA.style.marginTop='8px'; liA.style.display='inline-flex';
+        ap(liA,makeLinkedInIcon(emeta.color)); ap(eident,liA);
+      }
+      ap(panel,eawWrap,eident);
+      return;
+    }
     if (lens !== 'myself') return;
     var meta=LENS_META[lens];
     /* Avatar */
@@ -1198,6 +1230,13 @@
     var rect=svgEl('rect'); sattr(rect,{x:'2',y:'2',width:'20',height:'20',rx:'5',ry:'5'}); svg.appendChild(rect);
     var circ=svgEl('circle'); sattr(circ,{cx:'12',cy:'12',r:'5'}); svg.appendChild(circ);
     var dot=svgEl('circle'); sattr(dot,{cx:'17.5',cy:'6.5',r:'1.5',fill:color||'currentColor',stroke:'none'}); svg.appendChild(dot);
+    return svg;
+  }
+  function makeLinkedInIcon(color) {
+    var svg=svgEl('svg'); sattr(svg,{viewBox:'0 0 24 24',width:'22',height:'22',fill:'none',stroke:color||'currentColor','stroke-width':'1.8','stroke-linecap':'round','stroke-linejoin':'round'});
+    var path=svgEl('path'); sattr(path,{d:'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z'}); svg.appendChild(path);
+    var rect=svgEl('rect'); sattr(rect,{x:'2',y:'9',width:'4',height:'12'}); svg.appendChild(rect);
+    var circ=svgEl('circle'); sattr(circ,{cx:'4',cy:'4',r:'2'}); svg.appendChild(circ);
     return svg;
   }
 
