@@ -881,14 +881,15 @@ function renderCostAnalysis(){
   }
   function renderTree(title, shops){
     const grandTotal=Object.values(shops).reduce((s,v)=>s+v.total,0);
-    if(!grandTotal) return '';
+    const grandCount=Object.values(shops).reduce((s,v)=>s+v.count,0);
+    if(!grandCount) return '';
     const rows=Object.entries(shops)
-      .filter(([,d])=>d.total>0&&d.count>0)
+      .filter(([,d])=>d.count>0)
       .sort((a,b)=>b[1].total-a[1].total)
       .map(([shop,data])=>{
-        const sPct=Math.round(data.total/grandTotal*100);
+        const sPct=grandTotal>0?Math.round(data.total/grandTotal*100):0;
         const childRows=Object.entries(data.items)
-          .filter(([,d])=>d.total>0&&d.count>0)
+          .filter(([,d])=>d.count>0)
           .sort((a,b)=>b[1].total-a[1].total)
           .map(([item,d])=>{
             const iPct=data.total>0?Math.round(d.total/data.total*100):0;
@@ -936,6 +937,7 @@ function renderCostAnalysis(){
         <div class="cost-sub">前 ${daysElapsed} 天</div>
       </div>
     </div>
+    ${monthEntries.length>0?`
     ${monthTotal>0?`
     <div class="cost-bar-section">
       <div class="cost-cat-row">
@@ -948,7 +950,7 @@ function renderCostAnalysis(){
         <div class="cost-bar-wrap"><div class="cost-bar" style="width:${dessertP}%;background:#c4aa7c;"></div></div>
         <span class="cost-cat-amt">NT$${monthDessert} <span style="color:var(--faint);font-weight:400;">(${dessertP}%)</span></span>
       </div>
-    </div>
+    </div>`:''}
     <div class="cost-breakdown">
       <div class="cost-bd-group">
         <div class="cost-chart-header">
@@ -959,7 +961,7 @@ function renderCostAnalysis(){
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
       </div>
       ${renderTree('☕ 咖啡', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
-      ${renderTree('🍰 甜點/餐食', buildTree(monthEntries.filter(e=>(e.dessertPrice??0)>0||e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
+      ${renderTree('🍰 甜點/餐食', buildTree(monthEntries.filter(e=>e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
     </div>`:'<div style="font-size:12px;color:var(--faint);text-align:center;padding:4px 0;">本月尚無消費記錄</div>'}
   `;
   renderCoffeeChart();
