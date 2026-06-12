@@ -214,6 +214,19 @@
     .dm-lens-btn:hover{background:var(--border);}
     .dm-lens-btn.dm-lens-active{background:#4878a0;color:#fff;border-color:#4878a0;}
     .dm-card-row{display:grid;grid-template-columns:80px 1fr 26px;gap:6px;align-items:center;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;}
+    /* dm modal */
+    .dm-overlay{position:fixed;inset:0;z-index:850;background:rgba(40,38,31,0.42);display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;opacity:0;pointer-events:none;transition:opacity 200ms ease;overflow-y:auto;}
+    .dm-overlay.open{opacity:1;pointer-events:all;}
+    .dm-modal{background:var(--bg);border:1px solid var(--border);border-radius:12px;width:100%;max-width:660px;box-shadow:0 14px 44px rgba(40,38,31,0.22);transform:scale(0.96) translateY(12px);transition:transform 200ms ease;flex-shrink:0;}
+    .dm-overlay.open .dm-modal{transform:scale(1) translateY(0);}
+    .dm-modal-head{display:flex;align-items:center;padding:16px 20px 14px;border-bottom:1px solid var(--border);}
+    .dm-modal-title{flex:1;font-size:13px;font-weight:700;color:var(--ink);}
+    .dm-modal-close{width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);cursor:pointer;font-size:16px;color:var(--sub);display:flex;align-items:center;justify-content:center;transition:background 140ms ease;}
+    .dm-modal-close:hover{background:var(--border);}
+    .dm-modal-body{padding:18px 20px 26px;max-height:calc(100vh - 160px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    /* sidebar dm button */
+    .sp-dm-btn{display:block;width:100%;margin-top:12px;padding:8px 12px;font-size:11px;font-weight:700;letter-spacing:.03em;cursor:pointer;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--sub);text-align:left;transition:background 140ms ease;}
+    .sp-dm-btn:hover{background:var(--border);}
 
     /* ── MOBILE ── */
     @media (max-width:680px){
@@ -236,6 +249,9 @@
 <div id="modal-overlay" class="modal-overlay">
   <div id="modal-card" class="modal-card" role="dialog" aria-modal="true"></div>
 </div>
+<div id="dm-overlay" class="dm-overlay">
+  <div id="dm-modal" class="dm-modal" role="dialog" aria-modal="true"></div>
+</div>
 <script>
 (function () {
   'use strict';
@@ -246,11 +262,11 @@
     photography: { label:'攝影視角',    icon:'▣', color:'#4a7888', bg:'#ecf2f4', border:'#9abcc8', desc:'光影 · 構圖 · 田野與靜物' },
     creative:    { label:'插畫視角',    icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'角色設計 · 世界觀 · 週邊創作' },
     astrology:   { label:'斗數視角',    icon:'◆', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'紫微斗數 · 命盤解讀 · 同頻諮詢' },
-    engineering: { label:'工管視角',    icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
+    engineering: { label:'工作視角',    icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
     myself:      { label:'全觀自我視角', icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
   };
   var TRACK_META = {
-    engineering: { label:'工管專案', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
+    engineering: { label:'工作專案', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
     creative:    { label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)', gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)' },
     divination:  { label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',  gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)' },
   };
@@ -356,7 +372,7 @@
     { id:'c1', year:2015, track:'creative',    label:'重啟', title:'插畫創作重新出發',    subtitle:'停筆十年後的回歸',
       star:{ S:'大學後因工作擱置創作超過十年，重新拾筆的慾望長期被「沒時間」的思維壓制。',T:'在不犧牲工作表現的前提下，重建創作習慣，嘗試找到個人視覺語言的定位。',A:'設定每週最低一張習作承諾；加入線上社群尋求回饋；購置數位板系統性練習。',R:'連續六個月維持節奏；確立柔和線條+暖色系個人風格；收到首批陌生人正向回饋。' }},
     { id:'c2', year:2019, track:'creative',    label:'週邊', title:'文具週邊首批量產',    subtitle:'從設計稿到實體落地',
-      star:{ S:'多款作品累積穩定粉絲，多次收到「有沒有實體版？」詢問，決定嘗試週邊生產。',T:'在零消費品供應鏈知識的領域，完成設計到生產到配送的第一次完整流程學習。',A:'運用工管背景比對多家印製廠 BOM 與交期；設計包裝規格；小批量 50 件試水溫。',R:'首批週邊兩週內售罄，銷售額超預期 60%；建立個人品牌與消費者關係基礎。' }},
+      star:{ S:'多款作品累積穩定粉絲，多次收到「有沒有實體版？」詢問，決定嘗試週邊生產。',T:'在零消費品供應鏈知識的領域，完成設計到生產到配送的第一次完整流程學習。',A:'運用工作背景比對多家印製廠 BOM 與交期；設計包裝規格；小批量 50 件試水溫。',R:'首批週邊兩週內售罄，銷售額超預期 60%；建立個人品牌與消費者關係基礎。' }},
     { id:'c3', year:2022, track:'creative',    label:'攝影', title:'攝影系統化訓練',      subtitle:'構圖語言建立 · 視覺風格確立',
       star:{ S:'手機攝影多年但缺乏系統框架，照片隨機性高，難以複製好看的成功案例。',T:'一年內建立可重複的攝影構圖原則，確立個人視覺風格，與插畫語言形成呼應。',A:'購置相機系統；報名攝影師評圖課；每月主題式拍攝練習；建立個人色彩 preset 庫。',R:'攝影作品獲平台演算法推薦；確立靜物+田野+光影三主題；攝影與插畫語言統一。' }},
     { id:'c4', year:2026, track:'creative',    label:'公開', title:'創作身分正式公開化',  subtitle:'作品發表 · 創作者身分確立',
@@ -632,7 +648,7 @@
     }
   }
   function dmTrackLabel(t){
-    return t==='engineering'?'工管':t==='creative'?'創作':t==='divination'?'命理':t||'-';
+    return t==='engineering'?'工作':t==='creative'?'創作':t==='divination'?'命理':t||'-';
   }
   function dmRefreshForm() {
     var fa = _dmFormAreaRef; if (!fa) return;
@@ -704,7 +720,7 @@
         var f=el('div',{className:'dm-field'});
         var lb=el('div',{className:'dm-field-lbl'}); ap(lb,txt(lbl));
         var sel=el('select',{className:'dm-sel'});
-        [['engineering','工管軌道'],['creative','創作軌道'],['divination','命理軌道']].forEach(function(o){
+        [['engineering','工作軌道'],['creative','創作軌道'],['divination','命理軌道']].forEach(function(o){
           var opt=el('option',{value:o[0]}); ap(opt,txt(o[1]));
           if (o[0]===val) opt.selected=true; ap(sel,opt);
         });
@@ -873,6 +889,31 @@
     var ov=document.getElementById('modal-overlay'); if(ov) ov.classList.remove('open');
   }
 
+  /* ── DATA MANAGER MODAL ── */
+  function openDmModal() {
+    dmInitBuffers();
+    var overlay=document.getElementById('dm-overlay');
+    var modal=document.getElementById('dm-modal');
+    if (!overlay||!modal) return;
+    clearNode(modal);
+    var head=el('div',{className:'dm-modal-head'});
+    var title=el('div',{className:'dm-modal-title'}); ap(title,txt('📊 總指揮官資料管理中樞'));
+    var closeBtn=el('button',{className:'dm-modal-close','aria-label':'關閉'}); ap(closeBtn,txt('×'));
+    closeBtn.addEventListener('click',closeDmModal);
+    ap(head,title,closeBtn);
+    var body=el('div',{className:'dm-modal-body'});
+    var tabBar=buildDmTabBar();
+    var formArea=el('div',{}); _dmFormAreaRef=formArea;
+    dmRefreshForm();
+    ap(body,tabBar,formArea);
+    ap(modal,head,body);
+    overlay.classList.add('open');
+    closeBtn.focus();
+  }
+  function closeDmModal() {
+    var ov=document.getElementById('dm-overlay'); if(ov) ov.classList.remove('open');
+  }
+
   /* ── STATUS PANEL ── */
   function renderStatusPanel(lens) {
     var panel=document.getElementById('status-panel'); clearNode(panel);
@@ -889,6 +930,12 @@
     var desc=el('p',{className:'lens-desc'}); ap(desc,txt(meta.desc));
     var lensSection=el('div',{className:'sp-lens-section'});
     ap(lensSection, lensTitle, badge, desc);
+    /* Myself-only sidebar controls */
+    if (lens === 'myself') {
+      var dmBtn=el('button',{className:'sp-dm-btn'}); ap(dmBtn,txt('📊 資料管理中樞'));
+      dmBtn.addEventListener('click',openDmModal);
+      ap(lensSection,dmBtn);
+    }
     /* URL hints: DOM element only created when lens === 'myself' */
     if (lens === 'myself') {
       var hintWrap=el('div',{className:'sp-url-hint'}); ap(hintWrap,txt('視角切換：'));
@@ -952,7 +999,7 @@
     ap(panel, cLabel);
     var lensMap=[
       ['public','公眾'],['photography','攝影'],['creative','插畫'],
-      ['astrology','斗數'],['engineering','工管'],['myself','全觀'],
+      ['astrology','斗數'],['engineering','工作'],['myself','全觀'],
     ];
     lensMap.forEach(function(pair){
       var l=pair[0], label=pair[1];
@@ -1093,25 +1140,6 @@
   }
 
   /* ── DATA MANAGER (myself only) ── */
-  function renderDataManager() {
-    dmInitBuffers();
-    var dm=el('div',{className:'data-manager'});
-    var toggleBtn=el('button',{className:'dm-toggle-btn'});
-    toggleBtn.textContent=(_dmIsOpen?'▼ ':'▶ ')+'📊 總指揮官資料管理中樞';
-    var dmBody=el('div',{className:'dm-body'+(_dmIsOpen?' open':'')});
-    var tabBar=buildDmTabBar();
-    var formArea=el('div',{}); _dmFormAreaRef=formArea;
-    dmRefreshForm();
-    toggleBtn.addEventListener('click',function(){
-      _dmIsOpen=!_dmIsOpen;
-      dmBody.classList[_dmIsOpen?'add':'remove']('open');
-      toggleBtn.textContent=(_dmIsOpen?'▼ ':'▶ ')+'📊 總指揮官資料管理中樞';
-    });
-    ap(dmBody, tabBar, formArea);
-    ap(dm, toggleBtn, dmBody);
-    return dm;
-  }
-
   /* ── PIPELINE ── */
   function renderPipeline(lens) {
     var visMap=VIS[lens]||VIS.public;
@@ -1189,7 +1217,7 @@
     if (lens==='engineering') { ap(area,renderEngSection()); }
 
     /* Myself bottom sections */
-    if (lens==='myself') { ap(area,renderLifeMatrix()); ap(area,renderDataManager()); }
+    if (lens==='myself') { ap(area,renderLifeMatrix()); }
   }
 
   /* ── INIT ── */
@@ -1198,7 +1226,9 @@
     renderStatusPanel(lens); renderContent(lens);
     var overlay=document.getElementById('modal-overlay');
     if (overlay) { overlay.addEventListener('click',function(e){if(e.target===overlay)closeModal();}); }
-    document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+    var dmOverlay=document.getElementById('dm-overlay');
+    if (dmOverlay) { dmOverlay.addEventListener('click',function(e){if(e.target===dmOverlay)closeDmModal();}); }
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeDmModal();}});
   }
 
   if (document.readyState==='loading') { document.addEventListener('DOMContentLoaded',init); } else { init(); }
