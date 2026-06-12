@@ -92,6 +92,18 @@ body{position:relative;}
   transition:background .2s;
 }
 #settings-btn:hover{background:rgba(255,255,255,.9);}
+/* ── Life Tracker Btn ── */
+#lto-btn{
+  position:fixed;top:68px;left:22px;z-index:50;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  color:var(--sub);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+  transition:background .2s;text-decoration:none;
+}
+#lto-btn:hover{background:rgba(255,255,255,.9);}
 
 /* ── Lab button ── */
 #lab-btn{
@@ -426,6 +438,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 </div>
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
+<a id="lto-btn" href="life_tracker_v1.html" target="_blank" title="人生軌跡觀測儀">◉</a>
 <button id="lab-btn" onclick="openLab()" title="實驗中">🧪</button>
 
 <!-- DOCK -->

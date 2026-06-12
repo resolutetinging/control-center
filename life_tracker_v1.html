@@ -197,6 +197,7 @@
     .dm-field-row{display:grid;gap:8px;margin-bottom:8px;}
     .dm-field-row:last-child{margin-bottom:0;}
     .dm-fr3{grid-template-columns:72px 1fr 72px;}
+    .dm-fr4{grid-template-columns:60px 46px 1fr 66px;}
     .dm-fr2{grid-template-columns:1fr 1fr;}
     .dm-fr1{grid-template-columns:1fr;}
     .dm-field{display:flex;flex-direction:column;gap:3px;}
@@ -270,7 +271,7 @@
     creative:    { label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)', gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)' },
     divination:  { label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',  gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)' },
   };
-  var TRACK_ORDER = ['engineering','creative','divination'];
+  var TRACK_ORDER = ['engineering','divination'];
   var YEAR_START = 2012, YEAR_END = 2026;
   var VIS = {
     public:      { engineering:'dimmed',  creative:'partial', divination:'partial' },
@@ -758,8 +759,8 @@
         });
         ap(f,lb,sel); return f;
       }
-      var r1=el('div',{className:'dm-field-row dm-fr3'});
-      ap(r1, mkInp('年份',node.year,'year'), mkSel('軌道',node.track), mkInp('標籤',node.label,'label'));
+      var r1=el('div',{className:'dm-field-row dm-fr4'});
+      ap(r1, mkInp('年份',node.year,'year'), mkInp('月份',node.month||'','month'), mkSel('軌道',node.track), mkInp('標籤',node.label,'label'));
       var r2=el('div',{className:'dm-field-row dm-fr1'});
       ap(r2, mkInp('標題',node.title,'title'));
       var r3=el('div',{className:'dm-field-row dm-fr1'});
@@ -772,7 +773,7 @@
     });
     var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增里程碑'));
     addBtn.addEventListener('click',function(){
-      _dmNodesBuf.push({id:'n'+Date.now(),year:new Date().getFullYear(),track:'engineering',label:'',title:'',subtitle:'',star:{S:'',T:'',A:'',R:''}});
+      _dmNodesBuf.push({id:'n'+Date.now(),year:new Date().getFullYear(),month:'',track:'engineering',label:'',title:'',subtitle:'',star:{S:'',T:'',A:'',R:''}});
       _dmExpandedNodes[_dmNodesBuf.length-1]=true; persistData(); dmRefreshForm();
     });
     var saveBtn=el('button',{className:'dm-sync-btn'}); ap(saveBtn,txt('⚡ 寫入並刷新水管圖'));
@@ -1189,12 +1190,13 @@
       ap(pipeContent, pipeLine);
       TINA_DATA_MATRIX.nodes.filter(function(m){return m.track===trackId;}).forEach(function(m){
         var canClick=(vis!=='dimmed');
-        var node=el('div',{className:'ms-node',role:'button',tabIndex:canClick?0:-1,'aria-label':m.year+'年 '+m.title,style:{left:pct(m.year),background:tm.color}});
+        var mPos=parseFloat(m.year)+(m.month?(parseInt(m.month)-1)/12:0);
+        var node=el('div',{className:'ms-node',role:'button',tabIndex:canClick?0:-1,'aria-label':m.year+'年 '+m.title,style:{left:pct(mPos),background:tm.color}});
         if (canClick) {
           node.addEventListener('click',(function(ms){return function(){openModal(ms);};})(m));
           node.addEventListener('keydown',(function(ms){return function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal(ms);}};})(m));
         }
-        var nlabel=el('div',{className:'ms-label',style:{left:pct(m.year),color:tm.color}}); ap(nlabel,txt(m.label));
+        var nlabel=el('div',{className:'ms-label',style:{left:pct(mPos),color:tm.color}}); ap(nlabel,txt(m.label));
         ap(pipeContent,node,nlabel);
       });
       ap(row,pipeContent); ap(inner,row);
@@ -1231,11 +1233,9 @@
 
     /* Pipeline: public, engineering, myself */
     var pipeSection=el('div',{className:'section'});
-    var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('時間軸水管圖 2012–2026'));
+    var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('時間軸水管圖'));
     ap(pipeSection,sLabel,renderPipeline(lens));
-    var hint=el('p',{style:{fontSize:'10.5px',color:'#9e9890',marginTop:'10px',lineHeight:'1.6'}});
-    ap(hint,txt('點擊軌道上的節點，展開里程碑詳細 STAR 資料。'));
-    ap(pipeSection,hint); ap(area,pipeSection);
+    ap(area,pipeSection);
 
     /* Engineering section */
     if (lens==='engineering') { ap(area,renderEngSection()); }
