@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="author" content="Yi Ting Yu, Tina Yu">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%220.9em%22 font-size=%2290%22>🌳</text></svg>">
-  <title>人生軌跡觀測儀</title>
+  <title>Yi Ting Yu / Tina Yu</title>
+  <script>(function(){try{var s=JSON.parse(localStorage.getItem('lto_matrix')||'{}');var wl=['public','photography','creative','astrology','engineering','myself'];var lens=(new URLSearchParams(location.search)).get('lens')||'public';if(wl.indexOf(lens)===-1)lens='public';var n=((s.lensNames||{})[lens]||'').trim();document.title=n?n.split('\n')[0]:'Yi Ting Yu / Tina Yu';}catch(e){document.title='Yi Ting Yu / Tina Yu';}}());</script>
   <style>
     /* ── TOKENS ── */
     :root {
@@ -258,6 +259,10 @@
     /* sidebar dm button */
     .sp-dm-btn{display:block;width:100%;margin-top:12px;padding:8px 12px;font-size:11px;font-weight:700;letter-spacing:.03em;cursor:pointer;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--sub);text-align:left;transition:background 140ms ease;}
     .sp-dm-btn:hover{background:var(--border);}
+    .myself-ctrl-hint{font-size:9px;color:var(--faint);line-height:1.9;margin-top:10px;flex-wrap:wrap;display:flex;align-items:center;gap:3px;}
+    .myself-ctrl-hint code{background:var(--bg2);border:.5px solid var(--border);border-radius:3px;padding:0 5px;font-family:'SF Mono','Fira Mono',monospace;font-size:8.5px;color:var(--sub);}
+    .myself-dm-btn{margin-top:14px;padding:9px 18px;font-size:11.5px;font-weight:700;letter-spacing:.03em;cursor:pointer;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--sub);transition:background 140ms ease;}
+    .myself-dm-btn:hover{background:var(--border);}
 
     /* ── MOBILE ── */
     @media (max-width:680px){
@@ -293,7 +298,7 @@
   var LENS_META = {
     public:      { label:'Public',      icon:'◎', color:'#6a6a58', bg:'#f0ede8', border:'#c4c2b8', desc:'公開展示模式 · 僅顯示開放節點' },
     photography: { label:'Photography', icon:'▣', color:'#4a7888', bg:'#ecf2f4', border:'#9abcc8', desc:'光影 · 構圖 · 田野與靜物' },
-    creative:    { label:'Creative',    icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'角色設計 · 世界觀 · 週邊創作' },
+    creative:    { label:'Creativity',  icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'角色設計 · 世界觀 · 週邊創作' },
     astrology:   { label:'Astrology',   icon:'◆', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'紫微斗數 · 命盤解讀 · 同頻諮詢' },
     engineering: { label:'Work',        icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
     myself:      { label:'All',         icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
@@ -967,7 +972,7 @@
     ptTa.addEventListener('input',function(){TINA_DATA_MATRIX.publicText=ptTa.value; schedulePersist(); if(parseLens()==='public'){renderContent('public');}});
     ap(wrap,ptH,ptSub,ptTa);
     /* 三視角 profile */
-    [['photography','Photography','Instagram 連結','instagram'],['creative','Creative','Instagram 連結','instagram'],['astrology','Astrology','外部連結','link']].forEach(function(quad){
+    [['photography','Photography','Instagram 連結','instagram'],['creative','Creativity','Instagram 連結','instagram'],['astrology','Astrology','外部連結','link']].forEach(function(quad){
       var pk=quad[0], plbl=quad[1], linkLbl=quad[2], linkKey=quad[3];
       var ph=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'22px',marginBottom:'4px'}}); ap(ph,txt(plbl));
       ap(wrap,ph);
@@ -1231,34 +1236,7 @@
     var lensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||'Yi Ting Yu / Tina Yu';
     var name=el('p',{className:'sp-name'}); ap(name,txt(lensName));
     var ident=el('div',{style:{textAlign:'center'}}); ap(ident,name);
-    /* Lens section */
-    var lensTitle=el('div',{className:'sp-section-title'}); ap(lensTitle,txt('當前視角'));
-    var dot=el('span',{className:'lens-badge-dot',style:{background:meta.color}});
-    var badge=el('div',{className:'lens-badge',style:{color:meta.color,borderColor:meta.border,background:meta.bg}});
-    ap(badge,dot,txt(meta.icon+' '+meta.label));
-    var desc=el('p',{className:'lens-desc'}); ap(desc,txt(meta.desc));
-    var lensSection=el('div',{className:'sp-lens-section'});
-    ap(lensSection,lensTitle,badge,desc);
-    /* Back to 全觀（非 myself 視角顯示） */
-    if(lens!=='myself'){
-      var backBtn=el('button',{className:'sp-back-btn'}); ap(backBtn,txt('← 全觀'));
-      backBtn.addEventListener('click',function(){switchLens('myself');});
-      ap(lensSection,backBtn);
-    }
-    /* Myself-only controls */
-    if(lens==='myself'){
-      var dmBtn=el('button',{className:'sp-dm-btn'}); ap(dmBtn,txt('📊 資料管理中樞'));
-      dmBtn.addEventListener('click',openDmModal); ap(lensSection,dmBtn);
-    }
-    if(lens==='myself'){
-      var hintWrap=el('div',{className:'sp-url-hint'}); ap(hintWrap,txt('視角切換：'));
-      ['?lens=photography','?lens=creative','?lens=astrology','?lens=engineering','?lens=myself'].forEach(function(c,i,arr){
-        var code=el('code',{}); ap(code,txt(c)); ap(hintWrap,code);
-        if(i<arr.length-1) ap(hintWrap,txt(' '));
-      });
-      ap(lensSection,hintWrap);
-    }
-    ap(panel,avatarWrap,ident,lensSection);
+    ap(panel,avatarWrap,ident);
   }
 
   /* ── STANDALONE SECTION ── */
@@ -1364,6 +1342,37 @@
       ap(panel,btn);
     });
     return panel;
+  }
+
+  /* ── MYSELF FOOTER（Timeline 下方的視角切換 + 設定中樞）── */
+  function renderMyselfFooter() {
+    var curLens=parseLens();
+    /* 視角切換 */
+    var switchSec=el('div',{className:'section'});
+    var switchLbl=el('div',{className:'section-label'}); ap(switchLbl,txt('Switch Lens'));
+    ap(switchSec,switchLbl);
+    var cmdRow=el('div',{className:'commander-panel',style:{marginBottom:'0'}});
+    [['public','Public'],['photography','Photography'],['creative','Creativity'],
+     ['astrology','Astrology'],['engineering','Work'],['myself','All']].forEach(function(pair){
+      var btn=el('button',{className:'cmd-btn'+(pair[0]===curLens?' cmd-current':'')});
+      ap(btn,txt(pair[1]));
+      btn.addEventListener('click',(function(l){return function(){switchLens(l);};})(pair[0]));
+      ap(cmdRow,btn);
+    });
+    ap(switchSec,cmdRow);
+    var hint=el('div',{className:'myself-ctrl-hint'}); ap(hint,txt('URL：'));
+    ['photography','creative','astrology','engineering','myself'].forEach(function(k,i,arr){
+      var code=el('code',{}); ap(code,txt('?lens='+k)); ap(hint,code);
+      if(i<arr.length-1) ap(hint,txt(' '));
+    });
+    ap(switchSec,hint);
+    /* 設定中樞 */
+    var dmSec=el('div',{className:'section'});
+    var dmLbl=el('div',{className:'section-label'}); ap(dmLbl,txt('Control Center'));
+    var dmBtn=el('button',{className:'myself-dm-btn'}); ap(dmBtn,txt('📊 資料管理中樞'));
+    dmBtn.addEventListener('click',openDmModal);
+    ap(dmSec,dmLbl,dmBtn);
+    var wrap=el('div',{}); ap(wrap,switchSec,dmSec); return wrap;
   }
 
   /* ── ENGINEERING SECTION ── */
@@ -1519,9 +1528,6 @@
     ap(lbadge,dot,txt(meta.icon+' '+meta.label));
     var header=el('div',{className:'content-header'}); ap(header,titleEl,lbadge); ap(area,header);
 
-    /* Commander panel: DOM created ONLY when lens === 'myself' */
-    if (lens==='myself') { ap(area,renderCommanderPanel()); }
-
     /* Standalone lenses: full custom layout, no pipeline */
     if (isStandalone) { ap(area, renderStandaloneSection(lens)); return; }
 
@@ -1536,6 +1542,9 @@
 
     /* Engineering section */
     if (lens==='engineering') { ap(area,renderEngSection()); }
+
+    /* Myself footer: Switch Lens + Control Center（Timeline 下方）*/
+    if (lens==='myself') { ap(area,renderMyselfFooter()); }
   }
 
   /* ── INIT ── */
