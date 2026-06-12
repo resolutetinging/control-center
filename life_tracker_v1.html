@@ -29,6 +29,18 @@
     .sp-name{font-size:14px;font-weight:700;color:var(--ink);text-align:center;white-space:pre-line;line-height:1.5;}
     .sp-back-btn{display:block;width:100%;margin-top:8px;padding:6px 12px;font-size:10.5px;font-weight:700;cursor:pointer;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--sub);text-align:center;transition:background 140ms ease;font-family:inherit;}
     .sp-back-btn:hover{background:var(--border);}
+    /* ── PUBLIC VIEW ── */
+    .pub-text{font-size:13px;color:var(--sub);line-height:1.75;white-space:pre-line;margin-bottom:32px;}
+    .pub-circles{display:flex;gap:36px;flex-wrap:wrap;}
+    .pub-circle-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
+    .pub-circle{width:88px;height:88px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;transition:transform 130ms ease,box-shadow 130ms ease;}
+    .pub-circle:hover{transform:scale(1.08);box-shadow:0 4px 18px rgba(40,38,31,0.14);}
+    .pub-circle img{width:100%;height:100%;object-fit:cover;display:block;}
+    .pub-circle-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.04em;text-align:center;}
+    /* ── LENS AVATAR SETTINGS ── */
+    .lens-av-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .lens-av-thumb{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .lens-av-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
     .sp-section-title{font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding-bottom:7px;border-bottom:1px solid var(--border);}
     .lens-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:4px 11px;border-radius:20px;border:1px solid var(--border);margin-top:8px;white-space:nowrap;}
     .lens-badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
@@ -264,6 +276,7 @@
   <div id="modal-card" class="modal-card" role="dialog" aria-modal="true"></div>
 </div>
 <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
+<input type="file" id="lens-avatar-input" accept="image/*" style="display:none">
 <div id="dm-overlay" class="dm-overlay">
   <div id="dm-modal" class="dm-modal" role="dialog" aria-modal="true"></div>
 </div>
@@ -414,11 +427,14 @@
       public:'Yi Ting Yu / Tina Yu', photography:'', creative:'', astrology:'', engineering:'', myself:'',
     },
     avatarImg: '',
+    lensAvatars: { photography:'', creative:'', astrology:'' },
+    publicText: '',
   };
 
   /* ── MODULE STATE (persists across re-renders) ── */
   var _dmIsOpen = false;
   var _dmTextCache = '';
+  var _lensAvatarTarget = '';
   var _dmTab = 'nodes';
   var _dmCardLens = 'photography';
   var _dmNodesBuf = null;
@@ -666,7 +682,7 @@
       ['photography','creative','astrology'].forEach(function(k){
         cards[k] = (_dmCardsBuf && _dmCardsBuf[k]) || TINA_DATA_MATRIX.cards[k];
       });
-      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards, lensNames:TINA_DATA_MATRIX.lensNames, avatarImg:TINA_DATA_MATRIX.avatarImg }));
+      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards, lensNames:TINA_DATA_MATRIX.lensNames, avatarImg:TINA_DATA_MATRIX.avatarImg, lensAvatars:TINA_DATA_MATRIX.lensAvatars, publicText:TINA_DATA_MATRIX.publicText }));
     } catch(e) {}
   }
   function schedulePersist() {
@@ -685,6 +701,10 @@
         Object.keys(saved.lensNames).forEach(function(k){ if (TINA_DATA_MATRIX.lensNames[k] !== undefined) TINA_DATA_MATRIX.lensNames[k] = saved.lensNames[k]; });
       }
       if (typeof saved.avatarImg === 'string') TINA_DATA_MATRIX.avatarImg = saved.avatarImg;
+      if (saved.lensAvatars && typeof saved.lensAvatars === 'object') {
+        Object.keys(saved.lensAvatars).forEach(function(k){ if (TINA_DATA_MATRIX.lensAvatars[k] !== undefined) TINA_DATA_MATRIX.lensAvatars[k] = saved.lensAvatars[k]; });
+      }
+      if (typeof saved.publicText === 'string') TINA_DATA_MATRIX.publicText = saved.publicText;
     } catch(e) {}
   }
   function dmInitBuffers() {
@@ -922,14 +942,45 @@
       })(k,ta);
       ap(row,lbl,ta); ap(wrap,row);
     });
-    var avH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(avH,txt('頭像'));
-    var avSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'10px'}}); ap(avSub,txt('點擊左側圓形頭像即可上傳；在此可移除。'));
-    ap(wrap,avH,avSub);
+    /* 公眾視角文字說明 */
+    var ptH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(ptH,txt('公眾視角文字說明'));
+    var ptSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'8px'}}); ap(ptSub,txt('顯示於公眾視角圈圈上方。'));
+    var ptTa=el('textarea',{className:'dm-ta',rows:'4'}); ptTa.value=TINA_DATA_MATRIX.publicText||'';
+    ptTa.addEventListener('input',function(){TINA_DATA_MATRIX.publicText=ptTa.value; schedulePersist(); if(parseLens()==='public'){renderContent('public');}});
+    ap(wrap,ptH,ptSub,ptTa);
+    /* 頭像設定 */
+    var avH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(avH,txt('頭像設定'));
+    ap(wrap,avH);
+    /* 全觀頭像 */
+    var avSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'10px'}}); ap(avSub,txt('全觀視角：點擊側欄圓形頭像上傳。'));
+    ap(wrap,avSub);
     if(TINA_DATA_MATRIX.avatarImg){
-      var clearBtn=el('button',{className:'dm-add-btn'}); ap(clearBtn,txt('✕ 移除頭像'));
+      var clearBtn=el('button',{className:'dm-add-btn'}); ap(clearBtn,txt('✕ 移除全觀頭像'));
       clearBtn.addEventListener('click',function(){TINA_DATA_MATRIX.avatarImg=''; persistData(); renderStatusPanel(parseLens()); clearNode(container); buildDmSettingsTab(container);});
       ap(wrap,clearBtn);
     }
+    /* 各視角頭像（攝影/插畫/斗數） */
+    var laKeys=[['photography','攝影','▣'],['creative','插畫','◈'],['astrology','斗數','◆']];
+    laKeys.forEach(function(triple){
+      var key=triple[0], lbl=triple[1], icon=triple[2];
+      var row=el('div',{className:'lens-av-row'});
+      var thumb=el('div',{className:'lens-av-thumb'});
+      if(TINA_DATA_MATRIX.lensAvatars[key]){ var tImg=el('img',{alt:lbl}); tImg.src=TINA_DATA_MATRIX.lensAvatars[key]; ap(thumb,tImg); } else { ap(thumb,txt(icon)); }
+      var lblEl=el('span',{style:{fontSize:'11px',fontWeight:'700',color:'var(--sub)',flex:'1'}}); ap(lblEl,txt(lbl));
+      var upBtn=el('button',{className:'dm-add-btn'}); ap(upBtn,txt('↑ 上傳'));
+      (function(k){
+        upBtn.addEventListener('click',function(){_lensAvatarTarget=k; var fi=document.getElementById('lens-avatar-input'); if(fi)fi.click();});
+      })(key);
+      ap(row,thumb,lblEl,upBtn);
+      if(TINA_DATA_MATRIX.lensAvatars[key]){
+        var rmBtn=el('button',{className:'dm-add-btn'}); ap(rmBtn,txt('✕'));
+        (function(k,cont){
+          rmBtn.addEventListener('click',function(){TINA_DATA_MATRIX.lensAvatars[k]=''; persistData(); if(parseLens()==='public')renderContent('public'); clearNode(cont); buildDmSettingsTab(cont);});
+        })(key,container);
+        ap(row,rmBtn);
+      }
+      ap(wrap,row);
+    });
     ap(container,wrap);
   }
 
@@ -1047,6 +1098,7 @@
   /* ── STATUS PANEL ── */
   function renderStatusPanel(lens) {
     var panel=document.getElementById('status-panel'); clearNode(panel);
+    if (lens !== 'myself') return; /* 非全觀視角側欄保持空白 */
     var meta=LENS_META[lens];
     /* Avatar */
     var avatarWrap=el('div',{className:'avatar-wrap'});
@@ -1092,6 +1144,29 @@
   }
 
   /* ── STANDALONE SECTION ── */
+  function renderPublicSection() {
+    var section=el('div',{className:'section'});
+    /* text block */
+    if(TINA_DATA_MATRIX.publicText){
+      var textEl=el('p',{className:'pub-text'}); ap(textEl,txt(TINA_DATA_MATRIX.publicText)); ap(section,textEl);
+    }
+    /* 3 circles */
+    var circles=el('div',{className:'pub-circles'});
+    [['photography','攝影','▣'],['creative','插畫','◈'],['astrology','斗數','◆']].forEach(function(triple){
+      var key=triple[0], lbl=triple[1], icon=triple[2];
+      var meta=LENS_META[key];
+      var wrap=el('div',{className:'pub-circle-wrap'});
+      wrap.addEventListener('click',function(){switchLens(key);});
+      var circle=el('div',{className:'pub-circle',style:{borderColor:meta.color}});
+      if(TINA_DATA_MATRIX.lensAvatars[key]){
+        var img=el('img',{alt:lbl}); img.src=TINA_DATA_MATRIX.lensAvatars[key]; ap(circle,img);
+      } else { ap(circle,txt(icon)); }
+      var labelEl=el('div',{className:'pub-circle-label'}); ap(labelEl,txt(lbl));
+      ap(wrap,circle,labelEl); ap(circles,wrap);
+    });
+    ap(section,circles); return section;
+  }
+
   function renderStandaloneSection(lens) {
     var profile=LENS_PROFILES[lens];
     var meta=LENS_META[lens];
@@ -1342,12 +1417,12 @@
     if (lens==='myself') { ap(area,renderCommanderPanel()); }
 
     /* Standalone lenses: full custom layout, no pipeline */
-    if (isStandalone) {
-      ap(area, renderStandaloneSection(lens));
-      return;
-    }
+    if (isStandalone) { ap(area, renderStandaloneSection(lens)); return; }
 
-    /* Pipeline: public, engineering, myself */
+    /* Public lens: text + 3 circles, no pipeline */
+    if (lens==='public') { ap(area, renderPublicSection()); return; }
+
+    /* Pipeline: engineering, myself */
     var pipeSection=el('div',{className:'section'});
     var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('Timeline'));
     ap(pipeSection,sLabel,renderPipeline(lens));
@@ -1367,6 +1442,18 @@
     var dmOverlay=document.getElementById('dm-overlay');
     if (dmOverlay) { dmOverlay.addEventListener('click',function(e){if(e.target===dmOverlay)closeDmModal();}); }
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeDmModal();}});
+    var lensAvInput=document.getElementById('lens-avatar-input');
+    if(lensAvInput){lensAvInput.addEventListener('change',function(){
+      var file=this.files&&this.files[0]; if(!file||!file.type.startsWith('image/')||!_lensAvatarTarget) return;
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        TINA_DATA_MATRIX.lensAvatars[_lensAvatarTarget]=ev.target.result;
+        persistData();
+        if(parseLens()==='public') renderContent('public');
+        var dm=document.getElementById('dm-modal'); if(dm&&dm.children.length) openDmModal();
+      };
+      reader.readAsDataURL(file); this.value=''; _lensAvatarTarget='';
+    });}
     var avatarInput=document.getElementById('avatar-file-input');
     if(avatarInput){avatarInput.addEventListener('change',function(){
       var file=this.files&&this.files[0]; if(!file||!file.type.startsWith('image/')) return;
