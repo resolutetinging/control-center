@@ -281,7 +281,7 @@
     myself:      { label:'全觀自我視角', icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
   };
   var TRACK_META = {
-    engineering: { label:'工作專案', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
+    engineering: { label:'Work', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
     creative:    { label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)', gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)' },
     divination:  { label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',  gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)' },
   };
@@ -984,7 +984,7 @@
     var tm=TRACK_META[ms.track];
     var tag=el('span',{className:'modal-track-tag',style:{background:tm.color+'1a',color:tm.color,borderColor:tm.color+'55'}});
     ap(tag, txt(tm.label));
-    var mo=ms.month?('/'+(parseInt(ms.month)<10?'0'+ms.month:ms.month)):'';
+    var mo=ms.month?('/'+ms.month):'';
     var yrEl=el('div',{className:'modal-year-label'}); ap(yrEl, txt(ms.year+mo+' · '+ms.label));
     var titEl=el('div',{className:'modal-title'});     ap(titEl, txt(ms.title));
     var tblock=el('div',{className:'modal-title-block'}); ap(tblock, yrEl, titEl);
@@ -1332,7 +1332,7 @@
     var lensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||'Yi Ting Yu / Tina Yu';
     var firstLine=lensName.split('\n')[0];
     document.title=firstLine;
-    var titleEl=el('h1',{className:'content-title'}); ap(titleEl,txt(firstLine));
+    var titleEl=el('h1',{className:'content-title'}); titleEl.style.whiteSpace='pre-line'; ap(titleEl,txt(lensName));
     var dot=el('span',{className:'lens-badge-dot',style:{background:meta.color}});
     var lbadge=el('div',{className:'content-lens-badge',style:{color:meta.color,background:meta.bg,borderColor:meta.border}});
     ap(lbadge,dot,txt(meta.icon+' '+meta.label));
