@@ -165,6 +165,10 @@
     .ext-link-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);color:var(--sub);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease;white-space:nowrap;}
     .ext-link-btn:hover{background:var(--bg2);box-shadow:0 2px 10px rgba(40,38,31,0.10);}
     .ext-link-icon{font-size:10px;color:var(--faint);}
+    .ig-btn{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);text-decoration:none;transition:background 150ms ease,box-shadow 150ms ease;}
+    .ig-btn:hover{background:var(--bg2);box-shadow:0 2px 10px rgba(40,38,31,.12);}
+    .preview-card.has-link{cursor:pointer;}
+    .preview-card.has-link:hover .pc-inner{filter:brightness(0.95);}
     .preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
     .preview-card{border-radius:var(--r);overflow:hidden;height:160px;cursor:pointer;transition:transform 200ms ease,box-shadow 200ms ease;}
     .preview-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(40,38,31,0.16);}
@@ -231,7 +235,8 @@
     .dm-lens-btn{font-size:9.5px;font-weight:700;padding:3px 11px;border-radius:20px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:all 120ms ease;}
     .dm-lens-btn:hover{background:var(--border);}
     .dm-lens-btn.dm-lens-active{background:#4878a0;color:#fff;border-color:#4878a0;}
-    .dm-card-row{display:grid;grid-template-columns:80px 1fr 26px;gap:6px;align-items:center;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;}
+    .dm-card-row{display:flex;flex-direction:column;gap:5px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;}
+    .dm-card-row-inner{display:grid;grid-template-columns:80px 1fr 26px;gap:6px;align-items:center;}
     /* dm modal */
     .dm-overlay{position:fixed;inset:0;z-index:850;background:rgba(40,38,31,0.42);display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;opacity:0;pointer-events:none;transition:opacity 200ms ease;overflow-y:auto;}
     .dm-overlay.open{opacity:1;pointer-events:all;}
@@ -429,6 +434,10 @@
     avatarImg: '',
     lensAvatars: { photography:'', creative:'', astrology:'' },
     publicText: '',
+    lensProfiles: {
+      photography: { headline:'光影的永恆切片', tagline:'攝影師 · 尋找安靜的語法', intro:'相信每一張好照片都是一次有意識的呼吸。靜物、田野、街頭日常，是我觀察世界的三個入口。自 2022 年起系統化訓練，確立以「低飽和暖光 × 幾何構圖」為核心的視覺語言。', instagram:'' },
+      creative:    { headline:'用線條說故事',   tagline:'插畫師 · 世界觀構築者',  intro:'停筆十年後重新拾起畫筆。相信每個角色都是一個宇宙——有記憶、有習慣、有他不願說出口的秘密。以「柔和線條 × 暖色系」為風格基調，在角色設計、世界觀概念稿與文具週邊三條線上同步延伸。', instagram:'' },
+    },
   };
 
   /* ── MODULE STATE (persists across re-renders) ── */
@@ -682,7 +691,7 @@
       ['photography','creative','astrology'].forEach(function(k){
         cards[k] = (_dmCardsBuf && _dmCardsBuf[k]) || TINA_DATA_MATRIX.cards[k];
       });
-      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards, lensNames:TINA_DATA_MATRIX.lensNames, avatarImg:TINA_DATA_MATRIX.avatarImg, lensAvatars:TINA_DATA_MATRIX.lensAvatars, publicText:TINA_DATA_MATRIX.publicText }));
+      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards, lensNames:TINA_DATA_MATRIX.lensNames, avatarImg:TINA_DATA_MATRIX.avatarImg, lensAvatars:TINA_DATA_MATRIX.lensAvatars, publicText:TINA_DATA_MATRIX.publicText, lensProfiles:TINA_DATA_MATRIX.lensProfiles }));
     } catch(e) {}
   }
   function schedulePersist() {
@@ -705,6 +714,13 @@
         Object.keys(saved.lensAvatars).forEach(function(k){ if (TINA_DATA_MATRIX.lensAvatars[k] !== undefined) TINA_DATA_MATRIX.lensAvatars[k] = saved.lensAvatars[k]; });
       }
       if (typeof saved.publicText === 'string') TINA_DATA_MATRIX.publicText = saved.publicText;
+      if (saved.lensProfiles && typeof saved.lensProfiles === 'object') {
+        ['photography','creative'].forEach(function(k){
+          if (saved.lensProfiles[k] && typeof saved.lensProfiles[k] === 'object') {
+            Object.assign(TINA_DATA_MATRIX.lensProfiles[k], saved.lensProfiles[k]);
+          }
+        });
+      }
     } catch(e) {}
   }
   function dmInitBuffers() {
@@ -876,15 +892,19 @@
       var list=el('div',{className:'dm-card-list'});
       cards.forEach(function(card,idx){
         var row=el('div',{className:'dm-card-row'});
-        var catInp=el('input',{className:'dm-inp',type:'text',placeholder:'類別'}); catInp.value=card.cat||'';
+        var inner1=el('div',{className:'dm-card-row-inner'});
+        var catInp=el('input',{className:'dm-inp',type:'text',placeholder:'分類'}); catInp.value=card.cat||'';
         catInp.addEventListener('input',function(){card.cat=catInp.value; schedulePersist();});
-        var titInp=el('input',{className:'dm-inp',type:'text',placeholder:'卡片標題'}); titInp.value=card.title||'';
+        var titInp=el('input',{className:'dm-inp',type:'text',placeholder:'項目名稱'}); titInp.value=card.title||'';
         titInp.addEventListener('input',function(){card.title=titInp.value; schedulePersist();});
         var delBtn=el('button',{className:'dm-entry-del',style:{padding:'2px 6px'}}); ap(delBtn,txt('✕'));
         delBtn.addEventListener('click',(function(i){
           return function(){_dmCardsBuf[_dmCardLens].splice(i,1); persistData(); clearNode(area); buildCardList(area);};
         })(idx));
-        ap(row,catInp,titInp,delBtn); ap(list,row);
+        ap(inner1,catInp,titInp,delBtn);
+        var urlInp=el('input',{className:'dm-inp',type:'text',placeholder:'作品連結（選填）'}); urlInp.value=card.url||'';
+        urlInp.addEventListener('input',function(){card.url=urlInp.value; schedulePersist();});
+        ap(row,inner1,urlInp); ap(list,row);
       });
       var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增卡片'));
       addBtn.addEventListener('click',function(){
@@ -942,8 +962,26 @@
       })(k,ta);
       ap(row,lbl,ta); ap(wrap,row);
     });
+    /* 攝影 / 插畫 視角文字維護 */
+    [['photography','攝影'],['creative','插畫']].forEach(function(pair){
+      var pk=pair[0], plbl=pair[1];
+      var ph=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(ph,txt(plbl+'視角'));
+      ap(wrap,ph);
+      var fields=[['headline','大標'],['tagline','副標'],['intro','簡介'],['instagram','Instagram 連結']];
+      fields.forEach(function(fp){
+        var fk=fp[0], flbl=fp[1];
+        var frow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
+        var flblEl=el('div',{className:'dm-field-lbl'}); ap(flblEl,txt(flbl));
+        var rows=(fk==='intro')?3:1;
+        var finp; if(rows===1){ finp=el('input',{className:'dm-inp',type:'text'}); finp.value=TINA_DATA_MATRIX.lensProfiles[pk][fk]||''; } else { finp=el('textarea',{className:'dm-ta',rows:''+rows}); finp.value=TINA_DATA_MATRIX.lensProfiles[pk][fk]||''; }
+        (function(key,lensKey,inp){
+          inp.addEventListener('input',function(){TINA_DATA_MATRIX.lensProfiles[lensKey][key]=inp.value; schedulePersist(); if(parseLens()===lensKey){renderContent(lensKey);}});
+        })(fk,pk,finp);
+        ap(frow,flblEl,finp); ap(wrap,frow);
+      });
+    });
     /* 公眾視角文字說明 */
-    var ptH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(ptH,txt('公眾視角文字說明'));
+    var ptH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(ptH,txt('公眾視角文字說明'));
     var ptSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'8px'}}); ap(ptSub,txt('顯示於公眾視角圈圈上方。'));
     var ptTa=el('textarea',{className:'dm-ta',rows:'4'}); ptTa.value=TINA_DATA_MATRIX.publicText||'';
     ptTa.addEventListener('input',function(){TINA_DATA_MATRIX.publicText=ptTa.value; schedulePersist(); if(parseLens()==='public'){renderContent('public');}});
@@ -1144,6 +1182,14 @@
   }
 
   /* ── STANDALONE SECTION ── */
+  function makeIgIcon(color) {
+    var svg=svgEl('svg'); sattr(svg,{viewBox:'0 0 24 24',width:'22',height:'22',fill:'none',stroke:color||'currentColor','stroke-width':'1.8','stroke-linecap':'round','stroke-linejoin':'round'});
+    var rect=svgEl('rect'); sattr(rect,{x:'2',y:'2',width:'20',height:'20',rx:'5',ry:'5'}); svg.appendChild(rect);
+    var circ=svgEl('circle'); sattr(circ,{cx:'12',cy:'12',r:'5'}); svg.appendChild(circ);
+    var dot=svgEl('circle'); sattr(dot,{cx:'17.5',cy:'6.5',r:'1.5',fill:color||'currentColor',stroke:'none'}); svg.appendChild(dot);
+    return svg;
+  }
+
   function renderPublicSection() {
     var section=el('div',{className:'section'});
     /* text block */
@@ -1168,27 +1214,36 @@
   }
 
   function renderStandaloneSection(lens) {
-    var profile=LENS_PROFILES[lens];
+    var prof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
+    var base=LENS_PROFILES[lens]||{};
     var meta=LENS_META[lens];
     var wrap=el('div',{className:'standalone-wrap'});
 
     /* Intro */
     var intro=el('div',{className:'intro-block'});
-    var headline=el('h2',{className:'intro-headline'}); ap(headline,txt(profile.headline));
-    var tagline=el('div',{className:'intro-tagline'}); ap(tagline,txt(profile.tagline));
-    var bio=el('p',{className:'intro-bio'}); ap(bio,txt(profile.intro));
+    var headline=el('h2',{className:'intro-headline'}); ap(headline,txt((prof.headline||base.headline)||''));
+    var tagline=el('div',{className:'intro-tagline'}); ap(tagline,txt((prof.tagline||base.tagline)||''));
+    var bio=el('p',{className:'intro-bio'}); bio.style.whiteSpace='pre-line'; ap(bio,txt((prof.intro||base.intro)||''));
     ap(intro, headline, tagline, bio); ap(wrap, intro);
 
-    /* External links */
-    if (profile.links && profile.links.length) {
-      var linksBlock=el('div',{className:'links-block'});
-      profile.links.forEach(function(link){
+    /* Instagram icon link (photography + creative) */
+    if((lens==='photography'||lens==='creative') && (prof.instagram||(base.links&&base.links[0]&&base.links[0].url))){
+      var igUrl=prof.instagram||(base.links&&base.links[0]&&base.links[0].url)||'#';
+      if(igUrl){
+        var linksBlock=el('div',{className:'links-block'});
+        var igA=el('a',{className:'ig-btn',href:igUrl,target:'_blank',rel:'noopener noreferrer',title:'Instagram'});
+        ap(igA, makeIgIcon(meta.color));
+        ap(linksBlock,igA); ap(wrap,linksBlock);
+      }
+    } else if(base.links&&base.links.length){
+      var linksBlock2=el('div',{className:'links-block'});
+      base.links.forEach(function(link){
         var a=el('a',{className:'ext-link-btn',href:link.url,target:'_blank',rel:'noopener noreferrer'});
         var icon=el('span',{className:'ext-link-icon'}); ap(icon,txt(link.icon));
         var lbl=el('span',{}); ap(lbl,txt(link.label));
-        ap(a, icon, lbl); ap(linksBlock, a);
+        ap(a,icon,lbl); ap(linksBlock2,a);
       });
-      ap(wrap, linksBlock);
+      ap(wrap,linksBlock2);
     }
 
     /* Preview grid */
@@ -1197,9 +1252,12 @@
     ap(previewSection, sLabel);
     var grid=el('div',{className:'preview-grid'});
     var cards=TINA_DATA_MATRIX.cards[lens]||[];
-    cards.forEach(function(card,idx){
+    cards.forEach(function(card){
       var bg=card.gradient||card.bg||'var(--bg2)';
-      var pcard=el('div',{className:'preview-card'});
+      var pcard=el('div',{className:'preview-card'+(card.url?' has-link':'')});
+      if(card.url){
+        pcard.addEventListener('click',(function(u){return function(){window.open(u,'_blank','noopener');};})(card.url));
+      }
       var inner=el('div',{className:'pc-inner',style:{background:bg}});
       var cat=el('span',{className:'pc-cat'}); ap(cat,txt(card.cat));
       var title=el('div',{className:'pc-title'}); ap(title,txt(card.title));
