@@ -1462,7 +1462,8 @@
     var axisContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){var tick=el('span',{className:'year-tick',style:{left:pct(y)}});ap(tick,txt(y));ap(axisContent,tick);});
     ap(axisRow, axisContent); ap(inner, axisRow);
-    TRACK_ORDER.forEach(function(trackId){
+    var tracks=(lens==='engineering')?['engineering']:TRACK_ORDER;
+    tracks.forEach(function(trackId){
       var tm=TRACK_META[trackId], vis=visMap[trackId]||'dimmed';
       var row=el('div',{className:'pl-row track-row vis-'+vis});
       var labelCell=el('div',{className:'pl-label'});
