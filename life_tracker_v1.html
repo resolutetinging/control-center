@@ -110,7 +110,8 @@
     }
     .eng-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 20px;overflow-x:auto;}
     .eng-river-wrap .pl-label{display:none;}
-    .eng-river-track{min-height:64px;}
+    .eng-river-track,.myself-river-track{min-height:64px;}
+    .myself-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 20px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
     .eng-node-marker{position:absolute;top:0;bottom:calc(50% + 7px);display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);z-index:3;pointer-events:none;}
     .eng-node-date{font-size:8px;color:var(--sub);white-space:nowrap;font-weight:600;letter-spacing:.02em;padding-bottom:2px;line-height:1.2;}
     .eng-node-dline{flex:1;border-left:1px dashed rgba(46,93,138,0.38);min-height:4px;}
@@ -1519,7 +1520,6 @@
     var t=(node.type||'work'); return ENG_TYPE_COLORS[t]||ENG_TYPE_COLORS['work'];
   }
   function renderEngTimeline() {
-    var visNodes=TINA_DATA_MATRIX.nodes.filter(function(n){return n.track==='engineering'&&n.visible!==false;}).slice().sort(function(a,b){return parseFloat(a.year)-parseFloat(b.year);});
     var wrap=el('div',{className:'eng-river-wrap'});
     var yearMarks=[2012,2014,2016,2018,2020,2022,2024,2026];
     var axisRow=el('div',{className:'pl-row axis-row'});
@@ -1527,54 +1527,79 @@
     var axisContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){var tick=el('span',{className:'year-tick',style:{left:pct(y)}});ap(tick,txt(y));ap(axisContent,tick);});
     ap(axisRow,axisContent); ap(wrap,axisRow);
-    var trackRow=el('div',{className:'pl-row track-row vis-active eng-river-track'});
-    ap(trackRow,el('div',{className:'pl-label'}));
+    ap(wrap, renderRiverTrack('engineering', function(node){return engTypeColor(node);}, 'eng-river-track'));
+    return wrap;
+  }
+
+  /* ── RIVER TRACK (shared renderer) ── */
+  function renderRiverTrack(trackId, getSegColor, trackClass) {
+    var tm=TRACK_META[trackId];
+    var visNodes=TINA_DATA_MATRIX.nodes.filter(function(n){return n.track===trackId&&n.visible!==false;}).slice().sort(function(a,b){return parseFloat(a.year)-parseFloat(b.year);});
+    var yearMarks=[2012,2014,2016,2018,2020,2022,2024,2026];
+    var totalRange=YEAR_END-YEAR_START;
+    var trackRow=el('div',{className:'pl-row track-row vis-active '+(trackClass||'myself-river-track')});
+    var labelCell=el('div',{className:'pl-label'});
+    var labelIn=el('div',{className:'track-label-inner'});
+    var ldot=el('span',{className:'track-label-dot',style:{background:tm.color}});
+    var ltext=el('span',{className:'track-label-text',style:{color:tm.color}}); ap(ltext,txt(tm.label));
+    ap(labelIn,ldot,ltext); ap(labelCell,labelIn); ap(trackRow,labelCell);
     var pipeContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){ap(pipeContent,el('span',{className:'guide-line',style:{left:pct(y)}}));});
     var nodeYrs=visNodes.map(function(n){return parseFloat(n.year)+(n.month?(parseInt(n.month)-1)/12:0);});
-    var totalRange=YEAR_END-YEAR_START;
-    /* 色段：每對節點間一段，顏色依起點節點 type */
     for(var i=0;i<visNodes.length-1;i++){
       var ya=nodeYrs[i], yb=nodeYrs[i+1];
       var lp=((ya-YEAR_START)/totalRange*100).toFixed(3)+'%';
       var wp=((yb-ya)/totalRange*100).toFixed(3)+'%';
-      var c=engTypeColor(visNodes[i]);
+      var c=getSegColor(visNodes[i],i);
       var seg=el('div',{className:'eng-river-seg'});
       seg.style.left=lp; seg.style.width=wp;
       seg.style.background='linear-gradient(90deg,'+c[0]+','+c[1]+','+c[0]+')';
       seg.style.animationDelay=(i*-1.8)+'s';
       ap(pipeContent,seg);
-      /* 段中間文字 */
       var midPct=((ya+yb)/2-YEAR_START)/totalRange*100;
       var segLbl=el('div',{className:'eng-seg-label',style:{left:midPct.toFixed(3)+'%'}});
       ap(segLbl,txt(visNodes[i].label||visNodes[i].title||'')); ap(pipeContent,segLbl);
     }
-    /* 最後節點之後延伸一小段 */
     if(visNodes.length){
       var last=visNodes[visNodes.length-1], lastYr=nodeYrs[visNodes.length-1];
-      var endYr=Math.min(lastYr+0.5, YEAR_END);
+      var endYr=Math.min(lastYr+0.5,YEAR_END);
       var lp2=((lastYr-YEAR_START)/totalRange*100).toFixed(3)+'%';
       var wp2=((endYr-lastYr)/totalRange*100).toFixed(3)+'%';
-      var cl=engTypeColor(last);
+      var cl=getSegColor(last,visNodes.length-1);
       var tailSeg=el('div',{className:'eng-river-seg'});
       tailSeg.style.left=lp2; tailSeg.style.width=wp2;
       tailSeg.style.background='linear-gradient(90deg,'+cl[0]+','+cl[1]+','+cl[0]+')';
-      tailSeg.style.opacity='0.5';
-      ap(pipeContent,tailSeg);
+      tailSeg.style.opacity='0.45'; ap(pipeContent,tailSeg);
+      var lastMid=Math.min(((lastYr+0.8-YEAR_START)/totalRange*100),96).toFixed(3)+'%';
+      var lastLbl=el('div',{className:'eng-seg-label',style:{left:lastMid}});
+      ap(lastLbl,txt(last.label||last.title||'')); ap(pipeContent,lastLbl);
     }
-    /* 節點：虛線往上 + 月份標籤 + 點 */
     visNodes.forEach(function(n,i){
       var leftP=((nodeYrs[i]-YEAR_START)/totalRange*100).toFixed(3)+'%';
       var mo=n.month?('/'+String(n.month).padStart(2,'0')):'';
       var marker=el('div',{className:'eng-node-marker',style:{left:leftP}});
       var dateEl=el('div',{className:'eng-node-date'}); ap(dateEl,txt(n.year+mo));
-      var dline=el('div',{className:'eng-node-dline'});
-      ap(marker,dateEl,dline); ap(pipeContent,marker);
+      ap(marker,dateEl,el('div',{className:'eng-node-dline'})); ap(pipeContent,marker);
       var dot=el('div',{className:'pipe-dot active',style:{left:leftP}});
       dot.title=(n.title||n.label||'')+(n.year?' ('+n.year+')':'');
       ap(pipeContent,dot);
     });
-    ap(trackRow,pipeContent); ap(wrap,trackRow); return wrap;
+    ap(trackRow,pipeContent); return trackRow;
+  }
+
+  /* Morandi purple for divination */
+  var DIV_SEG_COLOR=['#585070','#8878a8','#585070'];
+  function renderMyselfTimeline() {
+    var wrap=el('div',{className:'myself-river-wrap'});
+    var yearMarks=[2012,2014,2016,2018,2020,2022,2024,2026];
+    var axisRow=el('div',{className:'pl-row axis-row'});
+    ap(axisRow,el('div',{className:'pl-label'}));
+    var axisContent=el('div',{className:'pl-content'});
+    yearMarks.forEach(function(y){var tick=el('span',{className:'year-tick',style:{left:pct(y)}});ap(tick,txt(y));ap(axisContent,tick);});
+    ap(axisRow,axisContent); ap(wrap,axisRow);
+    ap(wrap, renderRiverTrack('engineering', function(node){return engTypeColor(node);}, 'myself-river-track'));
+    ap(wrap, renderRiverTrack('divination',  function(){return DIV_SEG_COLOR;},           'myself-river-track'));
+    return wrap;
   }
 
   /* ── ENGINEERING SECTION ── */
@@ -1762,7 +1787,7 @@
     /* Pipeline: myself */
     var pipeSection=el('div',{className:'section'});
     var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('Timeline'));
-    ap(pipeSection,sLabel,renderPipeline(lens));
+    ap(pipeSection,sLabel,renderMyselfTimeline());
     ap(area,pipeSection);
 
     /* Myself footer: Switch Lens + Control Center（Timeline 下方）*/
