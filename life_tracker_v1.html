@@ -757,12 +757,11 @@
     clearNode(fa);
     if (_dmTab==='nodes')  buildDmNodesTab(fa);
     else if (_dmTab==='cards') buildDmCardsTab(fa);
-    else if (_dmTab==='settings') buildDmSettingsTab(fa);
-    else buildDmImportTab(fa);
+    else buildDmSettingsTab(fa);
   }
   function buildDmTabBar() {
     var bar = el('div',{className:'dm-tab-bar'});
-    [['nodes','里程碑節點'],['cards','預覽卡片'],['import','批次匯入'],['settings','設定']].forEach(function(pair){
+    [['nodes','里程碑節點'],['cards','預覽卡片'],['settings','設定']].forEach(function(pair){
       var btn = el('button',{className:'dm-tab-btn'+(_dmTab===pair[0]?' dm-tab-active':'')});
       ap(btn, txt(pair[1]));
       (function(tab, b){
@@ -1039,35 +1038,6 @@
     ap(container,wrap);
   }
 
-  function buildDmImportTab(container) {
-    var lbl=el('div',{className:'dm-label'}); ap(lbl,txt('貼入 Notion 表格（TSV/CSV）或純文字格式'));
-    var hint=el('div',{className:'dm-hint'});
-    var hs=[el('span',{}),el('code',{}),el('span',{}),el('code',{}),el('span',{}),el('span',{style:{display:'block',marginTop:'4px'}}),el('span',{}),el('code',{}),el('span',{})];
-    ap(hs[0],txt('TSV/CSV：標題行含 ')); hs[1].textContent='year + track'; ap(hs[2],txt('（里程碑）或 ')); hs[3].textContent='lens'; ap(hs[4],txt('（卡片）'));
-    ap(hs[6],txt('純文字：每筆 key: value，')); hs[7].textContent='---'; ap(hs[8],txt(' 分隔記錄'));
-    hs.forEach(function(h){ap(hint,h);});
-    var ta=el('textarea',{className:'dm-textarea',rows:'9'});
-    ta.placeholder='純文字範例（里程碑）：\nyear: 2026\ntrack: engineering\nlabel: 換軌\ntitle: 職涯主動換軌決策\nS: 情境\nT: 任務\nA: 行動\nR: 成果\n---（下一筆）';
-    ta.value=_dmTextCache;
-    ta.addEventListener('input',function(){_dmTextCache=ta.value;});
-    var syncBtn=el('button',{className:'dm-sync-btn'}); ap(syncBtn,txt('⚡ 刷新人生同步'));
-    var statusEl=el('div',{className:'dm-status'});
-    syncBtn.addEventListener('click',function(){
-      var text=ta.value.trim(); if (!text){statusEl.textContent='輸入框為空';return;}
-      try {
-        var firstLine=''; text.split('\n').some(function(l){if(l.trim()){firstLine=l.trim();return true;}});
-        var res=/^[\w一-鿿\-_]+\s*:/.test(firstLine)&&firstLine.indexOf('\t')===-1
-          ? parsePlainTextBlocks(text) : parseCSV(text);
-        _dmNodesBuf=null; _dmCardsBuf=null;
-        persistData();
-        statusEl.textContent='同步完成：'+res.count+' 筆 '+res.type+' 已更新（已存檔）';
-        var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
-      } catch(e){ statusEl.textContent='解析失敗：'+e.message; }
-    });
-    var acts=el('div',{className:'dm-actions'}); ap(acts,syncBtn,statusEl);
-    ap(container,lbl,hint,ta,acts);
-  }
-
   /* ── ROUTING ── */
   function parseLens() {
     var raw='';
@@ -1132,9 +1102,7 @@
     var t2c=mkTipLine([mkCode('Tab'),txt(' 縮排，'),mkCode('Shift+Tab'),txt(' 取消縮排')]);
     var h3=el('div',{className:'dm-help-tip-sec'}); ap(h3,txt('預覽卡片'));
     var t3=mkTipRow('cat / title / gradient 三欄，各視角獨立維護。');
-    var h4=el('div',{className:'dm-help-tip-sec'}); ap(h4,txt('批次匯入'));
-    var t4=mkTipLine([txt('格式：'),mkCode('key: value'),txt('，以 '),mkCode('---'),txt(' 分隔多筆。')]);
-    ap(tip,tipTitle,h1,t1,h2,t2a,t2b,t2c,h3,t3,h4,t4);
+    ap(tip,tipTitle,h1,t1,h2,t2a,t2b,t2c,h3,t3);
     ap(helpWrap,helpBtn,tip);
     ap(head,title,helpWrap,closeBtn);
     var body=el('div',{className:'dm-modal-body'});
@@ -1166,17 +1134,17 @@
       var slensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||smeta.label;
       var sname=el('p',{className:'sp-name'}); ap(sname,txt(slensName));
       var sident=el('div',{style:{textAlign:'center'}}); ap(sident,sname);
-      ap(panel,sawWrap,sident);
-      /* Instagram icon（photography / creative 有設連結時顯示） */
+      /* Instagram icon 放在名字下方同一容器，避免 panel gap:22px 造成過大間距 */
       if(lens!=='astrology'){
         var sprof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
         var sigUrl=sprof.instagram||(LENS_PROFILES[lens]&&LENS_PROFILES[lens].links&&LENS_PROFILES[lens].links[0]&&LENS_PROFILES[lens].links[0].url)||'';
         if(sigUrl){
-          var sigWrap=el('div',{style:{textAlign:'center',marginTop:'10px'}});
           var sigA=el('a',{className:'ig-btn',href:sigUrl,target:'_blank',rel:'noopener noreferrer',title:'Instagram'});
-          ap(sigA,makeIgIcon(smeta.color)); ap(sigWrap,sigA); ap(panel,sigWrap);
+          sigA.style.marginTop='8px'; sigA.style.display='inline-flex';
+          ap(sigA,makeIgIcon(smeta.color)); ap(sident,sigA);
         }
       }
+      ap(panel,sawWrap,sident);
       return;
     }
     if (lens !== 'myself') return;
