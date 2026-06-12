@@ -356,12 +356,12 @@
         { label:'Instagram · 攝影作品', url:'https://instagram.com/', icon:'▣' },
       ],
       previewCards: [
-        { cat:'靜物', title:'光影練習 Vol.1', gradient:'linear-gradient(145deg,#d8d0c0,#c8c0b0)' },
-        { cat:'田野', title:'午後漫步',       gradient:'linear-gradient(145deg,#c8d4c0,#b8c8b0)' },
-        { cat:'街頭', title:'日常切片 01',    gradient:'linear-gradient(145deg,#c0cccc,#b0bcbc)' },
-        { cat:'靜物', title:'器物詩',         gradient:'linear-gradient(145deg,#d4ccc0,#c4bcb0)' },
-        { cat:'田野', title:'霧中行走',        gradient:'linear-gradient(145deg,#d0d8cc,#c0c8bc)' },
-        { cat:'街頭', title:'城市餘光',        gradient:'linear-gradient(145deg,#c8d0cc,#b8c0bc)' },
+        { cat:'Digital', title:'光影練習 Vol.1', gradient:'linear-gradient(145deg,#d8d0c0,#c8c0b0)' },
+        { cat:'Digital', title:'午後漫步',       gradient:'linear-gradient(145deg,#c8d4c0,#b8c8b0)' },
+        { cat:'Digital', title:'日常切片 01',    gradient:'linear-gradient(145deg,#c0cccc,#b0bcbc)' },
+        { cat:'Film',    title:'器物詩',         gradient:'linear-gradient(145deg,#d4ccc0,#c4bcb0)' },
+        { cat:'Film',    title:'霧中行走',        gradient:'linear-gradient(145deg,#d0d8cc,#c0c8bc)' },
+        { cat:'Film',    title:'城市餘光',        gradient:'linear-gradient(145deg,#c8d0cc,#b8c0bc)' },
       ],
     },
     creative: {
@@ -944,8 +944,18 @@
       cards.forEach(function(card,idx){
         var row=el('div',{className:'dm-card-row'});
         var inner1=el('div',{className:'dm-card-row-inner'});
-        var catInp=el('input',{className:'dm-inp',type:'text',placeholder:'分類'}); catInp.value=card.cat||'';
-        catInp.addEventListener('input',function(){card.cat=catInp.value; schedulePersist();});
+        var catInp;
+        if(_dmCardLens==='photography'){
+          catInp=el('select',{className:'dm-inp'});
+          [['','— 選擇 —'],['Digital','Digital'],['Film','Film']].forEach(function(opt){
+            var o=el('option',{value:opt[0]}); ap(o,txt(opt[1])); ap(catInp,o);
+          });
+          catInp.value=card.cat||'';
+          catInp.addEventListener('change',function(){card.cat=catInp.value; schedulePersist();});
+        } else {
+          catInp=el('input',{className:'dm-inp',type:'text',placeholder:'分類'}); catInp.value=card.cat||'';
+          catInp.addEventListener('input',function(){card.cat=catInp.value; schedulePersist();});
+        }
         var titInp=el('input',{className:'dm-inp',type:'text',placeholder:'項目名稱'}); titInp.value=card.title||'';
         titInp.addEventListener('input',function(){card.title=titInp.value; schedulePersist();});
         var delBtn=el('button',{className:'dm-entry-del',style:{padding:'2px 6px'}}); ap(delBtn,txt('✕'));
