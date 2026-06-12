@@ -100,12 +100,13 @@
     /* ── WORK LENS: Roboto + River ── */
     .content-eng, .content-eng * { font-family:'Roboto',sans-serif; }
     @keyframes river-flow{0%{background-position:200% center}100%{background-position:-200% center}}
-    .eng-river-track .pipe-line{
+    .eng-river-seg{
+      position:absolute;top:50%;transform:translateY(-50%);
       height:18px;border-radius:9px;
-      background:linear-gradient(90deg,#0b2a45,#1a5080,#3480c0,#5aaae8,#3480c0,#1a5080,#0b2a45);
-      background-size:300% 100%;
-      animation:river-flow 7s linear infinite;
-      box-shadow:0 2px 14px rgba(26,80,128,0.45),inset 0 -2px 4px rgba(0,0,0,0.22),inset 0 2px 5px rgba(255,255,255,0.14);
+      background-size:200% 100%;
+      animation:river-flow 6s linear infinite;
+      box-shadow:0 2px 12px rgba(0,0,0,0.32),inset 0 -2px 4px rgba(0,0,0,0.22),inset 0 2px 5px rgba(255,255,255,0.14);
+      z-index:1;
     }
     .eng-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px 26px;overflow-x:auto;}
     .eng-river-wrap .pl-label{display:none;}
@@ -820,7 +821,15 @@
       var togBtn = el('button',{className:'dm-entry-toggle'}); ap(togBtn, txt(isOpen?'▴':'▾'));
       var visBtn = el('button',{className:'node-vis-btn'+(node.visible===false?' vis-off':'')});
       ap(visBtn, txt(node.visible===false?'○':'●')); visBtn.title=node.visible===false?'隱藏中（點擊顯示）':'顯示中（點擊隱藏）';
-      (function(n,btn){btn.addEventListener('click',function(){n.visible=(n.visible!==false)?false:true;btn.className='node-vis-btn'+(n.visible===false?' vis-off':'');btn.textContent=n.visible===false?'○':'●';btn.title=n.visible===false?'隱藏中（點擊顯示）':'顯示中（點擊隱藏）';schedulePersist();});})(node,visBtn);
+      (function(n,btn,i){btn.addEventListener('click',function(){
+        n.visible=(n.visible!==false)?false:true;
+        if(TINA_DATA_MATRIX.nodes[i]) TINA_DATA_MATRIX.nodes[i].visible=n.visible;
+        btn.className='node-vis-btn'+(n.visible===false?' vis-off':'');
+        btn.textContent=n.visible===false?'○':'●';
+        btn.title=n.visible===false?'隱藏中（點擊顯示）':'顯示中（點擊隱藏）';
+        persistData();
+        var cl=parseLens(); if(cl==='engineering'){renderStatusPanel(cl);renderContent(cl);}
+      });})(node,visBtn,idx);
       var delBtn = el('button',{className:'dm-entry-del'}); ap(delBtn, txt('✕'));
       ap(hdr, htitle, togBtn, visBtn, delBtn); ap(entry, hdr);
       var body = el('div',{className:'dm-entry-body'}); body.style.display = isOpen?'':'none';
@@ -1482,7 +1491,13 @@
     var wrap=el('div',{}); ap(wrap,switchSec,dmSec); return wrap;
   }
 
-  /* ── ENGINEERING TIMELINE (river) ── */
+  /* ── ENGINEERING TIMELINE (river, per-segment colors) ── */
+  var ENG_SEG_COLORS=[
+    ['#1a4a6e','#3a8ab8'],['#2a5e38','#4aa868'],['#5e3a1a','#b87840'],
+    ['#3a1a5e','#7848c0'],['#1a4a4a','#38a0a0'],['#5e1a2a','#c04060'],
+    ['#2a4a1a','#68a038'],['#1a2a5e','#4868c0'],
+  ];
+  function engSegColor(i){return ENG_SEG_COLORS[i%ENG_SEG_COLORS.length];}
   function renderEngTimeline() {
     var visNodes=TINA_DATA_MATRIX.nodes.filter(function(n){return n.track==='engineering'&&n.visible!==false;}).slice().sort(function(a,b){return parseFloat(a.year)-parseFloat(b.year);});
     var wrap=el('div',{className:'eng-river-wrap'});
@@ -1496,27 +1511,36 @@
     ap(trackRow,el('div',{className:'pl-label'}));
     var pipeContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){ap(pipeContent,el('span',{className:'guide-line',style:{left:pct(y)}}));});
-    var pipeLine=el('div',{className:'pipe-line'});
-    ap(pipeContent,pipeLine);
-    /* 相鄰節點間插入 seg label */
+    /* 各節點對應的小數年份 */
+    var nodeYrs=visNodes.map(function(n){return parseFloat(n.year)+(n.month?(parseInt(n.month)-1)/12:0);});
+    var totalRange=YEAR_END-YEAR_START;
+    /* 每對相鄰節點畫一段有色色塊 */
     for(var i=0;i<visNodes.length-1;i++){
-      var na=visNodes[i], nb=visNodes[i+1];
-      var ya=parseFloat(na.year)+(na.month?(parseInt(na.month)-1)/12:0);
-      var yb=parseFloat(nb.year)+(nb.month?(parseInt(nb.month)-1)/12:0);
-      var midPct=pct((ya+yb)/2);
-      var segLbl=el('div',{className:'eng-seg-label',style:{left:midPct,pointerEvents:'none'}});
-      ap(segLbl,txt(na.label||na.title||'')); ap(pipeContent,segLbl);
+      var ya=nodeYrs[i], yb=nodeYrs[i+1];
+      var leftPct=((ya-YEAR_START)/totalRange*100).toFixed(3)+'%';
+      var widthPct=((yb-ya)/totalRange*100).toFixed(3)+'%';
+      var colors=engSegColor(i);
+      var seg=el('div',{className:'eng-river-seg'});
+      seg.style.left=leftPct; seg.style.width=widthPct;
+      seg.style.background='linear-gradient(90deg,'+colors[0]+','+colors[1]+','+colors[0]+')';
+      seg.style.backgroundSize='200% 100%';
+      seg.style.animationDelay=(i*-1.4)+'s';
+      ap(pipeContent,seg);
+      /* seg label 置中 */
+      var midPct=((ya+yb)/2-YEAR_START)/totalRange*100;
+      var segLbl=el('div',{className:'eng-seg-label',style:{left:midPct.toFixed(3)+'%'}});
+      ap(segLbl,txt(visNodes[i].label||visNodes[i].title||'')); ap(pipeContent,segLbl);
     }
-    /* 最後一個節點 label */
+    /* 最後節點 label */
     if(visNodes.length){
-      var last=visNodes[visNodes.length-1];
-      var lastLbl=el('div',{className:'eng-seg-label',style:{left:pct(parseFloat(last.year)+0.5),pointerEvents:'none'}});
+      var last=visNodes[visNodes.length-1], lastYr=nodeYrs[visNodes.length-1];
+      var lastMid=Math.min(((lastYr+0.8-YEAR_START)/totalRange*100),96).toFixed(3)+'%';
+      var lastLbl=el('div',{className:'eng-seg-label',style:{left:lastMid}});
       ap(lastLbl,txt(last.label||last.title||'')); ap(pipeContent,lastLbl);
     }
     /* 節點點 */
-    visNodes.forEach(function(n){
-      var yr=parseFloat(n.year)+(n.month?(parseInt(n.month)-1)/12:0);
-      var dot=el('div',{className:'pipe-dot active',style:{left:pct(yr)}});
+    visNodes.forEach(function(n,i){
+      var dot=el('div',{className:'pipe-dot active',style:{left:pct(nodeYrs[i])}});
       dot.title=(n.title||n.label||'')+(n.year?' ('+n.year+')':'');
       ap(pipeContent,dot);
     });
