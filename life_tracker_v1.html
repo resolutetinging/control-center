@@ -180,6 +180,40 @@
     .dm-sync-btn{font-size:11px;font-weight:700;padding:7px 16px;border-radius:5px;cursor:pointer;background:#2e5d8a;border:none;color:#fff;transition:background 150ms ease;}
     .dm-sync-btn:hover{background:#1e4a72;}
     .dm-status{font-size:10.5px;color:var(--sub);}
+    /* form editor */
+    .dm-tab-bar{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;}
+    .dm-tab-btn{font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:4px 13px;border-radius:20px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:all 120ms ease;}
+    .dm-tab-btn:hover{background:var(--border);}
+    .dm-tab-btn.dm-tab-active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+    .dm-node-list,.dm-card-list{display:flex;flex-direction:column;gap:6px;max-height:430px;overflow-y:auto;margin-bottom:12px;padding-right:2px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .dm-entry{border:1px solid var(--border);border-radius:6px;background:var(--bg);overflow:hidden;}
+    .dm-entry-hdr{display:flex;align-items:center;gap:6px;padding:8px 12px;}
+    .dm-entry-title{flex:1;font-size:11px;font-weight:600;color:var(--ink);}
+    .dm-entry-toggle,.dm-entry-del{font-size:11px;padding:1px 7px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--sub);flex-shrink:0;transition:background 120ms ease;}
+    .dm-entry-toggle:hover{background:var(--border);}
+    .dm-entry-del{color:#a06050;border-color:rgba(160,96,80,.3);}
+    .dm-entry-del:hover{background:rgba(160,96,80,.1);}
+    .dm-entry-body{padding:10px 12px 12px;border-top:1px solid var(--border);background:var(--bg2);}
+    .dm-field-row{display:grid;gap:8px;margin-bottom:8px;}
+    .dm-field-row:last-child{margin-bottom:0;}
+    .dm-fr3{grid-template-columns:72px 1fr 72px;}
+    .dm-fr2{grid-template-columns:1fr 1fr;}
+    .dm-fr1{grid-template-columns:1fr;}
+    .dm-field{display:flex;flex-direction:column;gap:3px;}
+    .dm-field-lbl{font-size:7.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+    .dm-inp{font-size:11.5px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--ink);font-family:inherit;width:100%;}
+    .dm-inp:focus{outline:none;border-color:#4878a0;}
+    .dm-ta{font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--ink);font-family:inherit;width:100%;resize:vertical;min-height:50px;line-height:1.6;}
+    .dm-ta:focus{outline:none;border-color:#4878a0;}
+    .dm-sel{font-size:11.5px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--ink);width:100%;cursor:pointer;}
+    .dm-sel:focus{outline:none;border-color:#4878a0;}
+    .dm-add-btn{font-size:10.5px;font-weight:700;padding:5px 13px;border-radius:5px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:background 120ms ease;}
+    .dm-add-btn:hover{background:var(--border);}
+    .dm-lens-bar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+    .dm-lens-btn{font-size:9.5px;font-weight:700;padding:3px 11px;border-radius:20px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:all 120ms ease;}
+    .dm-lens-btn:hover{background:var(--border);}
+    .dm-lens-btn.dm-lens-active{background:#4878a0;color:#fff;border-color:#4878a0;}
+    .dm-card-row{display:grid;grid-template-columns:80px 1fr 26px;gap:6px;align-items:center;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;}
 
     /* ── MOBILE ── */
     @media (max-width:680px){
@@ -350,6 +384,12 @@
   /* ── MODULE STATE (persists across re-renders) ── */
   var _dmIsOpen = false;
   var _dmTextCache = '';
+  var _dmTab = 'nodes';
+  var _dmCardLens = 'photography';
+  var _dmNodesBuf = null;
+  var _dmCardsBuf = null;
+  var _dmExpandedNodes = {};
+  var _dmFormAreaRef = null;
 
   /* ── SAFE DOM UTILS ── */
   function el(tag, props) {
@@ -518,6 +558,275 @@
     } else {
       throw new Error('無法識別格式，標題需含 year+track（里程碑）或 lens（預覽卡片）');
     }
+  }
+
+  /* ── PLAIN TEXT BLOCK PARSER ── */
+  function parsePlainTextBlocks(rawText) {
+    var blocks = rawText.split(/\n\s*---\s*\n|\n\s*---\s*$/).map(function(b){return b.trim();}).filter(Boolean);
+    if (!blocks.length) throw new Error('找不到有效區塊（每筆記錄之間請用 --- 分隔）');
+    var records = blocks.map(function(block) {
+      var obj = {};
+      block.split('\n').forEach(function(line) {
+        var m = line.match(/^([^:]+?)\s*:\s*([\s\S]*)/);
+        if (m) {
+          var k = m[1].trim().toLowerCase();
+          obj[k] = m[2].trim();
+        }
+      });
+      return obj;
+    }).filter(function(r){ return Object.keys(r).length > 0; });
+    if (!records.length) throw new Error('無法解析任何欄位，請確認格式為 key: value');
+    var hasYear = records.some(function(r){ return r.year||r['年份']||r['年']; });
+    var hasLens = records.some(function(r){ return r.lens||r['視角']; });
+    var count = 0;
+    if (hasYear) {
+      TINA_DATA_MATRIX.nodes = records.map(function(r,i){
+        return { id:r.id||('n'+(i+1)),
+          year:parseInt(r.year||r['年份']||r['年'])||2020,
+          track:r.track||r['軌道']||'engineering',
+          label:r.label||r['標籤']||'',
+          title:r.title||r['標題']||'',
+          subtitle:r.subtitle||r['副標']||'',
+          star:{ S:r.s||r.situation||r['情境']||'',
+                 T:r.t||r.task||r['任務']||'',
+                 A:r.a||r.action||r['行動']||'',
+                 R:r.r||r.result||r['成果']||'' } };
+      });
+      count = TINA_DATA_MATRIX.nodes.length;
+      return { count:count, type:'nodes' };
+    } else if (hasLens) {
+      var grouped = {};
+      records.forEach(function(r,i){
+        var l = r.lens||r['視角']||''; if (!l) return;
+        if (!grouped[l]) grouped[l] = [];
+        grouped[l].push({ id:r.id||('c'+(i+1)), cat:r.cat||r['類別']||'', title:r.title||r['標題']||'' });
+        count++;
+      });
+      Object.keys(grouped).forEach(function(k){
+        if (TINA_DATA_MATRIX.cards[k]) TINA_DATA_MATRIX.cards[k] = grouped[k];
+      });
+      return { count:count, type:'cards' };
+    } else {
+      throw new Error('純文字格式：需含 year/track（里程碑）或 lens（預覽卡片）');
+    }
+  }
+
+  function detectInputFormat(text) {
+    var firstLine = '';
+    text.split('\n').some(function(l){ if (l.trim()){ firstLine = l.trim(); return true; } });
+    if (/^[\w一-鿿\-_]+\s*:/.test(firstLine) && firstLine.indexOf('\t') === -1
+        && !/^(id|year|track|lens|label|title|cat|subtitle|s|t|a|r),/.test(firstLine.toLowerCase())) {
+      return 'plaintext';
+    }
+    return 'csv';
+  }
+
+  /* ── DATA MANAGER HELPERS ── */
+  function dmInitBuffers() {
+    if (!_dmNodesBuf) _dmNodesBuf = JSON.parse(JSON.stringify(TINA_DATA_MATRIX.nodes));
+    if (!_dmCardsBuf) {
+      _dmCardsBuf = {};
+      Object.keys(TINA_DATA_MATRIX.cards).forEach(function(k){
+        _dmCardsBuf[k] = JSON.parse(JSON.stringify(TINA_DATA_MATRIX.cards[k]));
+      });
+    }
+  }
+  function dmTrackLabel(t){
+    return t==='engineering'?'工管':t==='creative'?'創作':t==='divination'?'命理':t||'-';
+  }
+  function dmRefreshForm() {
+    var fa = _dmFormAreaRef; if (!fa) return;
+    clearNode(fa);
+    if (_dmTab==='nodes')  buildDmNodesTab(fa);
+    else if (_dmTab==='cards') buildDmCardsTab(fa);
+    else buildDmImportTab(fa);
+  }
+  function buildDmTabBar() {
+    var bar = el('div',{className:'dm-tab-bar'});
+    [['nodes','里程碑節點'],['cards','預覽卡片'],['import','批次匯入']].forEach(function(pair){
+      var btn = el('button',{className:'dm-tab-btn'+(_dmTab===pair[0]?' dm-tab-active':'')});
+      ap(btn, txt(pair[1]));
+      (function(tab, b){
+        b.addEventListener('click', function(){
+          if (_dmTab===tab) return;
+          _dmTab = tab;
+          bar.querySelectorAll('.dm-tab-btn').forEach(function(x){ x.className='dm-tab-btn'; });
+          b.className = 'dm-tab-btn dm-tab-active';
+          dmRefreshForm();
+        });
+      })(pair[0], btn);
+      ap(bar, btn);
+    });
+    return bar;
+  }
+  function buildDmNodesTab(container) {
+    var list = el('div',{className:'dm-node-list'});
+    _dmNodesBuf.forEach(function(node, idx){
+      var isOpen = !!_dmExpandedNodes[idx];
+      var entry = el('div',{className:'dm-entry'});
+      var hdr = el('div',{className:'dm-entry-hdr'});
+      var htitle = el('span',{className:'dm-entry-title'});
+      ap(htitle, txt((node.year||'????')+' · '+dmTrackLabel(node.track)+' · '+(node.label||node.title||'（未命名）')));
+      var togBtn = el('button',{className:'dm-entry-toggle'}); ap(togBtn, txt(isOpen?'▴':'▾'));
+      var delBtn = el('button',{className:'dm-entry-del'}); ap(delBtn, txt('✕'));
+      ap(hdr, htitle, togBtn, delBtn); ap(entry, hdr);
+      var body = el('div',{className:'dm-entry-body'}); body.style.display = isOpen?'':'none';
+      togBtn.addEventListener('click', function(){
+        var nowOpen = body.style.display !== 'none';
+        _dmExpandedNodes[idx] = !nowOpen;
+        body.style.display = !nowOpen ? '' : 'none';
+        togBtn.textContent = !nowOpen ? '▴' : '▾';
+      });
+      delBtn.addEventListener('click', (function(i){
+        return function(){
+          _dmNodesBuf.splice(i,1);
+          var nExp={};
+          Object.keys(_dmExpandedNodes).forEach(function(k){
+            var ki=parseInt(k);
+            if (ki<i) nExp[k]=_dmExpandedNodes[k];
+            else if (ki>i) nExp[String(ki-1)]=_dmExpandedNodes[k];
+          });
+          _dmExpandedNodes=nExp; dmRefreshForm();
+        };
+      })(idx));
+      function mkInp(lbl, val, key) {
+        var f=el('div',{className:'dm-field'});
+        var lb=el('div',{className:'dm-field-lbl'}); ap(lb,txt(lbl));
+        var inp=el('input',{className:'dm-inp',type:'text'}); inp.value=val||'';
+        inp.addEventListener('input',function(){
+          node[key]=inp.value;
+          if(key==='year'||key==='label'||key==='title')
+            htitle.textContent=(node.year||'????')+' · '+dmTrackLabel(node.track)+' · '+(node.label||node.title||'（未命名）');
+        });
+        ap(f,lb,inp); return f;
+      }
+      function mkSel(lbl, val) {
+        var f=el('div',{className:'dm-field'});
+        var lb=el('div',{className:'dm-field-lbl'}); ap(lb,txt(lbl));
+        var sel=el('select',{className:'dm-sel'});
+        [['engineering','工管軌道'],['creative','創作軌道'],['divination','命理軌道']].forEach(function(o){
+          var opt=el('option',{value:o[0]}); ap(opt,txt(o[1]));
+          if (o[0]===val) opt.selected=true; ap(sel,opt);
+        });
+        sel.addEventListener('change',function(){
+          node.track=sel.value;
+          htitle.textContent=(node.year||'????')+' · '+dmTrackLabel(node.track)+' · '+(node.label||node.title||'（未命名）');
+        });
+        ap(f,lb,sel); return f;
+      }
+      function mkTa(lbl, val, starKey) {
+        var f=el('div',{className:'dm-field'});
+        var lb=el('div',{className:'dm-field-lbl'}); ap(lb,txt(lbl));
+        var ta=el('textarea',{className:'dm-ta',rows:'3'}); ta.value=val||'';
+        ta.addEventListener('input',function(){ node.star[starKey]=ta.value; });
+        ap(f,lb,ta); return f;
+      }
+      var r1=el('div',{className:'dm-field-row dm-fr3'});
+      ap(r1, mkInp('年份',node.year,'year'), mkSel('軌道',node.track), mkInp('標籤',node.label,'label'));
+      var r2=el('div',{className:'dm-field-row dm-fr1'});
+      ap(r2, mkInp('標題',node.title,'title'));
+      var r3=el('div',{className:'dm-field-row dm-fr1'});
+      ap(r3, mkInp('副標',node.subtitle,'subtitle'));
+      var r4=el('div',{className:'dm-field-row dm-fr2'});
+      ap(r4, mkTa('S — Situation 情境',node.star.S,'S'), mkTa('T — Task 任務',node.star.T,'T'));
+      var r5=el('div',{className:'dm-field-row dm-fr2'});
+      ap(r5, mkTa('A — Action 行動',node.star.A,'A'), mkTa('R — Result 成果',node.star.R,'R'));
+      ap(body, r1, r2, r3, r4, r5); ap(entry, body); ap(list, entry);
+    });
+    var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增里程碑'));
+    addBtn.addEventListener('click',function(){
+      _dmNodesBuf.push({id:'n'+Date.now(),year:new Date().getFullYear(),track:'engineering',label:'',title:'',subtitle:'',star:{S:'',T:'',A:'',R:''}});
+      _dmExpandedNodes[_dmNodesBuf.length-1]=true; dmRefreshForm();
+    });
+    var saveBtn=el('button',{className:'dm-sync-btn'}); ap(saveBtn,txt('⚡ 寫入並刷新水管圖'));
+    var statusEl=el('div',{className:'dm-status'});
+    saveBtn.addEventListener('click',function(){
+      TINA_DATA_MATRIX.nodes=JSON.parse(JSON.stringify(_dmNodesBuf));
+      statusEl.textContent='已寫入 '+_dmNodesBuf.length+' 筆節點';
+      var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
+    });
+    var actions=el('div',{className:'dm-actions'}); ap(actions,addBtn,saveBtn,statusEl);
+    ap(container, list, actions);
+  }
+  function buildDmCardsTab(container) {
+    var lensMap=[['photography','攝影'],['creative','插畫'],['astrology','斗數']];
+    var lensBar=el('div',{className:'dm-lens-bar'});
+    lensMap.forEach(function(pair){
+      var btn=el('button',{className:'dm-lens-btn'+(_dmCardLens===pair[0]?' dm-lens-active':'')});
+      ap(btn,txt(pair[1]));
+      (function(l,b){
+        b.addEventListener('click',function(){
+          if (_dmCardLens===l) return;
+          _dmCardLens=l;
+          lensBar.querySelectorAll('.dm-lens-btn').forEach(function(x){x.className='dm-lens-btn';});
+          b.className='dm-lens-btn dm-lens-active';
+          clearNode(cardArea); buildCardList(cardArea);
+        });
+      })(pair[0],btn);
+      ap(lensBar,btn);
+    });
+    ap(container, lensBar);
+    var cardArea=el('div',{}); ap(container, cardArea);
+    function buildCardList(area) {
+      clearNode(area);
+      var cards=_dmCardsBuf[_dmCardLens]||[];
+      var list=el('div',{className:'dm-card-list'});
+      cards.forEach(function(card,idx){
+        var row=el('div',{className:'dm-card-row'});
+        var catInp=el('input',{className:'dm-inp',type:'text',placeholder:'類別'}); catInp.value=card.cat||'';
+        catInp.addEventListener('input',function(){card.cat=catInp.value;});
+        var titInp=el('input',{className:'dm-inp',type:'text',placeholder:'卡片標題'}); titInp.value=card.title||'';
+        titInp.addEventListener('input',function(){card.title=titInp.value;});
+        var delBtn=el('button',{className:'dm-entry-del',style:{padding:'2px 6px'}}); ap(delBtn,txt('✕'));
+        delBtn.addEventListener('click',(function(i){
+          return function(){_dmCardsBuf[_dmCardLens].splice(i,1); clearNode(area); buildCardList(area);};
+        })(idx));
+        ap(row,catInp,titInp,delBtn); ap(list,row);
+      });
+      var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增卡片'));
+      addBtn.addEventListener('click',function(){
+        if (!_dmCardsBuf[_dmCardLens]) _dmCardsBuf[_dmCardLens]=[];
+        _dmCardsBuf[_dmCardLens].push({id:'c'+Date.now(),cat:'',title:''});
+        clearNode(area); buildCardList(area);
+      });
+      var saveBtn=el('button',{className:'dm-sync-btn'}); ap(saveBtn,txt('⚡ 寫入並刷新'));
+      var statusEl=el('div',{className:'dm-status'});
+      saveBtn.addEventListener('click',function(){
+        TINA_DATA_MATRIX.cards[_dmCardLens]=JSON.parse(JSON.stringify(_dmCardsBuf[_dmCardLens]||[]));
+        statusEl.textContent='已寫入 '+(_dmCardsBuf[_dmCardLens]||[]).length+' 張 '+_dmCardLens+' 卡片';
+        var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
+      });
+      var acts=el('div',{className:'dm-actions'}); ap(acts,addBtn,saveBtn,statusEl);
+      ap(area, list, acts);
+    }
+    buildCardList(cardArea);
+  }
+  function buildDmImportTab(container) {
+    var lbl=el('div',{className:'dm-label'}); ap(lbl,txt('貼入 Notion 表格（TSV/CSV）或純文字格式'));
+    var hint=el('div',{className:'dm-hint'});
+    var hs=[el('span',{}),el('code',{}),el('span',{}),el('code',{}),el('span',{}),el('span',{style:{display:'block',marginTop:'4px'}}),el('span',{}),el('code',{}),el('span',{})];
+    ap(hs[0],txt('TSV/CSV：標題行含 ')); hs[1].textContent='year + track'; ap(hs[2],txt('（里程碑）或 ')); hs[3].textContent='lens'; ap(hs[4],txt('（卡片）'));
+    ap(hs[6],txt('純文字：每筆 key: value，')); hs[7].textContent='---'; ap(hs[8],txt(' 分隔記錄'));
+    hs.forEach(function(h){ap(hint,h);});
+    var ta=el('textarea',{className:'dm-textarea',rows:'9'});
+    ta.placeholder='純文字範例（里程碑）：\nyear: 2026\ntrack: engineering\nlabel: 換軌\ntitle: 職涯主動換軌決策\nS: 情境\nT: 任務\nA: 行動\nR: 成果\n---（下一筆）';
+    ta.value=_dmTextCache;
+    ta.addEventListener('input',function(){_dmTextCache=ta.value;});
+    var syncBtn=el('button',{className:'dm-sync-btn'}); ap(syncBtn,txt('⚡ 刷新人生同步'));
+    var statusEl=el('div',{className:'dm-status'});
+    syncBtn.addEventListener('click',function(){
+      var text=ta.value.trim(); if (!text){statusEl.textContent='輸入框為空';return;}
+      try {
+        var firstLine=''; text.split('\n').some(function(l){if(l.trim()){firstLine=l.trim();return true;}});
+        var res=/^[\w一-鿿\-_]+\s*:/.test(firstLine)&&firstLine.indexOf('\t')===-1
+          ? parsePlainTextBlocks(text) : parseCSV(text);
+        _dmNodesBuf=null; _dmCardsBuf=null;
+        statusEl.textContent='同步完成：'+res.count+' 筆 '+res.type+' 已更新';
+        var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
+      } catch(e){ statusEl.textContent='解析失敗：'+e.message; }
+    });
+    var acts=el('div',{className:'dm-actions'}); ap(acts,syncBtn,statusEl);
+    ap(container,lbl,hint,ta,acts);
   }
 
   /* ── ROUTING ── */
@@ -785,51 +1094,20 @@
 
   /* ── DATA MANAGER (myself only) ── */
   function renderDataManager() {
+    dmInitBuffers();
     var dm=el('div',{className:'data-manager'});
     var toggleBtn=el('button',{className:'dm-toggle-btn'});
     toggleBtn.textContent=(_dmIsOpen?'▼ ':'▶ ')+'📊 總指揮官資料管理中樞';
     var dmBody=el('div',{className:'dm-body'+(_dmIsOpen?' open':'')});
-
-    var lbl=el('div',{className:'dm-label'}); ap(lbl,txt('貼入 Notion 資料庫表格（Tab-separated 或 CSV）'));
-    var hint=el('div',{className:'dm-hint'});
-    ap(hint, txt('里程碑格式：'), el('code',{}), txt('year'), el('code',{}), txt('  track'));
-    /* rebuild hint properly */
-    clearNode(hint);
-    var h1=el('span',{}); ap(h1,txt('里程碑節點格式欄位：'));
-    var c1=el('code',{}); c1.textContent='id / year / track / label / title / subtitle / s / t / a / r';
-    var br=el('span',{style:{display:'block',marginTop:'4px'}});
-    var h2=el('span',{}); ap(h2,txt('預覽卡片格式欄位：'));
-    var c2=el('code',{}); c2.textContent='id / lens / cat / title';
-    ap(hint, h1, c1, br, h2, c2);
-
-    var textarea=el('textarea',{className:'dm-textarea',placeholder:'貼入 Notion 表格內容（含標題行）...',rows:'10'});
-    textarea.value=_dmTextCache;
-    textarea.addEventListener('input',function(){_dmTextCache=textarea.value;});
-
-    var syncBtn=el('button',{className:'dm-sync-btn'}); ap(syncBtn,txt('⚡ 刷新人生同步'));
-    var statusEl=el('div',{className:'dm-status'});
-
-    syncBtn.addEventListener('click',function(){
-      var text=textarea.value.trim();
-      if (!text){statusEl.textContent='輸入框為空';return;}
-      try {
-        var res=parseCSV(text);
-        statusEl.textContent='同步完成：'+res.count+' 筆 '+res.type+' 已更新';
-        var lens=parseLens();
-        renderStatusPanel(lens); renderContent(lens);
-      } catch(e) {
-        statusEl.textContent='解析失敗：'+e.message;
-      }
-    });
-
+    var tabBar=buildDmTabBar();
+    var formArea=el('div',{}); _dmFormAreaRef=formArea;
+    dmRefreshForm();
     toggleBtn.addEventListener('click',function(){
       _dmIsOpen=!_dmIsOpen;
       dmBody.classList[_dmIsOpen?'add':'remove']('open');
       toggleBtn.textContent=(_dmIsOpen?'▼ ':'▶ ')+'📊 總指揮官資料管理中樞';
     });
-
-    var actions=el('div',{className:'dm-actions'}); ap(actions,syncBtn,statusEl);
-    ap(dmBody, lbl, hint, textarea, actions);
+    ap(dmBody, tabBar, formArea);
     ap(dm, toggleBtn, dmBody);
     return dm;
   }
