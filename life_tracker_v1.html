@@ -638,6 +638,20 @@
   }
 
   /* ── DATA MANAGER HELPERS ── */
+  var LTO_KEY = 'lto_matrix';
+  function persistData() {
+    try { localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:TINA_DATA_MATRIX.nodes, cards:TINA_DATA_MATRIX.cards })); } catch(e) {}
+  }
+  function loadPersistedData() {
+    try {
+      var raw = localStorage.getItem(LTO_KEY); if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (saved.nodes && Array.isArray(saved.nodes)) TINA_DATA_MATRIX.nodes = saved.nodes;
+      if (saved.cards && typeof saved.cards === 'object') {
+        Object.keys(saved.cards).forEach(function(k){ if (TINA_DATA_MATRIX.cards[k] !== undefined) TINA_DATA_MATRIX.cards[k] = saved.cards[k]; });
+      }
+    } catch(e) {}
+  }
   function dmInitBuffers() {
     if (!_dmNodesBuf) _dmNodesBuf = JSON.parse(JSON.stringify(TINA_DATA_MATRIX.nodes));
     if (!_dmCardsBuf) {
@@ -751,7 +765,8 @@
     var statusEl=el('div',{className:'dm-status'});
     saveBtn.addEventListener('click',function(){
       TINA_DATA_MATRIX.nodes=JSON.parse(JSON.stringify(_dmNodesBuf));
-      statusEl.textContent='已寫入 '+_dmNodesBuf.length+' 筆節點';
+      persistData();
+      statusEl.textContent='已寫入 '+_dmNodesBuf.length+' 筆節點（已存檔）';
       var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
     });
     var actions=el('div',{className:'dm-actions'}); ap(actions,addBtn,saveBtn,statusEl);
@@ -802,7 +817,8 @@
       var statusEl=el('div',{className:'dm-status'});
       saveBtn.addEventListener('click',function(){
         TINA_DATA_MATRIX.cards[_dmCardLens]=JSON.parse(JSON.stringify(_dmCardsBuf[_dmCardLens]||[]));
-        statusEl.textContent='已寫入 '+(_dmCardsBuf[_dmCardLens]||[]).length+' 張 '+_dmCardLens+' 卡片';
+        persistData();
+        statusEl.textContent='已寫入 '+(_dmCardsBuf[_dmCardLens]||[]).length+' 張 '+_dmCardLens+' 卡片（已存檔）';
         var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
       });
       var acts=el('div',{className:'dm-actions'}); ap(acts,addBtn,saveBtn,statusEl);
@@ -830,7 +846,8 @@
         var res=/^[\w一-鿿\-_]+\s*:/.test(firstLine)&&firstLine.indexOf('\t')===-1
           ? parsePlainTextBlocks(text) : parseCSV(text);
         _dmNodesBuf=null; _dmCardsBuf=null;
-        statusEl.textContent='同步完成：'+res.count+' 筆 '+res.type+' 已更新';
+        persistData();
+        statusEl.textContent='同步完成：'+res.count+' 筆 '+res.type+' 已更新（已存檔）';
         var lens=parseLens(); renderStatusPanel(lens); renderContent(lens);
       } catch(e){ statusEl.textContent='解析失敗：'+e.message; }
     });
@@ -1215,6 +1232,7 @@
 
   /* ── INIT ── */
   function init() {
+    loadPersistedData();
     var lens=parseLens();
     renderStatusPanel(lens); renderContent(lens);
     var overlay=document.getElementById('modal-overlay');
