@@ -7,25 +7,15 @@
   <style>
     /* ── TOKENS ── */
     :root {
-      --bg:      #f4f1ec;
-      --bg2:     #eceae3;
-      --ink:     #28261f;
-      --sub:     #55514a;
-      --border:  #dcd9d2;
-      --faint:   #9e9890;
-      --bg-card: #f8f6f1;
-      --sidebar-w: 238px;
-      --r: 8px;
-      --track-label-w: 72px;
-      --track-h: 72px;
-      --pipe-h: 7px;
-      --node-d: 17px;
+      --bg:      #f4f1ec; --bg2:     #eceae3; --ink:     #28261f;
+      --sub:     #55514a; --border:  #dcd9d2; --faint:   #9e9890; --bg-card: #f8f6f1;
+      --sidebar-w: 238px; --r: 8px;
+      --track-label-w: 72px; --track-h: 72px; --pipe-h: 7px; --node-d: 17px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang TC', sans-serif;
-      background: var(--bg); color: var(--ink); font-size: 13.5px;
-      line-height: 1.65; min-height: 100vh;
+      background: var(--bg); color: var(--ink); font-size: 13.5px; line-height: 1.65; min-height: 100vh;
     }
 
     /* ── LAYOUT ── */
@@ -39,182 +29,127 @@
       gap: 22px; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
     }
     .avatar-wrap { display: flex; justify-content: center; }
-    .avatar {
-      width: 68px; height: 68px; border-radius: 50%; background: var(--bg2);
-      border: 1.5px solid var(--border); display: flex; align-items: center;
-      justify-content: center; font-size: 13px; color: var(--faint);
-    }
+    .avatar { width: 68px; height: 68px; border-radius: 50%; background: var(--bg2); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--faint); }
     .sp-name { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; }
     .sp-role { font-size: 10.5px; color: var(--faint); text-align: center; margin-top: 3px; }
-    .sp-section-title {
-      font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-      color: var(--faint); padding-bottom: 7px; border-bottom: 1px solid var(--border);
-    }
+    .sp-section-title { font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding-bottom: 7px; border-bottom: 1px solid var(--border); }
     .sp-tag-group { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
-    .sp-tag {
-      font-size: 10px; padding: 2px 9px; border-radius: 20px;
-      background: var(--bg2); border: .5px solid var(--border); color: var(--sub);
-    }
-    .lens-badge {
-      display: inline-flex; align-items: center; gap: 5px; font-size: 10px;
-      font-weight: 700; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border);
-      margin-top: 8px; white-space: nowrap;
-    }
+    .sp-tag { font-size: 10px; padding: 2px 9px; border-radius: 20px; background: var(--bg2); border: .5px solid var(--border); color: var(--sub); }
+    .lens-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border); margin-top: 8px; white-space: nowrap; }
     .lens-badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .lens-desc { font-size: 10px; color: var(--faint); margin-top: 7px; line-height: 1.55; }
     .sp-lens-section { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
     .sp-url-hint { margin-top: 12px; font-size: 9px; color: var(--faint); line-height: 1.8; }
-    .sp-url-hint code {
-      background: var(--bg2); border: .5px solid var(--border); border-radius: 3px;
-      padding: 0 4px; font-family: 'SF Mono', 'Fira Mono', monospace; font-size: 8.5px; color: var(--sub);
-    }
+    .sp-url-hint code { background: var(--bg2); border: .5px solid var(--border); border-radius: 3px; padding: 0 4px; font-family: 'SF Mono', 'Fira Mono', monospace; font-size: 8.5px; color: var(--sub); }
 
     /* ── CONTENT AREA ── */
     #content-area { padding: 30px 26px 48px; min-height: 100vh; }
     .content-header { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
     .content-title { font-size: 21px; font-weight: 300; color: var(--ink); letter-spacing: -.4px; }
     .content-subtitle { font-size: 11.5px; color: var(--faint); margin-top: 5px; }
-    .content-lens-badge {
-      display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700;
-      padding: 3px 10px; border-radius: 20px; margin-top: 10px; border: 1px solid transparent;
-    }
+    .content-lens-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 10px; border: 1px solid transparent; }
     .section { margin-bottom: 36px; }
-    .section-label {
-      font-size: 8.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-      color: var(--faint); margin-bottom: 14px; display: flex; align-items: center; gap: 0;
-    }
+    .section-label { font-size: 8.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; display: flex; align-items: center; }
     .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 10px; }
 
     /* ── PIPELINE ── */
-    .pipeline-wrap {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--r); padding: 18px 16px 26px;
-      overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-    }
+    .pipeline-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 16px 26px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     .pipeline-inner { min-width: 540px; }
-
-    /* Each row = label spacer + content; both axis and track rows share same structure */
     .pl-row { display: flex; }
-    .pl-label {
-      width: var(--track-label-w); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: flex-end;
-      padding-right: 10px;
-    }
+    .pl-label { width: var(--track-label-w); flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; }
     .pl-content { flex: 1; position: relative; }
-
-    /* Year axis */
     .axis-row { height: 28px; margin-bottom: 4px; align-items: flex-end; }
-    .year-tick {
-      position: absolute; bottom: 0; font-size: 9px; font-weight: 600;
-      color: var(--faint); transform: translateX(-50%); white-space: nowrap;
-    }
-    .year-tick::before {
-      content: ''; display: block; width: 1px; height: 4px;
-      background: var(--border); margin: 0 auto 2px;
-    }
-
-    /* Track row */
+    .year-tick { position: absolute; bottom: 0; font-size: 9px; font-weight: 600; color: var(--faint); transform: translateX(-50%); white-space: nowrap; }
+    .year-tick::before { content: ''; display: block; width: 1px; height: 4px; background: var(--border); margin: 0 auto 2px; }
     .track-row { height: var(--track-h); transition: opacity 260ms ease; }
-    .track-row.vis-active  { opacity: 1; }
-    .track-row.vis-partial { opacity: 0.5; }
-    .track-row.vis-dimmed  { opacity: 0.09; pointer-events: none; }
-
+    .track-row.vis-active { opacity: 1; } .track-row.vis-partial { opacity: 0.5; } .track-row.vis-dimmed { opacity: 0.09; pointer-events: none; }
     .track-label-inner { display: flex; align-items: center; gap: 4px; }
     .track-label-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
     .track-label-text { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; }
-
-    /* Guide lines */
-    .guide-line {
-      position: absolute; top: 0; bottom: 0; width: 1px;
-      background: rgba(40,38,31,0.045); pointer-events: none;
-    }
-
-    /* Pipe line */
-    .pipe-line {
-      position: absolute; top: 50%; left: 0; right: 0;
-      height: var(--pipe-h); border-radius: calc(var(--pipe-h) / 2);
-      transform: translateY(-50%); pointer-events: none;
-    }
-
-    /* Milestone node */
-    .ms-node {
-      position: absolute; top: 50%;
-      width: var(--node-d); height: var(--node-d); border-radius: 50%;
-      transform: translate(-50%, -50%);
-      border: 2.5px solid rgba(255,255,255,0.88);
-      box-shadow: 0 1px 5px rgba(0,0,0,0.18);
-      cursor: pointer; z-index: 3;
-      transition: transform 130ms ease, box-shadow 130ms ease;
-    }
-    .ms-node:hover {
-      transform: translate(-50%,-50%) scale(1.35);
-      box-shadow: 0 3px 10px rgba(0,0,0,0.26);
-    }
-
-    /* Node short label below pipe */
-    .ms-label {
-      position: absolute; top: calc(50% + 12px);
-      font-size: 8.5px; font-weight: 700; letter-spacing: .04em;
-      transform: translateX(-50%); pointer-events: none; white-space: nowrap;
-    }
+    .guide-line { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(40,38,31,0.045); pointer-events: none; }
+    .pipe-line { position: absolute; top: 50%; left: 0; right: 0; height: var(--pipe-h); border-radius: calc(var(--pipe-h)/2); transform: translateY(-50%); pointer-events: none; }
+    .ms-node { position: absolute; top: 50%; width: var(--node-d); height: var(--node-d); border-radius: 50%; transform: translate(-50%,-50%); border: 2.5px solid rgba(255,255,255,0.88); box-shadow: 0 1px 5px rgba(0,0,0,0.18); cursor: pointer; z-index: 3; transition: transform 130ms ease, box-shadow 130ms ease; }
+    .ms-node:hover { transform: translate(-50%,-50%) scale(1.35); box-shadow: 0 3px 10px rgba(0,0,0,0.26); }
+    .ms-label { position: absolute; top: calc(50% + 12px); font-size: 8.5px; font-weight: 700; letter-spacing: .04em; transform: translateX(-50%); pointer-events: none; white-space: nowrap; }
 
     /* ── MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 900;
-      background: rgba(40,38,31,0.42);
-      display: flex; align-items: center; justify-content: center; padding: 20px;
-      opacity: 0; pointer-events: none; transition: opacity 200ms ease;
-    }
+    .modal-overlay { position: fixed; inset: 0; z-index: 900; background: rgba(40,38,31,0.42); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 200ms ease; }
     .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal-card {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: calc(var(--r) * 1.5); width: 100%; max-width: 520px;
-      max-height: calc(100vh - 80px); overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(40,38,31,0.24);
-      transform: scale(0.95) translateY(8px); transition: transform 200ms ease;
-    }
+    .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: calc(var(--r)*1.5); width: 100%; max-width: 520px; max-height: calc(100vh - 80px); overflow-y: auto; box-shadow: 0 10px 40px rgba(40,38,31,0.24); transform: scale(0.95) translateY(8px); transition: transform 200ms ease; }
     .modal-overlay.open .modal-card { transform: scale(1) translateY(0); }
-
-    .modal-head {
-      padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: flex-start; gap: 10px;
-    }
-    .modal-track-tag {
-      flex-shrink: 0; font-size: 9px; font-weight: 700; letter-spacing: .06em;
-      text-transform: uppercase; padding: 2px 9px; border-radius: 20px;
-      border: 1px solid transparent; margin-top: 4px; white-space: nowrap;
-    }
+    .modal-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+    .modal-track-tag { flex-shrink: 0; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 9px; border-radius: 20px; border: 1px solid transparent; margin-top: 4px; white-space: nowrap; }
     .modal-title-block { flex: 1; min-width: 0; }
     .modal-year-label { font-size: 10px; font-weight: 600; color: var(--faint); }
     .modal-title { font-size: 16.5px; font-weight: 700; color: var(--ink); margin-top: 2px; line-height: 1.3; }
     .modal-subtitle { font-size: 11.5px; color: var(--sub); margin-top: 4px; line-height: 1.5; }
-    .modal-close-btn {
-      flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
-      background: var(--bg2); border: 1px solid var(--border); cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; color: var(--sub); transition: background 160ms ease; margin-top: -2px;
-    }
+    .modal-close-btn { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--sub); transition: background 160ms ease; margin-top: -2px; }
     .modal-close-btn:hover { background: var(--border); }
-
     .modal-body { padding: 16px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
     .star-block { }
-    .star-key {
-      display: flex; align-items: center; font-size: 8px; font-weight: 700;
-      letter-spacing: .15em; text-transform: uppercase; margin-bottom: 5px;
-    }
+    .star-key { display: flex; align-items: center; font-size: 8px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 5px; }
     .star-key::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 8px; }
     .star-val { font-size: 12px; color: var(--sub); line-height: 1.7; }
+
+    /* ── STAGE 3: CAPABILITY FILTER (Engineering) ── */
+    .cap-filter-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+    .cap-btn { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 5px 15px; border-radius: 20px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--sub); transition: background 150ms ease, color 150ms ease, border-color 150ms ease; white-space: nowrap; }
+    .cap-btn.active { background: #2e5d8a; color: #fff; border-color: #2e5d8a; }
+    .cap-btn:hover:not(.active) { background: var(--border); }
+
+    /* ── STAGE 3: ENG PROJECT CARDS ── */
+    .eng-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .eng-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; transition: opacity 220ms ease; }
+    .eng-card-inner { padding: 14px 16px 12px; }
+    .eng-card-year { font-size: 9px; font-weight: 700; letter-spacing: .08em; color: var(--faint); display: block; }
+    .eng-card-title { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-top: 3px; line-height: 1.35; }
+    .eng-card-sub { font-size: 11px; color: var(--faint); margin-top: 4px; line-height: 1.5; }
+    .eng-cap-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+    .eng-cap-tag { font-size: 9px; font-weight: 700; letter-spacing: .05em; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; background: #e8f0f8; color: #2e5d8a; border: .5px solid #aaccdd; }
+    .eng-kpi-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+    .eng-kpi-chip { font-size: 9.5px; padding: 2px 8px; border-radius: 4px; background: var(--bg2); border: .5px solid var(--border); color: var(--sub); }
+    .eng-card-foot { padding: 9px 16px 11px; border-top: 1px solid var(--border); background: var(--bg2); }
+    .drill-btn { font-size: 10px; font-weight: 700; letter-spacing: .03em; padding: 4px 12px; border-radius: 5px; cursor: pointer; background: transparent; border: 1px solid #7aaac8; color: #2e5d8a; transition: background 140ms ease; }
+    .drill-btn:hover { background: #e8f0f8; }
+    .star-expand { max-height: 0; overflow: hidden; transition: max-height 320ms cubic-bezier(0.4,0,0.2,1); }
+    .star-expand.open { max-height: 900px; }
+    .star-inner { padding: 14px 16px 16px; border-top: 1px dashed var(--border); }
+    .eng-star-block { margin-bottom: 12px; }
+    .eng-star-block:last-child { margin-bottom: 0; }
+    .eng-star-key { display: flex; align-items: center; font-size: 8px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: #2e5d8a; margin-bottom: 4px; }
+    .eng-star-key::after { content: ''; flex: 1; height: 1px; background: #ccdde8; margin-left: 8px; }
+
+    /* ── STAGE 3: PORTFOLIO GRID (Creative) ── */
+    .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .portfolio-item { border-radius: var(--r); overflow: hidden; height: 150px; position: relative; cursor: pointer; transition: transform 210ms ease, box-shadow 210ms ease; }
+    .portfolio-item:hover { transform: scale(1.04); box-shadow: 0 6px 22px rgba(40,38,31,0.18); z-index: 2; }
+    .portfolio-item.size-tall { height: 310px; }
+    .portfolio-item.size-wide { grid-column: span 2; }
+    .pf-placeholder { width: 100%; height: 100%; padding: 10px 12px; display: flex; flex-direction: column; justify-content: flex-end; }
+    .pf-cat-tag { font-size: 8.5px; font-weight: 700; letter-spacing: .06em; display: inline-block; padding: 2px 8px; border-radius: 20px; background: rgba(255,255,255,0.55); color: var(--ink); margin-bottom: 4px; }
+    .pf-title { font-size: 11px; font-weight: 700; color: var(--ink); line-height: 1.4; display: block; }
+    .pf-stage-note { font-size: 8px; color: rgba(40,38,31,0.38); margin-top: 2px; display: block; }
+
+    /* ── STAGE 3: DIVINATION BOARD (Creative) ── */
+    .divination-board { background: #fdf7f0; border: 1.5px solid #e0cdb8; border-radius: var(--r); padding: 22px 24px 24px; }
+    .div-board-title { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+    .div-board-philo { font-size: 12.5px; color: var(--sub); line-height: 1.85; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid #e0cdb8; }
+    .div-feature-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    .div-feature-row { display: flex; align-items: flex-start; gap: 10px; }
+    .div-feature-icon { font-size: 12px; color: var(--sub); flex-shrink: 0; margin-top: 2px; }
+    .div-feature-text { font-size: 12px; color: var(--sub); line-height: 1.65; }
+    .div-feature-label { font-weight: 700; color: var(--ink); font-size: 12px; }
+    .div-board-note { font-size: 11px; color: var(--faint); line-height: 1.65; padding-top: 14px; border-top: 1px solid #e0cdb8; }
 
     /* ── MOBILE ── */
     @media (max-width: 680px) {
       #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-      #status-panel {
-        position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border);
-        padding: 16px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px;
-      }
+      #status-panel { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; }
       .sp-lens-section { margin-top: 0; padding-top: 0; border-top: none; margin-left: auto; }
       .sp-url-hint { display: none; }
       #content-area { padding: 18px 14px 40px; }
+      .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+      .portfolio-item.size-wide { grid-column: span 1; }
     }
   </style>
 </head>
@@ -230,151 +165,76 @@
 (function () {
   'use strict';
 
+  /* ── CONFIG ── */
   var LENS_META = {
     public:      { label:'公眾視角',      icon:'◎', color:'#6a6a58', bg:'#f0ede8', border:'#c4c2b8', desc:'公開展示模式 · 僅顯示開放節點' },
-    creative:    { label:'藝術創作者視角', icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'插畫 · 攝影 · 文具週邊軌跡' },
+    creative:    { label:'藝術創作者視角', icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'插畫 · 攝影 · 文具週邊 · 命理占驗' },
     engineering: { label:'專業工管視角',   icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
     myself:      { label:'全觀自我視角',   icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
   };
-
   var TRACK_META = {
-    engineering: {
-      label:'工管專案', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)',
-      gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)',
-    },
-    creative: {
-      label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)',
-      gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)',
-    },
-    divination: {
-      label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',
-      gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)',
-    },
+    engineering: { label:'工管專案', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
+    creative:    { label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)', gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)' },
+    divination:  { label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',  gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)' },
   };
-
   var TRACK_ORDER = ['engineering','creative','divination'];
   var YEAR_START = 2012, YEAR_END = 2026;
-
   var VIS = {
     public:      { engineering:'dimmed',  creative:'partial', divination:'partial' },
     creative:    { engineering:'dimmed',  creative:'active',  divination:'dimmed'  },
     engineering: { engineering:'active',  creative:'dimmed',  divination:'dimmed'  },
     myself:      { engineering:'active',  creative:'active',  divination:'active'  },
   };
+  function pct(year) { return ((year - YEAR_START) / (YEAR_END - YEAR_START) * 100).toFixed(3) + '%'; }
 
-  function pct(year) {
-    return ((year - YEAR_START) / (YEAR_END - YEAR_START) * 100).toFixed(3) + '%';
-  }
+  /* ── STAGE 3 DATA ── */
+  var ENG_PROJECTS = [
+    { msId:'e1', caps:['流程優化','跨國協作'],              kpis:['物料缺失率 -35%','跨部門 SOP 建立'] },
+    { msId:'e2', caps:['流程優化','危機處理','跨國協作'],   kpis:['齊套率提升至 96%','良率差異 <1.5%'] },
+    { msId:'e3', caps:['流程優化','危機處理'],              kpis:['良率回升 99.2%','根因分析框架建立'] },
+    { msId:'e4', caps:['流程優化','跨國協作'],              kpis:['培訓時間縮短 40%','SOP 覆蓋率 87%'] },
+    { msId:'e5', caps:['危機處理'],                         kpis:['換軌框架建立','技能資產整理'] },
+  ];
+  var PORTFOLIO_ITEMS = [
+    { id:'p1', cat:'插畫', title:'靈境物語 — 角色設計系列', bg:'linear-gradient(145deg,#e8d4b4,#d4bca0)', size:'tall' },
+    { id:'p2', cat:'攝影', title:'光影田野 — 田野漫步',     bg:'linear-gradient(145deg,#c8d8c0,#b0c4a8)', size:'wide' },
+    { id:'p3', cat:'週邊', title:'記事本設計稿 Vol.1',      bg:'linear-gradient(145deg,#d8c8a8,#c4b494)', size:''     },
+    { id:'p4', cat:'插畫', title:'世界觀概念稿',            bg:'linear-gradient(145deg,#dcc8b0,#c8b09c)', size:''     },
+    { id:'p5', cat:'攝影', title:'街頭靜物系列',            bg:'linear-gradient(145deg,#c0ccc8,#a8b8b4)', size:'tall' },
+    { id:'p6', cat:'攝影', title:'光影練習 2022–2023',      bg:'linear-gradient(145deg,#c8d4d0,#b0c0bc)', size:''     },
+  ];
 
+  /* ── MILESTONE DATA ── */
   var MS = [
-    { id:'e1', year:2012, track:'engineering', label:'入行',
-      title:'半導體供應鏈入局', subtitle:'物料管控 · 生產排程 · 首次跨部門協作',
-      star:{
-        S:'受聘封測廠，物料缺失問題導致產線頻繁停工；舊機制依賴人工電話確認，無系統化追蹤。',
-        T:'三個月內建立系統化物料追蹤流程，降低停線風險，同時快速適應半導體供應鏈運作節奏。',
-        A:'自主設計 Excel 追蹤模板推廣至跨部門；建立每日料況回報機制；與採購協調安全庫存緩衝。',
-        R:'入職三個月物料缺失停線事件減少 35%，建立個人在跨部門協作上的信任基礎。',
-      }},
-    { id:'e2', year:2016, track:'engineering', label:'升級',
-      title:'跨廠區管理擴張', subtitle:'三廠同步 · 良率優化 · 跨地協調',
-      star:{
-        S:'公司擴廠至三廠區，管理層決定整合物料與生產調度於單一負責人，挑戰大幅提升。',
-        T:'接管三廠物料協調，在不增加人力的前提下維持供應穩定，並推動跨廠良率標準化。',
-        A:'建立跨廠週報制度；統一 BOM 版本管控；導入異常分級回報機制，減少 escalation 延遲。',
-        R:'跨廠物料齊套率提升至 96%，良率差異縮小至 1.5% 以內，獲授跨廠協調代表資格。',
-      }},
-    { id:'e3', year:2019, track:'engineering', label:'精進',
-      title:'良率精進專案', subtitle:'數據驅動 · 根因分析 · 製程改善',
-      star:{
-        S:'特定製程段良率連續六個月低於目標值 3%，傳統目視檢查無法定位根因，客戶壓力升高。',
-        T:'主導跨部門改善小組，透過數據分析定位根因，三個月內達成穩定良率提升目標。',
-        A:'整合 SPC 數據與人工記錄建立根因相關性矩陣；協調設備、製程、品管三部門同步驗證。',
-        R:'目標製程良率回升至 99.2%，超越季度目標；改善方法論列為廠內 Best Practice 推廣。',
-      }},
-    { id:'e4', year:2023, track:'engineering', label:'制度',
-      title:'制度化改革推動', subtitle:'標準化 SOP · 知識管理 · 交接系統',
-      star:{
-        S:'核心人員流動導致知識斷層，新人培訓時間過長，舊 SOP 文件分散且版本混亂。',
-        T:'一年內完成供應鏈核心流程標準化，建立可傳承的知識管理系統，降低替換風險。',
-        A:'主導 SOP 重寫工作坊；建立版本管控 Wiki；設計新人 30/60/90 天培訓追蹤框架。',
-        R:'新人獨立上手時間縮短 40%，SOP 覆蓋率達 87%，交接順暢度評分由 3.2 升至 4.6。',
-      }},
-    { id:'e5', year:2025, track:'engineering', label:'換軌',
-      title:'職涯主動換軌決策', subtitle:'13 年積累 · 身分重組 · 多軌啟動',
-      star:{
-        S:'13 年深耕半導體供應鏈，達個人技術與職位天花板；創作與命理探索逐漸展現自主生命力。',
-        T:'在不妥協生活品質的前提下，完成職涯轉型的規劃、資源盤點與身分重建。',
-        A:'系統評估各路徑風險與資源；建立創作收入驗證機制；啟動人生軌跡觀測儀作為決策工具。',
-        R:'決策已啟動，觀測儀 Stage 1–2 上線，供應鏈技能整理成可攜帶資產（BQ 故事庫 + KPI 卡）。',
-      }},
-    { id:'c1', year:2015, track:'creative', label:'重啟',
-      title:'插畫創作重新出發', subtitle:'停筆十年後的回歸',
-      star:{
-        S:'大學後因工作擱置創作超過十年，重新拾筆的慾望長期被「沒時間」的思維壓制。',
-        T:'在不犧牲工作表現的前提下，重建創作習慣，嘗試找到個人視覺語言的定位。',
-        A:'設定每週最低一張習作承諾；加入線上社群尋求回饋；購置數位板系統性練習。',
-        R:'連續六個月維持節奏；確立柔和線條+暖色系個人風格；收到首批陌生人正向回饋。',
-      }},
-    { id:'c2', year:2019, track:'creative', label:'週邊',
-      title:'文具週邊首批量產', subtitle:'從設計稿到實體落地',
-      star:{
-        S:'多款作品累積穩定粉絲，多次收到「有沒有實體版？」詢問，決定嘗試週邊生產。',
-        T:'在零消費品供應鏈知識的領域，完成設計到生產到配送的第一次完整流程學習。',
-        A:'運用工管背景比對多家印製廠 BOM 與交期；設計包裝規格；小批量 50 件試水溫。',
-        R:'首批週邊兩週內售罄，銷售額超預期 60%；建立個人品牌與消費者關係基礎。',
-      }},
-    { id:'c3', year:2022, track:'creative', label:'攝影',
-      title:'攝影系統化訓練', subtitle:'構圖語言建立 · 視覺風格確立',
-      star:{
-        S:'手機攝影多年但缺乏系統框架，照片隨機性高，難以複製好看的成功案例。',
-        T:'一年內建立可重複的攝影構圖原則，確立個人視覺風格，與插畫語言形成呼應。',
-        A:'購置相機系統；報名攝影師評圖課；每月主題式拍攝練習；建立個人色彩 preset 庫。',
-        R:'攝影作品獲平台演算法推薦；確立靜物+田野+光影三主題；攝影與插畫語言統一。',
-      }},
-    { id:'c4', year:2026, track:'creative', label:'公開',
-      title:'創作身分正式公開化', subtitle:'作品發表 · 創作者身分確立',
-      star:{
-        S:'創作多年但一直以「業餘興趣」自我定位，缺乏公開展示的勇氣與系統化作品呈現。',
-        T:'建立公開創作者身分，整合攝影、插畫、週邊三條線，建立持續發表的基礎設施。',
-        A:'建立作品集（觀測儀）；設計發表 SOP 與內容行事曆；30 天三平台同步實驗。',
-        R:'（進行中）Stage 2 觀測儀上線；創作軌道數據開始系統性記錄。目標：Q3 線下展。',
-      }},
-    { id:'d1', year:2019, track:'divination', label:'入門',
-      title:'紫微斗數系統入門', subtitle:'命理體系初探',
-      star:{
-        S:'長期對命理有好奇但停留在坊間碎片知識，缺乏系統性架構理解自己與他人的生命規律。',
-        T:'選定紫微斗數作為主攻體系，在工作之餘完成基礎盤面解讀的自學建構。',
-        A:'購置系統性教材；加入研習社群；以自盤為起點每週深度研讀一宮位並驗證。',
-        R:'入門六個月後可獨立解讀主要格局；開始以命理視角重新詮釋職涯選擇的底層邏輯。',
-      }},
-    { id:'d2', year:2022, track:'divination', label:'深修',
-      title:'系統化深度修習', subtitle:'正式師傳學習 · 盤面解讀實練',
-      star:{
-        S:'自學達瓶頸，部分格局判斷缺乏脈絡，容易過度詮釋；需要師傳糾偏與體系整合。',
-        T:'透過師傳指導完成進階格局研習，累積足夠案例量以建立解盤直覺。',
-        A:'報名正規師傳課程；每週三盤以上實練；建立個人解盤 SOP 與格局筆記庫。',
-        R:'完成 100 盤以上實練；格局誤判率顯著下降；確立務實心理取向的解盤風格。',
-      }},
-    { id:'d3', year:2024, track:'divination', label:'諮詢',
-      title:'開始提供個人諮詢', subtitle:'命理知識服務化的第一步',
-      star:{
-        S:'師傳認可解盤能力後，友人主動尋求諮詢，決定以正式框架承接，建立服務邊界。',
-        T:'建立清晰的服務邊界、收費機制與諮詢流程，讓命理知識以可持續的方式提供。',
-        A:'設計諮詢表單與前置問卷；制定服務說明；以月接案量上限保護服務品質。',
-        R:'首季滿意度 4.8/5；口碑轉介率 70%；建立候補名單機制，供需平衡初步成立。',
-      }},
-    { id:'d4', year:2026, track:'divination', label:'平台',
-      title:'斗數預約平台建立', subtitle:'服務流程正式化 · 公開接案',
-      star:{
-        S:'口碑諮詢已達容量上限，需要系統化預約機制，降低每次行政溝通成本。',
-        T:'建立公開預約入口，整合服務說明與個人命理觀點，形成完整的服務品牌。',
-        A:'將斗數預約整合至觀測儀公眾視角；設計預約→前置問卷→確認 SOP。',
-        R:'（進行中）預約入口 Stage 3 建設中；目標：2026 Q3 公開預約功能正式上線。',
-      }},
+    { id:'e1', year:2012, track:'engineering', label:'入行',  title:'半導體供應鏈入局',    subtitle:'物料管控 · 生產排程 · 首次跨部門協作',
+      star:{ S:'受聘封測廠，物料缺失問題導致產線頻繁停工；舊機制依賴人工電話確認，無系統化追蹤。', T:'三個月內建立系統化物料追蹤流程，降低停線風險，同時快速適應半導體供應鏈運作節奏。', A:'自主設計 Excel 追蹤模板推廣至跨部門；建立每日料況回報機制；與採購協調安全庫存緩衝。', R:'入職三個月物料缺失停線事件減少 35%，建立個人在跨部門協作上的信任基礎。' }},
+    { id:'e2', year:2016, track:'engineering', label:'升級',  title:'跨廠區管理擴張',      subtitle:'三廠同步 · 良率優化 · 跨地協調',
+      star:{ S:'公司擴廠至三廠區，管理層決定整合物料與生產調度於單一負責人，挑戰大幅提升。', T:'接管三廠物料協調，在不增加人力的前提下維持供應穩定，並推動跨廠良率標準化。', A:'建立跨廠週報制度；統一 BOM 版本管控；導入異常分級回報機制，減少 escalation 延遲。', R:'跨廠物料齊套率提升至 96%，良率差異縮小至 1.5% 以內，獲授跨廠協調代表資格。' }},
+    { id:'e3', year:2019, track:'engineering', label:'精進',  title:'良率精進專案',          subtitle:'數據驅動 · 根因分析 · 製程改善',
+      star:{ S:'特定製程段良率連續六個月低於目標值 3%，傳統目視檢查無法定位根因，客戶壓力升高。', T:'主導跨部門改善小組，透過數據分析定位根因，三個月內達成穩定良率提升目標。', A:'整合 SPC 數據與人工記錄建立根因相關性矩陣；協調設備、製程、品管三部門同步驗證。', R:'目標製程良率回升至 99.2%，超越季度目標；改善方法論列為廠內 Best Practice 推廣。' }},
+    { id:'e4', year:2023, track:'engineering', label:'制度',  title:'制度化改革推動',        subtitle:'標準化 SOP · 知識管理 · 交接系統',
+      star:{ S:'核心人員流動導致知識斷層，新人培訓時間過長，舊 SOP 文件分散且版本混亂。', T:'一年內完成供應鏈核心流程標準化，建立可傳承的知識管理系統，降低替換風險。', A:'主導 SOP 重寫工作坊；建立版本管控 Wiki；設計新人 30/60/90 天培訓追蹤框架。', R:'新人獨立上手時間縮短 40%，SOP 覆蓋率達 87%，交接順暢度評分由 3.2 升至 4.6。' }},
+    { id:'e5', year:2025, track:'engineering', label:'換軌',  title:'職涯主動換軌決策',      subtitle:'13 年積累 · 身分重組 · 多軌啟動',
+      star:{ S:'13 年深耕半導體供應鏈，達個人技術與職位天花板；創作與命理探索逐漸展現自主生命力。', T:'在不妥協生活品質的前提下，完成職涯轉型的規劃、資源盤點與身分重建。', A:'系統評估各路徑風險與資源；建立創作收入驗證機制；啟動人生軌跡觀測儀作為決策工具。', R:'決策已啟動，觀測儀 Stage 1–3 上線，供應鏈技能整理成可攜帶資產（BQ 故事庫 + KPI 卡）。' }},
+    { id:'c1', year:2015, track:'creative',    label:'重啟',  title:'插畫創作重新出發',      subtitle:'停筆十年後的回歸',
+      star:{ S:'大學後因工作擱置創作超過十年，重新拾筆的慾望長期被「沒時間」的思維壓制。', T:'在不犧牲工作表現的前提下，重建創作習慣，嘗試找到個人視覺語言的定位。', A:'設定每週最低一張習作承諾；加入線上社群尋求回饋；購置數位板系統性練習。', R:'連續六個月維持節奏；確立柔和線條+暖色系個人風格；收到首批陌生人正向回饋。' }},
+    { id:'c2', year:2019, track:'creative',    label:'週邊',  title:'文具週邊首批量產',      subtitle:'從設計稿到實體落地',
+      star:{ S:'多款作品累積穩定粉絲，多次收到「有沒有實體版？」詢問，決定嘗試週邊生產。', T:'在零消費品供應鏈知識的領域，完成設計到生產到配送的第一次完整流程學習。', A:'運用工管背景比對多家印製廠 BOM 與交期；設計包裝規格；小批量 50 件試水溫。', R:'首批週邊兩週內售罄，銷售額超預期 60%；建立個人品牌與消費者關係基礎。' }},
+    { id:'c3', year:2022, track:'creative',    label:'攝影',  title:'攝影系統化訓練',        subtitle:'構圖語言建立 · 視覺風格確立',
+      star:{ S:'手機攝影多年但缺乏系統框架，照片隨機性高，難以複製好看的成功案例。', T:'一年內建立可重複的攝影構圖原則，確立個人視覺風格，與插畫語言形成呼應。', A:'購置相機系統；報名攝影師評圖課；每月主題式拍攝練習；建立個人色彩 preset 庫。', R:'攝影作品獲平台演算法推薦；確立靜物+田野+光影三主題；攝影與插畫語言統一。' }},
+    { id:'c4', year:2026, track:'creative',    label:'公開',  title:'創作身分正式公開化',    subtitle:'作品發表 · 創作者身分確立',
+      star:{ S:'創作多年但一直以「業餘興趣」自我定位，缺乏公開展示的勇氣與系統化作品呈現。', T:'建立公開創作者身分，整合攝影、插畫、週邊三條線，建立持續發表的基礎設施。', A:'建立作品集（觀測儀）；設計發表 SOP 與內容行事曆；30 天三平台同步實驗。', R:'（進行中）Stage 3 觀測儀上線；創作軌道數據開始系統性記錄。目標：Q3 線下展。' }},
+    { id:'d1', year:2019, track:'divination',  label:'入門',  title:'紫微斗數系統入門',      subtitle:'命理體系初探',
+      star:{ S:'長期對命理有好奇但停留在坊間碎片知識，缺乏系統性架構理解自己與他人的生命規律。', T:'選定紫微斗數作為主攻體系，在工作之餘完成基礎盤面解讀的自學建構。', A:'購置系統性教材；加入研習社群；以自盤為起點每週深度研讀一宮位並驗證。', R:'入門六個月後可獨立解讀主要格局；開始以命理視角重新詮釋職涯選擇的底層邏輯。' }},
+    { id:'d2', year:2022, track:'divination',  label:'深修',  title:'系統化深度修習',        subtitle:'正式師傳學習 · 盤面解讀實練',
+      star:{ S:'自學達瓶頸，部分格局判斷缺乏脈絡，容易過度詮釋；需要師傳糾偏與體系整合。', T:'透過師傳指導完成進階格局研習，累積足夠案例量以建立解盤直覺。', A:'報名正規師傳課程；每週三盤以上實練；建立個人解盤 SOP 與格局筆記庫。', R:'完成 100 盤以上實練；格局誤判率顯著下降；確立務實心理取向的解盤風格。' }},
+    { id:'d3', year:2024, track:'divination',  label:'諮詢',  title:'開始提供個人諮詢',      subtitle:'命理知識服務化的第一步',
+      star:{ S:'師傳認可解盤能力後，友人主動尋求諮詢，決定以正式框架承接，建立服務邊界。', T:'建立清晰的服務邊界、收費機制與諮詢流程，讓命理知識以可持續的方式提供。', A:'設計諮詢表單與前置問卷；制定服務說明；以月接案量上限保護服務品質。', R:'首季滿意度 4.8/5；口碑轉介率 70%；建立候補名單機制，供需平衡初步成立。' }},
+    { id:'d4', year:2026, track:'divination',  label:'平台',  title:'斗數預約平台建立',      subtitle:'服務流程正式化 · 公開接案',
+      star:{ S:'口碑諮詢已達容量上限，需要系統化預約機制，降低每次行政溝通成本。', T:'建立公開預約入口，整合服務說明與個人命理觀點，形成完整的服務品牌。', A:'將斗數預約整合至觀測儀公眾視角；設計預約→前置問卷→確認 SOP。', R:'（進行中）預約入口 Stage 4 建設中；目標：2026 Q3 公開預約功能正式上線。' }},
   ];
 
   /* ── SAFE DOM UTILS ── */
-
   function el(tag, props) {
     var node = document.createElement(tag);
     if (props) {
@@ -382,13 +242,9 @@
         var v = props[k];
         if (k === 'style' && typeof v === 'object') {
           Object.keys(v).forEach(function (sk) { node.style[sk] = v[sk]; });
-        } else if (k === 'className') {
-          node.className = v;
-        } else if (k === 'tabIndex') {
-          node.tabIndex = v;
-        } else {
-          node.setAttribute(k, v);
-        }
+        } else if (k === 'className') { node.className = v;
+        } else if (k === 'tabIndex') { node.tabIndex = v;
+        } else { node.setAttribute(k, v); }
       });
     }
     return node;
@@ -415,204 +271,293 @@
     if (!overlay || !card) return;
     clearNode(card);
     var tm = TRACK_META[ms.track];
-
-    var tag = el('span', { className:'modal-track-tag',
-      style:{ background: tm.color+'1a', color: tm.color, borderColor: tm.color+'55' }});
+    var tag = el('span', { className:'modal-track-tag', style:{ background:tm.color+'1a', color:tm.color, borderColor:tm.color+'55' } });
     ap(tag, txt(tm.label));
-
     var yrEl  = el('div', { className:'modal-year-label' }); ap(yrEl, txt(ms.year + ' · ' + ms.label));
     var titEl = el('div', { className:'modal-title' });      ap(titEl, txt(ms.title));
     var subEl = el('div', { className:'modal-subtitle' });   ap(subEl, txt(ms.subtitle));
     var tblock = el('div', { className:'modal-title-block' }); ap(tblock, yrEl, titEl, subEl);
-
     var closeBtn = el('button', { className:'modal-close-btn', 'aria-label':'關閉', tabIndex:0 });
     ap(closeBtn, txt('×'));
     closeBtn.addEventListener('click', closeModal);
-
     var head = el('div', { className:'modal-head' }); ap(head, tag, tblock, closeBtn);
-
     var body = el('div', { className:'modal-body' });
     [['S','Situation 情境'],['T','Task 任務'],['A','Action 行動'],['R','Result 成果']].forEach(function (pair) {
-      var block  = el('div', { className:'star-block' });
-      var keyEl  = el('div', { className:'star-key' });
-      var keySpan = el('span', { style:{ color: tm.color } }); ap(keySpan, txt(pair[1]));
-      ap(keyEl, keySpan);
-      var valEl  = el('div', { className:'star-val' }); ap(valEl, txt(ms.star[pair[0]]));
+      var block = el('div', { className:'star-block' });
+      var keyEl = el('div', { className:'star-key' });
+      var ks = el('span', { style:{ color:tm.color } }); ap(ks, txt(pair[1])); ap(keyEl, ks);
+      var valEl = el('div', { className:'star-val' }); ap(valEl, txt(ms.star[pair[0]]));
       ap(block, keyEl, valEl); ap(body, block);
     });
-
     ap(card, head, body);
-    overlay.classList.add('open');
-    closeBtn.focus();
+    overlay.classList.add('open'); closeBtn.focus();
   }
-
   function closeModal() {
-    var ov = document.getElementById('modal-overlay');
-    if (ov) ov.classList.remove('open');
+    var ov = document.getElementById('modal-overlay'); if (ov) ov.classList.remove('open');
   }
 
   /* ── STATUS PANEL ── */
   function renderStatusPanel(lens) {
-    var panel = document.getElementById('status-panel');
-    clearNode(panel);
+    var panel = document.getElementById('status-panel'); clearNode(panel);
     var meta = LENS_META[lens];
-
     var avatarWrap = el('div', { className:'avatar-wrap' });
     var avatar = el('div', { className:'avatar' }); ap(avatar, txt('△')); ap(avatarWrap, avatar);
-
     var name = el('p', { className:'sp-name' }); ap(name, txt('人生軌跡觀測儀'));
-    var role = el('p', { className:'sp-role' }); ap(role, txt('Stage 2 · 水管時間軸'));
+    var role = el('p', { className:'sp-role' }); ap(role, txt('Stage 3 · 視角組件填裝'));
     var ident = el('div', { style:{ textAlign:'center' } }); ap(ident, name, role);
-
     var tagsTitle = el('div', { className:'sp-section-title' }); ap(tagsTitle, txt('識別標籤'));
     var tagGroup  = el('div', { className:'sp-tag-group' });
-    ['Stage 2','Pipeline','里程碑 STAR','三軌並行'].forEach(function (t) {
+    ['Stage 3','特質濾鏡','作品展示牆','STAR 深探'].forEach(function (t) {
       var tag = el('span', { className:'sp-tag' }); ap(tag, txt(t)); ap(tagGroup, tag);
     });
     var tagsSection = el('div', {}); ap(tagsSection, tagsTitle, tagGroup);
-
     var lensTitle = el('div', { className:'sp-section-title' }); ap(lensTitle, txt('當前視角'));
-    var dot   = el('span', { className:'lens-badge-dot', style:{ background: meta.color } });
-    var badge = el('div', { className:'lens-badge',
-      style:{ color: meta.color, borderColor: meta.border, background: meta.bg } });
+    var dot   = el('span', { className:'lens-badge-dot', style:{ background:meta.color } });
+    var badge = el('div', { className:'lens-badge', style:{ color:meta.color, borderColor:meta.border, background:meta.bg } });
     ap(badge, dot, txt(meta.icon + ' ' + meta.label));
-    var desc  = el('p', { className:'lens-desc' }); ap(desc, txt(meta.desc));
-
-    var hintWrap = el('div', { className:'sp-url-hint' });
-    ap(hintWrap, txt('視角切換 URL：'));
+    var desc = el('p', { className:'lens-desc' }); ap(desc, txt(meta.desc));
+    var hintWrap = el('div', { className:'sp-url-hint' }); ap(hintWrap, txt('視角切換 URL：'));
     ['?lens=creative','?lens=engineering','?lens=myself'].forEach(function (c, i, arr) {
       var code = el('code', {}); ap(code, txt(c)); ap(hintWrap, code);
       if (i < arr.length - 1) ap(hintWrap, txt(' '));
     });
-
     var lensSection = el('div', { className:'sp-lens-section' });
     ap(lensSection, lensTitle, badge, desc, hintWrap);
     ap(panel, avatarWrap, ident, tagsSection, lensSection);
+  }
+
+  /* ── STAGE 3: ENGINEERING SECTION ── */
+  function renderEngSection() {
+    var section = el('div', { className:'section' });
+    var sLabel  = el('div', { className:'section-label' }); ap(sLabel, txt('能力特質濾鏡 · 專案深探'));
+    ap(section, sLabel);
+
+    var CAPS = ['全部','流程優化','危機處理','跨國協作'];
+    var activeCap   = '全部';
+    var cardEntries = []; /* {el, caps} */
+    var btnMap      = {};
+
+    /* Filter buttons */
+    var filterRow = el('div', { className:'cap-filter-row' });
+    CAPS.forEach(function (cap) {
+      var btn = el('button', { className:'cap-btn' + (cap === '全部' ? ' active' : '') });
+      ap(btn, txt(cap));
+      btn.addEventListener('click', function () { applyFilter(cap); });
+      btnMap[cap] = btn; ap(filterRow, btn);
+    });
+    ap(section, filterRow);
+
+    function applyFilter(cap) {
+      activeCap = cap;
+      CAPS.forEach(function (c) { btnMap[c].className = 'cap-btn' + (c === cap ? ' active' : ''); });
+      cardEntries.forEach(function (entry) {
+        var show = (cap === '全部' || entry.caps.indexOf(cap) !== -1);
+        entry.el.style.opacity = show ? '1' : '0.15';
+        entry.el.style.pointerEvents = show ? '' : 'none';
+      });
+    }
+
+    /* Project cards */
+    var cardsGrid = el('div', { className:'eng-cards-grid' });
+    ENG_PROJECTS.forEach(function (proj) {
+      var ms = MS.filter(function (m) { return m.id === proj.msId; })[0];
+      if (!ms) return;
+      var card = el('div', { className:'eng-card' });
+      cardEntries.push({ el: card, caps: proj.caps });
+
+      /* Card inner */
+      var inner = el('div', { className:'eng-card-inner' });
+      var yearEl = el('span', { className:'eng-card-year' }); ap(yearEl, txt(ms.year + ' · ' + ms.label));
+      var titleEl = el('div', { className:'eng-card-title' }); ap(titleEl, txt(ms.title));
+      var subEl   = el('div', { className:'eng-card-sub' });   ap(subEl,   txt(ms.subtitle));
+      var capTags = el('div', { className:'eng-cap-tags' });
+      proj.caps.forEach(function (cap) {
+        var ct = el('span', { className:'eng-cap-tag' }); ap(ct, txt(cap)); ap(capTags, ct);
+      });
+      var kpiRow = el('div', { className:'eng-kpi-row' });
+      proj.kpis.forEach(function (kpi) {
+        var chip = el('span', { className:'eng-kpi-chip' }); ap(chip, txt(kpi)); ap(kpiRow, chip);
+      });
+      ap(inner, yearEl, titleEl, subEl, capTags, kpiRow);
+
+      /* Foot + drill button */
+      var foot     = el('div', { className:'eng-card-foot' });
+      var drillBtn = el('button', { className:'drill-btn' }); ap(drillBtn, txt('🔍 穿透根因'));
+
+      /* STAR accordion */
+      var starExpand = el('div', { className:'star-expand' });
+      var starInner  = el('div', { className:'star-inner' });
+      [['S','Situation 情境'],['T','Task 任務'],['A','Action 行動'],['R','Result 成果']].forEach(function (pair) {
+        var block = el('div', { className:'eng-star-block' });
+        var keyEl = el('div', { className:'eng-star-key' });
+        var ks    = el('span', {}); ap(ks, txt(pair[1])); ap(keyEl, ks);
+        var valEl = el('div', { className:'star-val' }); ap(valEl, txt(ms.star[pair[0]]));
+        ap(block, keyEl, valEl); ap(starInner, block);
+      });
+      ap(starExpand, starInner);
+
+      /* Toggle closure per card */
+      (function (btn, expand) {
+        var isOpen = false;
+        btn.addEventListener('click', function () {
+          isOpen = !isOpen;
+          expand.classList[isOpen ? 'add' : 'remove']('open');
+          btn.textContent = isOpen ? '▲ 收起' : '🔍 穿透根因';
+        });
+      })(drillBtn, starExpand);
+
+      ap(foot, drillBtn);
+      ap(card, inner, foot, starExpand);
+      ap(cardsGrid, card);
+    });
+
+    ap(section, cardsGrid);
+    return section;
+  }
+
+  /* ── STAGE 3: CREATIVE SECTION ── */
+  function renderCreativeSection() {
+    var wrap = el('div', {});
+
+    /* Portfolio grid */
+    var gridSection = el('div', { className:'section' });
+    var gridLabel   = el('div', { className:'section-label' }); ap(gridLabel, txt('作品展示牆'));
+    ap(gridSection, gridLabel);
+
+    var grid = el('div', { className:'portfolio-grid' });
+    PORTFOLIO_ITEMS.forEach(function (item) {
+      var cls  = 'portfolio-item' + (item.size ? ' size-' + item.size : '');
+      var pItem = el('div', { className: cls });
+      var pf    = el('div', { className:'pf-placeholder', style:{ background: item.bg } });
+      var catTag  = el('span', { className:'pf-cat-tag' });    ap(catTag, txt(item.cat));
+      var titleEl = el('span', { className:'pf-title' });      ap(titleEl, txt(item.title));
+      var stageEl = el('span', { className:'pf-stage-note' }); ap(stageEl, txt('Stage 4 圖源填裝'));
+      ap(pf, catTag, titleEl, stageEl); ap(pItem, pf); ap(grid, pItem);
+    });
+    ap(gridSection, grid); ap(wrap, gridSection);
+
+    /* Divination board */
+    var divSection = el('div', { className:'section' });
+    var divLabel   = el('div', { className:'section-label' }); ap(divLabel, txt('命理占驗預約'));
+    ap(divSection, divLabel);
+
+    var board = el('div', { className:'divination-board' });
+    var boardTitle = el('div', { className:'div-board-title' }); ap(boardTitle, txt('紫微斗數同頻交流'));
+    var boardPhilo = el('p', { className:'div-board-philo' });
+    ap(boardPhilo, txt('我相信命盤是一份立體的生命地圖，而非算命的機器。透過解盤，我們探索的不是「會發生什麼」，而是「此刻你在哪裡、可以如何移動」。'));
+
+    var featureList = el('div', { className:'div-feature-list' });
+    [['◈','深度解讀','以紫微斗數為框架，結合心理取向詮釋，聚焦當下議題'],
+     ['◎','一對一交流','線上進行，約 60–75 分鐘，全程錄音供事後回聽'],
+     ['◧','非算命服務','不販售吉凶預測，而是協助你理解自身的能量模式與決策脈絡'],
+    ].forEach(function (feat) {
+      var row      = el('div', { className:'div-feature-row' });
+      var icon     = el('span', { className:'div-feature-icon' }); ap(icon, txt(feat[0]));
+      var textwrap = el('div', { className:'div-feature-text' });
+      var lbl  = el('span', { className:'div-feature-label' }); ap(lbl,  txt(feat[1]));
+      var sep  = el('span', {}); ap(sep,  txt(' · '));
+      var desc = el('span', {}); ap(desc, txt(feat[2]));
+      ap(textwrap, lbl, sep, desc); ap(row, icon, textwrap); ap(featureList, row);
+    });
+
+    var boardNote = el('p', { className:'div-board-note' });
+    ap(boardNote, txt('目前透過口碑轉介接案，候補名單制度運作中。如有緣，請透過公開頁面的聯絡入口洽詢。'));
+    ap(board, boardTitle, boardPhilo, featureList, boardNote);
+    ap(divSection, board); ap(wrap, divSection);
+
+    return wrap;
   }
 
   /* ── PIPELINE ── */
   function renderPipeline(lens) {
     var visMap    = VIS[lens] || VIS.public;
     var yearMarks = [2012,2014,2016,2018,2020,2022,2024,2026];
-
     var wrap  = el('div', { className:'pipeline-wrap' });
     var inner = el('div', { className:'pipeline-inner' });
 
     /* Year axis */
     var axisRow = el('div', { className:'pl-row axis-row' });
-    ap(axisRow, el('div', { className:'pl-label' })); /* spacer */
+    ap(axisRow, el('div', { className:'pl-label' }));
     var axisContent = el('div', { className:'pl-content' });
     yearMarks.forEach(function (y) {
-      var tick = el('span', { className:'year-tick', style:{ left: pct(y) } });
-      ap(tick, txt(y));
-      ap(axisContent, tick);
+      var tick = el('span', { className:'year-tick', style:{ left: pct(y) } }); ap(tick, txt(y)); ap(axisContent, tick);
     });
-    ap(axisRow, axisContent);
-    ap(inner, axisRow);
+    ap(axisRow, axisContent); ap(inner, axisRow);
 
     /* Track rows */
     TRACK_ORDER.forEach(function (trackId) {
       var tm  = TRACK_META[trackId];
       var vis = visMap[trackId] || 'dimmed';
-      var isActive = (vis === 'active');
-
       var row = el('div', { className:'pl-row track-row vis-' + vis });
-
-      /* Label */
       var labelCell = el('div', { className:'pl-label' });
       var labelIn   = el('div', { className:'track-label-inner' });
       var ldot  = el('span', { className:'track-label-dot', style:{ background: tm.color } });
       var ltext = el('span', { className:'track-label-text', style:{ color: tm.color } });
-      ap(ltext, txt(tm.label)); ap(labelIn, ldot, ltext); ap(labelCell, labelIn);
-      ap(row, labelCell);
-
-      /* Pipe content */
+      ap(ltext, txt(tm.label)); ap(labelIn, ldot, ltext); ap(labelCell, labelIn); ap(row, labelCell);
       var pipeContent = el('div', { className:'pl-content' });
-
-      /* Guide lines */
-      yearMarks.forEach(function (y) {
-        ap(pipeContent, el('span', { className:'guide-line', style:{ left: pct(y) } }));
-      });
-
-      /* Pipe line */
+      yearMarks.forEach(function (y) { ap(pipeContent, el('span', { className:'guide-line', style:{ left: pct(y) } })); });
       var pipeLine = el('div', { className:'pipe-line', style:{
         background: tm.gradient,
-        boxShadow: isActive
+        boxShadow: vis === 'active'
           ? '0 1px 8px '+tm.glow+', 0 0 18px '+tm.glow+', inset 0 -2px 4px rgba(255,255,255,0.12), inset 0 2px 4px rgba(0,0,0,0.14)'
           : 'inset 0 -1px 3px rgba(255,255,255,0.10), inset 0 1px 3px rgba(0,0,0,0.10)',
       }});
       ap(pipeContent, pipeLine);
-
-      /* Nodes */
       MS.filter(function (m) { return m.track === trackId; }).forEach(function (m) {
         var canClick = (vis !== 'dimmed');
-        var node = el('div', {
-          className:'ms-node', role:'button', tabIndex: canClick ? 0 : -1,
-          'aria-label': m.year + '年 ' + m.title,
-          style:{ left: pct(m.year), background: tm.color },
-        });
+        var node = el('div', { className:'ms-node', role:'button', tabIndex: canClick ? 0 : -1,
+          'aria-label': m.year + '年 ' + m.title, style:{ left: pct(m.year), background: tm.color } });
         if (canClick) {
           node.addEventListener('click', (function (ms) { return function () { openModal(ms); }; })(m));
           node.addEventListener('keydown', (function (ms) {
             return function (e) { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); openModal(ms); } };
           })(m));
         }
-        var nlabel = el('div', { className:'ms-label', style:{ left: pct(m.year), color: tm.color } });
-        ap(nlabel, txt(m.label));
+        var nlabel = el('div', { className:'ms-label', style:{ left: pct(m.year), color: tm.color } }); ap(nlabel, txt(m.label));
         ap(pipeContent, node, nlabel);
       });
-
-      ap(row, pipeContent);
-      ap(inner, row);
+      ap(row, pipeContent); ap(inner, row);
     });
-
-    ap(wrap, inner);
-    return wrap;
+    ap(wrap, inner); return wrap;
   }
 
   /* ── CONTENT AREA ── */
   function renderContent(lens) {
-    var area = document.getElementById('content-area');
-    clearNode(area);
+    var area = document.getElementById('content-area'); clearNode(area);
     var meta = LENS_META[lens];
 
+    /* Header */
     var titleEl = el('h1', { className:'content-title' }); ap(titleEl, txt('人生軌跡觀測儀'));
     var subEl   = el('p',  { className:'content-subtitle' }); ap(subEl, txt('個人生命數據整合平台 · 2012–2026 里程碑水管圖'));
     var dot     = el('span', { className:'lens-badge-dot', style:{ background: meta.color } });
-    var lbadge  = el('div', { className:'content-lens-badge',
-      style:{ color: meta.color, background: meta.bg, borderColor: meta.border } });
+    var lbadge  = el('div', { className:'content-lens-badge', style:{ color:meta.color, background:meta.bg, borderColor:meta.border } });
     ap(lbadge, dot, txt(meta.icon + ' ' + meta.label));
-    var header = el('div', { className:'content-header' }); ap(header, titleEl, subEl, lbadge);
-    ap(area, header);
+    var header = el('div', { className:'content-header' }); ap(header, titleEl, subEl, lbadge); ap(area, header);
 
+    /* Pipeline (always) */
     var pipeSection = el('div', { className:'section' });
     var sLabel = el('div', { className:'section-label' }); ap(sLabel, txt('時間軸水管圖 2012–2026'));
     ap(pipeSection, sLabel, renderPipeline(lens));
-
     var hint = el('p', { style:{ fontSize:'10.5px', color:'#9e9890', marginTop:'10px', lineHeight:'1.6' } });
     ap(hint, txt('點擊軌道上的節點，展開里程碑詳細 STAR 資料。'));
-    ap(pipeSection, hint);
-    ap(area, pipeSection);
+    ap(pipeSection, hint); ap(area, pipeSection);
+
+    /* Lens-specific sections */
+    if (lens === 'engineering') { ap(area, renderEngSection()); }
+    else if (lens === 'creative') { ap(area, renderCreativeSection()); }
+    /* myself: full pipeline only; Stage 4 will compose all sections */
   }
 
   /* ── INIT ── */
   function init() {
     var lens = parseLens();
-    renderStatusPanel(lens);
-    renderContent(lens);
-
+    renderStatusPanel(lens); renderContent(lens);
     var overlay = document.getElementById('modal-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
-    }
+    if (overlay) { overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); }); }
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 }());
 </script>
 </body>
