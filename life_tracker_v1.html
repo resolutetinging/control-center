@@ -210,6 +210,9 @@
     .dm-sel:focus{outline:none;border-color:#4878a0;}
     .dm-add-btn{font-size:10.5px;font-weight:700;padding:5px 13px;border-radius:5px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:background 120ms ease;}
     .dm-add-btn:hover{background:var(--border);}
+    .dm-ta.dm-rr-ta{border-radius:4px 4px 0 0;border-bottom-color:transparent;}
+    .dm-rr-preview{background:var(--bg);border:1px solid var(--border);border-radius:0 0 4px 4px;padding:7px 10px;font-size:11.5px;color:var(--ink);line-height:1.75;min-height:22px;}
+    .dm-rr-line{white-space:pre-wrap;line-height:1.75;}
     .dm-lens-bar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
     .dm-lens-btn{font-size:9.5px;font-weight:700;padding:3px 11px;border-radius:20px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);transition:all 120ms ease;}
     .dm-lens-btn:hover{background:var(--border);}
@@ -766,9 +769,41 @@
       var r3=el('div',{className:'dm-field-row dm-fr1'});
       var f3=el('div',{className:'dm-field'});
       var lb3=el('div',{className:'dm-field-lbl'}); ap(lb3,txt('R&R'));
-      var ta3=el('textarea',{className:'dm-ta',rows:'5'}); ta3.value=node.subtitle||'';
-      ta3.addEventListener('input',function(){node.subtitle=ta3.value; schedulePersist();});
-      ap(f3,lb3,ta3); ap(r3,f3);
+      var ta3=el('textarea',{className:'dm-ta dm-rr-ta',rows:'5'}); ta3.value=node.subtitle||'';
+      var prev3=el('div',{className:'dm-rr-preview'});
+      var rrUpdate=function(){
+        node.subtitle=ta3.value; schedulePersist();
+        clearNode(prev3);
+        ta3.value.split('\n').forEach(function(ln){
+          var m=ln.match(/^(\s*)-\s?(.*)/);
+          var lnEl=el('div',{className:'dm-rr-line'});
+          if(m){
+            var depth=Math.floor(m[1].length/2);
+            var bulls=['•','◦','▪'];
+            lnEl.style.paddingLeft=(Math.min(depth,3)*14+4)+'px';
+            ap(lnEl,txt(bulls[Math.min(depth,bulls.length-1)]+' '+m[2]));
+          } else { ap(lnEl,txt(ln||' ')); }
+          ap(prev3,lnEl);
+        });
+      };
+      rrUpdate();
+      ta3.addEventListener('input',rrUpdate);
+      ta3.addEventListener('keydown',function(e){
+        var pos=ta3.selectionStart, val=ta3.value;
+        if(e.key==='Enter'){
+          var ls=val.lastIndexOf('\n',pos-1)+1;
+          var bm=val.slice(ls,pos).match(/^(\s*)-\s/);
+          if(bm){e.preventDefault();var ins='\n'+bm[0];ta3.value=val.slice(0,pos)+ins+val.slice(ta3.selectionEnd);ta3.selectionStart=ta3.selectionEnd=pos+ins.length;rrUpdate();}
+        } else if(e.key==='Tab'){
+          e.preventDefault();
+          var st=ta3.selectionStart,en=ta3.selectionEnd,v=ta3.value;
+          var ls2=v.lastIndexOf('\n',st-1)+1;
+          if(!e.shiftKey){ta3.value=v.slice(0,ls2)+'  '+v.slice(ls2);ta3.selectionStart=st+2;ta3.selectionEnd=en+2;}
+          else if(v.slice(ls2,ls2+2)==='  '){ta3.value=v.slice(0,ls2)+v.slice(ls2+2);ta3.selectionStart=Math.max(ls2,st-2);ta3.selectionEnd=Math.max(ls2,en-2);}
+          rrUpdate();
+        }
+      });
+      ap(f3,lb3,ta3,prev3); ap(r3,f3);
       ap(body, r1, r2, r3); ap(entry, body); ap(list, entry);
     });
     var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增里程碑'));
