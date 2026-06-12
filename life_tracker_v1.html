@@ -102,7 +102,7 @@
     .cap-btn:hover:not(.active){background:var(--border);}
 
     /* ── STAGE 3: ENG CARDS ── */
-    .eng-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+    .eng-cards-grid{display:grid;grid-template-columns:1fr;gap:12px;}
     .eng-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:opacity 220ms ease;}
     .eng-card-inner{padding:14px 16px 12px;}
     .eng-card-year{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--faint);display:block;}
@@ -365,14 +365,6 @@
     },
   };
 
-  /* ── STAGE 3 DATA ── */
-  var ENG_PROJECTS = [
-    { msId:'e1', caps:['流程優化','跨國協作'],             kpis:['物料缺失率 -35%','跨部門 SOP 建立'] },
-    { msId:'e2', caps:['流程優化','危機處理','跨國協作'],  kpis:['齊套率提升至 96%','良率差異 <1.5%'] },
-    { msId:'e3', caps:['流程優化','危機處理'],             kpis:['良率回升 99.2%','根因分析框架建立'] },
-    { msId:'e4', caps:['流程優化','跨國協作'],             kpis:['培訓時間縮短 40%','SOP 覆蓋率 87%'] },
-    { msId:'e5', caps:['危機處理'],                        kpis:['換軌框架建立','技能資產整理'] },
-  ];
 
   /* ── STAGE 4 DATA ── */
   var LIFE_MATRIX = {
@@ -758,11 +750,12 @@
     clearNode(fa);
     if (_dmTab==='nodes')  buildDmNodesTab(fa);
     else if (_dmTab==='cards') buildDmCardsTab(fa);
+    else if (_dmTab==='eng') buildDmEngTab(fa);
     else buildDmSettingsTab(fa);
   }
   function buildDmTabBar() {
     var bar = el('div',{className:'dm-tab-bar'});
-    [['nodes','里程碑節點'],['cards','預覽卡片'],['settings','設定']].forEach(function(pair){
+    [['nodes','里程碑節點'],['cards','預覽卡片'],['eng','工作維護'],['settings','設定']].forEach(function(pair){
       var btn = el('button',{className:'dm-tab-btn'+(_dmTab===pair[0]?' dm-tab-active':'')});
       ap(btn, txt(pair[1]));
       (function(tab, b){
@@ -961,6 +954,37 @@
       }
       ap(container,lnEl);
     });
+  }
+
+  function buildDmEngTab(container) {
+    var wrap=el('div',{});
+    var h=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginBottom:'4px'}}); ap(h,txt('工作經歷 Hashtag 綁定'));
+    var sub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'16px',lineHeight:'1.6'}}); ap(sub,txt('以逗號分隔多個 hashtag，留空則不顯示標籤。'));
+    ap(wrap,h,sub);
+    var engNodes=(_dmNodesBuf||TINA_DATA_MATRIX.nodes).filter(function(m){return m.track==='engineering';}).slice().sort(function(a,b){
+      var ay=parseFloat(a.year)+(a.month?(parseInt(a.month)-1)/12:0);
+      var by=parseFloat(b.year)+(b.month?(parseInt(b.month)-1)/12:0);
+      return by-ay;
+    });
+    if(!engNodes.length){
+      var empty=el('div',{style:{fontSize:'11px',color:'var(--faint)',padding:'12px 0'}}); ap(empty,txt('尚無工作軌道節點。請先在「里程碑節點」tab 新增。'));
+      ap(wrap,empty); ap(container,wrap); return;
+    }
+    engNodes.forEach(function(node){
+      var mo=node.month?('/'+node.month):'';
+      var row=el('div',{className:'dm-field',style:{marginBottom:'12px'}});
+      var lbl=el('div',{className:'dm-field-lbl'}); ap(lbl,txt(node.year+mo+' · '+(node.title||node.label||'')));
+      var inp=el('input',{className:'dm-inp',type:'text',placeholder:'hashtag1, hashtag2, ...'});
+      inp.value=(node.hashtags&&node.hashtags.length)?node.hashtags.join(', '):'';
+      (function(n,input){
+        input.addEventListener('input',function(){
+          n.hashtags=input.value.split(',').map(function(t){return t.trim();}).filter(Boolean);
+          schedulePersist();
+        });
+      })(node,inp);
+      ap(row,lbl,inp); ap(wrap,row);
+    });
+    ap(container,wrap);
   }
 
   function buildDmSettingsTab(container) {
@@ -1332,62 +1356,30 @@
   /* ── ENGINEERING SECTION ── */
   function renderEngSection() {
     var section=el('div',{className:'section'});
-    var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('能力特質濾鏡 · 專案深探'));
+    var sLabel=el('div',{className:'section-label'}); ap(sLabel,txt('Experience'));
     ap(section, sLabel);
-    var CAPS=['全部','流程優化','危機處理','跨國協作'];
-    var activeCap='全部', cardEntries=[], btnMap={};
-    var filterRow=el('div',{className:'cap-filter-row'});
-    CAPS.forEach(function(cap){
-      var btn=el('button',{className:'cap-btn'+(cap==='全部'?' active':'')});
-      ap(btn,txt(cap));
-      btn.addEventListener('click',function(){applyFilter(cap);});
-      btnMap[cap]=btn; ap(filterRow,btn);
-    });
-    ap(section, filterRow);
-    function applyFilter(cap) {
-      activeCap=cap;
-      CAPS.forEach(function(c){btnMap[c].className='cap-btn'+(c===cap?' active':'');});
-      cardEntries.forEach(function(entry){
-        var show=(cap==='全部'||entry.caps.indexOf(cap)!==-1);
-        entry.el.style.opacity=show?'1':'0.15';
-        entry.el.style.pointerEvents=show?'':'none';
-      });
-    }
     var cardsGrid=el('div',{className:'eng-cards-grid'});
-    ENG_PROJECTS.forEach(function(proj){
-      var ms=TINA_DATA_MATRIX.nodes.filter(function(m){return m.id===proj.msId;})[0];
-      if (!ms) return;
+    /* 工作節點倒序（最近在上） */
+    var engNodes=TINA_DATA_MATRIX.nodes.filter(function(m){return m.track==='engineering';}).slice().sort(function(a,b){
+      var ay=parseFloat(a.year)+(a.month?(parseInt(a.month)-1)/12:0);
+      var by=parseFloat(b.year)+(b.month?(parseInt(b.month)-1)/12:0);
+      return by-ay;
+    });
+    engNodes.forEach(function(ms){
       var card=el('div',{className:'eng-card'});
-      cardEntries.push({el:card,caps:proj.caps});
       var inner=el('div',{className:'eng-card-inner'});
-      var yearEl=el('span',{className:'eng-card-year'}); ap(yearEl,txt(ms.year+' · '+ms.label));
+      var mo=ms.month?('/'+ms.month):'';
+      var yearEl=el('span',{className:'eng-card-year'}); ap(yearEl,txt(ms.year+mo+' · '+ms.label));
       var titleEl=el('div',{className:'eng-card-title'}); ap(titleEl,txt(ms.title));
-      var subEl=el('div',{className:'eng-card-sub'});    ap(subEl,txt(ms.subtitle));
-      var capTags=el('div',{className:'eng-cap-tags'});
-      proj.caps.forEach(function(cap){var ct=el('span',{className:'eng-cap-tag'});ap(ct,txt(cap));ap(capTags,ct);});
-      var kpiRow=el('div',{className:'eng-kpi-row'});
-      proj.kpis.forEach(function(kpi){var chip=el('span',{className:'eng-kpi-chip'});ap(chip,txt(kpi));ap(kpiRow,chip);});
-      ap(inner, yearEl, titleEl, subEl, capTags, kpiRow);
-      var foot=el('div',{className:'eng-card-foot'});
-      var drillBtn=el('button',{className:'drill-btn'}); ap(drillBtn,txt('🔍 穿透根因'));
-      var starExpand=el('div',{className:'star-expand'});
-      var starInner=el('div',{className:'star-inner'});
-      [['S','Situation 情境'],['T','Task 任務'],['A','Action 行動'],['R','Result 成果']].forEach(function(pair){
-        var block=el('div',{className:'eng-star-block'});
-        var keyEl=el('div',{className:'eng-star-key'});
-        var ks=el('span',{}); ap(ks,txt(pair[1])); ap(keyEl,ks);
-        var valEl=el('div',{className:'star-val'}); ap(valEl,txt(ms.star[pair[0]]));
-        ap(block,keyEl,valEl); ap(starInner,block);
-      });
-      ap(starExpand, starInner);
-      (function(btn,expand){
-        var isOpen=false;
-        btn.addEventListener('click',function(){
-          isOpen=!isOpen; expand.classList[isOpen?'add':'remove']('open');
-          btn.textContent=isOpen?'▲ 收起':'🔍 穿透根因';
-        });
-      })(drillBtn, starExpand);
-      ap(foot,drillBtn); ap(card,inner,foot,starExpand); ap(cardsGrid,card);
+      var subEl=el('div',{className:'eng-card-sub'}); if(ms.subtitle) renderBulletLines(ms.subtitle,subEl);
+      ap(inner,yearEl,titleEl,subEl);
+      var tags=ms.hashtags&&ms.hashtags.length?ms.hashtags:[];
+      if(tags.length){
+        var capTags=el('div',{className:'eng-cap-tags'});
+        tags.forEach(function(tag){if(tag){var ct=el('span',{className:'eng-cap-tag'});ap(ct,txt(tag));ap(capTags,ct);}});
+        ap(inner,capTags);
+      }
+      ap(card,inner); ap(cardsGrid,card);
     });
     ap(section, cardsGrid); return section;
   }
