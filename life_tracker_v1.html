@@ -291,12 +291,12 @@
 
   /* ── CONFIG ── */
   var LENS_META = {
-    public:      { label:'公眾視角',    icon:'◎', color:'#6a6a58', bg:'#f0ede8', border:'#c4c2b8', desc:'公開展示模式 · 僅顯示開放節點' },
-    photography: { label:'攝影視角',    icon:'▣', color:'#4a7888', bg:'#ecf2f4', border:'#9abcc8', desc:'光影 · 構圖 · 田野與靜物' },
-    creative:    { label:'插畫視角',    icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'角色設計 · 世界觀 · 週邊創作' },
-    astrology:   { label:'斗數視角',    icon:'◆', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'紫微斗數 · 命盤解讀 · 同頻諮詢' },
-    engineering: { label:'工作視角',    icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
-    myself:      { label:'全觀自我視角', icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
+    public:      { label:'Public',      icon:'◎', color:'#6a6a58', bg:'#f0ede8', border:'#c4c2b8', desc:'公開展示模式 · 僅顯示開放節點' },
+    photography: { label:'Photography', icon:'▣', color:'#4a7888', bg:'#ecf2f4', border:'#9abcc8', desc:'光影 · 構圖 · 田野與靜物' },
+    creative:    { label:'Creative',    icon:'◈', color:'#b8682e', bg:'#fdf0e4', border:'#d4a878', desc:'角色設計 · 世界觀 · 週邊創作' },
+    astrology:   { label:'Astrology',   icon:'◆', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'紫微斗數 · 命盤解讀 · 同頻諮詢' },
+    engineering: { label:'Work',        icon:'◧', color:'#2e5d8a', bg:'#e8f0f8', border:'#7aaac8', desc:'13 年供應鏈與工業工程核心數據' },
+    myself:      { label:'All',         icon:'◉', color:'#5a3878', bg:'#f0eaf8', border:'#a888c8', desc:'全軌道解鎖 · 含生理 / 情緒 / 防禦層' },
   };
   var TRACK_META = {
     engineering: { label:'Work', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
@@ -429,6 +429,7 @@
     lensProfiles: {
       photography: { headline:'光影的永恆切片', tagline:'攝影師 · 尋找安靜的語法', intro:'相信每一張好照片都是一次有意識的呼吸。靜物、田野、街頭日常，是我觀察世界的三個入口。自 2022 年起系統化訓練，確立以「低飽和暖光 × 幾何構圖」為核心的視覺語言。', instagram:'' },
       creative:    { headline:'用線條說故事',   tagline:'插畫師 · 世界觀構築者',  intro:'停筆十年後重新拾起畫筆。相信每個角色都是一個宇宙——有記憶、有習慣、有他不願說出口的秘密。以「柔和線條 × 暖色系」為風格基調，在角色設計、世界觀概念稿與文具週邊三條線上同步延伸。', instagram:'' },
+      astrology:   { headline:'', tagline:'', intro:'', link:'' },
       engineering: { linkedin:'' },
     },
   };
@@ -725,7 +726,7 @@
       }
       if (typeof saved.publicText === 'string') TINA_DATA_MATRIX.publicText = saved.publicText;
       if (saved.lensProfiles && typeof saved.lensProfiles === 'object') {
-        ['photography','creative','engineering'].forEach(function(k){
+        ['photography','creative','astrology','engineering'].forEach(function(k){
           if (saved.lensProfiles[k] && typeof saved.lensProfiles[k] === 'object') {
             Object.assign(TINA_DATA_MATRIX.lensProfiles[k], saved.lensProfiles[k]);
           }
@@ -751,11 +752,12 @@
     if (_dmTab==='nodes')  buildDmNodesTab(fa);
     else if (_dmTab==='cards') buildDmCardsTab(fa);
     else if (_dmTab==='eng') buildDmEngTab(fa);
+    else if (_dmTab==='content') buildDmContentTab(fa);
     else buildDmSettingsTab(fa);
   }
   function buildDmTabBar() {
     var bar = el('div',{className:'dm-tab-bar'});
-    [['nodes','里程碑節點'],['cards','預覽卡片'],['eng','工作維護'],['settings','設定']].forEach(function(pair){
+    [['nodes','里程碑節點'],['cards','預覽卡片'],['eng','工作維護'],['content','視角內容'],['settings','設定']].forEach(function(pair){
       var btn = el('button',{className:'dm-tab-btn'+(_dmTab===pair[0]?' dm-tab-active':'')});
       ap(btn, txt(pair[1]));
       (function(tab, b){
@@ -956,6 +958,41 @@
     });
   }
 
+  function buildDmContentTab(container) {
+    var wrap=el('div',{});
+    /* 公眾視角文字說明 */
+    var ptH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginBottom:'4px'}}); ap(ptH,txt('Public — 文字說明'));
+    var ptSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'8px'}}); ap(ptSub,txt('顯示於公眾視角圈圈上方。'));
+    var ptTa=el('textarea',{className:'dm-ta',rows:'4'}); ptTa.value=TINA_DATA_MATRIX.publicText||'';
+    ptTa.addEventListener('input',function(){TINA_DATA_MATRIX.publicText=ptTa.value; schedulePersist(); if(parseLens()==='public'){renderContent('public');}});
+    ap(wrap,ptH,ptSub,ptTa);
+    /* 三視角 profile */
+    [['photography','Photography','Instagram 連結','instagram'],['creative','Creative','Instagram 連結','instagram'],['astrology','Astrology','外部連結','link']].forEach(function(quad){
+      var pk=quad[0], plbl=quad[1], linkLbl=quad[2], linkKey=quad[3];
+      var ph=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'22px',marginBottom:'4px'}}); ap(ph,txt(plbl));
+      ap(wrap,ph);
+      var fields=[['headline','大標','',1],['tagline','副標','',1],['intro','簡介','',3],[linkKey,linkLbl,'https://...',1]];
+      fields.forEach(function(fp){
+        var fk=fp[0], flbl=fp[1], fph=fp[2], frows=fp[3];
+        var frow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
+        var flblEl=el('div',{className:'dm-field-lbl'}); ap(flblEl,txt(flbl));
+        var finp;
+        if(frows===1){ finp=el('input',{className:'dm-inp',type:'text'}); } else { finp=el('textarea',{className:'dm-ta',rows:''+frows}); }
+        if(fph) finp.placeholder=fph;
+        finp.value=(TINA_DATA_MATRIX.lensProfiles[pk]&&TINA_DATA_MATRIX.lensProfiles[pk][fk])||'';
+        (function(key,lensKey,inp){
+          inp.addEventListener('input',function(){
+            TINA_DATA_MATRIX.lensProfiles[lensKey][key]=inp.value;
+            schedulePersist();
+            var cl=parseLens(); if(cl===lensKey){ renderContent(lensKey); if(key==='instagram'||key==='link') renderStatusPanel(cl); }
+          });
+        })(fk,pk,finp);
+        ap(frow,flblEl,finp); ap(wrap,frow);
+      });
+    });
+    ap(container,wrap);
+  }
+
   function buildDmEngTab(container) {
     var wrap=el('div',{});
     var h=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginBottom:'4px'}}); ap(h,txt('工作經歷 Hashtag 綁定'));
@@ -1003,30 +1040,6 @@
       })(k,ta);
       ap(row,lbl,ta); ap(wrap,row);
     });
-    /* 攝影 / 插畫 視角文字維護 */
-    [['photography','攝影'],['creative','插畫']].forEach(function(pair){
-      var pk=pair[0], plbl=pair[1];
-      var ph=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(ph,txt(plbl+'視角'));
-      ap(wrap,ph);
-      var fields=[['headline','大標'],['tagline','副標'],['intro','簡介'],['instagram','Instagram 連結']];
-      fields.forEach(function(fp){
-        var fk=fp[0], flbl=fp[1];
-        var frow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
-        var flblEl=el('div',{className:'dm-field-lbl'}); ap(flblEl,txt(flbl));
-        var rows=(fk==='intro')?3:1;
-        var finp; if(rows===1){ finp=el('input',{className:'dm-inp',type:'text'}); finp.value=TINA_DATA_MATRIX.lensProfiles[pk][fk]||''; } else { finp=el('textarea',{className:'dm-ta',rows:''+rows}); finp.value=TINA_DATA_MATRIX.lensProfiles[pk][fk]||''; }
-        (function(key,lensKey,inp){
-          inp.addEventListener('input',function(){TINA_DATA_MATRIX.lensProfiles[lensKey][key]=inp.value; schedulePersist(); if(parseLens()===lensKey){renderContent(lensKey);}});
-        })(fk,pk,finp);
-        ap(frow,flblEl,finp); ap(wrap,frow);
-      });
-    });
-    /* 公眾視角文字說明 */
-    var ptH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(ptH,txt('公眾視角文字說明'));
-    var ptSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'8px'}}); ap(ptSub,txt('顯示於公眾視角圈圈上方。'));
-    var ptTa=el('textarea',{className:'dm-ta',rows:'4'}); ptTa.value=TINA_DATA_MATRIX.publicText||'';
-    ptTa.addEventListener('input',function(){TINA_DATA_MATRIX.publicText=ptTa.value; schedulePersist(); if(parseLens()==='public'){renderContent('public');}});
-    ap(wrap,ptH,ptSub,ptTa);
     /* 頭像設定 */
     var avH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(avH,txt('頭像設定'));
     ap(wrap,avH);
@@ -1300,16 +1313,16 @@
     var bio=el('p',{className:'intro-bio'}); bio.style.whiteSpace='pre-line'; ap(bio,txt((prof.intro||base.intro)||''));
     ap(intro, headline, tagline, bio); ap(wrap, intro);
 
-    /* 外部連結已移至左側欄，此區段保留 astrology 的非 IG 連結 */
-    if(lens==='astrology'&&base.links&&base.links.length){
-      var linksBlock=el('div',{className:'links-block'});
-      base.links.forEach(function(link){
-        var a=el('a',{className:'ext-link-btn',href:link.url,target:'_blank',rel:'noopener noreferrer'});
-        var icon=el('span',{className:'ext-link-icon'}); ap(icon,txt(link.icon));
-        var lbl=el('span',{}); ap(lbl,txt(link.label));
-        ap(a,icon,lbl); ap(linksBlock,a);
-      });
-      ap(wrap,linksBlock);
+    /* astrology 外部連結：優先用 prof.link，fallback 至 base.links */
+    if(lens==='astrology'){
+      var astUrl=prof.link||((base.links&&base.links[0]&&base.links[0].url)||'');
+      if(astUrl){
+        var linksBlock=el('div',{className:'links-block'});
+        var astA=el('a',{className:'ext-link-btn',href:astUrl,target:'_blank',rel:'noopener noreferrer'});
+        var astIcon=el('span',{className:'ext-link-icon'}); ap(astIcon,txt('◆'));
+        var astLbl=el('span',{}); ap(astLbl,txt('預約諮詢'));
+        ap(astA,astIcon,astLbl); ap(linksBlock,astA); ap(wrap,linksBlock);
+      }
     }
 
     /* Preview grid */
