@@ -17,7 +17,7 @@
       --track-label-w:72px; --track-h:72px; --pipe-h:7px; --node-d:17px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--ink);font-size:13.5px;line-height:1.65;min-height:100vh;}
+    body{font-family:'Roboto',-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--ink);font-size:13.5px;line-height:1.65;min-height:100vh;}
 
     /* ── LAYOUT ── */
     #app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh;}
@@ -98,7 +98,7 @@
     .modal-rr-wrap{font-size:12px;color:var(--sub);line-height:1.75;}
 
     /* ── WORK LENS: Roboto + River ── */
-    .content-eng, .content-eng * { font-family:'Roboto',sans-serif; }
+    .content-eng, .content-eng * { font-family:inherit; }
     @keyframes river-flow{0%{background-position:200% center}100%{background-position:-200% center}}
     .eng-river-seg{
       position:absolute;top:50%;transform:translateY(-50%);
@@ -119,7 +119,7 @@
     .eng-hashtag-section{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
     .eng-hashtag-section-title{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
     .eng-hashtag-pills{display:flex;flex-direction:column;gap:4px;}
-    .eng-hashtag-pill{font-size:10px;padding:5px 10px;border-radius:4px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);text-align:left;transition:all 130ms ease;font-weight:500;font-family:'Roboto',sans-serif;}
+    .eng-hashtag-pill{font-size:10px;padding:5px 10px;border-radius:4px;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--sub);text-align:left;transition:all 130ms ease;font-weight:500;}
     .eng-hashtag-pill:hover{background:var(--border);}
     .eng-hashtag-pill.eng-tag-active{background:#2e5d8a;color:#fff;border-color:#2e5d8a;}
     /* ── WORK: Experience items (hashtag view) ── */
@@ -1137,8 +1137,16 @@
       })(k,ta);
       ap(row,lbl,ta); ap(wrap,row);
     });
+    /* 工作視角 LinkedIn */
+    var engH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(engH,txt('工作視角'));
+    ap(wrap,engH);
+    var liRow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
+    var liLbl=el('div',{className:'dm-field-lbl'}); ap(liLbl,txt('LinkedIn 連結'));
+    var liInp=el('input',{className:'dm-inp',type:'text'}); liInp.value=TINA_DATA_MATRIX.lensProfiles.engineering&&TINA_DATA_MATRIX.lensProfiles.engineering.linkedin||'';
+    liInp.addEventListener('input',function(){TINA_DATA_MATRIX.lensProfiles.engineering.linkedin=liInp.value; schedulePersist(); if(parseLens()==='engineering'){renderStatusPanel('engineering');}});
+    ap(liRow,liLbl,liInp); ap(wrap,liRow);
     /* 頭像設定 */
-    var avH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'18px',marginBottom:'4px'}}); ap(avH,txt('頭像設定'));
+    var avH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(avH,txt('頭像設定'));
     ap(wrap,avH);
     /* 全觀頭像 */
     var avSub=el('div',{style:{fontSize:'10px',color:'var(--faint)',marginBottom:'10px'}}); ap(avSub,txt('全觀視角：點擊側欄圓形頭像上傳。'));
@@ -1148,14 +1156,6 @@
       clearBtn.addEventListener('click',function(){TINA_DATA_MATRIX.avatarImg=''; persistData(); renderStatusPanel(parseLens()); clearNode(container); buildDmSettingsTab(container);});
       ap(wrap,clearBtn);
     }
-    /* 工作視角 LinkedIn */
-    var engH=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'20px',marginBottom:'4px'}}); ap(engH,txt('工作視角'));
-    ap(wrap,engH);
-    var liRow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
-    var liLbl=el('div',{className:'dm-field-lbl'}); ap(liLbl,txt('LinkedIn 連結'));
-    var liInp=el('input',{className:'dm-inp',type:'text'}); liInp.value=TINA_DATA_MATRIX.lensProfiles.engineering&&TINA_DATA_MATRIX.lensProfiles.engineering.linkedin||'';
-    liInp.addEventListener('input',function(){TINA_DATA_MATRIX.lensProfiles.engineering.linkedin=liInp.value; schedulePersist(); if(parseLens()==='engineering'){renderStatusPanel('engineering');}});
-    ap(liRow,liLbl,liInp); ap(wrap,liRow);
     /* 各視角頭像（攝影/插畫/斗數/工作） */
     var laKeys=[['photography','攝影','▣'],['creative','插畫','◈'],['astrology','斗數','◆'],['engineering','工作','◧']];
     laKeys.forEach(function(triple){
