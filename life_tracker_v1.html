@@ -639,8 +639,20 @@
 
   /* ── DATA MANAGER HELPERS ── */
   var LTO_KEY = 'lto_matrix';
+  var _persistTimer = null;
   function persistData() {
-    try { localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:TINA_DATA_MATRIX.nodes, cards:TINA_DATA_MATRIX.cards })); } catch(e) {}
+    try {
+      var nodes = _dmNodesBuf || TINA_DATA_MATRIX.nodes;
+      var cards = {};
+      ['photography','creative','astrology'].forEach(function(k){
+        cards[k] = (_dmCardsBuf && _dmCardsBuf[k]) || TINA_DATA_MATRIX.cards[k];
+      });
+      localStorage.setItem(LTO_KEY, JSON.stringify({ nodes:nodes, cards:cards }));
+    } catch(e) {}
+  }
+  function schedulePersist() {
+    clearTimeout(_persistTimer);
+    _persistTimer = setTimeout(persistData, 600);
   }
   function loadPersistedData() {
     try {
@@ -716,7 +728,7 @@
             if (ki<i) nExp[k]=_dmExpandedNodes[k];
             else if (ki>i) nExp[String(ki-1)]=_dmExpandedNodes[k];
           });
-          _dmExpandedNodes=nExp; dmRefreshForm();
+          _dmExpandedNodes=nExp; persistData(); dmRefreshForm();
         };
       })(idx));
       function mkInp(lbl, val, key) {
@@ -727,6 +739,7 @@
           node[key]=inp.value;
           if(key==='year'||key==='label'||key==='title')
             htitle.textContent=(node.year||'????')+' · '+dmTrackLabel(node.track)+' · '+(node.label||node.title||'（未命名）');
+          schedulePersist();
         });
         ap(f,lb,inp); return f;
       }
@@ -741,6 +754,7 @@
         sel.addEventListener('change',function(){
           node.track=sel.value;
           htitle.textContent=(node.year||'????')+' · '+dmTrackLabel(node.track)+' · '+(node.label||node.title||'（未命名）');
+          schedulePersist();
         });
         ap(f,lb,sel); return f;
       }
@@ -752,14 +766,14 @@
       var f3=el('div',{className:'dm-field'});
       var lb3=el('div',{className:'dm-field-lbl'}); ap(lb3,txt('R&R'));
       var ta3=el('textarea',{className:'dm-ta',rows:'5'}); ta3.value=node.subtitle||'';
-      ta3.addEventListener('input',function(){node.subtitle=ta3.value;});
+      ta3.addEventListener('input',function(){node.subtitle=ta3.value; schedulePersist();});
       ap(f3,lb3,ta3); ap(r3,f3);
       ap(body, r1, r2, r3); ap(entry, body); ap(list, entry);
     });
     var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增里程碑'));
     addBtn.addEventListener('click',function(){
       _dmNodesBuf.push({id:'n'+Date.now(),year:new Date().getFullYear(),track:'engineering',label:'',title:'',subtitle:'',star:{S:'',T:'',A:'',R:''}});
-      _dmExpandedNodes[_dmNodesBuf.length-1]=true; dmRefreshForm();
+      _dmExpandedNodes[_dmNodesBuf.length-1]=true; persistData(); dmRefreshForm();
     });
     var saveBtn=el('button',{className:'dm-sync-btn'}); ap(saveBtn,txt('⚡ 寫入並刷新水管圖'));
     var statusEl=el('div',{className:'dm-status'});
@@ -798,12 +812,12 @@
       cards.forEach(function(card,idx){
         var row=el('div',{className:'dm-card-row'});
         var catInp=el('input',{className:'dm-inp',type:'text',placeholder:'類別'}); catInp.value=card.cat||'';
-        catInp.addEventListener('input',function(){card.cat=catInp.value;});
+        catInp.addEventListener('input',function(){card.cat=catInp.value; schedulePersist();});
         var titInp=el('input',{className:'dm-inp',type:'text',placeholder:'卡片標題'}); titInp.value=card.title||'';
-        titInp.addEventListener('input',function(){card.title=titInp.value;});
+        titInp.addEventListener('input',function(){card.title=titInp.value; schedulePersist();});
         var delBtn=el('button',{className:'dm-entry-del',style:{padding:'2px 6px'}}); ap(delBtn,txt('✕'));
         delBtn.addEventListener('click',(function(i){
-          return function(){_dmCardsBuf[_dmCardLens].splice(i,1); clearNode(area); buildCardList(area);};
+          return function(){_dmCardsBuf[_dmCardLens].splice(i,1); persistData(); clearNode(area); buildCardList(area);};
         })(idx));
         ap(row,catInp,titInp,delBtn); ap(list,row);
       });
@@ -811,7 +825,7 @@
       addBtn.addEventListener('click',function(){
         if (!_dmCardsBuf[_dmCardLens]) _dmCardsBuf[_dmCardLens]=[];
         _dmCardsBuf[_dmCardLens].push({id:'c'+Date.now(),cat:'',title:''});
-        clearNode(area); buildCardList(area);
+        persistData(); clearNode(area); buildCardList(area);
       });
       var saveBtn=el('button',{className:'dm-sync-btn'}); ap(saveBtn,txt('⚡ 寫入並刷新'));
       var statusEl=el('div',{className:'dm-status'});
