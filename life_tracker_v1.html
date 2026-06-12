@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人生軌跡觀測儀</title>
+  <style>
+    /* ══════════════════════════════════════
+       CSS TOKENS
+    ══════════════════════════════════════ */
+    :root {
+      --bg:       #f4f1ec;
+      --bg2:      #eceae3;
+      --ink:      #28261f;
+      --sub:      #55514a;
+      --border:   #dcd9d2;
+      --faint:    #9e9890;
+      --bg-card:  #f8f6f1;
+
+      /* Lens accent (B≥R 原則) */
+      --c-public:      #6a6a58;
+      --c-creative:    #b8682e;
+      --c-engineering: #2e5d8a;
+      --c-myself:      #5a3878;
+
+      /* Lens tint bg */
+      --bg-public:      #f0ede8;
+      --bg-creative:    #fdf0e4;
+      --bg-engineering: #e8f0f8;
+      --bg-myself:      #f0eaf8;
+
+      /* Track dot palette */
+      --t-photo:   #5a7a5a;
+      --t-illus:   #9a6a38;
+      --t-ziwei:   #6a4a8a;
+      --t-chars:   #b85e38;
+      --t-station: #b8882e;
+      --t-supply:  #2e5d8a;
+      --t-kpi:     #3e6d9a;
+      --t-bq:      #4e7daa;
+      --t-sleep:   #7a4a28;
+      --t-emotion: #9a3858;
+      --t-defense: #483a78;
+
+      --sidebar-w: 238px;
+      --r:         8px;
+      --r-sm:      5px;
+      --transition: 180ms ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang TC',
+                   'Noto Sans TC', 'Noto Serif TC', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 13.5px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════ */
+    #app {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       STATUS PANEL (LEFT SIDEBAR)
+    ══════════════════════════════════════ */
+    #status-panel {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 30px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    /* ── Avatar ── */
+    .avatar-wrap {
+      display: flex;
+      justify-content: center;
+    }
+    .avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--faint);
+      letter-spacing: .05em;
+      flex-shrink: 0;
+    }
+
+    /* ── Identity ── */
+    .sp-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: center;
+      letter-spacing: -.2px;
+    }
+    .sp-role {
+      font-size: 10.5px;
+      color: var(--faint);
+      text-align: center;
+      margin-top: 3px;
+      letter-spacing: .03em;
+    }
+
+    /* ── Section header ── */
+    .sp-section-title {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--faint);
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Tags ── */
+    .sp-tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 9px;
+    }
+    .sp-tag {
+      font-size: 10px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      background: var(--bg2);
+      border: .5px solid var(--border);
+      color: var(--sub);
+      white-space: nowrap;
+    }
+
+    /* ── Lens badge ── */
+    .lens-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      padding: 4px 11px;
+      border-radius: 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--sub);
+      margin-top: 8px;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .lens-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .lens-desc {
+      font-size: 10px;
+      color: var(--faint);
+      margin-top: 7px;
+      line-height: 1.55;
+    }
+
+    /* ── Lens section at bottom of panel ── */
+    .sp-lens-section {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Lens URL hint ── */
+    .sp-url-hint {
+      margin-top: 12px;
+      font-size: 9px;
+      color: var(--faint);
+      line-height: 1.6;
+    }
+    .sp-url-hint code {
+      background: var(--bg2);
+      border: .5px solid var(--border);
+      border-radius: 3px;
+      padding: 0 4px;
+      font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+      font-size: 8.5px;
+      color: var(--sub);
+    }
+
+    /* ══════════════════════════════════════
+       CONTENT AREA (RIGHT)
+    ══════════════════════════════════════ */
+    #content-area {
+      padding: 30px 26px 48px;
+      min-height: 100vh;
+    }
+
+    /* ── Content header ── */
+    .content-header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .content-title {
+      font-size: 21px;
+      font-weight: 300;
+      color: var(--ink);
+      letter-spacing: -.4px;
+    }
+    .content-subtitle {
+      font-size: 11.5px;
+      color: var(--faint);
+      margin-top: 5px;
+      letter-spacing: .02em;
+    }
+    .content-lens-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 10px;
+      border: 1px solid transparent;
+    }
+
+    /* ── Section label ── */
+    .section {
+      margin-bottom: 32px;
+    }
+    .section-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Track card ── */
+    .track-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--r);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: box-shadow var(--transition);
+    }
+    .track-card:hover {
+      box-shadow: 0 2px 8px rgba(40,38,31,.07);
+    }
+
+    .track-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+    .track-card-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .track-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .track-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .track-lens-tag {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    /* ── Placeholder body ── */
+    .track-placeholder {
+      font-size: 11.5px;
+      color: var(--faint);
+      line-height: 1.6;
+      border-top: 1px dashed var(--border);
+      padding-top: 9px;
+    }
+    .stage-badge {
+      display: inline-block;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: var(--bg2);
+      color: var(--faint);
+      border: .5px solid var(--border);
+      text-transform: uppercase;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 70px 20px;
+      color: var(--faint);
+    }
+    .empty-icon {
+      font-size: 30px;
+      margin-bottom: 14px;
+    }
+    .empty-text {
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    /* ══════════════════════════════════════
+       MOBILE
+    ══════════════════════════════════════ */
+    @media (max-width: 680px) {
+      #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      #status-panel {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 18px 16px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+      .avatar-wrap { flex-shrink: 0; }
+      .sp-lens-section {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .sp-url-hint { display: none; }
+      #content-area { padding: 20px 16px 40px; }
+      .content-title { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside id="status-panel"></aside>
+    <main id="content-area"></main>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ══════════════════════════════════════
+       CONFIG
+    ══════════════════════════════════════ */
+
+    var LENS_META = {
+      public: {
+        label:   '公眾視角',
+        icon:    '◎',
+        color:   '#6a6a58',
+        bg:      '#f0ede8',
+        border:  '#c4c2b8',
+        desc:    '公開展示模式 · 僅顯示安全節點',
+      },
+      creative: {
+        label:   '藝術創作者視角',
+        icon:    '◈',
+        color:   '#b8682e',
+        bg:      '#fdf0e4',
+        border:  '#d4a878',
+        desc:    '插畫 · 攝影 · 文具週邊軌跡',
+      },
+      engineering: {
+        label:   '專業工管視角',
+        icon:    '◧',
+        color:   '#2e5d8a',
+        bg:      '#e8f0f8',
+        border:  '#7aaac8',
+        desc:    '13 年供應鏈與工業工程核心數據',
+      },
+      myself: {
+        label:   '全觀自我視角',
+        icon:    '◉',
+        color:   '#5a3878',
+        bg:      '#f0eaf8',
+        border:  '#a888c8',
+        desc:    '全軌道解鎖 · 含生理 / 情緒 / 防禦層',
+      },
+    };
+
+    /* lens 陣列 = 哪些視角下此軌道可見；lensOwner = 顯示歸屬 badge 的主視角 */
+    var TRACKS = [
+      /* ── 公眾軌道 ── */
+      {
+        id:          'photography',
+        label:       '攝影作品',
+        group:       '公眾展示',
+        color:       '#5a7a5a',
+        lens:        ['public', 'creative', 'myself'],
+        lensOwner:   'public',
+        placeholder: '靜態構圖・光影田野・街頭攝影精選；Stage 2 掛載圖集牆',
+      },
+      {
+        id:          'illustration-concept',
+        label:       '插畫概念',
+        group:       '公眾展示',
+        color:       '#9a6a38',
+        lens:        ['public', 'myself'],
+        lensOwner:   'public',
+        placeholder: '設計語言介紹・概念草圖說明；Stage 2 掛載視覺展板',
+      },
+      {
+        id:          'ziwei',
+        label:       '斗數預約',
+        group:       '公眾展示',
+        color:       '#6a4a8a',
+        lens:        ['public', 'myself'],
+        lensOwner:   'public',
+        placeholder: '預約說明・服務範圍・聯絡入口；Stage 2 掛載預約表單區塊',
+      },
+      /* ── 創作軌道 ── */
+      {
+        id:          'original-characters',
+        label:       '原創角色',
+        group:       '藝術創作',
+        color:       '#b85e38',
+        lens:        ['creative', 'myself'],
+        lensOwner:   'creative',
+        placeholder: '角色設定書・世界觀背景・設計演進；Stage 2 掛載角色圖鑑',
+      },
+      {
+        id:          'stationery',
+        label:       '文具週邊',
+        group:       '藝術創作',
+        color:       '#b8882e',
+        lens:        ['creative', 'myself'],
+        lensOwner:   'creative',
+        placeholder: '週邊品項・設計稿・生產備忘；Stage 2 掛載商品展示卡',
+      },
+      /* ── 工管軌道 ── */
+      {
+        id:          'supply-chain',
+        label:       '供應鏈工管',
+        group:       '專業成就',
+        color:       '#2e5d8a',
+        lens:        ['engineering', 'myself'],
+        lensOwner:   'engineering',
+        placeholder: '13 年跨廠區管理・良率提升・交期壓縮；Stage 2 掛載時間軸與 KPI 儀表板',
+      },
+      {
+        id:          'kpi',
+        label:       'KPI 成就指標',
+        group:       '專業成就',
+        color:       '#3e6d9a',
+        lens:        ['engineering', 'myself'],
+        lensOwner:   'engineering',
+        placeholder: '量化成就數據・對比基準・改善幅度；Stage 2 掛載指標卡片組',
+      },
+      {
+        id:          'bq-stories',
+        label:       'BQ 行為故事',
+        group:       '專業成就',
+        color:       '#4e7daa',
+        lens:        ['engineering', 'myself'],
+        lensOwner:   'engineering',
+        placeholder: 'STAR 格式行為面試故事庫；Stage 2 掛載故事卡可展開閱讀',
+      },
+      /* ── 私密軌道（myself only）── */
+      {
+        id:          'sleep-variation',
+        label:       '睡眠變異因果',
+        group:       '生命防線',
+        color:       '#7a4a28',
+        lens:        ['myself'],
+        lensOwner:   'myself',
+        placeholder: '深睡比例・相位偏移・因果追蹤；Stage 2 連接 SAS Hub 資料流',
+      },
+      {
+        id:          'emotion-curve',
+        label:       '情緒去噪曲線',
+        group:       '生命防線',
+        color:       '#9a3858',
+        lens:        ['myself'],
+        lensOwner:   'myself',
+        placeholder: '情緒週期平滑化・去噪趨勢・觸發因子；Stage 2 連接 Mental Dashboard',
+      },
+      {
+        id:          'life-defense',
+        label:       '生活防線',
+        group:       '生命防線',
+        color:       '#483a78',
+        lens:        ['myself'],
+        lensOwner:   'myself',
+        placeholder: '能量防禦策略・壓力緩衝機制・日常儀軌；Stage 2 整合 Daily Optimizer',
+      },
+    ];
+
+    /* ══════════════════════════════════════
+       安全 DOM 工具 — 禁用 innerHTML
+    ══════════════════════════════════════ */
+
+    function el(tag, props) {
+      var node = document.createElement(tag);
+      if (props) {
+        Object.keys(props).forEach(function (k) {
+          var v = props[k];
+          if (k === 'style' && typeof v === 'object') {
+            Object.keys(v).forEach(function (sk) { node.style[sk] = v[sk]; });
+          } else if (k === 'className') {
+            node.className = v;
+          } else {
+            node.setAttribute(k, v);
+          }
+        });
+      }
+      return node;
+    }
+
+    function txt(s) {
+      return document.createTextNode(String(s == null ? '' : s));
+    }
+
+    function ap(parent) {
+      var children = Array.prototype.slice.call(arguments, 1);
+      children.forEach(function (c) {
+        if (c == null) return;
+        if (c instanceof Node) {
+          parent.appendChild(c);
+        } else {
+          parent.appendChild(txt(c));
+        }
+      });
+      return parent;
+    }
+
+    function clearNode(node) {
+      while (node.firstChild) { node.removeChild(node.firstChild); }
+    }
+
+    /* ══════════════════════════════════════
+       ROUTING
+    ══════════════════════════════════════ */
+
+    function parseLens() {
+      var raw = '';
+      try {
+        raw = new URLSearchParams(window.location.search).get('lens') || '';
+      } catch (e) {
+        raw = '';
+      }
+      return Object.prototype.hasOwnProperty.call(LENS_META, raw) ? raw : 'public';
+    }
+
+    /* ══════════════════════════════════════
+       RENDER: STATUS PANEL
+    ══════════════════════════════════════ */
+
+    function renderStatusPanel(lens) {
+      var panel = document.getElementById('status-panel');
+      clearNode(panel);
+      var meta = LENS_META[lens];
+
+      /* Avatar */
+      var avatarWrap = el('div', { className: 'avatar-wrap' });
+      var avatar = el('div', { className: 'avatar' });
+      ap(avatar, txt('△'));
+      ap(avatarWrap, avatar);
+
+      /* Identity */
+      var name = el('p', { className: 'sp-name' });
+      ap(name, txt('人生軌跡觀測儀'));
+      var role = el('p', { className: 'sp-role' });
+      ap(role, txt('Stage 1 · 地基佈局'));
+      var identBlock = el('div', { style: { textAlign: 'center' } });
+      ap(identBlock, name, role);
+
+      /* Tags */
+      var tagsTitle = el('div', { className: 'sp-section-title' });
+      ap(tagsTitle, txt('識別標籤'));
+      var tagGroup = el('div', { className: 'sp-tag-group' });
+      ['Stage 1', '骨架版', 'URL 視角路由', '繁體中文'].forEach(function (t) {
+        var tag = el('span', { className: 'sp-tag' });
+        ap(tag, txt(t));
+        ap(tagGroup, tag);
+      });
+      var tagsSection = el('div', {});
+      ap(tagsSection, tagsTitle, tagGroup);
+
+      /* Lens indicator（唯讀，不可切換） */
+      var lensTitle = el('div', { className: 'sp-section-title' });
+      ap(lensTitle, txt('當前視角'));
+
+      var dot = el('span', { className: 'lens-badge-dot', style: { background: meta.color } });
+      var badge = el('div', { className: 'lens-badge', style: { color: meta.color, borderColor: meta.border, background: meta.bg } });
+      ap(badge, dot, txt(meta.icon + ' ' + meta.label));
+
+      var desc = el('p', { className: 'lens-desc' });
+      ap(desc, txt(meta.desc));
+
+      /* URL hint */
+      var hintWrap = el('div', { className: 'sp-url-hint' });
+      ap(hintWrap, txt('視角切換方式：在 URL 末尾加上'));
+      var br1 = el('br', {}), br2 = el('br', {});
+      var code1 = el('code', {}); ap(code1, txt('?lens=creative'));
+      var code2 = el('code', {}); ap(code2, txt('?lens=engineering'));
+      var code3 = el('code', {}); ap(code3, txt('?lens=myself'));
+      ap(hintWrap, br1, code1, txt(' / '), code2, br2, code3);
+
+      var lensSection = el('div', { className: 'sp-lens-section' });
+      ap(lensSection, lensTitle, badge, desc, hintWrap);
+
+      ap(panel, avatarWrap, identBlock, tagsSection, lensSection);
+    }
+
+    /* ══════════════════════════════════════
+       RENDER: CONTENT AREA
+    ══════════════════════════════════════ */
+
+    function renderContent(lens) {
+      var area = document.getElementById('content-area');
+      clearNode(area);
+      var meta = LENS_META[lens];
+
+      /* Header */
+      var titleEl = el('h1', { className: 'content-title' });
+      ap(titleEl, txt('人生軌跡觀測儀'));
+
+      var subtitleEl = el('p', { className: 'content-subtitle' });
+      ap(subtitleEl, txt('個人生命數據整合平台 · 階段性動態建設中'));
+
+      var lensTagEl = el('div', {
+        className: 'content-lens-badge',
+        style: {
+          color:           meta.color,
+          background:      meta.bg,
+          borderColor:     meta.border,
+        }
+      });
+      var lensTagDot = el('span', {
+        className: 'lens-badge-dot',
+        style: { background: meta.color }
+      });
+      ap(lensTagEl, lensTagDot, txt(meta.icon + ' ' + meta.label));
+
+      var header = el('div', { className: 'content-header' });
+      ap(header, titleEl, subtitleEl, lensTagEl);
+      ap(area, header);
+
+      /* Filter tracks */
+      var visible = TRACKS.filter(function (t) { return t.lens.indexOf(lens) !== -1; });
+
+      if (visible.length === 0) {
+        var emptyIcon = el('div', { className: 'empty-icon' }); ap(emptyIcon, txt('◌'));
+        var emptyText = el('div', { className: 'empty-text' }); ap(emptyText, txt('此視角目前無可顯示的軌道'));
+        var emptyState = el('div', { className: 'empty-state' }); ap(emptyState, emptyIcon, emptyText);
+        ap(area, emptyState);
+        return;
+      }
+
+      /* Group tracks */
+      var groups = {};
+      var groupOrder = [];
+      visible.forEach(function (t) {
+        if (!groups[t.group]) {
+          groups[t.group] = [];
+          groupOrder.push(t.group);
+        }
+        groups[t.group].push(t);
+      });
+
+      groupOrder.forEach(function (groupName) {
+        var tracks = groups[groupName];
+        var section = el('div', { className: 'section' });
+
+        /* Section label */
+        var sectionLabel = el('div', { className: 'section-label' });
+        ap(sectionLabel, txt(groupName));
+        ap(sectionLabel, el('span', { className: 'section-label-line' }));
+        ap(section, sectionLabel);
+
+        tracks.forEach(function (t) {
+          var lm = LENS_META[t.lensOwner];
+
+          /* Card */
+          var card = el('div', {
+            className: 'track-card',
+            style: { borderLeftColor: t.color }
+          });
+
+          /* Card head */
+          var dot = el('span', { className: 'track-dot', style: { background: t.color } });
+          var name = el('span', { className: 'track-name' }); ap(name, txt(t.label));
+          var cardLeft = el('div', { className: 'track-card-left' }); ap(cardLeft, dot, name);
+
+          var lensTag = el('span', {
+            className: 'track-lens-tag',
+            style: {
+              background:  lm.bg,
+              color:       lm.color,
+              borderColor: lm.border,
+            }
+          });
+          ap(lensTag, txt(lm.icon + ' ' + lm.label));
+
+          var cardHead = el('div', { className: 'track-card-head' });
+          ap(cardHead, cardLeft, lensTag);
+          ap(card, cardHead);
+
+          /* Placeholder body */
+          var stageBadge = el('span', { className: 'stage-badge' }); ap(stageBadge, txt('Stage 2'));
+          var placeholder = el('div', { className: 'track-placeholder' });
+          ap(placeholder, stageBadge, txt(t.placeholder));
+          ap(card, placeholder);
+
+          ap(section, card);
+        });
+
+        ap(area, section);
+      });
+    }
+
+    /* ══════════════════════════════════════
+       INIT
+    ══════════════════════════════════════ */
+
+    function init() {
+      var lens = parseLens();
+      renderStatusPanel(lens);
+      renderContent(lens);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  }());
+  </script>
+</body>
+</html>
