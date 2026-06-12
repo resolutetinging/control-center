@@ -102,15 +102,19 @@
     @keyframes river-flow{0%{background-position:200% center}100%{background-position:-200% center}}
     .eng-river-seg{
       position:absolute;top:50%;transform:translateY(-50%);
-      height:18px;border-radius:9px;
+      height:14px;border-radius:7px;
       background-size:200% 100%;
-      animation:river-flow 6s linear infinite;
-      box-shadow:0 2px 12px rgba(0,0,0,0.32),inset 0 -2px 4px rgba(0,0,0,0.22),inset 0 2px 5px rgba(255,255,255,0.14);
+      animation:river-flow 7s linear infinite;
+      box-shadow:0 1px 8px rgba(0,0,0,0.28),inset 0 -1px 3px rgba(0,0,0,0.20),inset 0 1px 4px rgba(255,255,255,0.12);
       z-index:1;
     }
-    .eng-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px 26px;overflow-x:auto;}
+    .eng-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 20px;overflow-x:auto;}
     .eng-river-wrap .pl-label{display:none;}
-    .eng-seg-label{position:absolute;top:50%;transform:translateY(-50%) translateX(-50%);font-size:8px;font-weight:600;color:rgba(255,255,255,0.82);letter-spacing:.04em;white-space:nowrap;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,0.4);z-index:2;}
+    .eng-river-track{min-height:64px;}
+    .eng-node-marker{position:absolute;top:0;bottom:calc(50% + 7px);display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);z-index:3;pointer-events:none;}
+    .eng-node-date{font-size:8px;color:var(--sub);white-space:nowrap;font-weight:600;letter-spacing:.02em;padding-bottom:2px;line-height:1.2;}
+    .eng-node-dline{flex:1;border-left:1px dashed rgba(46,93,138,0.38);min-height:4px;}
+    .eng-seg-label{display:none;}
     /* ── WORK: Hashtag sidebar ── */
     .eng-hashtag-section{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
     .eng-hashtag-section-title{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
@@ -880,6 +884,19 @@
       }
       var r1=el('div',{className:'dm-field-row dm-fr4'});
       ap(r1, mkInp('年份',node.year,'year'), mkInp('月份',node.month||'','month'), mkSel('軌道',node.track), mkInp('標籤',node.label,'label'));
+      /* 工作屬性（engineering 節點專用）*/
+      if(node.track==='engineering'){
+        var typeRow=el('div',{className:'dm-field-row',style:{marginBottom:'6px'}});
+        var typeFld=el('div',{className:'dm-field'});
+        var typeLbl=el('div',{className:'dm-field-lbl'}); ap(typeLbl,txt('工作屬性'));
+        var typeSel=el('select',{className:'dm-sel'});
+        [['work','Work'],['innovation','Innovation'],['sabbatical','Sabbatical']].forEach(function(o){
+          var opt=el('option',{value:o[0]}); ap(opt,txt(o[1]));
+          if((node.type||'work')===o[0]) opt.selected=true; ap(typeSel,opt);
+        });
+        (function(n){typeSel.addEventListener('change',function(){n.type=typeSel.value;schedulePersist();});})(node);
+        ap(typeFld,typeLbl,typeSel); ap(typeRow,typeFld); ap(body,typeRow);
+      }
       var r2=el('div',{className:'dm-field-row dm-fr1'});
       ap(r2, mkInp('標題',node.title,'title'));
       var r3=el('div',{className:'dm-field-row dm-fr1'});
@@ -1491,13 +1508,15 @@
     var wrap=el('div',{}); ap(wrap,switchSec,dmSec); return wrap;
   }
 
-  /* ── ENGINEERING TIMELINE (river, per-segment colors) ── */
-  var ENG_SEG_COLORS=[
-    ['#1a4a6e','#3a8ab8'],['#2a5e38','#4aa868'],['#5e3a1a','#b87840'],
-    ['#3a1a5e','#7848c0'],['#1a4a4a','#38a0a0'],['#5e1a2a','#c04060'],
-    ['#2a4a1a','#68a038'],['#1a2a5e','#4868c0'],
-  ];
-  function engSegColor(i){return ENG_SEG_COLORS[i%ENG_SEG_COLORS.length];}
+  /* ── ENGINEERING TIMELINE ── */
+  var ENG_TYPE_COLORS={
+    'work':       ['#0c2840','#1a5280','#2e80c0'],
+    'innovation': ['#0c3038','#1a6878','#2ea8c0'],
+    'sabbatical': ['#1e2838','#304858','#486880'],
+  };
+  function engTypeColor(node){
+    var t=(node.type||'work'); return ENG_TYPE_COLORS[t]||ENG_TYPE_COLORS['work'];
+  }
   function renderEngTimeline() {
     var visNodes=TINA_DATA_MATRIX.nodes.filter(function(n){return n.track==='engineering'&&n.visible!==false;}).slice().sort(function(a,b){return parseFloat(a.year)-parseFloat(b.year);});
     var wrap=el('div',{className:'eng-river-wrap'});
@@ -1511,36 +1530,42 @@
     ap(trackRow,el('div',{className:'pl-label'}));
     var pipeContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){ap(pipeContent,el('span',{className:'guide-line',style:{left:pct(y)}}));});
-    /* 各節點對應的小數年份 */
     var nodeYrs=visNodes.map(function(n){return parseFloat(n.year)+(n.month?(parseInt(n.month)-1)/12:0);});
     var totalRange=YEAR_END-YEAR_START;
-    /* 每對相鄰節點畫一段有色色塊 */
+    /* 色段：每對節點間一段，顏色依起點節點 type */
     for(var i=0;i<visNodes.length-1;i++){
       var ya=nodeYrs[i], yb=nodeYrs[i+1];
-      var leftPct=((ya-YEAR_START)/totalRange*100).toFixed(3)+'%';
-      var widthPct=((yb-ya)/totalRange*100).toFixed(3)+'%';
-      var colors=engSegColor(i);
+      var lp=((ya-YEAR_START)/totalRange*100).toFixed(3)+'%';
+      var wp=((yb-ya)/totalRange*100).toFixed(3)+'%';
+      var c=engTypeColor(visNodes[i]);
       var seg=el('div',{className:'eng-river-seg'});
-      seg.style.left=leftPct; seg.style.width=widthPct;
-      seg.style.background='linear-gradient(90deg,'+colors[0]+','+colors[1]+','+colors[0]+')';
-      seg.style.backgroundSize='200% 100%';
-      seg.style.animationDelay=(i*-1.4)+'s';
+      seg.style.left=lp; seg.style.width=wp;
+      seg.style.background='linear-gradient(90deg,'+c[0]+','+c[1]+','+c[2]+','+c[1]+','+c[0]+')';
+      seg.style.animationDelay=(i*-1.8)+'s';
       ap(pipeContent,seg);
-      /* seg label 置中 */
-      var midPct=((ya+yb)/2-YEAR_START)/totalRange*100;
-      var segLbl=el('div',{className:'eng-seg-label',style:{left:midPct.toFixed(3)+'%'}});
-      ap(segLbl,txt(visNodes[i].label||visNodes[i].title||'')); ap(pipeContent,segLbl);
     }
-    /* 最後節點 label */
+    /* 最後節點之後延伸一小段 */
     if(visNodes.length){
       var last=visNodes[visNodes.length-1], lastYr=nodeYrs[visNodes.length-1];
-      var lastMid=Math.min(((lastYr+0.8-YEAR_START)/totalRange*100),96).toFixed(3)+'%';
-      var lastLbl=el('div',{className:'eng-seg-label',style:{left:lastMid}});
-      ap(lastLbl,txt(last.label||last.title||'')); ap(pipeContent,lastLbl);
+      var endYr=Math.min(lastYr+0.5, YEAR_END);
+      var lp2=((lastYr-YEAR_START)/totalRange*100).toFixed(3)+'%';
+      var wp2=((endYr-lastYr)/totalRange*100).toFixed(3)+'%';
+      var cl=engTypeColor(last);
+      var tailSeg=el('div',{className:'eng-river-seg'});
+      tailSeg.style.left=lp2; tailSeg.style.width=wp2;
+      tailSeg.style.background='linear-gradient(90deg,'+cl[0]+','+cl[1]+','+cl[0]+')';
+      tailSeg.style.opacity='0.5';
+      ap(pipeContent,tailSeg);
     }
-    /* 節點點 */
+    /* 節點：虛線往上 + 月份標籤 + 點 */
     visNodes.forEach(function(n,i){
-      var dot=el('div',{className:'pipe-dot active',style:{left:pct(nodeYrs[i])}});
+      var leftP=((nodeYrs[i]-YEAR_START)/totalRange*100).toFixed(3)+'%';
+      var mo=n.month?('/'+String(n.month).padStart(2,'0')):'';
+      var marker=el('div',{className:'eng-node-marker',style:{left:leftP}});
+      var dateEl=el('div',{className:'eng-node-date'}); ap(dateEl,txt(n.year+mo));
+      var dline=el('div',{className:'eng-node-dline'});
+      ap(marker,dateEl,dline); ap(pipeContent,marker);
+      var dot=el('div',{className:'pipe-dot active',style:{left:leftP}});
       dot.title=(n.title||n.label||'')+(n.year?' ('+n.year+')':'');
       ap(pipeContent,dot);
     });
