@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Yi Ting Yu, Tina Yu">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%220.9em%22 font-size=%2290%22>🌳</text></svg>">
   <title>人生軌跡觀測儀</title>
   <style>
     /* ── TOKENS ── */
@@ -227,6 +229,14 @@
     .dm-modal-title{flex:1;font-size:13px;font-weight:700;color:var(--ink);}
     .dm-modal-close{width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);cursor:pointer;font-size:16px;color:var(--sub);display:flex;align-items:center;justify-content:center;transition:background 140ms ease;}
     .dm-modal-close:hover{background:var(--border);}
+    .dm-help-wrap{position:relative;margin-right:8px;display:flex;align-items:center;}
+    .dm-help-btn{width:22px;height:22px;border-radius:50%;background:transparent;border:none;cursor:default;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--faint);transition:color 140ms ease;padding:0;}
+    .dm-help-wrap:hover .dm-help-btn{color:var(--sub);}
+    .dm-help-tip{position:absolute;top:calc(100% + 10px);right:0;width:252px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:13px 15px 14px;font-size:10.5px;color:var(--sub);line-height:1.75;box-shadow:0 8px 24px rgba(40,38,31,0.14);z-index:900;opacity:0;pointer-events:none;transition:opacity 150ms ease;}
+    .dm-help-wrap:hover .dm-help-tip{opacity:1;pointer-events:auto;}
+    .dm-help-tip-title{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+    .dm-help-tip-sec{font-weight:700;color:var(--ink);margin-top:9px;margin-bottom:2px;}
+    .dm-help-code{background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:0 4px;font-family:monospace;font-size:10px;}
     .dm-modal-body{padding:18px 20px 26px;max-height:calc(100vh - 160px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
     /* sidebar dm button */
     .sp-dm-btn{display:block;width:100%;margin-top:12px;padding:8px 12px;font-size:11px;font-weight:700;letter-spacing:.03em;cursor:pointer;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--sub);text-align:left;transition:background 140ms ease;}
@@ -960,7 +970,26 @@
     var title=el('div',{className:'dm-modal-title'}); ap(title,txt('📊 總指揮官資料管理中樞'));
     var closeBtn=el('button',{className:'dm-modal-close','aria-label':'關閉'}); ap(closeBtn,txt('×'));
     closeBtn.addEventListener('click',closeDmModal);
-    ap(head,title,closeBtn);
+    var helpWrap=el('div',{className:'dm-help-wrap'});
+    var helpBtn=el('span',{className:'dm-help-btn'}); ap(helpBtn,txt('?'));
+    var tip=el('div',{className:'dm-help-tip'});
+    var mkTipRow=function(t){var d=el('div');ap(d,txt(t));return d;};
+    var mkCode=function(t){var c=el('code',{className:'dm-help-code'});ap(c,txt(t));return c;};
+    var mkTipLine=function(parts){var d=el('div');parts.forEach(function(p){ap(d,typeof p==='string'?txt(p):p);});return d;};
+    var tipTitle=el('div',{className:'dm-help-tip-title'}); ap(tipTitle,txt('維護說明'));
+    var h1=el('div',{className:'dm-help-tip-sec'}); ap(h1,txt('節點'));
+    var t1=mkTipRow('點擊展開編輯。年份＋月份決定水管圖位置。');
+    var h2=el('div',{className:'dm-help-tip-sec'}); ap(h2,txt('R&R 欄位'));
+    var t2a=mkTipLine([mkCode('- 文字'),txt(' → bullet（• ◦ ▪ 三層縮排）')]);
+    var t2b=mkTipRow('Enter → 自動在同層續行');
+    var t2c=mkTipLine([mkCode('Tab'),txt(' 縮排，'),mkCode('Shift+Tab'),txt(' 取消縮排')]);
+    var h3=el('div',{className:'dm-help-tip-sec'}); ap(h3,txt('預覽卡片'));
+    var t3=mkTipRow('cat / title / gradient 三欄，各視角獨立維護。');
+    var h4=el('div',{className:'dm-help-tip-sec'}); ap(h4,txt('批次匯入'));
+    var t4=mkTipLine([txt('格式：'),mkCode('key: value'),txt('，以 '),mkCode('---'),txt(' 分隔多筆。')]);
+    ap(tip,tipTitle,h1,t1,h2,t2a,t2b,t2c,h3,t3,h4,t4);
+    ap(helpWrap,helpBtn,tip);
+    ap(head,title,helpWrap,closeBtn);
     var body=el('div',{className:'dm-modal-body'});
     var tabBar=buildDmTabBar();
     var formArea=el('div',{}); _dmFormAreaRef=formArea;
@@ -980,7 +1009,7 @@
     var meta=LENS_META[lens];
     var avatarWrap=el('div',{className:'avatar-wrap'});
     var avatar=el('div',{className:'avatar'}); ap(avatar,txt('△')); ap(avatarWrap,avatar);
-    var name=el('p',{className:'sp-name'}); ap(name,txt('人生軌跡觀測儀'));
+    var name=el('p',{className:'sp-name'}); ap(name,txt('Yi Ting Yu / Tina Yu'));
     var role=el('p',{className:'sp-role'}); ap(role,txt('Stage 4 · 全視角整合'));
     var ident=el('div',{style:{textAlign:'center'}}); ap(ident,name,role);
     var lensTitle=el('div',{className:'sp-section-title'}); ap(lensTitle,txt('當前視角'));
