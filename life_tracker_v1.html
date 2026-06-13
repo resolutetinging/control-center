@@ -210,7 +210,13 @@
     .pc-inner{width:100%;height:100%;padding:12px 14px;display:flex;flex-direction:column;justify-content:flex-end;}
     .pc-cat{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:inline-block;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.55);color:var(--ink);margin-bottom:5px;width:fit-content;}
     .pc-title{font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;}
-    .pc-link-badge{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,0.72);color:var(--sub);letter-spacing:.03em;pointer-events:none;}
+    .pc-inner-img{background:linear-gradient(to top,rgba(28,26,20,0.6) 0%,rgba(28,26,20,0) 65%);}
+    .pc-inner-img .pc-cat{background:rgba(255,255,255,0.35);color:#fff;}
+    .pc-inner-img .pc-title{color:#fff;}
+    .dm-card-img-row{display:flex;align-items:center;gap:6px;margin-top:5px;}
+    .dm-card-img-thumb{width:36px;height:36px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    .dm-card-img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+    .dm-card-img-lbl{font-size:10px;color:var(--faint);flex:1;cursor:pointer;}
 
     /* ── COMMANDER PANEL ── */
     .commander-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
@@ -993,7 +999,29 @@
         ap(inner1,catInp,titInp,delBtn);
         var urlInp=el('input',{className:'dm-inp',type:'text',placeholder:'作品連結（選填）'}); urlInp.value=card.url||'';
         urlInp.addEventListener('input',function(){card.url=urlInp.value; schedulePersist();});
-        ap(row,inner1,urlInp); ap(list,row);
+        /* 封面圖上傳 */
+        var imgRow=el('div',{className:'dm-card-img-row'});
+        var imgThumb=el('div',{className:'dm-card-img-thumb'});
+        if(card.img){var tImg=el('img'); tImg.src=card.img; ap(imgThumb,tImg);} else {ap(imgThumb,txt('📷'));}
+        var imgLbl=el('span',{className:'dm-card-img-lbl'}); ap(imgLbl,txt(card.img?'封面已設定，點擊更換':'點擊上傳封面圖'));
+        var imgClr=el('button',{className:'dm-entry-del',style:{padding:'2px 6px',display:card.img?'':'none'}}); ap(imgClr,txt('清除'));
+        var imgFile=el('input',{type:'file',accept:'image/*',style:{display:'none'}});
+        (function(c,thumb,lbl,clr,fi){
+          function refreshThumb(){
+            clearNode(thumb);
+            if(c.img){var im=el('img'); im.src=c.img; ap(thumb,im); lbl.textContent='封面已設定，點擊更換'; clr.style.display='';}
+            else{ap(thumb,txt('📷')); lbl.textContent='點擊上傳封面圖'; clr.style.display='none';}
+          }
+          thumb.addEventListener('click',function(){fi.click();});
+          lbl.addEventListener('click',function(){fi.click();});
+          fi.addEventListener('change',function(ev){
+            var f=ev.target.files[0]; if(!f) return;
+            compressImg(f,600,0.85,function(d){c.img=d; schedulePersist(); refreshThumb();});
+          });
+          clr.addEventListener('click',function(){delete c.img; schedulePersist(); refreshThumb();});
+        })(card,imgThumb,imgLbl,imgClr,imgFile);
+        ap(imgRow,imgThumb,imgLbl,imgClr,imgFile);
+        ap(row,inner1,urlInp,imgRow); ap(list,row);
       });
       var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增卡片'));
       addBtn.addEventListener('click',function(){
@@ -1418,15 +1446,21 @@
     function buildCardGrid(cardList){
       var grid=el('div',{className:'preview-grid'});
       cardList.forEach(function(card){
-        var bg=card.gradient||card.bg||'var(--bg2)';
         var pcard=el('div',{className:'preview-card'+(card.url?' has-link':'')});
         if(card.url){pcard.addEventListener('click',(function(u){return function(){window.open(u,'_blank','noopener');};})(card.url));}
-        var inner=el('div',{className:'pc-inner',style:{background:bg}});
+        var inner;
+        if(card.img){
+          pcard.style.backgroundImage='url('+card.img+')';
+          pcard.style.backgroundSize='cover';
+          pcard.style.backgroundPosition='center';
+          inner=el('div',{className:'pc-inner pc-inner-img'});
+        } else {
+          var bg=card.gradient||card.bg||'var(--bg2)';
+          inner=el('div',{className:'pc-inner',style:{background:bg}});
+        }
         var cat=el('span',{className:'pc-cat'}); ap(cat,txt(card.cat));
         var title=el('div',{className:'pc-title'}); ap(title,txt(card.title));
-        ap(inner,cat,title); ap(pcard,inner);
-        if(card.url){var badge=el('span',{className:'pc-link-badge'}); ap(badge,txt('↗ 連結')); ap(pcard,badge);}
-        ap(grid,pcard);
+        ap(inner,cat,title); ap(pcard,inner); ap(grid,pcard);
       });
       return grid;
     }
