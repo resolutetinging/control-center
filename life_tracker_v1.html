@@ -193,8 +193,8 @@
     /* ── STANDALONE LENS LAYOUT ── */
     .standalone-wrap{max-width:700px;}
     .intro-block{padding:36px 0 30px;}
-    .intro-headline{font-size:30px;font-weight:200;letter-spacing:-.6px;color:var(--ink);line-height:1.2;}
-    .intro-tagline{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:10px;}
+    .intro-headline{font-size:30px;font-weight:200;letter-spacing:-.6px;color:var(--ink);line-height:1.2;white-space:pre-line;}
+    .intro-tagline{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:10px;white-space:pre-line;}
     .intro-bio{font-size:13.5px;color:var(--sub);line-height:1.85;margin-top:18px;}
     .links-block{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:32px;}
     .ext-link-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);color:var(--sub);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease;white-space:nowrap;}
@@ -1048,7 +1048,7 @@
       var pk=quad[0], plbl=quad[1], linkLbl=quad[2], linkKey=quad[3];
       var ph=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',marginTop:'22px',marginBottom:'4px'}}); ap(ph,txt(plbl));
       ap(wrap,ph);
-      var fields=[['headline','大標','',1],['tagline','副標','',1],['intro','簡介','',3],[linkKey,linkLbl,'https://...',1]];
+      var fields=[['headline','大標','',2],['tagline','副標','',2],['intro','簡介','',3],[linkKey,linkLbl,'https://...',1]];
       fields.forEach(function(fp){
         var fk=fp[0], flbl=fp[1], fph=fp[2], frows=fp[3];
         var frow=el('div',{className:'dm-field',style:{marginBottom:'8px'}});
