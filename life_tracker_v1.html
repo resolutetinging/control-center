@@ -141,8 +141,11 @@
     .eng-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:opacity 220ms ease;}
     .eng-card-inner{padding:14px 16px 12px;}
     .eng-card-year{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--faint);display:block;}
-    .eng-card-title{font-size:13.5px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.35;}
+    .eng-card-company{font-size:9.5px;font-weight:700;letter-spacing:.05em;color:#4a6878;background:rgba(74,104,120,.1);border:1px solid rgba(74,104,120,.2);border-radius:10px;padding:1px 8px;display:inline-block;margin-top:4px;}
+    .eng-card-title{font-size:13.5px;font-weight:700;color:var(--ink);margin-top:5px;line-height:1.35;}
     .eng-card-sub{font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5;}
+    .eng-card-section-lbl{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:8px;margin-bottom:2px;}
+    .eng-card-section-body{font-size:11.5px;color:var(--sub);line-height:1.6;white-space:pre-wrap;}
     .eng-cap-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;}
     .eng-cap-tag{font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:20px;text-transform:uppercase;background:#e8f0f8;color:#2e5d8a;border:.5px solid #aaccdd;}
     .eng-kpi-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
@@ -909,40 +912,56 @@
         (function(n){typeSel.addEventListener('change',function(){n.type=typeSel.value;schedulePersist();});})(node);
         ap(typeFld,typeLbl,typeSel); ap(typeRow,typeFld); ap(body,typeRow);
       }
-      var r2=el('div',{className:'dm-field-row dm-fr1'});
-      ap(r2, mkInp('標題',node.title,'title'));
-      var r3=el('div',{className:'dm-field-row dm-fr1'});
-      var f3=el('div',{className:'dm-field'});
-      var lb3=el('div',{className:'dm-field-lbl'}); ap(lb3,txt('R&R'));
-      var ta3=el('textarea',{className:'dm-ta dm-rr-ta',rows:'5'}); ta3.value=node.subtitle||'';
-      var prev3=el('div',{className:'dm-rr-preview'});
-      var rrUpdate=function(){
-        node.subtitle=ta3.value; schedulePersist();
-        renderBulletLines(ta3.value,prev3);
-      };
-      rrUpdate();
-      ta3.addEventListener('input',rrUpdate);
-      ta3.addEventListener('keydown',function(e){
-        var pos=ta3.selectionStart, val=ta3.value;
-        if(e.key==='Enter'){
-          var ls=val.lastIndexOf('\n',pos-1)+1;
-          var bm=val.slice(ls,pos).match(/^(\s*)-\s/);
-          if(bm){e.preventDefault();var ins='\n'+bm[0];ta3.value=val.slice(0,pos)+ins+val.slice(ta3.selectionEnd);ta3.selectionStart=ta3.selectionEnd=pos+ins.length;rrUpdate();}
-        } else if(e.key==='Tab'){
-          e.preventDefault();
-          var st=ta3.selectionStart,en=ta3.selectionEnd,v=ta3.value;
-          var ls2=v.lastIndexOf('\n',st-1)+1;
-          if(!e.shiftKey){ta3.value=v.slice(0,ls2)+'  '+v.slice(ls2);ta3.selectionStart=st+2;ta3.selectionEnd=en+2;}
-          else if(v.slice(ls2,ls2+2)==='  '){ta3.value=v.slice(0,ls2)+v.slice(ls2+2);ta3.selectionStart=Math.max(ls2,st-2);ta3.selectionEnd=Math.max(ls2,en-2);}
-          rrUpdate();
-        }
-      });
-      ap(f3,lb3,ta3,prev3); ap(r3,f3);
-      ap(body, r1, r2, r3); ap(entry, body); ap(list, entry);
+      function mkTa(lbl,val,key,rows){
+        var f=el('div',{className:'dm-field'});
+        var lb=el('div',{className:'dm-field-lbl'}); ap(lb,txt(lbl));
+        var ta=el('textarea',{className:'dm-ta',rows:''+(rows||3)}); ta.value=val||'';
+        ta.addEventListener('input',function(){node[key]=ta.value; schedulePersist();});
+        ap(f,lb,ta); return f;
+      }
+      if(node.track==='engineering'){
+        var r2e=el('div',{className:'dm-field-row dm-fr2'});
+        ap(r2e, mkInp('公司',node.company||'','company'), mkInp('Event',node.title,'title'));
+        var r3e=el('div',{className:'dm-field-row dm-fr2'});
+        ap(r3e, mkTa('Target',node.target||'','target',3), mkTa('Result',node.result||'','result',3));
+        ap(body, r1, r2e, r3e);
+      } else {
+        var r2=el('div',{className:'dm-field-row dm-fr1'});
+        ap(r2, mkInp('標題',node.title,'title'));
+        var r3=el('div',{className:'dm-field-row dm-fr1'});
+        var f3=el('div',{className:'dm-field'});
+        var lb3=el('div',{className:'dm-field-lbl'}); ap(lb3,txt('R&R'));
+        var ta3=el('textarea',{className:'dm-ta dm-rr-ta',rows:'5'}); ta3.value=node.subtitle||'';
+        var prev3=el('div',{className:'dm-rr-preview'});
+        var rrUpdate=function(){
+          node.subtitle=ta3.value; schedulePersist();
+          renderBulletLines(ta3.value,prev3);
+        };
+        rrUpdate();
+        ta3.addEventListener('input',rrUpdate);
+        ta3.addEventListener('keydown',function(e){
+          var pos=ta3.selectionStart, val=ta3.value;
+          if(e.key==='Enter'){
+            var ls=val.lastIndexOf('\n',pos-1)+1;
+            var bm=val.slice(ls,pos).match(/^(\s*)-\s/);
+            if(bm){e.preventDefault();var ins='\n'+bm[0];ta3.value=val.slice(0,pos)+ins+val.slice(ta3.selectionEnd);ta3.selectionStart=ta3.selectionEnd=pos+ins.length;rrUpdate();}
+          } else if(e.key==='Tab'){
+            e.preventDefault();
+            var st=ta3.selectionStart,en=ta3.selectionEnd,v=ta3.value;
+            var ls2=v.lastIndexOf('\n',st-1)+1;
+            if(!e.shiftKey){ta3.value=v.slice(0,ls2)+'  '+v.slice(ls2);ta3.selectionStart=st+2;ta3.selectionEnd=en+2;}
+            else if(v.slice(ls2,ls2+2)==='  '){ta3.value=v.slice(0,ls2)+v.slice(ls2+2);ta3.selectionStart=Math.max(ls2,st-2);ta3.selectionEnd=Math.max(ls2,en-2);}
+            rrUpdate();
+          }
+        });
+        ap(f3,lb3,ta3,prev3); ap(r3,f3);
+        ap(body, r1, r2, r3);
+      }
+      ap(entry, body); ap(list, entry);
     });
     var addBtn=el('button',{className:'dm-add-btn'}); ap(addBtn,txt('＋ 新增里程碑'));
     addBtn.addEventListener('click',function(){
-      _dmNodesBuf.push({id:'n'+Date.now(),year:new Date().getFullYear(),month:'',track:'engineering',label:'',title:'',subtitle:'',star:{S:'',T:'',A:'',R:''}});
+      _dmNodesBuf.push({id:'n'+Date.now(),year:new Date().getFullYear(),month:'',track:'engineering',label:'',title:'',subtitle:'',company:'',target:'',result:''});
       _dmExpandedNodes[_dmNodesBuf.length-1]=true; persistData(); dmRefreshForm();
     });
     var saveBtn=el('button',{className:'dm-sync-btn'}); ap(saveBtn,txt('⚡ 寫入並刷新水管圖'));
@@ -1693,9 +1712,15 @@
         var inner=el('div',{className:'eng-card-inner'});
         var mo=ms.month?('/'+ms.month):'';
         var yearEl=el('span',{className:'eng-card-year'}); ap(yearEl,txt(ms.year+mo+' · '+ms.label));
-        var titleEl=el('div',{className:'eng-card-title'}); ap(titleEl,txt(ms.title));
-        var subEl=el('div',{className:'eng-card-sub'}); if(ms.subtitle) renderBulletLines(ms.subtitle,subEl);
-        ap(inner,yearEl,titleEl,subEl);
+        ap(inner,yearEl);
+        if(ms.company){var coEl=el('span',{className:'eng-card-company'}); ap(coEl,txt(ms.company)); ap(inner,coEl);}
+        var titleEl=el('div',{className:'eng-card-title'}); ap(titleEl,txt(ms.title)); ap(inner,titleEl);
+        if(ms.target||ms.result){
+          if(ms.target){var tLbl=el('div',{className:'eng-card-section-lbl'}); ap(tLbl,txt('Target')); var tBody=el('div',{className:'eng-card-section-body'}); ap(tBody,txt(ms.target)); ap(inner,tLbl,tBody);}
+          if(ms.result){var rLbl=el('div',{className:'eng-card-section-lbl'}); ap(rLbl,txt('Result')); var rBody=el('div',{className:'eng-card-section-body'}); ap(rBody,txt(ms.result)); ap(inner,rLbl,rBody);}
+        } else {
+          var subEl=el('div',{className:'eng-card-sub'}); if(ms.subtitle) renderBulletLines(ms.subtitle,subEl); ap(inner,subEl);
+        }
         ap(card,inner); ap(cardsGrid,card);
       });
       ap(section, cardsGrid);
