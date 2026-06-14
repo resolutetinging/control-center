@@ -125,8 +125,10 @@
     .eng-hashtag-pill.eng-tag-active{background:#2e5d8a;color:#fff;border-color:#2e5d8a;}
     /* ── WORK: Experience items (hashtag view) ── */
     .eng-exp-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;}
+    .eng-exp-company{font-size:9.5px;font-weight:700;letter-spacing:.05em;color:#4a6878;background:rgba(74,104,120,.1);border:1px solid rgba(74,104,120,.2);border-radius:10px;padding:1px 8px;display:inline-block;margin-bottom:6px;}
     .eng-exp-event{font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:5px;line-height:1.4;}
-    .eng-exp-result{font-size:11px;color:var(--sub);line-height:1.6;}
+    .eng-exp-result{font-size:11px;color:var(--sub);line-height:1.6;white-space:pre-wrap;}
+    .eng-exp-target{font-size:11px;color:var(--sub);line-height:1.6;white-space:pre-wrap;}
     /* ── DM: visibility toggle ── */
     .node-vis-btn{font-size:13px;padding:0 5px;border:none;background:none;cursor:pointer;color:#2e5d8a;line-height:1;transition:opacity 120ms ease;}
     .node-vis-btn.vis-off{color:var(--border);}
@@ -194,7 +196,7 @@
     .lm-quote{margin-top:18px;padding-top:14px;border-top:1px solid #3c3830;font-size:11px;color:#6a6460;line-height:1.8;text-align:center;}
 
     /* ── STANDALONE LENS LAYOUT ── */
-    .standalone-wrap{max-width:700px;}
+    .standalone-wrap{width:100%;}
     .intro-block{padding:36px 0 30px;}
     .intro-headline{font-size:30px;font-weight:200;letter-spacing:-.6px;color:var(--ink);line-height:1.2;white-space:pre-line;}
     .intro-tagline{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:10px;white-space:pre-line;}
@@ -1144,7 +1146,7 @@
     var h=el('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--ink)',flex:'1'}}); ap(h,txt('工作維護'));
     var addTagBtn=el('button',{className:'dm-add-btn'}); ap(addTagBtn,txt('+ 新增 Hashtag'));
     addTagBtn.addEventListener('click',function(){
-      data.push({tag:'',items:[{event:'',result:''}]});
+      data.push({tag:'',items:[{company:'',event:'',target:'',result:''}]});
       schedulePersist(); rerender();
     });
     ap(hdrRow,h,addTagBtn); ap(wrap,hdrRow);
@@ -1163,27 +1165,43 @@
       var delTagBtn=el('button',{className:'dm-entry-del'}); ap(delTagBtn,txt('✕'));
       delTagBtn.addEventListener('click',(function(i){return function(){data.splice(i,1);schedulePersist();rerender();};})(ti));
       ap(tagRow,tagInp,delTagBtn); ap(card,tagRow);
-      /* 各 Event/Result 項目 */
+      /* 各 工作項目 */
       (tagObj.items||[]).forEach(function(item,ii){
         var itemWrap=el('div',{style:{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:'6px',padding:'10px 12px',marginBottom:'8px'}});
+        /* 公司 */
+        var coRow=el('div',{className:'dm-field',style:{marginBottom:'6px'}});
+        var coLbl=el('div',{className:'dm-field-lbl'}); ap(coLbl,txt('公司'));
+        var coInp=el('input',{className:'dm-inp',type:'text',placeholder:'公司名稱'});
+        coInp.value=item.company||'';
+        (function(obj,inp){inp.addEventListener('input',function(){obj.company=inp.value;schedulePersist();});})(item,coInp);
+        ap(coRow,coLbl,coInp);
+        /* Event */
         var evRow=el('div',{className:'dm-field',style:{marginBottom:'6px'}});
         var evLbl=el('div',{className:'dm-field-lbl'}); ap(evLbl,txt('Event'));
-        var evInp=el('input',{className:'dm-inp',type:'text',placeholder:'發生了什麼事 / 哪家公司'});
+        var evInp=el('input',{className:'dm-inp',type:'text',placeholder:'發生了什麼事'});
         evInp.value=item.event||'';
         (function(obj,inp){inp.addEventListener('input',function(){obj.event=inp.value;schedulePersist();});})(item,evInp);
         ap(evRow,evLbl,evInp);
+        /* Target (textarea) */
+        var tgRow=el('div',{className:'dm-field',style:{marginBottom:'6px'}});
+        var tgLbl=el('div',{className:'dm-field-lbl'}); ap(tgLbl,txt('Target'));
+        var tgTa=el('textarea',{className:'dm-ta',rows:'3',placeholder:'目標'}); tgTa.style.resize='vertical';
+        tgTa.value=item.target||'';
+        (function(obj,ta){ta.addEventListener('input',function(){obj.target=ta.value;schedulePersist();});})(item,tgTa);
+        ap(tgRow,tgLbl,tgTa);
+        /* Result (textarea) */
         var resRow=el('div',{className:'dm-field'});
         var resLbl=el('div',{className:'dm-field-lbl'}); ap(resLbl,txt('Result'));
-        var resInp=el('input',{className:'dm-inp',type:'text',placeholder:'結果/影響'});
-        resInp.value=item.result||'';
-        (function(obj,inp){inp.addEventListener('input',function(){obj.result=inp.value;schedulePersist();});})(item,resInp);
-        ap(resRow,resLbl,resInp);
-        var delItemBtn=el('button',{className:'dm-entry-del',style:{display:'block',marginTop:'6px'}}); ap(delItemBtn,txt('✕ 移除'));
+        var resTa=el('textarea',{className:'dm-ta',rows:'3',placeholder:'結果/影響'}); resTa.style.resize='vertical';
+        resTa.value=item.result||'';
+        (function(obj,ta){ta.addEventListener('input',function(){obj.result=ta.value;schedulePersist();});})(item,resTa);
+        ap(resRow,resLbl,resTa);
+        var delItemBtn=el('button',{className:'dm-entry-del',style:{display:'block',marginTop:'8px'}}); ap(delItemBtn,txt('✕ 移除'));
         delItemBtn.addEventListener('click',(function(tObj,i){return function(){tObj.items.splice(i,1);schedulePersist();rerender();};})(tagObj,ii));
-        ap(itemWrap,evRow,resRow,delItemBtn); ap(card,itemWrap);
+        ap(itemWrap,coRow,evRow,tgRow,resRow,delItemBtn); ap(card,itemWrap);
       });
-      var addItemBtn=el('button',{className:'dm-add-btn',style:{marginTop:'4px'}}); ap(addItemBtn,txt('+ 新增 Event / Result'));
-      addItemBtn.addEventListener('click',(function(obj){return function(){if(!obj.items)obj.items=[];obj.items.push({event:'',result:''});schedulePersist();rerender();};})(tagObj));
+      var addItemBtn=el('button',{className:'dm-add-btn',style:{marginTop:'4px'}}); ap(addItemBtn,txt('+ 新增工作項目'));
+      addItemBtn.addEventListener('click',(function(obj){return function(){if(!obj.items)obj.items=[];obj.items.push({company:'',event:'',target:'',result:''});schedulePersist();rerender();};})(tagObj));
       ap(card,addItemBtn); ap(wrap,card);
     });
     ap(container,wrap);
@@ -1345,9 +1363,18 @@
       var slensName=(TINA_DATA_MATRIX.lensNames[lens]||'').trim()||smeta.label;
       var sname=el('p',{className:'sp-name'}); ap(sname,txt(slensName));
       var sident=el('div',{style:{textAlign:'center'}}); ap(sident,sname);
-      /* Instagram icon 放在名字下方同一容器，避免 panel gap:22px 造成過大間距 */
-      if(lens!=='astrology'){
-        var sprof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
+      /* 連結 icon 放在名字下方同一容器，避免 panel gap:22px 造成過大間距 */
+      var sprof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
+      if(lens==='astrology'){
+        var astUrl=sprof.link||((LENS_PROFILES[lens]&&LENS_PROFILES[lens].links&&LENS_PROFILES[lens].links[0]&&LENS_PROFILES[lens].links[0].url)||'');
+        if(astUrl){
+          var astSideA=el('a',{className:'ext-link-btn',href:astUrl,target:'_blank',rel:'noopener noreferrer',title:'預約諮詢'});
+          astSideA.style.marginTop='8px'; astSideA.style.display='inline-flex';
+          var astSideIcon=el('span',{className:'ext-link-icon'}); ap(astSideIcon,txt('◆'));
+          var astSideLbl=el('span',{}); ap(astSideLbl,txt('預約諮詢'));
+          ap(astSideA,astSideIcon,astSideLbl); ap(sident,astSideA);
+        }
+      } else {
         var sigUrl=sprof.instagram||(LENS_PROFILES[lens]&&LENS_PROFILES[lens].links&&LENS_PROFILES[lens].links[0]&&LENS_PROFILES[lens].links[0].url)||'';
         if(sigUrl){
           var sigA=el('a',{className:'ig-btn',href:sigUrl,target:'_blank',rel:'noopener noreferrer',title:'Instagram'});
@@ -1466,18 +1493,6 @@
     var tagline=el('div',{className:'intro-tagline'}); ap(tagline,txt((prof.tagline||base.tagline)||''));
     var bio=el('p',{className:'intro-bio'}); bio.style.whiteSpace='pre-line'; ap(bio,txt((prof.intro||base.intro)||''));
     ap(intro, headline, tagline, bio); ap(wrap, intro);
-
-    /* astrology 外部連結：優先用 prof.link，fallback 至 base.links */
-    if(lens==='astrology'){
-      var astUrl=prof.link||((base.links&&base.links[0]&&base.links[0].url)||'');
-      if(astUrl){
-        var linksBlock=el('div',{className:'links-block'});
-        var astA=el('a',{className:'ext-link-btn',href:astUrl,target:'_blank',rel:'noopener noreferrer'});
-        var astIcon=el('span',{className:'ext-link-icon'}); ap(astIcon,txt('◆'));
-        var astLbl=el('span',{}); ap(astLbl,txt('預約諮詢'));
-        ap(astA,astIcon,astLbl); ap(linksBlock,astA); ap(wrap,linksBlock);
-      }
-    }
 
     /* Preview grid — photography 分 Digital / Film 兩區，其他一區 */
     var cards=TINA_DATA_MATRIX.cards[lens]||[];
@@ -1689,9 +1704,19 @@
       if(tagObj&&tagObj.items&&tagObj.items.length){
         tagObj.items.forEach(function(item){
           var card=el('div',{className:'eng-exp-item'});
-          var evEl=el('div',{className:'eng-exp-event'}); ap(evEl,txt(item.event||''));
-          var resEl=el('div',{className:'eng-exp-result'}); ap(resEl,txt(item.result||''));
-          ap(card,evEl,resEl); ap(section,card);
+          if(item.company){var coEl=el('span',{className:'eng-exp-company'}); ap(coEl,txt(item.company)); ap(card,coEl);}
+          var evEl=el('div',{className:'eng-exp-event'}); ap(evEl,txt(item.event||'')); ap(card,evEl);
+          if(item.target){
+            var tgLbl=el('div',{className:'eng-card-section-lbl'}); ap(tgLbl,txt('Target'));
+            var tgEl=el('div',{className:'eng-exp-target'}); ap(tgEl,txt(item.target));
+            ap(card,tgLbl,tgEl);
+          }
+          if(item.result){
+            var resLbl=el('div',{className:'eng-card-section-lbl'}); ap(resLbl,txt('Result'));
+            var resEl=el('div',{className:'eng-exp-result'}); ap(resEl,txt(item.result));
+            ap(card,resLbl,resEl);
+          }
+          ap(section,card);
         });
       } else {
         var none=el('div',{style:{fontSize:'11px',color:'var(--faint)',padding:'8px 0'}}); ap(none,txt('此 hashtag 尚無經歷資料。'));
