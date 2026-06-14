@@ -205,7 +205,7 @@
     .preview-card.has-link{cursor:pointer;}
     .preview-card.has-link:hover .pc-inner{filter:brightness(0.95);}
     .preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-    .preview-card{border-radius:var(--r);overflow:hidden;height:160px;cursor:pointer;transition:transform 200ms ease,box-shadow 200ms ease;position:relative;}
+    .preview-card{border-radius:var(--r);overflow:hidden;height:184px;cursor:pointer;transition:transform 200ms ease,box-shadow 200ms ease;position:relative;}
     .preview-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(40,38,31,0.16);}
     .pc-inner{width:100%;height:100%;padding:12px 14px;display:flex;flex-direction:column;justify-content:flex-end;}
     .pc-cat{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:inline-block;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.55);color:var(--ink);margin-bottom:5px;width:fit-content;}
@@ -253,6 +253,8 @@
     .dm-entry-title{flex:1;font-size:11px;font-weight:600;color:var(--ink);}
     .dm-entry-toggle,.dm-entry-del{font-size:11px;padding:1px 7px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--sub);flex-shrink:0;transition:background 120ms ease;}
     .dm-entry-toggle:hover{background:var(--border);}
+    .dm-entry-toggle.vis-on{background:rgba(60,130,80,.1);border-color:rgba(60,130,80,.4);color:#3a7850;}
+    .dm-entry-toggle.vis-off{background:rgba(140,130,120,.1);border-color:var(--border);color:var(--faint);}
     .dm-entry-del{color:#a06050;border-color:rgba(160,96,80,.3);}
     .dm-entry-del:hover{background:rgba(160,96,80,.1);}
     .dm-entry-body{padding:10px 12px 12px;border-top:1px solid var(--border);background:var(--bg2);}
@@ -994,11 +996,22 @@
         }
         var titInp=el('input',{className:'dm-inp',type:'text',placeholder:'項目名稱'}); titInp.value=card.title||'';
         titInp.addEventListener('input',function(){card.title=titInp.value; schedulePersist();});
+        var isOn=card.visible!==false;
+        var visBtn=el('button',{className:'dm-entry-toggle '+(isOn?'vis-on':'vis-off')}); ap(visBtn,txt(isOn?'● 顯示':'○ 隱藏'));
+        (function(c,btn){
+          btn.addEventListener('click',function(){
+            c.visible=(c.visible===false);
+            var on=c.visible!==false;
+            btn.className='dm-entry-toggle '+(on?'vis-on':'vis-off');
+            clearNode(btn); ap(btn,txt(on?'● 顯示':'○ 隱藏'));
+            schedulePersist();
+          });
+        })(card,visBtn);
         var delBtn=el('button',{className:'dm-entry-del',style:{padding:'2px 6px'}}); ap(delBtn,txt('✕'));
         delBtn.addEventListener('click',(function(i){
           return function(){_dmCardsBuf[_dmCardLens].splice(i,1); persistData(); clearNode(area); buildCardList(area);};
         })(idx));
-        ap(inner1,catInp,titInp,delBtn);
+        ap(inner1,catInp,titInp,visBtn,delBtn);
         var urlInp=el('input',{className:'dm-inp',type:'text',placeholder:'作品連結（選填）'}); urlInp.value=card.url||'';
         urlInp.addEventListener('input',function(){card.url=urlInp.value; schedulePersist();});
         /* 封面圖上傳 */
@@ -1451,7 +1464,7 @@
     var cards=TINA_DATA_MATRIX.cards[lens]||[];
     function buildCardGrid(cardList){
       var grid=el('div',{className:'preview-grid'});
-      cardList.forEach(function(card){
+      cardList.filter(function(c){return c.visible!==false;}).forEach(function(card){
         var pcard=el('div',{className:'preview-card'+(card.url?' has-link':'')});
         if(card.url){pcard.addEventListener('click',(function(u){return function(){window.open(u,'_blank','noopener');};})(card.url));}
         var inner;
