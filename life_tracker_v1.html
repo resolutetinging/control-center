@@ -214,7 +214,9 @@
     .pc-inner-img .pc-cat{background:rgba(255,255,255,0.35);color:#fff;}
     .pc-inner-img .pc-title{color:#fff;}
     .dm-card-img-row{display:flex;align-items:center;gap:6px;margin-top:5px;}
-    .dm-card-img-thumb{width:36px;height:36px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    .dm-card-img-thumb{width:52px;height:52px;border-radius:4px;background:var(--bg2);border:1.5px dashed var(--border);overflow:hidden;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:border-color 150ms,background 150ms;}
+    .dm-card-img-thumb:hover{border-color:#4878a0;background:rgba(72,120,160,.06);}
+    .dm-card-img-thumb.drag-over{border-color:#4878a0;background:rgba(72,120,160,.12);outline:2px solid rgba(72,120,160,.3);}
     .dm-card-img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
     .dm-card-img-lbl{font-size:10px;color:var(--faint);flex:1;cursor:pointer;}
 
@@ -1012,12 +1014,16 @@
             if(c.img){var im=el('img'); im.src=c.img; ap(thumb,im); lbl.textContent='封面已設定，點擊更換'; clr.style.display='';}
             else{ap(thumb,txt('📷')); lbl.textContent='點擊上傳封面圖'; clr.style.display='none';}
           }
+          function handleFile(f){
+            if(!f||!f.type.startsWith('image/')) return;
+            compressImg(f,600,0.85,function(d){c.img=d; schedulePersist(); refreshThumb();});
+          }
           thumb.addEventListener('click',function(){fi.click();});
           lbl.addEventListener('click',function(){fi.click();});
-          fi.addEventListener('change',function(ev){
-            var f=ev.target.files[0]; if(!f) return;
-            compressImg(f,600,0.85,function(d){c.img=d; schedulePersist(); refreshThumb();});
-          });
+          fi.addEventListener('change',function(ev){handleFile(ev.target.files[0]);});
+          thumb.addEventListener('dragover',function(ev){ev.preventDefault(); thumb.classList.add('drag-over');});
+          thumb.addEventListener('dragleave',function(){thumb.classList.remove('drag-over');});
+          thumb.addEventListener('drop',function(ev){ev.preventDefault(); thumb.classList.remove('drag-over'); handleFile(ev.dataTransfer.files[0]);});
           clr.addEventListener('click',function(){delete c.img; schedulePersist(); refreshThumb();});
         })(card,imgThumb,imgLbl,imgClr,imgFile);
         ap(imgRow,imgThumb,imgLbl,imgClr,imgFile);
