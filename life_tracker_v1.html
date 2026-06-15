@@ -112,6 +112,17 @@
     .eng-river-wrap .pl-label{display:none;}
     .eng-river-track,.myself-river-track{min-height:64px;}
     .myself-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 20px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    /* ── 命理里程碑橫排 ── */
+    .div-milestone-track{min-height:72px;align-items:center;}
+    .div-milestone-content{display:flex;align-items:center;min-height:72px;}
+    .div-milestone-row{display:flex;align-items:center;flex-wrap:nowrap;width:100%;}
+    .div-milestone-chip{display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:0 6px;flex-shrink:0;}
+    .div-milestone-chip:hover .div-ms-dot{transform:scale(1.35);box-shadow:0 0 10px rgba(90,56,120,0.45);}
+    .div-milestone-conn{flex:1;height:1.5px;background:rgba(90,56,120,0.22);min-width:12px;}
+    .div-ms-year{font-size:8px;font-weight:600;color:var(--faint);letter-spacing:.04em;margin-bottom:4px;}
+    .div-ms-dot{width:9px;height:9px;border-radius:50%;background:#5a3878;transition:transform 140ms ease,box-shadow 140ms ease;}
+    .div-ms-lbl{font-size:9.5px;font-weight:700;color:#5a3878;letter-spacing:.03em;margin-top:4px;}
+    .div-ms-title{font-size:9.5px;color:var(--sub);margin-top:2px;text-align:center;line-height:1.3;max-width:76px;}
     .eng-node-marker{position:absolute;top:0;bottom:calc(50% + 7px);display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);z-index:3;pointer-events:none;}
     .eng-node-date{font-size:8px;color:var(--sub);white-space:nowrap;font-weight:600;letter-spacing:.02em;padding-bottom:2px;line-height:1.2;}
     .eng-node-dline{flex:1;border-left:1px dashed rgba(46,93,138,0.38);min-height:4px;}
@@ -1677,8 +1688,41 @@
     ap(trackRow,pipeContent); return trackRow;
   }
 
-  /* Morandi purple for divination */
-  var DIV_SEG_COLOR=['#585070','#8878a8','#585070'];
+  /* 命理里程碑橫排（僅全觀視角使用，不受時間軸比例影響） */
+  function renderDivinationMilestones() {
+    var tm=TRACK_META['divination'];
+    var visNodes=TINA_DATA_MATRIX.nodes.filter(function(n){return n.track==='divination'&&n.visible!==false;}).slice().sort(function(a,b){return parseFloat(a.year)-parseFloat(b.year);});
+    var trackRow=el('div',{className:'pl-row track-row vis-active myself-river-track div-milestone-track'});
+    /* 左側 label cell */
+    var labelCell=el('div',{className:'pl-label'});
+    var labelIn=el('div',{className:'track-label-inner'});
+    var ldot=el('span',{className:'track-label-dot',style:{background:tm.color}});
+    var ltext=el('span',{className:'track-label-text',style:{color:tm.color}}); ap(ltext,txt(tm.label));
+    ap(labelIn,ldot,ltext); ap(labelCell,labelIn); ap(trackRow,labelCell);
+    /* 里程碑橫排 content */
+    var content=el('div',{className:'pl-content div-milestone-content'});
+    var row=el('div',{className:'div-milestone-row'});
+    visNodes.forEach(function(n,i){
+      if(i>0){ ap(row,el('div',{className:'div-milestone-conn'})); }
+      var chip=el('div',{className:'div-milestone-chip'});
+      chip.title=(n.title||n.label||'')+(n.year?' ('+n.year+')':'');
+      chip.tabIndex=0;
+      (function(node){
+        chip.addEventListener('click',function(){openModal(node);});
+        chip.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal(node);}});
+      })(n);
+      var mo=n.month?('/'+n.month):'';
+      var yearEl=el('div',{className:'div-ms-year'}); ap(yearEl,txt(n.year+mo));
+      var dotEl=el('div',{className:'div-ms-dot'});
+      var lblEl=el('div',{className:'div-ms-lbl'}); ap(lblEl,txt(n.label||''));
+      var titEl=el('div',{className:'div-ms-title'}); ap(titEl,txt(n.title||''));
+      ap(chip,yearEl,dotEl,lblEl,titEl);
+      ap(row,chip);
+    });
+    ap(content,row); ap(trackRow,content);
+    return trackRow;
+  }
+
   function renderMyselfTimeline() {
     var wrap=el('div',{className:'myself-river-wrap'});
     var yearMarks=[2012,2014,2016,2018,2020,2022,2024,2026];
@@ -1688,7 +1732,7 @@
     yearMarks.forEach(function(y){var tick=el('span',{className:'year-tick',style:{left:pct(y)}});ap(tick,txt(y));ap(axisContent,tick);});
     ap(axisRow,axisContent); ap(wrap,axisRow);
     ap(wrap, renderRiverTrack('engineering', function(node){return engTypeColor(node);}, 'myself-river-track'));
-    ap(wrap, renderRiverTrack('divination',  function(){return DIV_SEG_COLOR;},           'myself-river-track'));
+    ap(wrap, renderDivinationMilestones());
     return wrap;
   }
 
