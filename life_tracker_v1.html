@@ -110,8 +110,10 @@
     }
     .eng-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 20px;overflow-x:auto;}
     .eng-river-wrap .pl-label{display:none;}
+    .myself-river-wrap .pl-label{display:none;}
     .eng-river-track,.myself-river-track{min-height:64px;}
-    .myself-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 20px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .myself-river-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px 16px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .myself-track-hdr{display:flex;align-items:center;gap:5px;padding-bottom:4px;}
     /* ── 命理里程碑橫排 ── */
     .div-milestone-track{min-height:72px;align-items:center;}
     .div-milestone-content{display:flex;align-items:center;min-height:72px;}
@@ -1723,13 +1725,19 @@
     return trackRow;
   }
 
+  function myselfTrackHdr(tm) {
+    var hdr=el('div',{className:'myself-track-hdr'});
+    var dot=el('span',{className:'track-label-dot',style:{background:tm.color}});
+    var lbl=el('span',{className:'track-label-text',style:{color:tm.color,fontSize:'10px'}}); ap(lbl,txt(tm.label));
+    ap(hdr,dot,lbl); return hdr;
+  }
   function renderMyselfTimeline() {
     var outer=el('div',{style:{display:'flex',flexDirection:'column',gap:'12px'}});
     /* 工作軌道框 */
     var engWrap=el('div',{className:'myself-river-wrap'});
+    ap(engWrap, myselfTrackHdr(TRACK_META['engineering']));
     var yearMarks=[2012,2014,2016,2018,2020,2022,2024,2026];
     var axisRow=el('div',{className:'pl-row axis-row'});
-    ap(axisRow,el('div',{className:'pl-label'}));
     var axisContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){var tick=el('span',{className:'year-tick',style:{left:pct(y)}});ap(tick,txt(y));ap(axisContent,tick);});
     ap(axisRow,axisContent); ap(engWrap,axisRow);
@@ -1737,6 +1745,7 @@
     ap(outer, engWrap);
     /* 斗數框 */
     var divWrap=el('div',{className:'myself-river-wrap'});
+    ap(divWrap, myselfTrackHdr(TRACK_META['divination']));
     ap(divWrap, renderDivinationMilestones());
     ap(outer, divWrap);
     return outer;
