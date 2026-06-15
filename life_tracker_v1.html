@@ -367,7 +367,7 @@
   var TRACK_META = {
     engineering: { label:'Work', color:'#2e5d8a', glow:'rgba(46,93,138,0.32)', gradient:'linear-gradient(90deg,#1e4a72 0%,#2e6090 45%,#4e80b0 72%,#2e5d8a 100%)' },
     creative:    { label:'藝術創作', color:'#b8682e', glow:'rgba(184,104,46,0.30)', gradient:'linear-gradient(90deg,#8a481e 0%,#b8682e 45%,#d8884e 72%,#b8682e 100%)' },
-    divination:  { label:'命理占驗', color:'#5a3878', glow:'rgba(90,56,120,0.30)',  gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)' },
+    divination:  { label:'斗數', color:'#5a3878', glow:'rgba(90,56,120,0.30)',  gradient:'linear-gradient(90deg,#3e2060 0%,#5a3878 45%,#7a58a8 72%,#5a3878 100%)' },
   };
   var TRACK_ORDER = ['engineering','divination'];
   var YEAR_START = 2012, YEAR_END = 2026;
@@ -1724,16 +1724,22 @@
   }
 
   function renderMyselfTimeline() {
-    var wrap=el('div',{className:'myself-river-wrap'});
+    var outer=el('div',{style:{display:'flex',flexDirection:'column',gap:'12px'}});
+    /* 工作軌道框 */
+    var engWrap=el('div',{className:'myself-river-wrap'});
     var yearMarks=[2012,2014,2016,2018,2020,2022,2024,2026];
     var axisRow=el('div',{className:'pl-row axis-row'});
     ap(axisRow,el('div',{className:'pl-label'}));
     var axisContent=el('div',{className:'pl-content'});
     yearMarks.forEach(function(y){var tick=el('span',{className:'year-tick',style:{left:pct(y)}});ap(tick,txt(y));ap(axisContent,tick);});
-    ap(axisRow,axisContent); ap(wrap,axisRow);
-    ap(wrap, renderRiverTrack('engineering', function(node){return engTypeColor(node);}, 'myself-river-track'));
-    ap(wrap, renderDivinationMilestones());
-    return wrap;
+    ap(axisRow,axisContent); ap(engWrap,axisRow);
+    ap(engWrap, renderRiverTrack('engineering', function(node){return engTypeColor(node);}, 'myself-river-track'));
+    ap(outer, engWrap);
+    /* 斗數框 */
+    var divWrap=el('div',{className:'myself-river-wrap'});
+    ap(divWrap, renderDivinationMilestones());
+    ap(outer, divWrap);
+    return outer;
   }
 
   /* ── ENGINEERING SECTION ── */
