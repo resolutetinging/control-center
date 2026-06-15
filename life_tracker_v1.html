@@ -350,9 +350,7 @@
 </div>
 <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
 <input type="file" id="lens-avatar-input" accept="image/*" style="display:none">
-<div id="dm-overlay" class="dm-overlay">
-  <div id="dm-modal" class="dm-modal" role="dialog" aria-modal="true"></div>
-</div>
+<!-- dm-overlay intentionally absent from static HTML; injected by JS only with valid access key -->
 <script>
 (function () {
   'use strict';
@@ -379,6 +377,10 @@
     myself:      { engineering:'active',  creative:'active',  divination:'active'  },
   };
   var STANDALONE_LENSES = ['photography','creative','astrology'];
+  /* ── NEXUS ACCESS GATE ── */
+  var NEXUS_OK = (function(){
+    try { return new URLSearchParams(window.location.search).get('access')==='tina_nexus_2026_secure'; } catch(e){ return false; }
+  }());
   function pct(year) { return ((year-YEAR_START)/(YEAR_END-YEAR_START)*100).toFixed(3)+'%'; }
 
   /* ── STANDALONE LENS PROFILES ── */
@@ -1284,6 +1286,7 @@
   function parseLens() {
     var raw='';
     try { raw=new URLSearchParams(window.location.search).get('lens')||''; } catch(e){}
+    if(raw==='myself'&&!NEXUS_OK) raw='public';
     return Object.prototype.hasOwnProperty.call(LENS_META, raw) ? raw : 'public';
   }
   function switchLens(newLens) {
@@ -1320,6 +1323,7 @@
 
   /* ── DATA MANAGER MODAL ── */
   function openDmModal() {
+    if(!NEXUS_OK) return;
     dmInitBuffers();
     var overlay=document.getElementById('dm-overlay');
     var modal=document.getElementById('dm-modal');
@@ -1562,8 +1566,9 @@
     ap(panel, cLabel);
     var lensMap=[
       ['public','公眾'],['photography','攝影'],['creative','插畫'],
-      ['astrology','斗數'],['engineering','工作'],['myself','全觀'],
+      ['astrology','斗數'],['engineering','工作'],
     ];
+    if(NEXUS_OK) lensMap.push(['myself','全觀']);
     lensMap.forEach(function(pair){
       var l=pair[0], label=pair[1];
       var btn=el('button',{className:'cmd-btn'+(l===currentLens?' cmd-current':'')});
@@ -1591,8 +1596,9 @@
     });
     ap(switchSec,cmdRow);
     var hint=el('div',{className:'myself-ctrl-hint'}); ap(hint,txt('URL：'));
-    ['photography','creative','astrology','engineering','myself'].forEach(function(k,i,arr){
-      var code=el('code',{}); ap(code,txt('?lens='+k)); ap(hint,code);
+    var hintKeys=['photography','creative','astrology','engineering','myself'];
+    hintKeys.forEach(function(k,i,arr){
+      var code=el('code',{}); ap(code,txt(k==='myself'?'?access=tina_nexus_2026_secure':'?lens='+k)); ap(hint,code);
       if(i<arr.length-1) ap(hint,txt(' '));
     });
     ap(switchSec,hint);
@@ -1966,9 +1972,14 @@
     renderStatusPanel(lens); renderContent(lens);
     var overlay=document.getElementById('modal-overlay');
     if (overlay) { overlay.addEventListener('click',function(e){if(e.target===overlay)closeModal();}); }
-    var dmOverlay=document.getElementById('dm-overlay');
-    if (dmOverlay) { dmOverlay.addEventListener('click',function(e){if(e.target===dmOverlay)closeDmModal();}); }
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeDmModal();}});
+    /* dm-overlay: injected into DOM only when NEXUS_OK — physically absent for public visitors */
+    if(NEXUS_OK){
+      var dmOv=document.createElement('div'); dmOv.id='dm-overlay'; dmOv.className='dm-overlay';
+      var dmMo=document.createElement('div'); dmMo.id='dm-modal'; dmMo.className='dm-modal'; dmMo.setAttribute('role','dialog'); dmMo.setAttribute('aria-modal','true');
+      dmOv.appendChild(dmMo); document.body.appendChild(dmOv);
+      dmOv.addEventListener('click',function(e){if(e.target===dmOv)closeDmModal();});
+    }
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();if(NEXUS_OK)closeDmModal();}});
     var lensAvInput=document.getElementById('lens-avatar-input');
     if(lensAvInput){lensAvInput.addEventListener('change',function(){
       var file=this.files&&this.files[0]; if(!file||!file.type.startsWith('image/')||!_lensAvatarTarget) return;
