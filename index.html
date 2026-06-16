@@ -105,6 +105,25 @@ body{position:relative;}
 }
 #lto-btn:hover{background:rgba(255,255,255,.9);}
 
+/* ── NexusPortal lens panel ── */
+#lto-panel{
+  position:fixed;top:112px;left:22px;z-index:200;
+  background:rgba(244,241,236,.98);border:1px solid var(--bstr);
+  border-radius:14px;min-width:168px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(40,38,32,.16),0 1px 0 rgba(255,255,255,.8) inset;
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  display:none;
+}
+#lto-panel.open{display:block;}
+.lto-hd{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--faint);padding:10px 14px 8px;border-bottom:1px solid var(--border);}
+.lto-row{display:flex;align-items:center;gap:10px;padding:9px 14px;
+  text-decoration:none;color:var(--ink);font-size:12px;font-weight:500;
+  transition:background .15s;cursor:pointer;}
+.lto-row:hover{background:rgba(40,38,32,.06);}
+.lto-row-ic{font-size:10px;color:var(--sub);width:12px;text-align:center;flex-shrink:0;line-height:1;}
+.lto-sep{height:1px;background:var(--border);margin:4px 0;}
+
 /* ── Lab button ── */
 #lab-btn{
   position:fixed;top:22px;right:22px;z-index:50;
@@ -407,6 +426,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   /* Mobile lab */
   #lab-btn{display:none!important;}
   #lto-btn{top:22px!important;left:66px!important;z-index:110!important;}
+  #lto-panel{top:66px!important;left:22px!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(244,241,236,.99)!important;}
   #lab-mobile-card{display:block;position:relative;z-index:100;width:100%;max-width:400px;margin-bottom:12px;}
   .lab-icon-grid{grid-template-columns:repeat(4,1fr);}
 
@@ -439,7 +459,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 </div>
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
-<a id="lto-btn" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure" target="_blank" title="Nexus Portal">🌳</a>
+<button id="lto-btn" onclick="toggleLtoPanel(event)" title="Nexus Portal">🌳</button>
+<div id="lto-panel">
+  <div class="lto-hd">NexusPortal</div>
+  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=public" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">○</span>Public</a>
+  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=photography" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">▣</span>Photography</a>
+  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=creative" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◈</span>Creative</a>
+  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=astrology" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◆</span>Astrology</a>
+  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=engineering" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">≡</span>Engineering</a>
+  <div id="lto-edit-sep" class="lto-sep"></div>
+  <a id="lto-edit-row" class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=myself" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">✎</span>Edit Mode</a>
+</div>
 <button id="lab-btn" onclick="openLab()" title="實驗中">🧪</button>
 
 <!-- DOCK -->
@@ -1659,6 +1689,29 @@ async function genAstroBrief(){
     localStorage.setItem('astro_cc_brief',JSON.stringify({date:todayStr,today:p.today,thisMonth:p.month,ts:Date.now()}));
   }catch(e){}
 }
+
+// ── NEXUS PORTAL LENS PANEL ──
+function toggleLtoPanel(e){
+  e.stopPropagation();
+  var p=document.getElementById('lto-panel');
+  if(!p)return;
+  var opening=!p.classList.contains('open');
+  p.classList.toggle('open');
+  if(opening){
+    var isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
+    var editRow=document.getElementById('lto-edit-row');
+    var editSep=document.getElementById('lto-edit-sep');
+    if(editRow)editRow.style.display=isTouch?'none':'flex';
+    if(editSep)editSep.style.display=isTouch?'none':'block';
+  }
+}
+document.addEventListener('click',function(e){
+  var p=document.getElementById('lto-panel');
+  if(!p||!p.classList.contains('open'))return;
+  var btn=document.getElementById('lto-btn');
+  if(p.contains(e.target)||(btn&&btn.contains(e.target)))return;
+  p.classList.remove('open');
+});
 
 // ── INIT ──
 loadWP();
