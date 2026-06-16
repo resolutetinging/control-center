@@ -462,11 +462,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 <button id="lto-btn" onclick="toggleLtoPanel(event)" title="Nexus Portal">🌳</button>
 <div id="lto-panel">
   <div class="lto-hd">NexusPortal</div>
-  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=public" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">○</span>Public</a>
-  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=photography" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">▣</span>Photography</a>
-  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=creative" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◈</span>Creative</a>
-  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=astrology" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◆</span>Astrology</a>
-  <a class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=engineering" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">≡</span>Engineering</a>
+  <a class="lto-row lto-lens" data-lens="public" href="https://nexus-portal-epq.pages.dev/?lens=public" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">○</span>Public</a>
+  <a class="lto-row lto-lens" data-lens="photography" href="https://nexus-portal-epq.pages.dev/?lens=photography" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">▣</span>Photography</a>
+  <a class="lto-row lto-lens" data-lens="creative" href="https://nexus-portal-epq.pages.dev/?lens=creative" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◈</span>Creative</a>
+  <a class="lto-row lto-lens" data-lens="astrology" href="https://nexus-portal-epq.pages.dev/?lens=astrology" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◆</span>Astrology</a>
+  <a class="lto-row lto-lens" data-lens="engineering" href="https://nexus-portal-epq.pages.dev/?lens=engineering" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">≡</span>Engineering</a>
   <div id="lto-edit-sep" class="lto-sep"></div>
   <a id="lto-edit-row" class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=myself" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">✎</span>Edit Mode</a>
 </div>
@@ -1712,6 +1712,16 @@ document.addEventListener('click',function(e){
   if(p.contains(e.target)||(btn&&btn.contains(e.target)))return;
   p.classList.remove('open');
 });
+/* Mac（非觸控）才在 lens 連結上補 access key，讓 NexusPortal 讀 localStorage */
+(function(){
+  var isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
+  if(isTouch)return;
+  var NP_KEY='?access=tina_nexus_2026_secure&lens=';
+  document.querySelectorAll('#lto-panel .lto-lens').forEach(function(a){
+    var lens=a.getAttribute('data-lens');
+    if(lens)a.href='https://nexus-portal-epq.pages.dev/'+NP_KEY+lens;
+  });
+})();
 
 // ── INIT ──
 loadWP();
