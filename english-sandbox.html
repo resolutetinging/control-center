@@ -942,7 +942,7 @@ CRITICAL BLANK RULES (violation = bad question):
 1. The blank must contain the COMPLETE idiom — no part of the idiom should appear outside the blank in the surrounding sentence.
 2. NEVER split a phrasal verb across the blank and surrounding text. BAD: "really ______ me off" (because "me off" is part of "tick me off"). GOOD: "He was really ______ about the feedback" (blank = "worked up").
 3. After inserting the correct answer into the blank, the full sentence must be grammatically natural.
-4. If the correct answer ends with a preposition or particle (e.g. "upset about", "interested in", "responsible for", "ahead of"), that preposition must NOT appear again in the sentence immediately after the blank. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. GOOD: "He was ______ the news" (correct="upset about").
+4. MOST COMMON MISTAKE — always double-check: if the correct answer ends with a preposition or particle (e.g. "excited about", "upset about", "interested in", "responsible for"), that preposition must NOT appear again immediately after the blank in the sentence. BAD: "The team was really ______ about the project" (correct="excited about") — "about" duplicates. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. GOOD: "The team was really ______ by the project's results" (correct="excited about"). GOOD: "He was ______ the news" (correct="upset about"). Mentally read the full sentence with the answer inserted before finalising.
 
 Return ONLY valid JSON, no markdown, no extra text:
 {"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"zh":"快速聯絡確認","explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
@@ -955,8 +955,25 @@ Rules:
 - explain_zh: Traditional Chinese ONLY; max 3 short casual sentences; no grammar labels; plain everyday tone
 - example: a different natural sentence using the same correct idiom`;
 
-    const raw = await callGroq(prompt, 400, '', true);
-    curQ = safeParseJson(raw);
+    // Fetch + validate: if correct answer's last word duplicates immediately after blank, retry once
+    const _fetchCandidate = async () => {
+      const raw = await callGroq(prompt, 400, '', true);
+      return safeParseJson(raw);
+    };
+    const _hasDupParticle = (sentence, correct) => {
+      const last = (correct||'').trim().split(/\s+/).pop().toLowerCase();
+      const particles = new Set(['about','in','on','at','for','of','to','with','by','up','out','off','into','over','after','before','through','around','down','from','under']);
+      if (!particles.has(last)) return false;
+      const blankParts = sentence.split(/_{4,}/);
+      if (blankParts.length !== 2) return false;
+      const after = blankParts[1].trimStart().toLowerCase();
+      return after.startsWith(last + ' ') || after.startsWith(last + ',') || after.startsWith(last + '.');
+    };
+    let candidate = await _fetchCandidate();
+    if (_hasDupParticle(candidate.sentence, candidate.correct)) {
+      candidate = await _fetchCandidate(); // silent retry
+    }
+    curQ = candidate;
 
     // Shuffle options
     const allOpts = [curQ.correct, ...(curQ.distractors||[]).slice(0,3)];
