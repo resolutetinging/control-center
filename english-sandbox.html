@@ -1305,9 +1305,15 @@ function renderLibStudyCards(){
   const el = document.getElementById('lib-study-cards');
   el.innerHTML = libStudyPool.map((item,i)=>{
     const zh = getZhHint(item)||item.zh||'';
+    const starred=!!item.starred;
     return`<div class="lsc" id="lsc-${i}" onclick="toggleLsc(${i})">
-      <div class="lsc-idiom">${esc(item.idiom)}${item.starred?' ⭐':''}</div>
-      ${zh?`<div class="lsc-zh">${esc(zh)}</div>`:''}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;">
+          <div class="lsc-idiom">${esc(item.idiom)}</div>
+          ${zh?`<div class="lsc-zh">${esc(zh)}</div>`:''}
+        </div>
+        <button class="star-btn${starred?' on':''}" id="lsc-star-${i}" onclick="toggleStudyStar(${i});event.stopPropagation();" title="${starred?'取消標記':'標記重點'}">${starred?'⭐':'☆'}</button>
+      </div>
       <div class="lsc-back" id="lscb-${i}" style="display:none;">
         ${item.explain_zh?`<div class="lsc-explain">${esc(item.explain_zh)}</div>`:''}
         ${item.example?`<div class="lsc-example">${esc(item.example)}</div>`:''}
@@ -1315,6 +1321,18 @@ function renderLibStudyCards(){
       <div class="lsc-hint" id="lsch-${i}">▾ 點擊看解釋</div>
     </div>`;
   }).join('');
+}
+function toggleStudyStar(i){
+  libStudyPool[i].starred = !libStudyPool[i].starred;
+  const starred = libStudyPool[i].starred;
+  // update button immediately without re-render (preserves open/close state)
+  const btn = document.getElementById('lsc-star-'+i);
+  if(btn){ btn.textContent=starred?'⭐':'☆'; btn.className='star-btn'+(starred?' on':''); btn.title=starred?'取消標記':'標記重點'; }
+  // persist to lib storage by ts
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  const ts = libStudyPool[i].ts;
+  const idx = lib.findIndex(x=>x.ts===ts);
+  if(idx>-1){ lib[idx].starred=starred; localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib)); }
 }
 function toggleLsc(i){
   const back=document.getElementById('lscb-'+i);
