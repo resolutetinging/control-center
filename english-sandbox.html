@@ -109,6 +109,8 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 .saved-text{font-size:13px;color:var(--ink);line-height:1.55}
 .saved-context{font-size:10.5px;color:var(--faint);margin-top:3px}
 .del-btn{background:none;border:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;border-radius:4px;transition:color .15s;flex-shrink:0;line-height:1.2;opacity:.6}
+.star-btn{background:none;border:none;font-size:15px;cursor:pointer;padding:2px 3px;border-radius:4px;flex-shrink:0;line-height:1.2;opacity:.35;transition:opacity .15s;}
+.star-btn.on{opacity:1;}
 .del-btn:hover{color:#b06a3a;opacity:1}
 .saved-empty{font-size:12px;color:var(--faint);text-align:center;padding:10px 0}
 
@@ -122,7 +124,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 /* ── FEEDBACK CARD ── */
 .fb-card{background:var(--bg2);border:.5px solid var(--bstr);border-radius:12px;padding:13px 17px;margin-bottom:10px;box-shadow:var(--shadow)}
 .fb-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
-.fb-orig{font-size:13px;color:var(--faint);font-style:italic;margin-bottom:12px;padding:7px 11px;background:rgba(40,38,32,.05);border-radius:7px;border-left:2px solid var(--bstr);line-height:1.6}
+.fb-orig{font-size:13px;color:var(--faint);margin-bottom:12px;padding:7px 11px;background:rgba(40,38,32,.05);border-radius:7px;border-left:2px solid var(--bstr);line-height:1.6}
 .fb-block{margin-top:9px}
 .fb-block-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
 .fb-block-body{font-size:13px;line-height:1.65;padding-left:3px}
@@ -160,13 +162,13 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .reveal-verdict.v-wrong{background:rgba(176,96,50,.08);color:#8a4020}
 .reveal-idiom{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:7px;letter-spacing:.01em}
 .reveal-explain{font-size:13px;color:var(--sub);line-height:1.72;margin-bottom:10px}
-.reveal-example{font-size:12.5px;color:var(--faint);background:rgba(40,38,32,.04);border-radius:8px;padding:9px 13px;font-style:italic;border-left:2.5px solid var(--bstr);margin-bottom:14px;line-height:1.6}
+.reveal-example{font-size:12.5px;color:var(--faint);background:rgba(40,38,32,.04);border-radius:8px;padding:9px 13px;border-left:2.5px solid var(--bstr);margin-bottom:14px;line-height:1.6}
 .reveal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
 
 /* ── OPENER ZH CARD ── */
 .opener-zh-card{background:rgba(61,106,82,.07);border:.5px solid rgba(61,106,82,.22);border-radius:12px;padding:13px 17px;margin-bottom:10px;box-shadow:var(--shadow)}
 .opener-zh-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--en);margin-bottom:7px}
-.opener-zh-og{font-size:11.5px;color:var(--faint);font-style:italic;margin-bottom:6px;line-height:1.5}
+.opener-zh-og{font-size:11.5px;color:var(--faint);margin-bottom:6px;line-height:1.5}
 .opener-zh-body{font-size:13.5px;color:var(--ink);line-height:1.7}
 
 /* ── ENHANCED FEEDBACK ── */
@@ -956,11 +958,17 @@ const IDIOM_TOPICS = {
   social: { label:'🌐 日常社交', en:'casual conversation, small talk, social situations, and everyday English',
     scenes:[
       'Two acquaintances catching up after not seeing each other for months',
-      'Someone navigating awkward small talk at a party',
-      'A person politely declining a social invitation',
-      'Friends discussing weekend plans over lunch',
-      'Someone trying to change a tense subject in conversation',
-      'A person giving a heartfelt compliment to a friend',
+      'Someone navigating awkward small talk at a party with strangers',
+      'A person politely declining a social invitation without offending',
+      'Friends debating where to go for dinner, neither wants to decide',
+      'Someone trying to gracefully change a tense subject in conversation',
+      'A person giving a heartfelt compliment to a close friend',
+      'A newcomer making small talk with coworkers on their first day',
+      'Someone making light conversation while stuck waiting in line',
+      'Two neighbors having a brief friendly chat over the fence',
+      'A person running into an old classmate unexpectedly and reconnecting',
+      'Someone trying to wrap up a conversation that has gone on too long',
+      'A person asking a close friend for honest advice about a decision',
     ]},
 };
 
@@ -1156,14 +1164,16 @@ function renderLib(){
   $('lib-list').innerHTML = lib.length
     ? lib.map((item,i)=>{
         const zhHint = getZhHint(item);
+        const starred = !!item.starred;
         return `
         <div class="saved-item">
+          <button class="star-btn${starred?' on':''}" onclick="toggleStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'⭐':'☆'}</button>
           <div class="saved-body">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
               <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}${zhHint?`<span style="font-weight:700;font-size:13px;color:var(--ink);margin-left:7px">· ${esc(zhHint)}</span>`:''}</span>
               <span style="font-size:10.5px;color:var(--faint);white-space:nowrap;flex-shrink:0">${esc(item.topic||'')}</span>
             </div>
-            ${item.example?`<div style="font-size:12px;color:var(--sub);margin-top:5px;font-style:italic;line-height:1.55">${esc(item.example)}</div>`:''}
+            ${item.example?`<div style="font-size:12px;color:var(--sub);margin-top:5px;line-height:1.55">${esc(item.example)}</div>`:''}
             ${item.explain_zh?`<div style="font-size:11.5px;color:var(--faint);margin-top:4px;line-height:1.6">${esc(item.explain_zh)}</div>`:''}
           </div>
           <button class="del-btn" onclick="delLib(${i})" title="移除">✕</button>
@@ -1175,6 +1185,13 @@ function renderLib(){
 function delLib(i){
   const lib=JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   lib.splice(i,1);
+  localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib));
+  renderLib();
+}
+function toggleStar(i){
+  const lib=JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  if(!lib[i])return;
+  lib[i].starred=!lib[i].starred;
   localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib));
   renderLib();
 }
