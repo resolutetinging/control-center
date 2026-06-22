@@ -801,7 +801,9 @@ function renderCombos(){
   const body=$('combo-list');
   if(!body) return;
   body.innerHTML=saved.length
-    ? saved.map((item,i)=>`
+    ? saved.map((item,i)=>{
+        const starred=!!item.starred;
+        return`
       <div class="combo-card">
         <div class="combo-turn combo-a">
           <span class="combo-who">A</span>
@@ -813,10 +815,20 @@ function renderCombos(){
         </div>
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
-          <button class="combo-del-btn" onclick="delCombo(${i})">✕</button>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button class="star-btn${starred?' on':''}" onclick="toggleComboStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'⭐':'☆'}</button>
+            <button class="combo-del-btn" onclick="delCombo(${i})">✕</button>
+          </div>
         </div>
-      </div>`).join('')
+      </div>`;}).join('')
     : '<div class="combo-empty">尚無收藏對話，在 Small Talk 答題後點 ⭐ 收藏</div>';
+}
+function toggleComboStar(i){
+  const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+  if(!saved[i])return;
+  saved[i].starred=!saved[i].starred;
+  localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
+  renderCombos();
 }
 function delCombo(i){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
