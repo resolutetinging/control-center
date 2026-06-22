@@ -113,6 +113,31 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 .star-btn.on{opacity:1;}
 .del-btn:hover{color:#b06a3a;opacity:1}
 .saved-empty{font-size:12px;color:var(--faint);text-align:center;padding:10px 0}
+/* ── LIB STUDY / QUIZ ── */
+.lsc{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:9px;background:var(--card);cursor:pointer;transition:border-color .15s;}
+.lsc:hover{border-color:rgba(61,106,82,.35);}
+.lsc-idiom{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.lsc-zh{font-size:13px;color:var(--en);font-weight:600;margin-bottom:0;}
+.lsc-back{margin-top:10px;padding-top:10px;border-top:.5px solid var(--border);}
+.lsc-explain{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:8px;}
+.lsc-example{font-size:12px;color:var(--faint);border-left:2px solid var(--bstr);padding-left:9px;line-height:1.6;}
+.lsc-hint{font-size:10.5px;color:var(--faint);text-align:right;margin-top:6px;}
+.lqb-wrap{height:5px;background:var(--border);border-radius:3px;margin-bottom:16px;}
+.lqb{height:100%;background:var(--en);border-radius:3px;transition:width .3s;}
+.lq-prog{font-size:12px;color:var(--faint);text-align:center;margin-bottom:8px;}
+.lq-q{font-size:20px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:4px;line-height:1.4;}
+.lq-qsub{font-size:11.5px;color:var(--faint);text-align:center;margin-bottom:18px;}
+.lq-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.lq-opt{padding:12px 10px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--ink);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;line-height:1.35;}
+.lq-opt:disabled{cursor:default;}
+.lq-opt.correct{border-color:#4a8c6a;background:rgba(74,140,106,.12);color:#2a6a4a;font-weight:600;}
+.lq-opt.wrong{border-color:#c05050;background:rgba(192,80,80,.1);color:#b04040;}
+.lq-fb{text-align:center;font-size:13px;min-height:20px;margin-bottom:8px;}
+.lqr-score{font-size:44px;font-weight:800;color:var(--en);text-align:center;margin:12px 0 4px;}
+.lqr-label{font-size:13px;color:var(--sub);text-align:center;margin-bottom:16px;}
+.lqr-wrong{margin-top:12px;padding-top:12px;border-top:.5px solid var(--border);}
+.lqr-wrong-item{font-size:13px;padding:6px 0;border-bottom:.5px solid var(--border);color:var(--ink);}
+.lqr-wrong-item:last-child{border-bottom:none;}
 
 /* ── KEY NOTICE ── */
 #key-notice{display:none;background:rgba(176,96,50,.07);border:.5px solid rgba(176,96,50,.2);border-radius:10px;padding:11px 14px;margin-bottom:13px}
@@ -411,11 +436,38 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
 <!-- ── 字庫分頁 ── -->
 <div class="page" id="page-lib">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">📚 我的 Idiom 字庫</div>
-    <button class="btn btn-ghost btn-sm" onclick="clearLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空字庫</button>
+  <!-- 主視圖 -->
+  <div id="lib-main-view">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">📚 我的 Idiom 字庫 <span id="lib-tab-count2"></span></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:10px 12px;background:var(--bg2);border-radius:10px;">
+      <span style="font-size:12px;color:var(--sub);">抽取</span>
+      <input type="number" id="lib-n" value="10" min="4" max="50" style="width:48px;padding:5px 6px;font-size:13px;border:1.5px solid var(--border);border-radius:7px;background:var(--bg);color:var(--ink);font-family:inherit;text-align:center;"/>
+      <span style="font-size:12px;color:var(--sub);">題</span>
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);cursor:pointer;"><input type="checkbox" id="lib-star-first" style="margin:0;"/> ⭐ 優先</label>
+      <button class="btn btn-ghost btn-sm" style="padding:6px 12px;font-size:12px;" onclick="startLibStudy()">📖 背誦</button>
+      <button class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:12px;" onclick="startLibQuizDirect()">🎯 考驗</button>
+    </div>
+    <div id="lib-list"><div class="saved-empty">尚無收藏，在拆彈遊戲答題後點「加入字庫」</div></div>
   </div>
-  <div id="lib-list"><div class="saved-empty">尚無收藏，在拆彈遊戲答題後點「加入字庫」</div></div>
+  <!-- 背誦視圖 -->
+  <div id="lib-study-view" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:var(--ink);">📖 背誦 <span id="lib-study-count" style="color:var(--faint);font-weight:400;font-size:12px;"></span></div>
+      <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:5px 10px;" onclick="exitLibStudy()">← 回字庫</button>
+    </div>
+    <div id="lib-study-cards"></div>
+    <div style="padding:8px 0 20px;display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="startLibQuizFromStudy()">🎯 考驗這批 →</button>
+    </div>
+  </div>
+  <!-- 考驗視圖 -->
+  <div id="lib-quiz-view" style="display:none;">
+    <div id="lib-quiz-running"></div>
+    <div id="lib-quiz-results" style="display:none;"></div>
+  </div>
 </div><!-- /page-lib -->
 
 <!-- ════════════ PAGE 4: COMBO ════════════ -->
@@ -1039,7 +1091,7 @@ CRITICAL BLANK RULES (violation = bad question):
 1. The blank must contain the COMPLETE idiom — no part of the idiom should appear outside the blank in the surrounding sentence.
 2. NEVER split a phrasal verb across the blank and surrounding text. BAD: "really ______ me off" (because "me off" is part of "tick me off"). GOOD: "He was really ______ about the feedback" (blank = "worked up").
 3. After inserting the correct answer into the blank, the full sentence must be grammatically natural.
-4. MOST COMMON MISTAKE — always double-check: if the correct answer ends with a preposition or particle (e.g. "excited about", "upset about", "interested in", "responsible for"), that preposition must NOT appear again immediately after the blank in the sentence. BAD: "The team was really ______ about the project" (correct="excited about") — "about" duplicates. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. GOOD: "The team was really ______ by the project's results" (correct="excited about"). GOOD: "He was ______ the news" (correct="upset about"). Mentally read the full sentence with the answer inserted before finalising.
+4. MOST COMMON MISTAKE — always double-check: if the correct answer ends with a preposition or particle (e.g. "excited about", "upset about", "interested in", "responsible for", "rise to", "get used to", "look forward to"), that preposition must NOT appear again immediately after the blank in the sentence. BAD: "The team was really ______ about the project" (correct="excited about") — "about" duplicates. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. BAD: "Let's make sure you ______ to new challenges" (correct="rise to") — "to" duplicates. GOOD: "The team was really ______ by the project's results" (correct="excited about"). GOOD: "He was ______ the news" (correct="upset about"). GOOD: "She needs to ______ the pressure of public speaking" (correct="rise to"). Mentally read the full sentence with the answer inserted before finalising.
 
 Return ONLY valid JSON, no markdown, no extra text:
 {"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"zh":"快速聯絡確認","explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
@@ -1052,7 +1104,6 @@ Rules:
 - explain_zh: Traditional Chinese ONLY; max 3 short casual sentences; no grammar labels; plain everyday tone
 - example: a different natural sentence using the same correct idiom`;
 
-    // Fetch + validate: if correct answer's last word duplicates immediately after blank, retry once
     const _fetchCandidate = async () => {
       const raw = await callGroq(prompt, 400, '', true);
       return safeParseJson(raw);
@@ -1067,8 +1118,9 @@ Rules:
       return after.startsWith(last + ' ') || after.startsWith(last + ',') || after.startsWith(last + '.');
     };
     let candidate = await _fetchCandidate();
-    if (_hasDupParticle(candidate.sentence, candidate.correct)) {
-      candidate = await _fetchCandidate(); // silent retry
+    // retry up to 2 more times if duplicate particle detected
+    for(let r=0; r<2 && _hasDupParticle(candidate.sentence, candidate.correct); r++){
+      candidate = await _fetchCandidate();
     }
     curQ = candidate;
 
@@ -1181,6 +1233,8 @@ function getZhHint(item){
 function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   const tc=$('lib-tab-count'); if(tc) tc.textContent=lib.length||'';
+  const tc2=$('lib-tab-count2'); if(tc2) tc2.textContent=lib.length?`(${lib.length})`:'';
+  const ni=$('lib-n'); if(ni&&!ni._touched) ni.max=Math.max(lib.length,4);
   $('lib-list').innerHTML = lib.length
     ? lib.map((item,i)=>{
         const zhHint = getZhHint(item);
@@ -1219,6 +1273,156 @@ function toggleStar(i){
 function clearLib(){
   if(!confirm('確定清空全部字庫？')) return;
   localStorage.removeItem(IDIOM_LIB_KEY);
+  renderLib();
+}
+
+// ── 字庫背誦 ──
+let libStudyPool = [];
+function _pickLibPool(){
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  const n = Math.min(Math.max(parseInt(document.getElementById('lib-n').value)||10, 4), lib.length);
+  const starFirst = document.getElementById('lib-star-first').checked;
+  let pool = [...lib];
+  if(starFirst){
+    pool.sort((a,b)=>(b.starred?1:0)-(a.starred?1:0));
+  } else {
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  }
+  return pool.slice(0, n);
+}
+function startLibStudy(){
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  if(lib.length < 1){ alert('字庫是空的，先收藏一些 idiom 吧！'); return; }
+  if(lib.length < 4){ alert('至少需要 4 個 idiom 才能開始。'); return; }
+  libStudyPool = _pickLibPool();
+  document.getElementById('lib-study-count').textContent = libStudyPool.length + ' 個 idiom';
+  renderLibStudyCards();
+  document.getElementById('lib-main-view').style.display='none';
+  document.getElementById('lib-study-view').style.display='block';
+  document.getElementById('lib-quiz-view').style.display='none';
+}
+function renderLibStudyCards(){
+  const el = document.getElementById('lib-study-cards');
+  el.innerHTML = libStudyPool.map((item,i)=>{
+    const zh = getZhHint(item)||item.zh||'';
+    return`<div class="lsc" id="lsc-${i}" onclick="toggleLsc(${i})">
+      <div class="lsc-idiom">${esc(item.idiom)}${item.starred?' ⭐':''}</div>
+      ${zh?`<div class="lsc-zh">${esc(zh)}</div>`:''}
+      <div class="lsc-back" id="lscb-${i}" style="display:none;">
+        ${item.explain_zh?`<div class="lsc-explain">${esc(item.explain_zh)}</div>`:''}
+        ${item.example?`<div class="lsc-example">${esc(item.example)}</div>`:''}
+      </div>
+      <div class="lsc-hint" id="lsch-${i}">▾ 點擊看解釋</div>
+    </div>`;
+  }).join('');
+}
+function toggleLsc(i){
+  const back=document.getElementById('lscb-'+i);
+  const hint=document.getElementById('lsch-'+i);
+  const open=back.style.display==='block';
+  back.style.display=open?'none':'block';
+  if(hint)hint.textContent=open?'▾ 點擊看解釋':'▴ 收起';
+}
+function exitLibStudy(){
+  document.getElementById('lib-main-view').style.display='block';
+  document.getElementById('lib-study-view').style.display='none';
+}
+
+// ── 字庫考驗 ──
+let libQuizState = null;
+function startLibQuizFromStudy(){ _startLibQuiz(libStudyPool); }
+function startLibQuizDirect(){
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  if(lib.length < 4){ alert('至少需要 4 個 idiom 才能考驗。'); return; }
+  _startLibQuiz(_pickLibPool());
+}
+function _startLibQuiz(pool){
+  if(pool.length < 4){ alert('至少需要 4 個 idiom。'); return; }
+  const shuffled = [...pool];
+  for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+  libQuizState = { pool: shuffled, allLib: JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]'), index:0, correct:0, wrong:0, wrongItems:[], answered:false };
+  document.getElementById('lib-main-view').style.display='none';
+  document.getElementById('lib-study-view').style.display='none';
+  document.getElementById('lib-quiz-view').style.display='block';
+  document.getElementById('lib-quiz-results').style.display='none';
+  document.getElementById('lib-quiz-running').style.display='block';
+  renderLibQuizQ();
+}
+function renderLibQuizQ(){
+  const st = libQuizState;
+  if(st.index >= st.pool.length){ showLibQuizResults(); return; }
+  st.answered = false;
+  const cur = st.pool[st.index];
+  const total = st.pool.length;
+  const pct = (st.index/total)*100;
+  const zh = getZhHint(cur)||cur.zh||cur.explain_zh?.slice(0,15)||'—';
+  // random mode: 50% en2zh, 50% zh2en
+  const mode = Math.random()<0.5 ? 'en2zh' : 'zh2en';
+  // distractors from pool + fill from allLib if needed
+  const others = [...st.pool.filter((_,i)=>i!==st.index), ...st.allLib.filter(x=>x.idiom!==cur.idiom)];
+  const picked=[]; const seen=new Set([cur.idiom]);
+  for(const o of others){ if(!seen.has(o.idiom)&&picked.length<3){seen.add(o.idiom);picked.push(o);} }
+  let question, correctAns, opts;
+  if(mode==='en2zh'){
+    question=cur.idiom; correctAns=zh;
+    opts=_libShuffle([zh,...picked.map(o=>getZhHint(o)||o.zh||o.explain_zh?.slice(0,15)||o.idiom)]);
+  } else {
+    question=zh; correctAns=cur.idiom;
+    opts=_libShuffle([cur.idiom,...picked.map(o=>o.idiom)]);
+  }
+  const qsub = mode==='en2zh'?'選出正確的中文意思':'選出正確的 idiom';
+  document.getElementById('lib-quiz-running').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div class="lq-prog">第 ${st.index+1} 題 / 共 ${total} 題</div>
+      <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="exitLibQuiz()">✕ 離開</button>
+    </div>
+    <div class="lqb-wrap"><div class="lqb" id="lqb" style="width:${pct}%"></div></div>
+    <div class="lq-q">${esc(question)}</div>
+    <div class="lq-qsub">${qsub}</div>
+    <div class="lq-opts" id="lq-opts">${opts.map(o=>`<button class="lq-opt" onclick="answerLibQuiz(this,'${esc(o).replace(/'/g,"&#39;")}','${esc(correctAns).replace(/'/g,"&#39;")}','${esc(cur.idiom).replace(/'/g,"&#39;")}')">${esc(o)}</button>`).join('')}</div>
+    <div class="lq-fb" id="lq-fb"></div>`;
+}
+function _libShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function answerLibQuiz(btn, chosen, correct, idiomKey){
+  if(libQuizState.answered)return;
+  libQuizState.answered=true;
+  const allBtns=document.querySelectorAll('.lq-opt');
+  allBtns.forEach(b=>b.disabled=true);
+  const ok=chosen===correct;
+  const fb=document.getElementById('lq-fb');
+  if(ok){
+    btn.classList.add('correct');
+    libQuizState.correct++;
+    fb.innerHTML='<span style="color:#2a6a4a;font-weight:600">✓ 正確！</span>';
+    setTimeout(()=>{libQuizState.index++;renderLibQuizQ();},700);
+  } else {
+    btn.classList.add('wrong');
+    allBtns.forEach(b=>{ if(b.textContent.trim()===correct) b.classList.add('correct'); });
+    libQuizState.wrong++;
+    libQuizState.wrongItems.push(libQuizState.pool[libQuizState.index]);
+    fb.innerHTML=`<span style="color:#b04040">✗ 正確答案：${esc(correct)}</span>`;
+    setTimeout(()=>{libQuizState.index++;renderLibQuizQ();},1400);
+  }
+}
+function showLibQuizResults(){
+  const st=libQuizState;
+  const pct=Math.round(st.correct/st.pool.length*100);
+  const label=pct>=90?'太強了！':pct>=70?'不錯！':'還需多練習';
+  const wrongHtml=st.wrongItems.length?`<div class="lqr-wrong"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;">答錯的 idiom</div>${st.wrongItems.map(x=>`<div class="lqr-wrong-item"><b>${esc(x.idiom)}</b> <span style="color:var(--faint);font-size:12px;">— ${esc(getZhHint(x)||x.zh||'')}</span></div>`).join('')}</div>`:'';
+  document.getElementById('lib-quiz-running').style.display='none';
+  const res=document.getElementById('lib-quiz-results');
+  res.style.display='block';
+  res.innerHTML=`<div class="lqr-score">${st.correct}/${st.pool.length}</div>
+    <div class="lqr-label">${pct}% 正確率 · ${label}</div>
+    ${wrongHtml}
+    <div style="display:flex;gap:8px;padding:16px 0;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="_startLibQuiz(libQuizState.pool)">↻ 再試一次</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="exitLibQuiz()">回字庫</button>
+    </div>`;
+}
+function exitLibQuiz(){
+  document.getElementById('lib-quiz-view').style.display='none';
+  document.getElementById('lib-main-view').style.display='block';
   renderLib();
 }
 
