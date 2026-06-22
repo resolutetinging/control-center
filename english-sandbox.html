@@ -447,6 +447,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <input type="number" id="lib-n" value="10" min="4" max="50" style="width:48px;padding:5px 6px;font-size:13px;border:1.5px solid var(--border);border-radius:7px;background:var(--bg);color:var(--ink);font-family:inherit;text-align:center;"/>
       <span style="font-size:12px;color:var(--sub);">題</span>
       <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);cursor:pointer;"><input type="checkbox" id="lib-star-first" style="margin:0;"/> ⭐ 優先</label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);cursor:pointer;"><input type="checkbox" id="lib-err-first" style="margin:0;"/> ❌ 錯誤優先</label>
       <button class="btn btn-ghost btn-sm" style="padding:6px 12px;font-size:12px;" onclick="startLibStudy()">📖 背誦</button>
       <button class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:12px;" onclick="startLibQuizDirect()">🎯 考驗</button>
     </div>
@@ -1245,7 +1246,7 @@ function renderLib(){
           <div class="saved-body">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
               <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}${zhHint?`<span style="font-weight:700;font-size:13px;color:var(--ink);margin-left:7px">· ${esc(zhHint)}</span>`:''}</span>
-              <span style="font-size:10.5px;color:var(--faint);white-space:nowrap;flex-shrink:0">${esc(item.topic||'')}</span>
+              <span style="display:flex;align-items:center;gap:5px;flex-shrink:0;">${item.errorCount?`<span style="font-size:10px;background:rgba(192,80,80,.15);color:#b04040;border-radius:6px;padding:1px 5px;font-weight:700">✗${item.errorCount}</span>`:''}${item.topic?`<span style="font-size:10.5px;color:var(--faint);white-space:nowrap;">${esc(item.topic)}</span>`:''}</span>
             </div>
             ${item.example?`<div style="font-size:12px;color:var(--sub);margin-top:5px;line-height:1.55">${esc(item.example)}</div>`:''}
             ${item.explain_zh?`<div style="font-size:11.5px;color:var(--faint);margin-top:4px;line-height:1.6">${esc(item.explain_zh)}</div>`:''}
@@ -1282,8 +1283,11 @@ function _pickLibPool(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   const n = Math.min(Math.max(parseInt(document.getElementById('lib-n').value)||10, 4), lib.length);
   const starFirst = document.getElementById('lib-star-first').checked;
+  const errFirst = document.getElementById('lib-err-first').checked;
   let pool = [...lib];
-  if(starFirst){
+  if(errFirst){
+    pool.sort((a,b)=>(b.errorCount||0)-(a.errorCount||0));
+  } else if(starFirst){
     pool.sort((a,b)=>(b.starred?1:0)-(a.starred?1:0));
   } else {
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
@@ -1417,7 +1421,11 @@ function answerLibQuiz(btn, chosen, correct, idiomKey){
     btn.classList.add('wrong');
     allBtns.forEach(b=>{ if(b.textContent.trim()===correct) b.classList.add('correct'); });
     libQuizState.wrong++;
-    libQuizState.wrongItems.push(libQuizState.pool[libQuizState.index]);
+    const _cur = libQuizState.pool[libQuizState.index];
+    libQuizState.wrongItems.push(_cur);
+    const _lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+    const _idx = _lib.findIndex(x=>x.ts===_cur.ts);
+    if(_idx>-1){ _lib[_idx].errorCount=(_lib[_idx].errorCount||0)+1; localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(_lib)); _cur.errorCount=_lib[_idx].errorCount; }
     fb.innerHTML=`<span style="color:#b04040">✗ 正確答案：${esc(correct)}</span>`;
     setTimeout(()=>{libQuizState.index++;renderLibQuizQ();},1400);
   }
