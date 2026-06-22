@@ -232,11 +232,15 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <!-- Situation selector -->
   <div class="panel">
     <div class="panel-lbl">選擇情境 — Pick your scene</div>
-    <div class="sit-row" id="sit-row">
+    <div class="sit-row" id="sit-row" style="flex-wrap:wrap;gap:6px;">
       <button class="sit-btn" id="sit-coffee"  onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
       <button class="sit-btn" id="sit-meeting" onclick="pickSit('meeting')">⏰ 會議前三分鐘</button>
       <button class="sit-btn" id="sit-lunch"   onclick="pickSit('lunch')">🍱 與客戶等外送</button>
       <button class="sit-btn" id="sit-event"   onclick="pickSit('event')">🤝 業界活動場合</button>
+      <button class="sit-btn" id="sit-elevator" onclick="pickSit('elevator')">🛗 電梯巧遇</button>
+      <button class="sit-btn" id="sit-firstday" onclick="pickSit('firstday')">🆕 新人第一天</button>
+      <button class="sit-btn" id="sit-weekend"  onclick="pickSit('weekend')">🌤 週一回來後</button>
+      <button class="sit-btn" id="sit-remote"   onclick="pickSit('remote')">💻 視訊等待空檔</button>
     </div>
   </div>
 
@@ -427,10 +431,14 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 // ── Constants ──
 const SAVED_KEY = 'es_saved_phrases';
 const SITS = {
-  coffee:  { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
-  meeting: { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
-  lunch:   { label: '🍱 等外送', en: 'waiting for a food delivery order with a client' },
-  event:   { label: '🤝 業界活動', en: 'at a professional networking event or conference' }
+  coffee:   { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
+  meeting:  { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
+  lunch:    { label: '🍱 等外送', en: 'waiting for a food delivery order with a client' },
+  event:    { label: '🤝 業界活動', en: 'at a professional networking event or conference' },
+  elevator: { label: '🛗 電梯巧遇', en: 'sharing an elevator with a coworker or acquaintance for a brief ride' },
+  firstday: { label: '🆕 新人第一天', en: 'a new employee making small talk with teammates on their very first day at work' },
+  weekend:  { label: '🌤 週一回來後', en: 'chatting with a coworker on Monday morning, catching up after the weekend' },
+  remote:   { label: '💻 視訊等待', en: 'waiting for other participants to join a video call, filling the silence with a coworker already on the call' },
 };
 
 // ── State ──
