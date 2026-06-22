@@ -363,10 +363,13 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <!-- Topic selector -->
   <div class="panel">
     <div class="panel-lbl">選擇主題 — Pick a topic</div>
-    <div class="sit-row" id="topic-row">
+    <div class="sit-row" id="topic-row" style="flex-wrap:wrap;gap:6px;">
       <button class="sit-btn" id="topic-meeting" onclick="pickTopic('meeting')">📊 商務開會</button>
       <button class="sit-btn" id="topic-emotion" onclick="pickTopic('emotion')">💬 情緒表達</button>
       <button class="sit-btn" id="topic-project" onclick="pickTopic('project')">🚀 專案推進</button>
+      <button class="sit-btn" id="topic-negotiate" onclick="pickTopic('negotiate')">🤝 談判協商</button>
+      <button class="sit-btn" id="topic-career" onclick="pickTopic('career')">💪 職涯成長</button>
+      <button class="sit-btn" id="topic-social" onclick="pickTopic('social')">🌐 日常社交</button>
     </div>
   </div>
 
@@ -905,9 +908,60 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 // ══════════════ IDIOM ARCADE ══════════════
 const IDIOM_LIB_KEY = 'es_idiom_lib';
 const IDIOM_TOPICS = {
-  meeting: { label:'📊 商務開會', en:'business meetings, presentations, and boardroom discussions' },
-  emotion: { label:'💬 情緒表達', en:'expressing emotions, reactions, and attitudes professionally' },
-  project: { label:'🚀 專案推進', en:'project management, deadlines, milestones, and team coordination' }
+  meeting: { label:'📊 商務開會', en:'business meetings, presentations, and boardroom discussions',
+    scenes:[
+      'A manager rallying the team at a Monday kickoff',
+      'A tense boardroom debate over budget cuts',
+      'A one-on-one check-in between a boss and a nervous new hire',
+      'Someone joining a meeting late and catching up',
+      'An all-hands call where leadership drops a surprise announcement',
+      'A presenter defending their proposal against tough questions',
+    ]},
+  emotion: { label:'💬 情緒表達', en:'expressing emotions, reactions, and attitudes in professional or everyday settings',
+    scenes:[
+      'Someone venting to a friend after a rough day at work',
+      'A colleague reacting to unexpected good news',
+      'A person feeling burned out and talking to their manager',
+      'Two friends discussing a frustrating situation over coffee',
+      'Someone trying to stay composed under pressure in a meeting',
+      'A team member expressing disappointment about a cancelled project',
+    ]},
+  project: { label:'🚀 專案推進', en:'project management, deadlines, milestones, and team coordination',
+    scenes:[
+      'A PM pushing back on scope creep from a stakeholder',
+      'A team realizing they are behind schedule and regrouping',
+      'A developer explaining a technical blocker to a non-technical manager',
+      'A cross-functional team trying to align before a product launch',
+      'A freelancer negotiating a deadline extension with a client',
+      'A manager praising the team after hitting a major milestone',
+    ]},
+  negotiate: { label:'🤝 談判協商', en:'negotiation, persuasion, compromise, and conflict resolution',
+    scenes:[
+      'A salary negotiation between a candidate and an HR manager',
+      'Two colleagues disagreeing on the right approach to a problem',
+      'A salesperson trying to close a hesitant client',
+      'A vendor pushing back on contract terms',
+      'Two friends trying to decide on a plan when they want different things',
+      'A team lead mediating a conflict between two teammates',
+    ]},
+  career: { label:'💪 職涯成長', en:'career development, performance reviews, feedback, and professional growth',
+    scenes:[
+      'A manager giving difficult but constructive feedback',
+      'An employee asking for more responsibility',
+      'A mentor advising a mentee on their career path',
+      'Someone reflecting on a failure and what they learned',
+      'A new grad trying to impress in their first real job',
+      'A professional deciding whether to take a risky new opportunity',
+    ]},
+  social: { label:'🌐 日常社交', en:'casual conversation, small talk, social situations, and everyday English',
+    scenes:[
+      'Two acquaintances catching up after not seeing each other for months',
+      'Someone navigating awkward small talk at a party',
+      'A person politely declining a social invitation',
+      'Friends discussing weekend plans over lunch',
+      'Someone trying to change a tense subject in conversation',
+      'A person giving a heartfelt compliment to a friend',
+    ]},
 };
 
 let curTopic = null;
@@ -932,11 +986,26 @@ async function genQuestion(){
   try{
     const topic = IDIOM_TOPICS[curTopic];
     const skipList = usedIdioms.slice(-10).join(', ');
-    const prompt = `You are creating a business English vocabulary quiz.
+    const scenes = topic.scenes||[];
+    const scene = scenes[Math.floor(Math.random()*scenes.length)]||'';
+    const structures = [
+      'a direct statement (subject + verb)',
+      'a question ("Could you…?", "Have you…?")',
+      'a conditional ("If we…", "Unless they…")',
+      'an imperative or suggestion ("Let\'s…", "Make sure you…")',
+      'a past-tense reflection or reported speech',
+      'a first-person confession ("I really need to…", "I\'ve been trying to…")',
+    ];
+    const structure = structures[Math.floor(Math.random()*structures.length)];
+    const prompt = `You are creating an English vocabulary quiz.
 
 Topic: ${topic.en}
+Scene: ${scene}
+Sentence structure to use: ${structure}
 ${skipList?`\nDo NOT use any of these as the correct answer: ${skipList}\n`:''}
-Generate ONE natural business sentence with a key idiom/collocation replaced by "______".
+Generate ONE natural sentence (matching the scene and structure above) with a key idiom/collocation replaced by "______".
+
+VARIETY RULE: The subject must NOT be "we" unless the scene clearly calls for it. Vary perspective — use "I", "she", "he", "they", "you", or a named role (e.g. "The client", "My manager").
 
 CRITICAL BLANK RULES (violation = bad question):
 1. The blank must contain the COMPLETE idiom — no part of the idiom should appear outside the blank in the surrounding sentence.
