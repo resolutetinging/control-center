@@ -493,9 +493,9 @@ async function loadFromGist(){
   setSyncStatus('ing','↓ 載入中');
   try{
     const r=await fetch('https://api.github.com/gists/'+gist,{
-      headers:{'Authorization':'token '+pat}
+      headers:{'Authorization':'Bearer '+pat}
     });
-    if(!r.ok)throw new Error(r.status);
+    if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
     const content=j.files?.[GIST_FILE]?.content;
     if(content){
@@ -512,7 +512,7 @@ async function loadFromGist(){
     }
     setSyncStatus('ok','☁ 已同步');
   }catch(e){
-    setSyncStatus('err','⚠ 載入失敗');
+    setSyncStatus('err','⚠ 載入失敗 ('+e.message+')');
   }
 }
 
@@ -555,6 +555,8 @@ function addCoffee(){
   document.getElementById('photo-inp').value='';
   refresh();
   checkCoffeeReminder();
+  const btn=document.querySelector('.add-btn-coffee');
+  if(btn){const orig=btn.textContent;btn.textContent='✓ 已記錄';btn.disabled=true;setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1200);}
 }
 
 // ── WATER ──
@@ -568,11 +570,14 @@ function pickW(v){
 }
 function addWater(){
   const amount=parseInt(document.getElementById('w-amount').value)||selW||250;
+  if(!amount||amount<1){return;}
   const d=loadRF();
   const tsW=getRFDate();tsW.setHours(new Date().getHours(),new Date().getMinutes(),0,0);
   d.entries.push({id:'rf_'+Date.now(),type:'water',amount,timestamp:tsW.toISOString()});
   saveRF(d);
   refresh();
+  const btn=document.querySelector('.add-btn-water');
+  if(btn){const orig=btn.textContent;btn.textContent='✓ 已記錄 '+amount+'cc';btn.disabled=true;setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1200);}
 }
 document.getElementById('pw-250').classList.add('sel');
 
