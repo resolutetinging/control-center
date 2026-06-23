@@ -109,8 +109,8 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 .saved-text{font-size:13px;color:var(--ink);line-height:1.55}
 .saved-context{font-size:10.5px;color:var(--faint);margin-top:3px}
 .del-btn{background:none;border:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;border-radius:4px;transition:color .15s;flex-shrink:0;line-height:1.2;opacity:.6}
-.star-btn{background:none;border:none;font-size:15px;cursor:pointer;padding:2px 3px;border-radius:4px;flex-shrink:0;line-height:1.2;opacity:.35;transition:opacity .15s;}
-.star-btn.on{opacity:1;}
+.star-btn{background:none;border:none;font-size:15px;cursor:pointer;padding:2px 3px;border-radius:4px;flex-shrink:0;line-height:1.2;color:#b89a50;opacity:.28;transition:opacity .15s;}
+.star-btn.on{opacity:.88;}
 .del-btn:hover{color:#b06a3a;opacity:1}
 .saved-empty{font-size:12px;color:var(--faint);text-align:center;padding:10px 0}
 /* ── LIB STUDY / QUIZ ── */
@@ -838,8 +838,8 @@ Output ONLY valid JSON:
 
 // ── Save ──
 function savePhrase(type){
-  const text = results[type];
-  if(!text) return;
+  const text = results[type] || ($('text-'+type)?.textContent||'').trim();
+  if(!text || text === '—') { showSaveToast('⚠ 尚無內容，請先送出回應'); return; }
   const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
   const typeLabel = {safe:'🛡 Safe',pro:'💼 Pro',ball:'🎾 Ball-tosser'};
   saved.unshift({ text, type:typeLabel[type], sit:SITS[curSit]?.label||'', opener:curOpener, ts:Date.now() });
@@ -847,7 +847,15 @@ function savePhrase(type){
   localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
   const btn=$('save-'+type);
   btn.textContent='✓ 已收藏'; btn.classList.add('saved');
+  showSaveToast('✓ 已收藏', true);
   renderSaved(true);
+}
+
+function showSaveToast(msg, ok=false){
+  let t = document.getElementById('save-toast');
+  if(!t){ t=document.createElement('div'); t.id='save-toast'; t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#38342e;color:#f4f0e8;font-size:12px;padding:7px 16px;border-radius:20px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.background=ok?'#4a7e5e':'#38342e'; t.style.opacity='1';
+  clearTimeout(t._tid); t._tid=setTimeout(()=>{ t.style.opacity='0'; },1600);
 }
 
 function renderSaved(){
@@ -877,7 +885,7 @@ function renderCombos(){
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            <button class="star-btn${starred?' on':''}" onclick="toggleComboStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'⭐':'☆'}</button>
+            <button class="star-btn${starred?' on':''}" onclick="toggleComboStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
             <button class="combo-del-btn" onclick="delCombo(${i})">✕</button>
           </div>
         </div>
@@ -1242,7 +1250,7 @@ function renderLib(){
         const starred = !!item.starred;
         return `
         <div class="saved-item">
-          <button class="star-btn${starred?' on':''}" onclick="toggleStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'⭐':'☆'}</button>
+          <button class="star-btn${starred?' on':''}" onclick="toggleStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
           <div class="saved-body">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
               <span style="font-weight:700;font-size:14px;color:var(--ink)">${esc(item.idiom)}${zhHint?`<span style="font-weight:700;font-size:13px;color:var(--ink);margin-left:7px">· ${esc(zhHint)}</span>`:''}</span>
@@ -1316,7 +1324,7 @@ function renderLibStudyCards(){
           <div class="lsc-idiom">${esc(item.idiom)}</div>
           ${zh?`<div class="lsc-zh">${esc(zh)}</div>`:''}
         </div>
-        <button class="star-btn${starred?' on':''}" id="lsc-star-${i}" onclick="toggleStudyStar(${i});event.stopPropagation();" title="${starred?'取消標記':'標記重點'}">${starred?'⭐':'☆'}</button>
+        <button class="star-btn${starred?' on':''}" id="lsc-star-${i}" onclick="toggleStudyStar(${i});event.stopPropagation();" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
       </div>
       <div class="lsc-back" id="lscb-${i}" style="display:none;">
         ${item.explain_zh?`<div class="lsc-explain">${esc(item.explain_zh)}</div>`:''}
@@ -1331,7 +1339,7 @@ function toggleStudyStar(i){
   const starred = libStudyPool[i].starred;
   // update button immediately without re-render (preserves open/close state)
   const btn = document.getElementById('lsc-star-'+i);
-  if(btn){ btn.textContent=starred?'⭐':'☆'; btn.className='star-btn'+(starred?' on':''); btn.title=starred?'取消標記':'標記重點'; }
+  if(btn){ btn.textContent=starred?'★':'☆'; btn.className='star-btn'+(starred?' on':''); btn.title=starred?'取消標記':'標記重點'; }
   // persist to lib storage by ts
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   const ts = libStudyPool[i].ts;
