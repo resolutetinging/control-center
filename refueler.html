@@ -540,7 +540,13 @@ async function loadFromGist(){
     }
     setSyncStatus('ok','☁ 已同步');
   }catch(e){
-    setSyncStatus('err','⚠ 載入失敗 ('+e.message+')');
+    if(e instanceof SyntaxError){
+      // Gist JSON 損壞：自動用本機資料覆蓋修復
+      setSyncStatus('ing','↑ 修復 Gist…');
+      await syncToGist(loadRF());
+    }else{
+      setSyncStatus('err','⚠ 載入失敗 ('+e.message+')');
+    }
   }
 }
 
