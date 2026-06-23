@@ -440,7 +440,22 @@ let _syncTimer=null;
 // ── DATA ──
 function loadRF(){try{return JSON.parse(localStorage.getItem(RF_KEY))||{entries:[]};}catch{return{entries:[]};}}
 function saveRF(d){
-  localStorage.setItem(RF_KEY,JSON.stringify(d));
+  try{
+    localStorage.setItem(RF_KEY,JSON.stringify(d));
+  }catch(e){
+    if(e.name==='QuotaExceededError'){
+      // 剔除所有照片後重試
+      const stripped={...d,entries:(d.entries||[]).map(en=>({...en,photo:null}))};
+      try{
+        localStorage.setItem(RF_KEY,JSON.stringify(stripped));
+        console.warn('localStorage 已滿，已自動剔除所有咖啡照片以釋放空間');
+      }catch(e2){
+        console.error('localStorage 仍然滿，無法儲存：',e2);
+        return;
+      }
+      d=stripped;
+    }else{throw e;}
+  }
   clearTimeout(_syncTimer);
   _syncTimer=setTimeout(()=>syncToGist(d),3000);
 }
@@ -503,11 +518,7 @@ async function loadFromGist(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
     const fileObj=j.files?.[GIST_FILE];
-    let content=fileObj?.content;
-    if(fileObj?.truncated&&fileObj?.raw_url){
-      const rr=await fetch(fileObj.raw_url,{headers:{'Authorization':'Bearer '+pat}});
-      if(rr.ok)content=await rr.text();
-    }
+    const content=fileObj?.content;
     if(content){
       const remote=JSON.parse(content);
       // Merge: combine all entries, deduplicate by id (local + remote)
@@ -518,7 +529,14 @@ async function loadFromGist(){
         seen.add(e.id);
         return true;
       });
-      localStorage.setItem(RF_KEY,JSON.stringify({entries:merged}));
+      const mergedData=JSON.stringify({entries:merged});
+      try{
+        localStorage.setItem(RF_KEY,mergedData);
+      }catch(qe){
+        // 超額：剔除照片後再試
+        const noPhoto=merged.map(en=>({...en,photo:null}));
+        localStorage.setItem(RF_KEY,JSON.stringify({entries:noPhoto}));
+      }
     }
     setSyncStatus('ok','☁ 已同步');
   }catch(e){
