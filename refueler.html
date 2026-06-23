@@ -502,7 +502,12 @@ async function loadFromGist(){
     });
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
-    const content=j.files?.[GIST_FILE]?.content;
+    const fileObj=j.files?.[GIST_FILE];
+    let content=fileObj?.content;
+    if(fileObj?.truncated&&fileObj?.raw_url){
+      const rr=await fetch(fileObj.raw_url,{headers:{'Authorization':'Bearer '+pat}});
+      if(rr.ok)content=await rr.text();
+    }
     if(content){
       const remote=JSON.parse(content);
       // Merge: combine all entries, deduplicate by id (local + remote)
