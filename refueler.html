@@ -248,7 +248,7 @@ body{
 <div id="topbar">
   <div id="topbar-title">☕ Refueler 💧</div>
   <div id="topbar-right">
-    <div class="sync-pill sync-idle" id="sync-pill">☁ 同步</div>
+    <div class="sync-pill sync-idle" id="sync-pill" onclick="forceSyncToGist()" title="點擊強制上傳至 Gist" style="cursor:pointer">☁ 同步</div>
     <div class="today-pill tp-coffee" id="tp-coffee">☕ — 杯</div>
     <div class="today-pill tp-water" id="tp-water">💧 — ml</div>
   </div>
@@ -476,7 +476,7 @@ async function syncToGist(data){
   try{
     const r=await fetch('https://api.github.com/gists/'+gist,{
       method:'PATCH',
-      headers:{'Authorization':'token '+pat,'Content-Type':'application/json'},
+      headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json'},
       body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data)}}})
     });
     if(!r.ok)throw new Error(r.status);
@@ -484,6 +484,11 @@ async function syncToGist(data){
   }catch(e){
     setSyncStatus('err','⚠ 同步失敗');
   }
+}
+
+async function forceSyncToGist(){
+  const data=loadRF();
+  await syncToGist(data);
 }
 
 async function loadFromGist(){
