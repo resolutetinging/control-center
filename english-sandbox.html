@@ -885,7 +885,7 @@ function renderCombos(){
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            <button class="star-btn${starred?' on':''}" onclick="toggleComboStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
+            <button class="star-btn${starred?' on':''}" id="combo-star-${i}" onclick="toggleComboStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
             <button class="combo-del-btn" onclick="delCombo(${i})">✕</button>
           </div>
         </div>
@@ -894,10 +894,12 @@ function renderCombos(){
 }
 function toggleComboStar(i){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
-  if(!saved[i])return;
+  if(i<0||i>=saved.length||!saved[i]||typeof saved[i]!=='object')return;
   saved[i].starred=!saved[i].starred;
+  const starred=saved[i].starred;
   localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
-  renderCombos();
+  const btn=document.getElementById('combo-star-'+i);
+  if(btn){btn.textContent=starred?'★':'☆';btn.className='star-btn'+(starred?' on':'');btn.title=starred?'取消標記':'標記重點';}
 }
 function delCombo(i){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
