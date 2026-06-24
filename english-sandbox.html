@@ -1347,18 +1347,18 @@ function renderLibStudyCards(){
     const zh = getZhHint(item)||item.zh||'';
     const starred=!!item.starred;
     return`<div class="lsc" id="lsc-${i}" onclick="toggleLsc(${i})">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="flex:1;">
-          <div class="lsc-idiom">${esc(item.idiom)}</div>
-          ${zh?`<div class="lsc-zh">${esc(zh)}</div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:8px;">
+        <div class="lsc-idiom" style="margin-bottom:0">${esc(item.idiom)}</div>
+        <div class="lsc-zh" style="margin-bottom:0">${esc(zh||'—')}</div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+          <button class="star-btn${starred?' on':''}" id="lsc-star-${i}" onclick="toggleStudyStar(${i});event.stopPropagation();" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
+          <span class="lib-chevron" id="lsch-${i}">▾</span>
         </div>
-        <button class="star-btn${starred?' on':''}" id="lsc-star-${i}" onclick="toggleStudyStar(${i});event.stopPropagation();" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
       </div>
       <div class="lsc-back" id="lscb-${i}" style="display:none;">
         ${item.explain_zh?`<div class="lsc-explain">${esc(item.explain_zh)}</div>`:''}
         ${item.example?`<div class="lsc-example">${esc(item.example)}</div>`:''}
       </div>
-      <div class="lsc-hint" id="lsch-${i}">▾ 點擊看解釋</div>
     </div>`;
   }).join('');
 }
@@ -1376,10 +1376,10 @@ function toggleStudyStar(i){
 }
 function toggleLsc(i){
   const back=document.getElementById('lscb-'+i);
-  const hint=document.getElementById('lsch-'+i);
+  const chev=document.getElementById('lsch-'+i);
   const open=back.style.display==='block';
   back.style.display=open?'none':'block';
-  if(hint)hint.textContent=open?'▾ 點擊看解釋':'▴ 收起';
+  if(chev)chev.classList.toggle('open',!open);
 }
 function exitLibStudy(){
   document.getElementById('lib-main-view').style.display='block';
