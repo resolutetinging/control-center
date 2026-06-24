@@ -753,12 +753,15 @@ fb_content: 用繁體中文說明接球狀況，根據 verdict 調整語氣：
 
 fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
 
-TASK 2 — Write 3 model English responses to the opener (safe, pro, ball):
-- COMPLETELY INDEPENDENT — do NOT quote, correct, or reference the learner's text at all.
-- CRITICAL: Do NOT echo, repeat, or paraphrase the opener's words. A natural reply REACTS to the situation or emotion — it does not mirror back what was just said.
-  BAD example → opener: "Running a bit behind, huh." / bad reply: "Running a bit behind, yeah, traffic I guess." ← echoes the opener
-  GOOD example → opener: "Running a bit behind, huh." / good reply: "Ha, story of my life on Mondays. Did you grab coffee yet?"
-- Write each as a fluent native speaker who listens and responds naturally, not a chatbot that reflects phrases back.
+TASK 2 — Write 3 model English replies FROM THE LEARNER'S PERSPECTIVE (safe, pro, ball):
+- ROLE: The learner is the one being spoken TO. All 3 replies must come from the LEARNER'S perspective — answering, reacting, or responding to what was said to them. NEVER write from the opener speaker's perspective.
+- DIRECT QUESTION RULE: If the opener contains a direct question addressed to the learner (e.g. "is that a new setup?", "how was your weekend?", "did you enjoy the trip?"), every model reply MUST answer that question first before adding anything else. Ignoring a direct question is a critical error.
+- COMPLETELY INDEPENDENT of the learner's actual reply — do NOT quote, correct, or reference the learner's text at all.
+- Anti-echo: avoid mechanically repeating the opener's exact phrase. BUT when the opener asks a direct question about the learner's situation, a natural answer WILL reference the same topic — that is answering, not echoing.
+  BAD (mechanical echo) → opener: "Running a bit behind, huh." / bad: "Running a bit behind, yeah, traffic I guess." ← mirrors phrasing
+  GOOD → opener: "Running a bit behind, huh." / good: "Ha, story of my life on Mondays. Did you grab coffee yet?"
+  GOOD (direct question) → opener: "Your background looks nice, is that a new setup?" / good: "Thanks! Yes, I just rearranged my home office last week." ← answers the question
+- Write each as a fluent native speaker who listens and responds naturally.
 
 Output ONLY valid JSON:
 {
@@ -767,9 +770,9 @@ Output ONLY valid JSON:
   "fb_ball_verdict": "caught|partial|missed",
   "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
   "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節",
-  "safe": "Model reply — clean and professional (≤22 words, no echoing opener)",
-  "pro": "Model reply — natural idiomatic American English (≤25 words, no echoing opener)",
-  "ball": "Model reply + one follow-up question to extend the conversation (≤28 words, no echoing opener)"
+  "safe": "Learner's model reply — answers any direct question first, clean and professional (≤22 words)",
+  "pro": "Learner's model reply — answers any direct question first, natural idiomatic American English (≤25 words)",
+  "ball": "Learner's model reply — answers any direct question first, then one follow-up question to keep conversation going (≤28 words)"
 }`;
 
     const raw = await callGroq(prompt, 480, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.', true);
