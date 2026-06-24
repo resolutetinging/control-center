@@ -186,6 +186,9 @@ body{
 .cost-chart-legend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:7px;}
 .cost-chart-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
 .cost-chart-leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.cost-chart-tabs{display:flex;gap:4px;margin-bottom:7px;}
+.cost-chart-tab{font-size:10px;padding:3px 10px;border-radius:10px;border:.5px solid var(--border);background:var(--bg2);color:var(--sub);cursor:pointer;font-family:inherit;transition:background .15s,color .15s;}
+.cost-chart-tab.active{background:var(--coffee-tint2);color:var(--coffee);border-color:var(--coffee-l);font-weight:700;}
 
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
@@ -596,6 +599,7 @@ function addCoffee(){
 // ── WATER ──
 let selW=250;
 let selChartYear=new Date().getFullYear();
+let selChartMode='all'; // 'coffee' | 'all'
 function pickW(v){
   selW=v;
   document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('sel'));
@@ -826,6 +830,10 @@ function renderCoffeeChart(){
   const wrap=document.getElementById('cost-chart-wrap');
   const yearSel=document.getElementById('cost-chart-year');
   if(!wrap)return;
+  // sync tab active state
+  document.querySelectorAll('.cost-chart-tab').forEach(t=>{
+    t.classList.toggle('active',t.dataset.mode===selChartMode);
+  });
   const d=loadRF();const all=d.entries||[];
   const coffeeAll=all.filter(e=>e.type==='coffee');
   const curYear=new Date().getFullYear();
@@ -842,7 +850,9 @@ function renderCoffeeChart(){
   yearEntries.forEach(e=>{
     const m=new Date(e.timestamp).getMonth()+1;
     const shop=e.cafe||'（未填店名）';
-    const price=(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
+    const price=selChartMode==='coffee'
+      ?(e.coffeePrice??e.price??0)
+      :(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
     monthData[m][shop]=(monthData[m][shop]||0)+price;
   });
   // 從第一個有資料的月份開始，跳過前面空白月份
@@ -852,7 +862,7 @@ function renderCoffeeChart(){
   const monthTotals=Array.from({length:spanMonths},(_,i)=>Object.values(monthData[minMonth+i]||{}).reduce((s,v)=>s+v,0));
   const maxVal=Math.max(...monthTotals,1);
   const W=Math.max(wrap.offsetWidth||wrap.clientWidth||260,160);
-  const H=130;const padL=36,padR=6,padT=8,padB=24;
+  const H=140;const padL=36,padR=6,padT=18,padB=24;
   const chartW=W-padL-padR;const chartH=H-padT-padB;
   const gap=chartW/spanMonths;
   const barW=Math.max(6,Math.min(26,Math.floor(gap*0.65)));
@@ -876,6 +886,13 @@ function renderCoffeeChart(){
       barY-=bh;
       svgBars+=`<rect x="${Math.round(cx-barW/2)}" y="${barY}" width="${barW}" height="${bh}" fill="${shopColor[shop]}" rx="2"/>`;
     });
+    // 加總金額標籤（顯示在長條最上方）
+    const total=monthTotals[i];
+    if(total>0){
+      const topY=H-padB-Math.round(total/yMax*chartH);
+      const lbl=total>=1000?(Math.round(total/100)/10)+'k':total;
+      svgBars+=`<text x="${Math.round(cx)}" y="${topY-3}" text-anchor="middle" font-size="8" fill="#7a7570">${lbl}</text>`;
+    }
     svgBars+=`<text x="${Math.round(cx)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#7a7570">${m}月</text>`;
   }
   wrap.innerHTML=`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}</svg>`;
@@ -996,6 +1013,10 @@ function renderCostAnalysis(){
         <div class="cost-chart-header">
           <div class="cost-bd-title">📊 月度消費走勢（NT$）</div>
           <select class="cost-chart-year-sel" id="cost-chart-year" onchange="selChartYear=parseInt(this.value);renderCoffeeChart()"></select>
+        </div>
+        <div class="cost-chart-tabs">
+          <button class="cost-chart-tab" data-mode="coffee" onclick="selChartMode='coffee';renderCoffeeChart()">☕ 咖啡</button>
+          <button class="cost-chart-tab active" data-mode="all" onclick="selChartMode='all';renderCoffeeChart()">☕🍰 咖啡/餐食</button>
         </div>
         <div id="cost-chart-wrap" style="min-height:60px;"></div>
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
