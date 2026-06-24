@@ -599,7 +599,7 @@ function addCoffee(){
 // ── WATER ──
 let selW=250;
 let selChartYear=new Date().getFullYear();
-let selChartMode='all'; // 'coffee' | 'all'
+let selChartMode='coffee'; // 'coffee' | 'dessert'
 function pickW(v){
   selW=v;
   document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('sel'));
@@ -852,7 +852,7 @@ function renderCoffeeChart(){
     const shop=e.cafe||'（未填店名）';
     const price=selChartMode==='coffee'
       ?(e.coffeePrice??e.price??0)
-      :(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
+      :(e.dessertPrice??0);
     monthData[m][shop]=(monthData[m][shop]||0)+price;
   });
   // 從第一個有資料的月份開始，跳過前面空白月份
@@ -890,8 +890,8 @@ function renderCoffeeChart(){
     const total=monthTotals[i];
     if(total>0){
       const topY=H-padB-Math.round(total/yMax*chartH);
-      const lbl=total>=1000?(Math.round(total/100)/10)+'k':total;
-      svgBars+=`<text x="${Math.round(cx)}" y="${topY-3}" text-anchor="middle" font-size="8" fill="#7a7570">${lbl}</text>`;
+      const lbl='$'+total.toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
+      svgBars+=`<text x="${Math.round(cx)}" y="${topY-3}" text-anchor="middle" font-size="9" font-weight="700" fill="#4a4540">${lbl}</text>`;
     }
     svgBars+=`<text x="${Math.round(cx)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#7a7570">${m}月</text>`;
   }
@@ -1015,8 +1015,8 @@ function renderCostAnalysis(){
           <select class="cost-chart-year-sel" id="cost-chart-year" onchange="selChartYear=parseInt(this.value);renderCoffeeChart()"></select>
         </div>
         <div class="cost-chart-tabs">
-          <button class="cost-chart-tab" data-mode="coffee" onclick="selChartMode='coffee';renderCoffeeChart()">☕ 咖啡</button>
-          <button class="cost-chart-tab active" data-mode="all" onclick="selChartMode='all';renderCoffeeChart()">☕🍰 咖啡/餐食</button>
+          <button class="cost-chart-tab active" data-mode="coffee" onclick="selChartMode='coffee';renderCoffeeChart()">☕ 咖啡</button>
+          <button class="cost-chart-tab" data-mode="dessert" onclick="selChartMode='dessert';renderCoffeeChart()">🍰 甜點/餐食</button>
         </div>
         <div id="cost-chart-wrap" style="min-height:60px;"></div>
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
