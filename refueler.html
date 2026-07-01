@@ -654,7 +654,7 @@ function renderCoffeeLog(editId=null){
     }
     const desc=[e.cafe,e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
     const photoHtml=e.photo?`<img src="${e.photo}" class="log-thumb"/>`:'';
-    const priceHtml=[cp?`<span class="log-price" title="咖啡">☕$${cp}</span>`:'',dp?`<span class="log-price" title="甜點/餐食">🍰$${dp}</span>`:''].filter(Boolean).join('');
+    const priceHtml=[cp?`<span class="log-price" title="咖啡">☕ ${fmtM(cp)}</span>`:'',dp?`<span class="log-price" title="甜點/餐食">🍰 ${fmtM(dp)}</span>`:''].filter(Boolean).join('');
     return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${desc}</span>${priceHtml}<button class="log-edit" onclick="renderCoffeeLog('${e.id}')">✏️</button><button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
   }).join('');
 }
@@ -697,7 +697,7 @@ function showShopDetail(shop,editId=null){
       </div>`;
     }
     const desc=[e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
-    return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">NT$${cp+dp}</span>`:''}</div><button class="log-edit" onclick="showShopDetail('${shopEsc}','${e.id}')">✏️</button></div>`;
+    return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}</div><button class="log-edit" onclick="showShopDetail('${shopEsc}','${e.id}')">✏️</button></div>`;
   }).join('');
   document.getElementById('dd-panel').innerHTML=`<div class="dd-title"><span>☕ ${_x(shop)}</span><button class="dd-cls" onclick="closeDayDetail()">✕</button></div><div style="font-size:11px;color:var(--faint);margin-bottom:10px;">${es.length} 筆記錄（全部時間）</div>${rows||'<div style="color:var(--faint);font-size:13px;">無記錄</div>'}`;
   document.getElementById('day-detail').style.display='flex';
@@ -742,7 +742,7 @@ function renderCoffeeCalendar(){
     const isT=today.getFullYear()===cCalY&&today.getMonth()===cCalM&&today.getDate()===d;
     const cls=n===0?'':n===1?'c1':n===2?'c2':n===3?'c3':'c4';
     const dayCost=es.reduce((s,e)=>s+(e.coffeePrice??e.price??0)+(e.dessertPrice??0),0);
-    const badge=n?`<span class="cal-badge cal-badge-c">${n}杯</span>${dayCost?`<span class="cal-badge cal-badge-c" style="font-size:9px;font-weight:600;">$${dayCost}</span>`:''}`:'';
+    const badge=n?`<span class="cal-badge cal-badge-c">${n}杯</span>${dayCost?`<span class="cal-badge cal-badge-c" style="font-size:9px;font-weight:600;">${fmtM(dayCost)}</span>`:''}`:'';
     const clickFn=n?`onclick="showDayDetail('${key}','coffee')"`:'' ;
     return`<div class="cal-cell ${cls} ${isT?'today':''} ${n?'has-data':''}" ${clickFn}><span class="cal-num">${d}</span>${badge}</div>`;
   }).join('');
@@ -804,7 +804,7 @@ function showDayDetail(key,type,editId=null){
         </div>`;
       }
       const parts=[e.cafe,e.item,e.dessert].filter(Boolean);
-      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">NT$${cp+dp}</span>`:''}${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}</div><button class="log-edit" onclick="showDayDetail('${key}','coffee','${e.id}')">✏️</button></div>`;
+      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}</div><button class="log-edit" onclick="showDayDetail('${key}','coffee','${e.id}')">✏️</button></div>`;
     }).join('');
   }else{
     const total=es.reduce((s,e)=>s+(e.amount||0),0);
@@ -824,6 +824,7 @@ function closeDayDetail(){document.getElementById('day-detail').style.display='n
 
 // ── HELPERS ──
 const _x=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtM=n=>'$ '+Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const CHART_COLORS=['#c47a3a','#5a8a9a','#7a9a5a','#8a6a7a','#9a7a4a','#5a7a8a','#c4a43a','#6a5a4a'];
 
 // ── COFFEE CHART ──
@@ -893,7 +894,7 @@ function renderCoffeeChart(){
     const total=monthTotals[i];
     if(total>0){
       const topY=H-padB-Math.round(total/yMax*chartH);
-      const lbl='$'+total.toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
+      const lbl=fmtM(total);
       svgBars+=`<text x="${Math.round(cx)}" y="${topY-3}" text-anchor="middle" font-size="9" font-weight="700" fill="#4a4540">${lbl}</text>`;
     }
     svgBars+=`<text x="${Math.round(cx)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#7a7570">${m}月</text>`;
@@ -963,21 +964,21 @@ function renderCostAnalysis(){
             const iPct=data.total>0?Math.round(d.total/data.total*100):0;
             return `<div class="cost-tree-row">
               <div class="cost-tree-name"><span class="cost-tree-prefix">|──</span><span class="cost-tree-lbl">${_x(item)}</span></div>
-              <span class="cost-tree-stats">NT$${d.total}<span class="cost-tree-meta">${iPct}% · ${d.count}次</span></span>
+              <span class="cost-tree-stats">${fmtM(d.total)}<span class="cost-tree-meta">${iPct}% · ${d.count}次</span></span>
               <span class="cost-tree-trend"></span>
             </div>`;
           }).join('');
         const shopEsc=shop.replace(/'/g,"\\'");
         return `<div class="cost-tree-row cost-tree-parent" style="cursor:pointer;" onclick="showShopDetail('${shopEsc}')">
           <div class="cost-tree-name"><span class="cost-tree-lbl">${_x(shop)}</span><span style="font-size:10px;color:var(--faint);margin-left:4px;">✏️</span></div>
-          <span class="cost-tree-stats">NT$${data.total}<span class="cost-tree-meta">${sPct}% · ${data.count}次</span></span>
+          <span class="cost-tree-stats">${fmtM(data.total)}<span class="cost-tree-meta">${sPct}% · ${data.count}次</span></span>
           <span class="cost-tree-trend"></span>
         </div>${childRows}`;
       }).join('');
     return `<div class="cost-bd-group">
       <div class="cost-bd-title">${title}</div>
       ${rows}
-      <div class="cost-bd-total">合計 NT$${grandTotal}</div>
+      <div class="cost-bd-total">合計 ${fmtM(grandTotal)}</div>
     </div>`;
   }
 
@@ -986,22 +987,22 @@ function renderCostAnalysis(){
     <div class="cost-grid">
       <div class="cost-stat" style="border-left:2.5px solid var(--coffee-l);">
         <div class="cost-lbl">今日 ☕ 咖啡</div>
-        <div class="cost-val">NT$${todayCoffee}<span class="cost-val-unit"></span></div>
+        <div class="cost-val">${fmtM(todayCoffee)}<span class="cost-val-unit"></span></div>
         <div class="cost-sub">${coffeeEntriesToday.length} 杯</div>
       </div>
       <div class="cost-stat" style="border-left:2.5px solid #c4aa7c;">
         <div class="cost-lbl">今日 🍰 甜點/餐食</div>
-        <div class="cost-val">NT$${todayDessert}</div>
+        <div class="cost-val">${fmtM(todayDessert)}</div>
         <div class="cost-sub">${coffeeEntriesToday.filter(e=>(e.dessertPrice??0)>0||e.dessert).length} 項</div>
       </div>
       <div class="cost-stat" style="border-left:2.5px solid var(--ink);">
         <div class="cost-lbl">${monthLabel}總計</div>
-        <div class="cost-val" style="color:${monthTotal>3000?'var(--danger)':monthTotal>1500?'var(--warn)':'var(--ink)'};">NT$${monthTotal}</div>
+        <div class="cost-val" style="color:${monthTotal>3000?'var(--danger)':monthTotal>1500?'var(--warn)':'var(--ink)'};">${fmtM(monthTotal)}</div>
         <div class="cost-sub">${monthEntries.length} 筆</div>
       </div>
       <div class="cost-stat">
         <div class="cost-lbl">${monthLabel}日均</div>
-        <div class="cost-val">NT$${dailyAvg}</div>
+        <div class="cost-val">${fmtM(dailyAvg)}</div>
         <div class="cost-sub">前 ${daysElapsed} 天</div>
       </div>
     </div>
@@ -1011,12 +1012,12 @@ function renderCostAnalysis(){
       <div class="cost-cat-row">
         <span class="cost-cat-lbl">☕ 咖啡</span>
         <div class="cost-bar-wrap"><div class="cost-bar" style="width:${coffeeP}%;background:var(--coffee-l);"></div></div>
-        <span class="cost-cat-amt">NT$${monthCoffee} <span style="color:var(--faint);font-weight:400;">(${coffeeP}%)</span></span>
+        <span class="cost-cat-amt">${fmtM(monthCoffee)} <span style="color:var(--faint);font-weight:400;">(${coffeeP}%)</span></span>
       </div>
       <div class="cost-cat-row">
         <span class="cost-cat-lbl">🍰 甜點/餐食</span>
         <div class="cost-bar-wrap"><div class="cost-bar" style="width:${dessertP}%;background:#c4aa7c;"></div></div>
-        <span class="cost-cat-amt">NT$${monthDessert} <span style="color:var(--faint);font-weight:400;">(${dessertP}%)</span></span>
+        <span class="cost-cat-amt">${fmtM(monthDessert)} <span style="color:var(--faint);font-weight:400;">(${dessertP}%)</span></span>
       </div>
     </div>`:''}
     <div class="cost-breakdown">
