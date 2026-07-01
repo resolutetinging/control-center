@@ -175,6 +175,7 @@ body{
 .cost-tree-prefix{font-size:10px;color:var(--faint);flex-shrink:0;font-family:monospace;}
 .cost-tree-lbl{font-size:12px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .cost-tree-parent .cost-tree-lbl{font-weight:600;color:var(--ink);}
+.cost-tree-parent{background:rgba(40,38,32,.07);border-radius:5px;margin:3px -4px 1px;padding-left:4px;padding-right:4px;}
 .cost-tree-stats{font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:center;}
 .cost-tree-meta{font-size:10px;font-weight:400;color:var(--faint);margin-left:5px;}
 .cost-tree-trend{width:20px;} /* 保留：長期趨勢箭頭 */
@@ -852,7 +853,9 @@ function renderCoffeeChart(){
     const shop=e.cafe||'（未填店名）';
     const price=selChartMode==='coffee'
       ?(e.coffeePrice??e.price??0)
-      :(e.dessertPrice??0);
+      :selChartMode==='dessert'
+        ?(e.dessertPrice??0)
+        :(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
     monthData[m][shop]=(monthData[m][shop]||0)+price;
   });
   // 從第一個有資料的月份開始，跳過前面空白月份
@@ -895,7 +898,15 @@ function renderCoffeeChart(){
     }
     svgBars+=`<text x="${Math.round(cx)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#7a7570">${m}月</text>`;
   }
-  wrap.innerHTML=`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}</svg>`;
+  // 折線圖：連接各月總量頂端
+  const linePts=[];
+  for(let i=0;i<spanMonths;i++){if(monthTotals[i]>0){const cx=Math.round(padL+(i+0.5)*gap);const ty=H-padB-Math.round(monthTotals[i]/yMax*chartH);linePts.push({cx,ty});}}
+  let svgLine='';
+  if(linePts.length>=2){
+    svgLine+=`<polyline points="${linePts.map(p=>p.cx+','+p.ty).join(' ')}" fill="none" stroke="rgba(40,38,32,.32)" stroke-width="1.5" stroke-linejoin="round"/>`;
+    linePts.forEach(p=>{svgLine+=`<circle cx="${p.cx}" cy="${p.ty}" r="2.8" fill="#4a4540" stroke="#f0ede8" stroke-width="1.5"/>`;});
+  }
+  wrap.innerHTML=`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}${svgLine}</svg>`;
   const lg=document.getElementById('cost-chart-legend');
   if(lg)lg.innerHTML=allShops.length?allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join(''):'';
 }
@@ -1017,6 +1028,7 @@ function renderCostAnalysis(){
         <div class="cost-chart-tabs">
           <button class="cost-chart-tab active" data-mode="coffee" onclick="selChartMode='coffee';renderCoffeeChart()">☕ 咖啡</button>
           <button class="cost-chart-tab" data-mode="dessert" onclick="selChartMode='dessert';renderCoffeeChart()">🍰 甜點/餐食</button>
+          <button class="cost-chart-tab" data-mode="all" onclick="selChartMode='all';renderCoffeeChart()">📊 全部</button>
         </div>
         <div id="cost-chart-wrap" style="min-height:60px;"></div>
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
