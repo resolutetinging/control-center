@@ -765,15 +765,23 @@ fb_content: 用繁體中文說明接球狀況，根據 verdict 調整語氣：
 
 fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
 
-TASK 2 — Write 3 model English replies FROM THE LEARNER'S PERSPECTIVE (safe, pro, ball):
-- ROLE: The learner is the one being spoken TO. All 3 replies must come from the LEARNER'S perspective — answering, reacting, or responding to what was said to them. NEVER write from the opener speaker's perspective.
-- DIRECT QUESTION RULE: If the opener contains a direct question addressed to the learner (e.g. "is that a new setup?", "how was your weekend?", "did you enjoy the trip?"), every model reply MUST answer that question first before adding anything else. Ignoring a direct question is a critical error.
+TASK 2 — Write 3 DISTINCT model English replies FROM THE LEARNER'S PERSPECTIVE. Each reply must represent a clearly different strategy — NOT rewordings of the same idea. Three people chose three different approaches.
+
+SHARED RULES (all 3 replies):
+- ROLE: Learner's perspective only. Responding to what was said TO them. Never from the opener speaker's view.
+- DIRECT QUESTION RULE: If the opener asks a direct question ("how was your weekend?", "is that a new setup?"), every reply MUST answer it before anything else. Skipping a direct question is a critical error.
 - COMPLETELY INDEPENDENT of the learner's actual reply — do NOT quote, correct, or reference the learner's text at all.
-- Anti-echo: avoid mechanically repeating the opener's exact phrase. BUT when the opener asks a direct question about the learner's situation, a natural answer WILL reference the same topic — that is answering, not echoing.
-  BAD (mechanical echo) → opener: "Running a bit behind, huh." / bad: "Running a bit behind, yeah, traffic I guess." ← mirrors phrasing
-  GOOD → opener: "Running a bit behind, huh." / good: "Ha, story of my life on Mondays. Did you grab coffee yet?"
-  GOOD (direct question) → opener: "Your background looks nice, is that a new setup?" / good: "Thanks! Yes, I just rearranged my home office last week." ← answers the question
-- Write each as a fluent native speaker who listens and responds naturally.
+- Anti-echo: do NOT mirror the opener's phrasing mechanically. Referencing the same topic when answering a direct question is fine — that's answering, not echoing.
+  BAD → opener: "Running a bit behind, huh." → bad safe: "Running a bit behind, yeah, traffic I guess." ← mirrors phrasing
+  GOOD → same opener → good safe: "Sorry about that — I got caught in a quick call. Ready now."
+- No filler-only replies: "Oh interesting!" / "That's great!" / "Sounds good!" alone are NOT acceptable.
+
+INDIVIDUAL REQUIREMENTS:
+- safe (≤20 words): The failsafe version. Simple grammar, everyday vocabulary, zero awkwardness. No idioms. Anyone at intermediate level can pull this off and sound appropriate and complete. Tone matches the setting but plays it safe.
+- pro (≤25 words): The native-speaker version. Must include at least one colloquial expression, idiom, or native speech rhythm that intermediate learners wouldn't typically produce (e.g. "tell me about it", "not gonna lie", "honestly though", "right there with you"). Tone calibrated to the specific setting — casual for coffee machine, slightly sharper for networking events. Must sound like something a fluent outgoing colleague would actually say.
+- ball (≤30 words): The momentum version. Acknowledges the opener, then adds a SUBSTANTIVE follow-up question that opens a new thread — not just "how about you?" tacked on. The question must be specific and contextually relevant to this situation and opener. Creates a reason for the conversation to continue.
+
+ALL THREE must use different words, phrases, and sentence structures. If two replies start the same way or use the same key phrase, rewrite until they're distinct.
 
 Output ONLY valid JSON:
 {
@@ -782,12 +790,12 @@ Output ONLY valid JSON:
   "fb_ball_verdict": "caught|partial|missed",
   "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
   "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節",
-  "safe": "Learner's model reply — answers any direct question first, clean and professional (≤22 words)",
-  "pro": "Learner's model reply — answers any direct question first, natural idiomatic American English (≤25 words)",
-  "ball": "Learner's model reply — answers any direct question first, then one follow-up question to keep conversation going (≤28 words)"
+  "safe": "≤20 words — simple, appropriate, no idioms",
+  "pro": "≤25 words — includes ≥1 colloquial/idiomatic expression, calibrated tone",
+  "ball": "≤30 words — answers first, then a specific contextual follow-up question"
 }`;
 
-    const raw = await callGroq(prompt, 480, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.', true);
+    const raw = await callGroq(prompt, 600, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.', true);
     results = safeParseJson(raw);
 
     // Opener 中文說明（永遠顯示）
