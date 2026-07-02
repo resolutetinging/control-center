@@ -238,6 +238,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .combo-del-btn{background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;padding:0;line-height:1}
 .combo-del-btn:hover{color:#c05050}
 .combo-empty{text-align:center;font-size:13px;color:var(--faint);padding:30px 0}
+.combo-sit-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.combo-sit-tab{font-size:11px;padding:3px 9px;border-radius:20px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap;}
+.combo-sit-tab.active{background:var(--en);color:#fff;border-color:var(--en);}
 </style>
 </head>
 <body>
@@ -485,10 +488,11 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
 <!-- ════════════ PAGE 4: COMBO ════════════ -->
 <div class="page" id="page-combo">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">⭐ 收藏對話組合</div>
     <button class="btn btn-ghost btn-sm" onclick="clearCombos()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
   </div>
+  <div class="combo-sit-tabs" id="combo-sit-tabs"></div>
   <div id="combo-list"></div>
 </div><!-- /page-combo -->
 
@@ -510,6 +514,7 @@ const SITS = {
 let curSit = null;
 let curOpener = '';
 let timerInterval = null;
+let curComboSit = 'all';
 let timerSec = 30;
 let timerMode = 30;
 let results = {};
@@ -889,12 +894,26 @@ function renderSaved(){
 }
 
 // ── Combo Page ──
+function setComboSit(sit){ curComboSit=sit; renderCombos(); }
 function renderCombos(){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
   const body=$('combo-list');
+  const tabBar=$('combo-sit-tabs');
   if(!body) return;
-  body.innerHTML=saved.length
-    ? saved.map((item,i)=>{
+
+  // Build tab bar from unique sits present in data
+  if(tabBar){
+    const sits=[...new Set(saved.map(it=>it.sit).filter(Boolean))];
+    tabBar.innerHTML= sits.length
+      ? '<button class="combo-sit-tab'+(curComboSit==='all'?' active':'')+'" onclick="setComboSit(\'all\')">全部</button>'
+        + sits.map(s=>'<button class="combo-sit-tab'+(curComboSit===s?' active':'')+'" onclick="setComboSit('+JSON.stringify(s)+')">'+esc(s)+'</button>').join('')
+      : '';
+  }
+
+  const list = curComboSit==='all' ? saved : saved.filter(it=>it.sit===curComboSit);
+  body.innerHTML=list.length
+    ? list.map((item,i)=>{
+        const origIdx=saved.indexOf(item);
         const starred=!!item.starred;
         return`
       <div class="combo-card">
@@ -909,12 +928,12 @@ function renderCombos(){
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            <button class="star-btn${starred?' on':''}" id="combo-star-${i}" onclick="toggleComboStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
-            <button class="combo-del-btn" onclick="delCombo(${i})">✕</button>
+            <button class="star-btn${starred?' on':''}" id="combo-star-${origIdx}" onclick="toggleComboStar(${origIdx})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
+            <button class="combo-del-btn" onclick="delCombo(${origIdx})">✕</button>
           </div>
         </div>
-      </div>`;}).join('')
-    : '<div class="combo-empty">尚無收藏對話，在 Small Talk 答題後點 ⭐ 收藏</div>';
+      </div>`; }).join('')
+    : '<div class="combo-empty">'+(curComboSit==='all'?'尚無收藏對話，在 Small Talk 答題後點 ⭐ 收藏':'此分類尚無收藏對話')+'</div>';
 }
 function toggleComboStar(i){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
