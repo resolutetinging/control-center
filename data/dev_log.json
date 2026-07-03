@@ -1,0 +1,50 @@
+{
+  "generated_through": "2026-07-02",
+  "note": "每日資料抓取至前一天為止（今日資料視為未定稿，不納入）",
+  "timeline": [
+    {"date":"2026-07-02","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"AI 反饋 prompt 範例移除＋能耗配置預設收合"},
+    {"date":"2026-07-02","project":"AI Tracker","file":"update_data.py","summary":"新聞方向調整（技術面 → 產業應用）"},
+    {"date":"2026-07-02","project":"English Sandbox","file":"english-sandbox.html","summary":"三階潤飾角色修正＋字體縮小＋收藏組合分類 Tab"},
+
+    {"date":"2026-06-29","project":"AI Tracker","file":"update_data.py","summary":"品質閘同步至 scripts/＋上游截斷零捏造機制"},
+    {"date":"2026-06-29","project":"WordVault","file":"WordVault.html","summary":"喇叭播兩次修正＋背誦錯題顯示錯誤修正"},
+
+    {"date":"2026-06-24","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"AI 反饋 prompt 精簡重構（4-6 段 → 3 段固定結構）"},
+    {"date":"2026-06-24","project":"AI Tracker","file":"update_data.py","summary":"新聞來源擴充，解決半導體連續標「冷」問題"},
+    {"date":"2026-06-24","project":"Refueler","file":"refueler.html","summary":"月度消費走勢新增 Tab＋長條圖加總標籤"},
+    {"date":"2026-06-24","project":"English Sandbox","file":"english-sandbox.html","summary":"Small Talk 潤飾角色混淆修正＋字庫/背誦卡 3 欄 layout"},
+
+    {"date":"2026-06-23","project":"AI Tracker","file":"update_data.py","summary":"中文標題跨日重複修正＋body 套話重複改善"},
+    {"date":"2026-06-23","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"歷史頁右欄全面重構＋能耗配置×代償對照區塊"},
+    {"date":"2026-06-23","project":"NexusPortal","file":"index.html","summary":"修復分享連結預覽顯示錯誤文字"},
+    {"date":"2026-06-23","project":"WordVault","file":"WordVault.html","summary":"字庫同步星星標記＋資料修正卡片統一收合＋音標查詢防卡死"},
+    {"date":"2026-06-23","project":"English Sandbox","file":"english-sandbox.html","summary":"收藏組合星星只有第1&3項可用 Bug 修復"},
+    {"date":"2026-06-23","project":"Refueler","file":"refueler.html","summary":"localStorage 爆量修復＋Gist JSON 截斷自動修復"},
+    {"date":"2026-06-23","project":"SAS Hub","file":"index.html","summary":"三維相關性排除週末＋四層 Typography 色彩系統統一"},
+
+    {"date":"2026-06-22","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"休假模式 AI 反饋獨立 prompt，不評估產出績效"},
+    {"date":"2026-06-22","project":"Mental Dashboard","file":"mental-dashboard.html","summary":"人際圈分類層級＋可收合＋人物歸類下拉選單"},
+    {"date":"2026-06-22","project":"SAS Hub","file":"index.html","summary":"Mental tab 新增 ↻ 重整按鈕"},
+    {"date":"2026-06-22","project":"English Sandbox","file":"english-sandbox.html","summary":"Idiom 隨機化升級＋Small Talk 8 情境＋字庫背誦考驗系統"},
+    {"date":"2026-06-22","project":"NexusPortal","file":"index.html","summary":"Memo Tag 比較器 inline 編輯＋儲存 Toast＋Pill 高亮"},
+
+    {"date":"2026-06-16","project":"NexusPortal","file":"index.html","summary":"Public 底圖 overlay 修正＋Instagram 連結 iOS 修復＋Baked Data 注入 bug"},
+    {"date":"2026-06-16","project":"Control Center","file":"index.html","summary":"NexusPortal Lens 快捷面板（#lto-panel）"},
+
+    {"date":"2026-06-15","project":"NexusPortal","file":"index.html","summary":"Engineering Timeline 重構＋工作維護 tab 重構＋letter-spacing 全站統一"},
+    {"date":"2026-06-15","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"Calendar 行程未納入修正＋Pipes 時序排序錯誤修正＋積木池 UI 重組"},
+    {"date":"2026-06-15","project":"SAS Hub","file":"index.html","summary":"iframe 快取修正"},
+    {"date":"2026-06-15","project":"Control Center","file":"index.html","summary":"lto-btn 圖示與連結更新"}
+  ],
+  "hotspots": [
+    {"project":"NexusPortal","file":"index.html","count":26},
+    {"project":"English Sandbox","file":"english-sandbox.html","count":14},
+    {"project":"Daily Optimizer","file":"daily_optimizer.html","count":9},
+    {"project":"AI Tracker","file":"update_data.py","count":6},
+    {"project":"Mental Dashboard","file":"mental-dashboard.html","count":6},
+    {"project":"WordVault","file":"WordVault.html","count":5},
+    {"project":"SAS Hub","file":"index.html","count":4},
+    {"project":"Refueler","file":"refueler.html","count":3},
+    {"project":"Control Center","file":"index.html","count":2}
+  ]
+}

@@ -92,6 +92,18 @@ body{position:relative;}
   transition:background .2s;
 }
 #settings-btn:hover{background:rgba(255,255,255,.9);}
+/* ── Dev Dashboard Btn（設定齒輪正右方，同大小同風格）── */
+#dev-btn{
+  position:fixed;top:22px;left:68px;z-index:50;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  color:var(--sub);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+  transition:background .2s;
+}
+#dev-btn:hover{background:rgba(255,255,255,.9);}
 /* ── Life Tracker Btn ── */
 #lto-btn{
   position:fixed;top:68px;left:22px;z-index:50;
@@ -159,6 +171,33 @@ body{position:relative;}
 .ep-opt:hover{background:rgba(40,38,32,.08);}
 /* Mobile lab card */
 #lab-mobile-card{display:none;margin:16px 12px 0;padding:16px;background:rgba(244,241,236,.82);border:.5px solid var(--bstr);border-radius:18px;}
+
+/* ── Dev Dashboard（開發概況）── */
+#dev-overlay{position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;}
+#dev-panel{background:rgba(244,241,236,.97);backdrop-filter:blur(40px) saturate(180%);border:.5px solid var(--bstr);border-radius:18px;width:min(94vw,760px);max-height:88vh;overflow-y:auto;box-shadow:0 20px 70px rgba(40,38,32,.18);animation:panel-in .22s cubic-bezier(.34,1.56,.64,1);padding:24px;}
+#dev-panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+#dev-panel-title{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.04em;}
+#dev-panel-close{width:28px;height:28px;border-radius:50%;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--sub);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#dev-panel-close:hover{background:rgba(255,255,255,.9);}
+#dev-panel-sub{font-size:10.5px;color:var(--faint);margin-bottom:18px;}
+.dev-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;}
+@media(max-width:640px){.dev-grid{grid-template-columns:1fr;}}
+.dev-col-title{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.dev-timeline{display:flex;flex-direction:column;gap:0;max-height:440px;overflow-y:auto;padding-right:4px;}
+.dev-tl-item{display:flex;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);}
+.dev-tl-item:last-child{border-bottom:none;}
+.dev-tl-date{flex-shrink:0;width:60px;font-size:9.5px;color:var(--faint);font-family:monospace;padding-top:1px;}
+.dev-tl-body{flex:1;min-width:0;}
+.dev-tl-file{font-size:11.5px;font-weight:700;color:var(--deep);}
+.dev-tl-summary{font-size:11px;color:var(--sub);line-height:1.5;margin-top:1px;}
+.dev-hotspots{display:flex;flex-direction:column;gap:11px;}
+.dev-hot-row{display:flex;flex-direction:column;gap:4px;}
+.dev-hot-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--ink);}
+.dev-hot-name{font-weight:600;}
+.dev-hot-count{color:var(--faint);font-family:monospace;}
+.dev-hot-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.dev-hot-bar-fill{height:100%;background:var(--deep);border-radius:3px;}
+#dev-empty{font-size:12px;color:var(--faint);text-align:center;padding:40px 0;}
 
 /* ── Dock ── */
 #dock-outer{
@@ -425,6 +464,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   .d-box{width:52px;height:52px;}
   /* Mobile lab */
   #lab-btn{display:none!important;}
+  /* Dev Dashboard 為 Mac 專屬入口，手機版隱藏，避免與 lto-btn 重疊 */
+  #dev-btn{display:none!important;}
   #lto-btn{top:22px!important;left:66px!important;z-index:110!important;}
   #lto-panel{top:66px!important;left:22px!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(244,241,236,.99)!important;}
   #lab-mobile-card{display:block;position:relative;z-index:100;width:100%;max-width:400px;margin-bottom:12px;}
@@ -459,6 +500,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 </div>
 
 <button id="settings-btn" onclick="openSettings('appearance')" title="設定">⚙</button>
+<button id="dev-btn" onclick="openDevDashboard()" title="開發概況">🛠️</button>
 <button id="lto-btn" onclick="toggleLtoPanel(event)" title="Nexus Portal">🌳</button>
 <div id="lto-panel">
   <div class="lto-hd">NexusPortal</div>
@@ -561,6 +603,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <button class="s-tab" id="lab-tab-links" onclick="switchLabTab('links')"><span class="s-tab-ic">🔗</span>連結管理</button>
     </div>
     <div id="lab-content"></div>
+  </div>
+</div>
+
+<!-- Dev Dashboard Overlay -->
+<div id="dev-overlay" style="display:none;" onclick="if(event.target===this)closeDevDashboard()">
+  <div id="dev-panel">
+    <div id="dev-panel-hd">
+      <div id="dev-panel-title">🛠️ 生態系開發與運作狀態</div>
+      <button id="dev-panel-close" onclick="closeDevDashboard()">✕</button>
+    </div>
+    <div id="dev-panel-sub"></div>
+    <div id="dev-panel-body"></div>
   </div>
 </div>
 
@@ -1826,6 +1880,60 @@ function renderLabMobile(){
   el.innerHTML=ps.map(p=>`<a class="lab-app" href="${labEsc(p.url)}" target="_blank" rel="noopener"><div class="lab-app-box">${p.emoji||'🔗'}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('');
 }
 renderLabMobile();
+
+// ── Dev Dashboard（開發概況）──
+function openDevDashboard(){
+  document.getElementById('dev-overlay').style.display='flex';
+  renderDevDashboard();
+}
+function closeDevDashboard(){document.getElementById('dev-overlay').style.display='none';}
+function renderDevDashboard(){
+  const subEl=document.getElementById('dev-panel-sub');
+  const bodyEl=document.getElementById('dev-panel-body');
+  if(!bodyEl)return;
+  bodyEl.innerHTML='<div id="dev-empty">讀取中…</div>';
+  fetch('data/dev_log.json?v='+Date.now())
+    .then(r=>{if(!r.ok)throw new Error('讀取失敗');return r.json();})
+    .then(d=>{
+      const tl=d.timeline||[];
+      const hs=d.hotspots||[];
+      if(subEl)subEl.textContent='資料抓取至 '+esc(d.generated_through||'—')+' 為止（今日資料視為未定稿，不納入）';
+      if(!tl.length&&!hs.length){bodyEl.innerHTML='<div id="dev-empty">尚無開發紀錄</div>';return;}
+      const tlHtml=tl.length
+        ?'<div class="dev-timeline">'+tl.map(it=>`
+          <div class="dev-tl-item">
+            <div class="dev-tl-date">${esc(it.date||'')}</div>
+            <div class="dev-tl-body">
+              <div class="dev-tl-file">${esc(it.project||it.file||'')} · ${esc(it.file||'')}</div>
+              <div class="dev-tl-summary">${esc(it.summary||'')}</div>
+            </div>
+          </div>`).join('')+'</div>'
+        :'<div id="dev-empty">尚無時間軸資料</div>';
+      const maxCount=Math.max(1,...hs.map(h=>h.count||0));
+      const hsHtml=hs.length
+        ?'<div class="dev-hotspots">'+hs.map(h=>{
+          const pct=Math.round((h.count||0)/maxCount*100);
+          return `<div class="dev-hot-row">
+            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(h.project||h.file||'')}</span><span class="dev-hot-count">${h.count||0}</span></div>
+            <div class="dev-hot-bar-track"><div class="dev-hot-bar-fill" style="width:${pct}%"></div></div>
+          </div>`;
+        }).join('')+'</div>'
+        :'<div id="dev-empty">尚無熱點資料</div>';
+      bodyEl.innerHTML=`<div class="dev-grid">
+        <div>
+          <div class="dev-col-title">開發履歷時間軸</div>
+          ${tlHtml}
+        </div>
+        <div>
+          <div class="dev-col-title">組件熱點監測</div>
+          ${hsHtml}
+        </div>
+      </div>`;
+    })
+    .catch(e=>{
+      bodyEl.innerHTML='<div id="dev-empty">讀取失敗：'+esc(e.message)+'</div>';
+    });
+}
 </script>
 <script src="cc_autosync.js"></script>
 </body>
