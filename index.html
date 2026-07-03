@@ -1935,6 +1935,11 @@ function renderDevDashboard(){
       if(subEl)subEl.textContent='開發紀錄更新至 '+esc(d.generated_through||'—');
 
       // ── 開發履歷時間軸：同一天聚合一列，同一天內同一專案也合併一行 ──
+      function weekdayZh(dateStr){
+        const wd=['日','一','二','三','四','五','六'];
+        const d=new Date(dateStr+'T12:00:00');
+        return isNaN(d)?'':`(${wd[d.getDay()]})`;
+      }
       const byDate={};const dateOrder=[];
       tl.forEach(it=>{
         if(!byDate[it.date]){byDate[it.date]={};dateOrder.push(it.date);}
@@ -1947,7 +1952,7 @@ function renderDevDashboard(){
           const projects=byDate[date];
           const rows=Object.keys(projects).map(proj=>`<div class="dev-tl-row"><span class="dev-tl-proj">${esc(proj)}</span><span class="dev-tl-summary">${projects[proj].map(esc).join('＋')}</span></div>`).join('');
           return `<div class="dev-tl-item">
-            <div class="dev-tl-date">${esc(date)}</div>
+            <div class="dev-tl-date">${esc(date)}<br>${esc(weekdayZh(date))}</div>
             <div class="dev-tl-detail">${rows}</div>
           </div>`;
         }).join('')+'</div>'
