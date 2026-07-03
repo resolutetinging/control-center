@@ -1,7 +1,15 @@
 {
-  "generated_through": "2026-07-02",
-  "note": "每日資料抓取至前一天為止（今日資料視為未定稿，不納入）",
+  "generated_through": "2026-07-03",
+  "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {"date":"2026-07-03","project":"Control Center","file":"index.html","summary":"新增 Dev Dashboard 模組（🛠️ 按鈕＋兩欄式面板）"},
+    {"date":"2026-07-03","project":"Control Center","file":"index.html","summary":"「實驗中」🧪 圓圈按鈕移到 NexusPortal 圓圈下方"},
+    {"date":"2026-07-03","project":"English Sandbox","file":"english-sandbox.html","summary":"收藏組合分類 tab 點擊無反應修正（onclick 雙引號衝突）"},
+    {"date":"2026-07-03","project":"Sleep Dashboard","file":"sleep_dashboard_v2.html","summary":"排除週末開關規格重新定義（單夜不受影響/3夜加權受影響）＋全面審查"},
+    {"date":"2026-07-03","project":"AI Tracker","file":"update_data.py","summary":"一週6/7天全noise五輪 root cause 排查（內文擷取/顯示邏輯/數字regex/SOURCE_URL位置/insight欄位）"},
+    {"date":"2026-07-03","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"睡眠戰力改統一直接讀 Sleep Dashboard 3夜加權值"},
+    {"date":"2026-07-03","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"AI 反饋與實際完成狀態矛盾修正"},
+
     {"date":"2026-07-02","project":"Daily Optimizer","file":"daily_optimizer.html","summary":"AI 反饋 prompt 範例移除＋能耗配置預設收合"},
     {"date":"2026-07-02","project":"AI Tracker","file":"update_data.py","summary":"新聞方向調整（技術面 → 產業應用）"},
     {"date":"2026-07-02","project":"English Sandbox","file":"english-sandbox.html","summary":"三階潤飾角色修正＋字體縮小＋收藏組合分類 Tab"},
@@ -38,13 +46,14 @@
   ],
   "hotspots": [
     {"project":"NexusPortal","file":"index.html","count":26},
-    {"project":"English Sandbox","file":"english-sandbox.html","count":14},
-    {"project":"Daily Optimizer","file":"daily_optimizer.html","count":9},
-    {"project":"AI Tracker","file":"update_data.py","count":6},
+    {"project":"English Sandbox","file":"english-sandbox.html","count":15},
+    {"project":"Daily Optimizer","file":"daily_optimizer.html","count":11},
+    {"project":"AI Tracker","file":"update_data.py","count":7},
     {"project":"Mental Dashboard","file":"mental-dashboard.html","count":6},
     {"project":"WordVault","file":"WordVault.html","count":5},
     {"project":"SAS Hub","file":"index.html","count":4},
+    {"project":"Control Center","file":"index.html","count":4},
     {"project":"Refueler","file":"refueler.html","count":3},
-    {"project":"Control Center","file":"index.html","count":2}
+    {"project":"Sleep Dashboard","file":"sleep_dashboard_v2.html","count":1}
   ]
 }
