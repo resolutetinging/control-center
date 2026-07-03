@@ -906,7 +906,7 @@ function renderCombos(){
     const sits=[...new Set(saved.map(it=>it.sit).filter(Boolean))];
     tabBar.innerHTML= sits.length
       ? '<button class="combo-sit-tab'+(curComboSit==='all'?' active':'')+'" onclick="setComboSit(\'all\')">全部</button>'
-        + sits.map(s=>'<button class="combo-sit-tab'+(curComboSit===s?' active':'')+'" onclick="setComboSit('+JSON.stringify(s)+')">'+esc(s)+'</button>').join('')
+        + sits.map(s=>'<button class="combo-sit-tab'+(curComboSit===s?' active':'')+'" onclick="setComboSit(\''+s.replace(/'/g,"\\'")+'\')">'+esc(s)+'</button>').join('')
       : '';
   }
 
