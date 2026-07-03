@@ -981,18 +981,7 @@ function dClick(el,id){
   const links=getLinks();
   const url=links[id]||'';
   if(!url){openSettings('links');return;}
-  incrementUsage(id,el.querySelector('.d-lbl')?.textContent||id);
   window.open(url,'_blank');
-}
-// 使用頻率追蹤（Dock 點擊即計數，供 Dev Dashboard「使用頻率」區塊讀取）
-function incrementUsage(id,label){
-  try{
-    const stats=JSON.parse(localStorage.getItem('cc_usage_stats')||'{}');
-    if(!stats[id])stats[id]={label:label,count:0};
-    stats[id].count=(stats[id].count||0)+1;
-    stats[id].label=label;
-    localStorage.setItem('cc_usage_stats',JSON.stringify(stats));
-  }catch(e){}
 }
 // Mark LinkedIn if not set
 function updateUnsetFlags(){
@@ -1899,6 +1888,33 @@ function renderLabMobile(){
 }
 renderLabMobile();
 
+// ── 使用時間追蹤（cc_usage_stats，供 Dev Dashboard「使用頻率」讀取）──
+// 累積前景停留時間（非點擊次數），同一段邏輯複製到各 App 自己的 repo
+(function(){
+  var _ccKey='cc-home',_ccLabel='Control Center';
+  var _ccStart=Date.now(),_ccActive=(document.visibilityState!=='hidden');
+  function _ccFlush(){
+    if(!_ccActive)return;
+    var elapsed=Date.now()-_ccStart;
+    if(elapsed<1000)return;
+    try{
+      var stats=JSON.parse(localStorage.getItem('cc_usage_stats')||'{}');
+      if(!stats[_ccKey])stats[_ccKey]={label:_ccLabel,ms:0};
+      stats[_ccKey].ms=(stats[_ccKey].ms||0)+elapsed;
+      stats[_ccKey].label=_ccLabel;
+      localStorage.setItem('cc_usage_stats',JSON.stringify(stats));
+    }catch(e){}
+    _ccStart=Date.now();
+  }
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden'){_ccFlush();_ccActive=false;}
+    else{_ccStart=Date.now();_ccActive=true;}
+  });
+  window.addEventListener('beforeunload',_ccFlush);
+  window.addEventListener('pagehide',_ccFlush);
+  setInterval(_ccFlush,30000);
+})();
+
 // ── Dev Dashboard（開發概況）──
 function openDevDashboard(){
   document.getElementById('dev-overlay').style.display='flex';
@@ -1951,22 +1967,28 @@ function renderDevDashboard(){
         }).join('')+'</div>'
         :'<div id="dev-empty">尚無熱點資料</div>';
 
-      // ── 使用頻率：讀本機 localStorage（Dock 點擊即時累計，非 fetch）──
+      // ── 使用頻率：讀本機 localStorage 累積停留時間（各頁面前景累計 ms，非 fetch）──
+      function fmtMs(ms){
+        const totalMin=Math.round(ms/60000);
+        if(totalMin<1)return'<1min';
+        const h=Math.floor(totalMin/60),m=totalMin%60;
+        return h>0?`${h}h ${m}m`:`${m}min`;
+      }
       let usage=[];
       try{
         const stats=JSON.parse(localStorage.getItem('cc_usage_stats')||'{}');
-        usage=Object.keys(stats).map(k=>({label:stats[k].label||k,count:stats[k].count||0})).sort((a,b)=>b.count-a.count);
+        usage=Object.keys(stats).map(k=>({label:stats[k].label||k,ms:stats[k].ms||0})).filter(u=>u.ms>0).sort((a,b)=>b.ms-a.ms);
       }catch(e){}
-      const maxUse=Math.max(1,...usage.map(u=>u.count||0));
+      const maxUse=Math.max(1,...usage.map(u=>u.ms||0));
       const useHtml=usage.length
         ?'<div class="dev-hotspots">'+usage.map(u=>{
-          const pct=Math.round((u.count||0)/maxUse*100);
+          const pct=Math.round((u.ms||0)/maxUse*100);
           return `<div class="dev-hot-row">
-            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(u.label)}</span><span class="dev-hot-count">${u.count}</span></div>
+            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(u.label)}</span><span class="dev-hot-count">${fmtMs(u.ms)}</span></div>
             <div class="dev-hot-bar-track"><div class="dev-use-bar-fill" style="width:${pct}%"></div></div>
           </div>`;
         }).join('')+'</div>'
-        :'<div id="dev-empty">尚無使用紀錄，從 Dock 點各 App 開始累積</div>';
+        :'<div id="dev-empty">尚無使用紀錄，開啟各 App 停留即開始累積</div>';
 
       bodyEl.innerHTML=`
         <div class="dev-section">
@@ -1979,7 +2001,7 @@ function renderDevDashboard(){
             ${hsHtml}
           </div>
           <div class="dev-section">
-            <div class="dev-col-title">使用頻率（本機 Dock 點擊次數）</div>
+            <div class="dev-col-title">使用頻率（累積停留時間）</div>
             ${useHtml}
           </div>
         </div>`;
