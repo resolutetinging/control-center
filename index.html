@@ -174,29 +174,36 @@ body{position:relative;}
 
 /* ── Dev Dashboard（開發概況）── */
 #dev-overlay{position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;}
-#dev-panel{background:rgba(244,241,236,.97);backdrop-filter:blur(40px) saturate(180%);border:.5px solid var(--bstr);border-radius:18px;width:min(94vw,760px);max-height:88vh;overflow-y:auto;box-shadow:0 20px 70px rgba(40,38,32,.18);animation:panel-in .22s cubic-bezier(.34,1.56,.64,1);padding:24px;}
+#dev-panel{background:rgba(244,241,236,.97);backdrop-filter:blur(40px) saturate(180%);border:.5px solid var(--bstr);border-radius:18px;width:min(94vw,820px);max-height:88vh;overflow-y:auto;box-shadow:0 20px 70px rgba(40,38,32,.18);animation:panel-in .22s cubic-bezier(.34,1.56,.64,1);padding:24px;}
 #dev-panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 #dev-panel-title{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.04em;}
 #dev-panel-close{width:28px;height:28px;border-radius:50%;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--sub);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #dev-panel-close:hover{background:rgba(255,255,255,.9);}
 #dev-panel-sub{font-size:10.5px;color:var(--faint);margin-bottom:18px;}
-.dev-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;}
-@media(max-width:640px){.dev-grid{grid-template-columns:1fr;}}
 .dev-col-title{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.dev-timeline{display:flex;flex-direction:column;gap:0;max-height:440px;overflow-y:auto;padding-right:4px;}
-.dev-tl-item{display:flex;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);}
+.dev-section{margin-bottom:22px;}
+.dev-section:last-child{margin-bottom:0;}
+/* 時間軸：同一天聚合一列，左日期／右細節 */
+.dev-timeline{display:flex;flex-direction:column;gap:0;max-height:280px;overflow-y:auto;padding-right:4px;}
+.dev-tl-item{display:flex;gap:14px;padding:9px 4px;border-bottom:1px solid var(--border);}
 .dev-tl-item:last-child{border-bottom:none;}
-.dev-tl-date{flex-shrink:0;width:60px;font-size:9.5px;color:var(--faint);font-family:monospace;padding-top:1px;}
-.dev-tl-body{flex:1;min-width:0;}
-.dev-tl-file{font-size:11.5px;font-weight:700;color:var(--deep);}
-.dev-tl-summary{font-size:11px;color:var(--sub);line-height:1.5;margin-top:1px;}
+.dev-tl-date{flex-shrink:0;width:66px;font-size:10px;color:var(--faint);font-family:monospace;padding-top:2px;font-weight:700;}
+.dev-tl-detail{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
+.dev-tl-row{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;}
+.dev-tl-proj{font-size:11px;font-weight:700;color:var(--deep);flex-shrink:0;}
+.dev-tl-summary{font-size:11px;color:var(--sub);line-height:1.5;}
+/* 熱點/使用頻率：並排兩欄 */
+.dev-grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
+@media(max-width:640px){.dev-grid2{grid-template-columns:1fr;}}
 .dev-hotspots{display:flex;flex-direction:column;gap:11px;}
 .dev-hot-row{display:flex;flex-direction:column;gap:4px;}
-.dev-hot-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--ink);}
-.dev-hot-name{font-weight:600;}
-.dev-hot-count{color:var(--faint);font-family:monospace;}
+.dev-hot-lbl{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink);gap:6px;}
+.dev-hot-name{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dev-hot-reason{font-size:9px;color:var(--faint);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1px 7px;flex-shrink:0;white-space:nowrap;}
+.dev-hot-count{color:var(--faint);font-family:monospace;flex-shrink:0;}
 .dev-hot-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .dev-hot-bar-fill{height:100%;background:var(--deep);border-radius:3px;}
+.dev-use-bar-fill{height:100%;background:var(--core);border-radius:3px;}
 #dev-empty{font-size:12px;color:var(--faint);text-align:center;padding:40px 0;}
 
 /* ── Dock ── */
@@ -974,7 +981,18 @@ function dClick(el,id){
   const links=getLinks();
   const url=links[id]||'';
   if(!url){openSettings('links');return;}
+  incrementUsage(id,el.querySelector('.d-lbl')?.textContent||id);
   window.open(url,'_blank');
+}
+// 使用頻率追蹤（Dock 點擊即計數，供 Dev Dashboard「使用頻率」區塊讀取）
+function incrementUsage(id,label){
+  try{
+    const stats=JSON.parse(localStorage.getItem('cc_usage_stats')||'{}');
+    if(!stats[id])stats[id]={label:label,count:0};
+    stats[id].count=(stats[id].count||0)+1;
+    stats[id].label=label;
+    localStorage.setItem('cc_usage_stats',JSON.stringify(stats));
+  }catch(e){}
 }
 // Mark LinkedIn if not set
 function updateUnsetFlags(){
@@ -1897,38 +1915,71 @@ function renderDevDashboard(){
     .then(d=>{
       const tl=d.timeline||[];
       const hs=d.hotspots||[];
-      if(subEl)subEl.textContent='資料抓取至 '+esc(d.generated_through||'—')+' 為止（今日資料視為未定稿，不納入）';
-      if(!tl.length&&!hs.length){bodyEl.innerHTML='<div id="dev-empty">尚無開發紀錄</div>';return;}
-      const tlHtml=tl.length
-        ?'<div class="dev-timeline">'+tl.map(it=>`
-          <div class="dev-tl-item">
-            <div class="dev-tl-date">${esc(it.date||'')}</div>
-            <div class="dev-tl-body">
-              <div class="dev-tl-file">${esc(it.project||it.file||'')} · ${esc(it.file||'')}</div>
-              <div class="dev-tl-summary">${esc(it.summary||'')}</div>
-            </div>
-          </div>`).join('')+'</div>'
+      const reasonLabels=d.reason_labels||{};
+      if(subEl)subEl.textContent='開發紀錄更新至 '+esc(d.generated_through||'—');
+
+      // ── 開發履歷時間軸：同一天聚合一列，細節列在右側 ──
+      const byDate={};const dateOrder=[];
+      tl.forEach(it=>{
+        if(!byDate[it.date]){byDate[it.date]=[];dateOrder.push(it.date);}
+        byDate[it.date].push(it);
+      });
+      const tlHtml=dateOrder.length
+        ?'<div class="dev-timeline">'+dateOrder.map(date=>{
+          const rows=byDate[date].map(it=>`<div class="dev-tl-row"><span class="dev-tl-proj">${esc(it.project||it.file||'')}</span><span class="dev-tl-summary">${esc(it.summary||'')}</span></div>`).join('');
+          return `<div class="dev-tl-item">
+            <div class="dev-tl-date">${esc(date)}</div>
+            <div class="dev-tl-detail">${rows}</div>
+          </div>`;
+        }).join('')+'</div>'
         :'<div id="dev-empty">尚無時間軸資料</div>';
+
+      // ── 組件熱點監測：橫條 + top1 修改原因徽章 ──
       const maxCount=Math.max(1,...hs.map(h=>h.count||0));
       const hsHtml=hs.length
         ?'<div class="dev-hotspots">'+hs.map(h=>{
           const pct=Math.round((h.count||0)/maxCount*100);
+          const rl=reasonLabels[h.top_reason];
+          const reasonBadge=rl?`<span class="dev-hot-reason">${esc(rl.emoji||'')} ${esc(rl.label||h.top_reason||'')}</span>`:'';
           return `<div class="dev-hot-row">
-            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(h.project||h.file||'')}</span><span class="dev-hot-count">${h.count||0}</span></div>
+            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(h.project||h.file||'')}</span>${reasonBadge}<span class="dev-hot-count">${h.count||0}</span></div>
             <div class="dev-hot-bar-track"><div class="dev-hot-bar-fill" style="width:${pct}%"></div></div>
           </div>`;
         }).join('')+'</div>'
         :'<div id="dev-empty">尚無熱點資料</div>';
-      bodyEl.innerHTML=`<div class="dev-grid">
-        <div>
+
+      // ── 使用頻率：讀本機 localStorage（Dock 點擊即時累計，非 fetch）──
+      let usage=[];
+      try{
+        const stats=JSON.parse(localStorage.getItem('cc_usage_stats')||'{}');
+        usage=Object.keys(stats).map(k=>({label:stats[k].label||k,count:stats[k].count||0})).sort((a,b)=>b.count-a.count);
+      }catch(e){}
+      const maxUse=Math.max(1,...usage.map(u=>u.count||0));
+      const useHtml=usage.length
+        ?'<div class="dev-hotspots">'+usage.map(u=>{
+          const pct=Math.round((u.count||0)/maxUse*100);
+          return `<div class="dev-hot-row">
+            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(u.label)}</span><span class="dev-hot-count">${u.count}</span></div>
+            <div class="dev-hot-bar-track"><div class="dev-use-bar-fill" style="width:${pct}%"></div></div>
+          </div>`;
+        }).join('')+'</div>'
+        :'<div id="dev-empty">尚無使用紀錄，從 Dock 點各 App 開始累積</div>';
+
+      bodyEl.innerHTML=`
+        <div class="dev-section">
           <div class="dev-col-title">開發履歷時間軸</div>
           ${tlHtml}
         </div>
-        <div>
-          <div class="dev-col-title">組件熱點監測</div>
-          ${hsHtml}
-        </div>
-      </div>`;
+        <div class="dev-grid2">
+          <div class="dev-section">
+            <div class="dev-col-title">組件熱點監測（開發變更次數）</div>
+            ${hsHtml}
+          </div>
+          <div class="dev-section">
+            <div class="dev-col-title">使用頻率（本機 Dock 點擊次數）</div>
+            ${useHtml}
+          </div>
+        </div>`;
     })
     .catch(e=>{
       bodyEl.innerHTML='<div id="dev-empty">讀取失敗：'+esc(e.message)+'</div>';

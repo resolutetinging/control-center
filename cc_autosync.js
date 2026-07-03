@@ -16,6 +16,7 @@
     'guard_settings_v1',
     // CC 主頁
     'cc_links_v2', 'cc_wp_v1', 'cc_linkedin_v2', 'cc_last_sync', 'cc_lab_projects',
+    'cc_usage_stats',
     // Oasis
     'oasis_keywords', 'oasis_saved', 'oasis_authors', 'oasis_cache', 'oasis_status',
     // Worship
