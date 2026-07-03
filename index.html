@@ -1918,15 +1918,18 @@ function renderDevDashboard(){
       const reasonLabels=d.reason_labels||{};
       if(subEl)subEl.textContent='開發紀錄更新至 '+esc(d.generated_through||'—');
 
-      // ── 開發履歷時間軸：同一天聚合一列，細節列在右側 ──
+      // ── 開發履歷時間軸：同一天聚合一列，同一天內同一專案也合併一行 ──
       const byDate={};const dateOrder=[];
       tl.forEach(it=>{
-        if(!byDate[it.date]){byDate[it.date]=[];dateOrder.push(it.date);}
-        byDate[it.date].push(it);
+        if(!byDate[it.date]){byDate[it.date]={};dateOrder.push(it.date);}
+        const proj=it.project||it.file||'';
+        if(!byDate[it.date][proj])byDate[it.date][proj]=[];
+        byDate[it.date][proj].push(it.summary||'');
       });
       const tlHtml=dateOrder.length
         ?'<div class="dev-timeline">'+dateOrder.map(date=>{
-          const rows=byDate[date].map(it=>`<div class="dev-tl-row"><span class="dev-tl-proj">${esc(it.project||it.file||'')}</span><span class="dev-tl-summary">${esc(it.summary||'')}</span></div>`).join('');
+          const projects=byDate[date];
+          const rows=Object.keys(projects).map(proj=>`<div class="dev-tl-row"><span class="dev-tl-proj">${esc(proj)}</span><span class="dev-tl-summary">${projects[proj].map(esc).join('＋')}</span></div>`).join('');
           return `<div class="dev-tl-item">
             <div class="dev-tl-date">${esc(date)}</div>
             <div class="dev-tl-detail">${rows}</div>
@@ -1972,7 +1975,7 @@ function renderDevDashboard(){
         </div>
         <div class="dev-grid2">
           <div class="dev-section">
-            <div class="dev-col-title">組件熱點監測（開發變更次數）</div>
+            <div class="dev-col-title">Component Hotspots · Dev Activity</div>
             ${hsHtml}
           </div>
           <div class="dev-section">
