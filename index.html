@@ -1379,7 +1379,7 @@ function renderTab(tab){
         </div>
         <div class="s-lbl">Gist ID</div>
         <input class="s-inp" id="gs-gid" value="${gid}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
-        <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步時所有 localStorage 會存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>。</div>
+        <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步採白名單制：生活數據 key 存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>，大型資料（圖片等）自動分塊為 cc_big__ 檔案；憑證類 key 一律不上傳。開頁後亦會自動備份（資料有變更時，10 分鐘節流）。</div>
         <button class="s-btn s-btn-pr" onclick="saveAPI()">儲存</button>
       </div>
     `;
@@ -1636,42 +1636,32 @@ async function syncUpload(){
   const pat=localStorage.getItem('gh_pat')||'';
   const gid=localStorage.getItem('gist_id')||'';
   if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
+  if(!window.ccSyncCore){showSyncMsg('✗ cc_autosync.js 未載入，無法同步',true);hideSyncMsg(3500);return;}
   const btn=document.getElementById('sync-up');
   if(btn)btn.textContent='…';
   showSyncMsg('上傳中…');
   try{
-    const nowStr=new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    localStorage.setItem('cc_last_sync',nowStr);
-    const SKIP_KEYS=['gh_pat','gist_id','tina_groq','groq_key','groq_api_key','wordvault_groq_key','notion_token','do_gist_token','do_gist_id','wordvault_gist_token','wordvault_gist_id','gist_token','gist_id'];
-    const PAT_RE=/ghp_[A-Za-z0-9]{10,}|ghs_[A-Za-z0-9]{10,}|github_pat_[A-Za-z0-9_]{10,}|gsk_[A-Za-z0-9]{10,}/;
-    const snap={};
-    for(let i=0;i<localStorage.length;i++){
-      const k=localStorage.key(i);
-      if(SKIP_KEYS.includes(k)||k.startsWith('gsk_'))continue;
-      const v=localStorage.getItem(k)||'';
-      if(PAT_RE.test(v))continue;
-      if(v.length>200000)continue; // skip base64 images / custom wallpaper (too large for mobile localStorage)
-      snap[k]=v;
-    }
-    const r=await fetch('https://api.github.com/gists/'+gid,{
-      method:'PATCH',
-      headers:{'Authorization':'Bearer '+pat,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
-      body:JSON.stringify({files:{'cc_sync.json':{content:JSON.stringify(snap)}}})
-    });
-    if(!r.ok){
-      let msg='GitHub '+r.status;
-      if(r.status===403){let b={};try{b=await r.json();}catch(_){}msg='403：PAT 請使用 Classic token 並勾選 gist scope（不支援 fine-grained token）。'+(b.message?b.message:'');}
-      else if(r.status===404){msg='404：Gist ID 不存在或不屬於此帳號';}
-      else if(r.status===401){msg='401：PAT 無效或已過期';}
-      throw new Error(msg);
-    }
+    // 共用 cc_autosync.js 核心：白名單快照＋大型 key 分塊（不再有 200K 靜默跳過）
+    const sum=await window.ccSyncCore.uploadFull();
     updateSyncTime();
-    showSyncMsg('✓ 上傳完成（共 '+Object.keys(snap).length+' 個 key）');
-    hideSyncMsg();
+    let msg='✓ 上傳完成（共 '+sum.keyCount+' 個 key';
+    if(sum.bigKeys.length)msg+='，含 '+sum.bigKeys.length+' 個大型 key 分塊';
+    msg+='）';
+    if(sum.skippedBig.length)msg+='；略過無法分塊：'+sum.skippedBig.join('、');
+    showSyncMsg(msg);
+    hideSyncMsg(sum.skippedBig.length?4500:2600);
     if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='↑';},1500);}
   }catch(e){
+    let m=e.message||'';
+    if(m.indexOf('全量同步進行中')>-1){
+      showSyncMsg('⏳ 自動備份正在進行，稍候幾秒再按即可');
+      hideSyncMsg(2600);
+      if(btn)btn.textContent='↑';
+      return;
+    }
     console.error('[Sync] upload error',e);
-    showSyncMsg('✗ '+e.message,true);
+    if(m.indexOf('403')>-1)m='403：PAT 請使用 Classic token 並勾選 gist scope（不支援 fine-grained token）';
+    showSyncMsg('✗ '+m,true);
     hideSyncMsg(3500);
     if(btn){btn.textContent='!';setTimeout(()=>{btn.textContent='↑';},1500);}
   }
@@ -1704,15 +1694,42 @@ async function syncDownload(){
     let snap;
     try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤：'+e.message);}
     if(!snap||typeof snap!=='object'||Array.isArray(snap))throw new Error('資料結構錯誤，請重新 Upload');
+    const MANIFEST_KEY='__cc_manifest';
     const skipped=[];
     for(const[k,v] of Object.entries(snap)){
-      if(v==null)continue;
+      if(v==null||k===MANIFEST_KEY)continue;
       try{localStorage.setItem(k,v);}
       catch(e){if(e.name==='QuotaExceededError'){skipped.push(k);}else throw e;}
     }
+    // 大型 key 分塊還原（cc_big__ 檔案，由 __cc_manifest 索引）
+    const incomplete=[];let bigRestored=0;
+    let manifest={};
+    try{manifest=JSON.parse(snap[MANIFEST_KEY]||'{}');}catch(e){manifest={};}
+    for(const[bk,info] of Object.entries(manifest)){
+      if(!info||!Array.isArray(info.names)){incomplete.push(bk);continue;}
+      showSyncMsg('還原大型資料 '+bk+' 中…');
+      let val='',ok=true;
+      for(const name of info.names){
+        const f=j.files?.[name];
+        if(!f){ok=false;break;}
+        let c=f.content;
+        if(f.truncated){
+          try{const rr=await fetch(f.raw_url);if(!rr.ok)throw 0;c=await rr.text();}
+          catch(e){ok=false;break;}
+        }
+        val+=c;
+      }
+      if(!ok){incomplete.push(bk);continue;}
+      try{localStorage.setItem(bk,val);bigRestored++;}
+      catch(e){if(e.name==='QuotaExceededError'){skipped.push(bk);}else throw e;}
+    }
+    if(bigRestored)try{localStorage.setItem('cc_big_manifest',snap[MANIFEST_KEY]||'{}');}catch(e){}
     if(btn)btn.textContent='✓';
-    if(skipped.length){
-      alert('下載完成。以下 key 因超過裝置容量上限而略過：\n\n'+skipped.join('\n')+'\n\n（這些通常是圖片類資料，可在此裝置另行設定）');
+    if(skipped.length||incomplete.length){
+      let warn='下載完成。';
+      if(skipped.length)warn+='\n\n以下 key 因超過裝置容量上限而略過：\n'+skipped.join('\n');
+      if(incomplete.length)warn+='\n\n以下大型 key 分塊不完整，未還原（請在來源裝置重新上傳）：\n'+incomplete.join('\n');
+      alert(warn);
     }
     showSyncMsg('✓ 下載完成，重新載入中…');
     setTimeout(()=>window.location.reload(),800);
