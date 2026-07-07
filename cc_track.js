@@ -185,7 +185,33 @@
     ['gh_pat', '🔑 憑證', 'GitHub PAT'],
     ['gist_id', '🔑 憑證', '備份 Gist 位址'],
     ['nexus_*', '🌳 External Me', 'NexusPortal 相關'],
+    ['astro_active_tab', '⭐ Astro Bot', '介面分頁狀態'],
+    ['astro_*', '⭐ Astro Bot', '其他資料'],
+    ['do_*', '✅ Daily Optimizer', '同步設定/憑證'],
+    ['gist_token', '💛 Mental Dashboard', '同步憑證'],
+    ['groq_key', '🔑 憑證', 'Groq API key'],
+    ['tina_groq', '🔑 憑證', 'Groq API key（舊名）'],
+    ['oasis_groq_key', '🌿 Oasis', 'Groq API key'],
+    ['oasis_last_*', '🌿 Oasis', '最近抓取時間'],
+    ['oasis_*', '🌿 Oasis', '其他'],
+    ['notion_token', '🔑 憑證', 'Notion token'],
+    ['notion_li_db', '🏠 CC 首頁', 'Notion LinkedIn 設定'],
+    ['wv_kids_coll_*', '🧒 WordVault Kids', '介面摺疊狀態'],
+    ['wellness_v4', '💛 Mental Dashboard', '舊版資料（v5 已接手）'],
+    ['wellness_*', '💛 Mental Dashboard', '資料'],
+    ['es_*', '🎯 English Sandbox', '其他'],
+    ['sleep_*', '🌙 SAS Hub', '睡眠資料'],
   ];
+
+  // 舊版遺留 key：僅在「接手的新版 key 存在且有實質內容」時才開放清除
+  var CC_LEGACY_KEYS = {
+    'wellness_v4': { requires: 'wellness_v5' }
+  };
+  function _ccLegacyDeletable(k) {
+    var cfg = CC_LEGACY_KEYS[k];
+    if (!cfg) return false;
+    try { return ((localStorage.getItem(cfg.requires) || '').length > 100); } catch (e) { return false; }
+  }
   function _ccKeyInfo(k) {
     for (var i = 0; i < CC_KEY_INFO.length; i++) {
       var pat = CC_KEY_INFO[i][0];
@@ -218,7 +244,7 @@
 
     var note = document.createElement('div');
     note.setAttribute('style', 'padding:0 18px 10px;font-size:11.5px;color:#55514a;line-height:1.6;');
-    note.textContent = '標「快取」者可安全勾選清除（App 會自動重建）。其餘為資料或設定，請在對應 App 內整理；清除前請確認上次備份時間。';
+    note.textContent = '標「快取」者可安全勾選清除（App 會自動重建）；標「舊版」者為新版已接手的遺留資料，確認 App 正常後可清除。其餘為資料或設定，請在對應 App 內整理；清除前請確認上次備份時間。';
     panel.appendChild(note);
 
     var list = document.createElement('div');
@@ -234,15 +260,17 @@
     var checks = [];
     rows.forEach(function (r) {
       var isCache = Object.prototype.hasOwnProperty.call(CC_CACHE_KEYS, r.k);
+      var isLegacy = _ccLegacyDeletable(r.k);
+      var canDel = isCache || isLegacy;
       var isCred = CC_CRED_RE.test(r.k);
       var row = document.createElement('label');
-      row.setAttribute('style', 'display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid #e4e0d6;font-size:12px;cursor:' + (isCache ? 'pointer' : 'default') + ';');
+      row.setAttribute('style', 'display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid #e4e0d6;font-size:12px;cursor:' + (canDel ? 'pointer' : 'default') + ';');
       var cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.disabled = !isCache;
+      cb.disabled = !canDel;
       cb.dataset.key = r.k;
-      cb.setAttribute('style', 'flex:none;' + (isCache ? '' : 'visibility:hidden;'));
-      if (isCache) checks.push(cb);
+      cb.setAttribute('style', 'flex:none;' + (canDel ? '' : 'visibility:hidden;'));
+      if (canDel) checks.push(cb);
       row.appendChild(cb);
       var info = _ccKeyInfo(r.k);
       var name = document.createElement('span');
@@ -257,8 +285,8 @@
       name.appendChild(line2);
       row.appendChild(name);
       var tag = document.createElement('span');
-      tag.setAttribute('style', 'flex:none;font-size:10px;padding:1px 7px;border-radius:8px;background:' + (isCache ? '#dce8d8' : isCred ? '#e8e0d0' : '#e4e0d6') + ';color:#55514a;');
-      tag.textContent = isCache ? '快取' : isCred ? '設定' : '資料';
+      tag.setAttribute('style', 'flex:none;font-size:10px;padding:1px 7px;border-radius:8px;background:' + (isCache ? '#dce8d8' : isLegacy ? '#f0dcb0' : isCred ? '#e8e0d0' : '#e4e0d6') + ';color:#55514a;');
+      tag.textContent = isCache ? '快取' : isLegacy ? '舊版' : isCred ? '設定' : '資料';
       row.appendChild(tag);
       var sz = document.createElement('span');
       sz.setAttribute('style', 'flex:none;width:72px;text-align:right;font-variant-numeric:tabular-nums;color:#55514a;');
