@@ -134,6 +134,67 @@
   };
   var CC_CRED_RE = /^(gh_pat|gist_id|notes_gist_id|.*_token|.*_gist_id|groq_key|.*groq.*)$/;
 
+  // key → 所屬 App 與中文用途（來源：audit_backup_status_260706 全 key 盤點）
+  // 比對規則：字串以 * 結尾＝前綴比對，否則完全相等；由上而下取第一個命中
+  var CC_KEY_INFO = [
+    ['sas_dta', '🌙 SAS Hub', '睡眠戰力核心資料'],
+    ['sas_weekly_recap', '🌙 SAS Hub', '週回顧'],
+    ['sas_*', '🌙 SAS Hub', '睡眠/戰力衍生數值'],
+    ['cc_energy_weights', '🌙 SAS Hub', '個人化能量權重'],
+    ['lto_matrix', '🌳 External Me', '人生矩陣（含頭像圖片）'],
+    ['astro_vedic_images', '⭐ Astro Bot', '上傳的命盤圖片'],
+    ['astro_chat', '⭐ Astro Bot', '占星對話紀錄'],
+    ['astro_forecast', '⭐ Astro Bot', '人生預測結果'],
+    ['astro_myself', '⭐ Astro Bot', '我的星象'],
+    ['astro_settings', '⭐ Astro Bot', '星盤設定與筆記'],
+    ['astro_cc_brief', '⭐ Astro Bot', '每日簡報'],
+    ['wellness_v5', '💛 Mental Dashboard', '主資料（紀錄/人際圈）'],
+    ['mental_custom_emotions', '💛 Mental Dashboard', '自訂情緒標籤'],
+    ['md_*', '💛 Mental Dashboard', '介面狀態'],
+    ['review_*', '✅ Daily Optimizer', '每日覆盤'],
+    ['tina_tasks*', '✅ Daily Optimizer', '自訂任務庫'],
+    ['optimizer_*', '✅ Daily Optimizer', '自訂地點/心情'],
+    ['note_*', '📰 AI Tracker', '每日筆記'],
+    ['aitracker_cache', '📰 AI Tracker', '新聞快取'],
+    ['gloss_*', '📰 AI Tracker', '詞彙表策展'],
+    ['custom_cats', '📰 AI Tracker', '自訂分類'],
+    ['notes_last_synced_hash', '📰 AI Tracker', '同步指紋'],
+    ['notes_gist_id', '📰 AI Tracker', '筆記 Gist 位址'],
+    ['wordvault_v1-kids', '🧒 WordVault Kids', '孩子單字庫'],
+    ['wvk_*', '🧒 WordVault Kids', '孩子檔案/設定'],
+    ['wordvault_v1', '📚 WordVault', '單字庫'],
+    ['wordvault_*', '📚 WordVault', '設定'],
+    ['wv_coll_*', '📚 WordVault', '介面摺疊狀態'],
+    ['refueler_*', '⛽ Refueler', '加油紀錄（含收據照片欄位）'],
+    ['oasis_saved', '🌿 Oasis', '收藏文章'],
+    ['oasis_keywords', '🌿 Oasis', '關鍵字'],
+    ['oasis_authors', '🌿 Oasis', '作者清單'],
+    ['oasis_cache', '🌿 Oasis', '探索頁快取'],
+    ['oasis_status', '🌿 Oasis', '狀態統計'],
+    ['worship_*', '⛩️ Worship', '參拜紀錄'],
+    ['es_saved_phrases', '🎯 English Sandbox', '精華句收藏'],
+    ['es_idiom_lib', '🎯 English Sandbox', '片語字庫'],
+    ['guard_*', '🐈 Guard', '提醒設定/靜默'],
+    ['cc_links_v2', '🏠 CC 首頁', '捷徑連結'],
+    ['cc_lab_projects', '🏠 CC 首頁', '實驗中專案'],
+    ['cc_linkedin_v2', '🏠 CC 首頁', 'LinkedIn 卡片'],
+    ['cc_wp_v1', '🏠 CC 首頁', '桌布'],
+    ['cc_usage_stats', '🏠 CC 首頁', '使用頻率統計'],
+    ['cc_big_manifest', '🏠 CC 首頁', '備份分塊索引（勿刪）'],
+    ['cc_*', '🏠 CC 首頁', '同步/統計'],
+    ['gh_pat', '🔑 憑證', 'GitHub PAT'],
+    ['gist_id', '🔑 憑證', '備份 Gist 位址'],
+    ['nexus_*', '🌳 External Me', 'NexusPortal 相關'],
+  ];
+  function _ccKeyInfo(k) {
+    for (var i = 0; i < CC_KEY_INFO.length; i++) {
+      var pat = CC_KEY_INFO[i][0];
+      var hit = (pat.slice(-1) === '*') ? (k.indexOf(pat.slice(0, -1)) === 0) : (k === pat);
+      if (hit) return { app: CC_KEY_INFO[i][1], desc: CC_KEY_INFO[i][2] };
+    }
+    return { app: '❓ 未歸類', desc: '' };
+  }
+
   function _ccFmtSize(chars) {
     var b = chars * 2;
     return b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
@@ -183,9 +244,17 @@
       cb.setAttribute('style', 'flex:none;' + (isCache ? '' : 'visibility:hidden;'));
       if (isCache) checks.push(cb);
       row.appendChild(cb);
+      var info = _ccKeyInfo(r.k);
       var name = document.createElement('span');
-      name.setAttribute('style', 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;');
-      name.textContent = r.k + (isCache ? '　— ' + CC_CACHE_KEYS[r.k] : '');
+      name.setAttribute('style', 'flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:1px;');
+      var line1 = document.createElement('span');
+      line1.setAttribute('style', 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;');
+      line1.textContent = info.app + (info.desc ? '　' + info.desc : '');
+      name.appendChild(line1);
+      var line2 = document.createElement('span');
+      line2.setAttribute('style', 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#9e9890;');
+      line2.textContent = r.k + (isCache ? '　— ' + CC_CACHE_KEYS[r.k] : '');
+      name.appendChild(line2);
       row.appendChild(name);
       var tag = document.createElement('span');
       tag.setAttribute('style', 'flex:none;font-size:10px;padding:1px 7px;border-radius:8px;background:' + (isCache ? '#dce8d8' : isCred ? '#e8e0d0' : '#e4e0d6') + ';color:#55514a;');
