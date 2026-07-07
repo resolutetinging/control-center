@@ -284,6 +284,7 @@ label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
   </div>
 </div>
 
+<script src="cc_store.js"></script>
 <script src="cc_autosync.js"></script>
 <script>
 const GROQ = 'https://api.groq.com/openai/v1/chat/completions';
@@ -354,9 +355,35 @@ async function callGroq(messages, useVision=false, maxTokens=2000){
 function loadSettings(){
   return JSON.parse(localStorage.getItem(KEY_SETTINGS)||'{}');
 }
-function getImages(){
-  try{ return JSON.parse(localStorage.getItem(KEY_IMAGES)||'[]'); }
-  catch(e){ return []; }
+// 命盤圖片（base64，可能很大）已搬到 IndexedDB（cc_store.js），localStorage 只留 __idb 索引。
+// 一次性遷移：頁面載入時把舊版存在 localStorage 的圖片搬去 IndexedDB。
+async function migrateImagesToIDB(){
+  if(!window.ccStore) return;
+  try{ await ccStore.migrate(KEY_IMAGES); }catch(e){ console.warn('[astro] 命盤圖片遷移失敗，保留原狀：',e); }
+}
+function setImagesCountMeta(n){
+  // 給 cc_tooltip.js（CC 首頁 hover 卡片）用的輕量計數索引，避免它為了顯示張數就要整包讀圖片
+  try{ localStorage.setItem(KEY_IMAGES+'_count', String(n)); }catch(e){}
+}
+async function getImages(){
+  if(!window.ccStore){
+    try{ return JSON.parse(localStorage.getItem(KEY_IMAGES)||'[]'); }catch(e){ return []; }
+  }
+  try{
+    let v = ccStore.peek(KEY_IMAGES);
+    if(v===undefined) v = await ccStore.get(KEY_IMAGES);
+    if(v===undefined){
+      // IndexedDB 沒有資料：可能尚未遷移成功（migrateImagesToIDB 失敗過），保底讀 localStorage 原值
+      try{ v = localStorage.getItem(KEY_IMAGES); }catch(e){}
+    }
+    return v ? JSON.parse(v) : [];
+  }catch(e){ return []; }
+}
+async function setImages(images){
+  setImagesCountMeta(images.length);
+  if(!window.ccStore){ localStorage.setItem(KEY_IMAGES, JSON.stringify(images)); return; }
+  try{ await ccStore.put(KEY_IMAGES, JSON.stringify(images)); }
+  catch(e){ console.warn('[astro] 儲存命盤圖片到 IndexedDB 失敗，改存 localStorage：',e); localStorage.setItem(KEY_IMAGES, JSON.stringify(images)); }
 }
 function chartContext(){
   const s = loadSettings();
@@ -365,9 +392,10 @@ function chartContext(){
   if(s.notes) ctx += '\n\n【補充備註】\n'+s.notes;
   return ctx;
 }
-function hasChart(){
+async function hasChart(){
   const s = loadSettings();
-  return !!(s.western || getImages().length);
+  const imgs = await getImages();
+  return !!(s.western || imgs.length);
 }
 function getName(){
   return loadSettings().name || 'Tina';
@@ -390,9 +418,9 @@ function togglePanel(id){
 }
 
 // ══ SETTING ══
-function handleVedicUpload(e){
+async function handleVedicUpload(e){
   const files = Array.from(e.target.files);
-  const images = getImages();
+  const images = await getImages();
   const remaining = 3 - images.length;
   if(!remaining){ alert('最多只能上傳 3 張圖片'); return; }
   const toProcess = files.slice(0, remaining);
@@ -400,12 +428,12 @@ function handleVedicUpload(e){
   toProcess.forEach(file=>{
     const reader = new FileReader();
     reader.onload = ev=>{
-      compressImage(ev.target.result, compressed=>{
+      compressImage(ev.target.result, async compressed=>{
         images.push(compressed);
         done++;
         if(done===toProcess.length){
-          localStorage.setItem(KEY_IMAGES, JSON.stringify(images));
-          renderImagePreviews();
+          await setImages(images);
+          await renderImagePreviews();
         }
       });
     };
@@ -431,8 +459,8 @@ function compressImage(dataUrl, cb){
   img.src = dataUrl;
 }
 
-function renderImagePreviews(){
-  const imgs = getImages();
+async function renderImagePreviews(){
+  const imgs = await getImages();
   const wrap = document.getElementById('vedic-previews');
   wrap.innerHTML = imgs.map((src,i)=>`
     <div class="img-preview-wrap">
@@ -441,11 +469,11 @@ function renderImagePreviews(){
     </div>`).join('');
 }
 
-function delImage(idx){
-  const imgs = getImages();
+async function delImage(idx){
+  const imgs = await getImages();
   imgs.splice(idx,1);
-  localStorage.setItem(KEY_IMAGES, JSON.stringify(imgs));
-  renderImagePreviews();
+  await setImages(imgs);
+  await renderImagePreviews();
 }
 
 function saveSettings(){
@@ -461,15 +489,17 @@ function saveSettings(){
   setTimeout(()=>note.classList.remove('show'), 2000);
 }
 
-function loadSettingForm(){
+async function loadSettingForm(){
   const s = loadSettings();
   if(s.name) document.getElementById('s-name').value = s.name;
   if(s.western) document.getElementById('s-western').value = s.western;
   if(s.notes) document.getElementById('s-notes').value = s.notes;
-  renderImagePreviews();
+  await renderImagePreviews();
   // 已有資料時自動收合
   if(s.western) document.getElementById('cpanel-western').classList.add('collapsed');
-  if(getImages().length) document.getElementById('cpanel-vedic').classList.add('collapsed');
+  const _imgsOnLoad = await getImages();
+  setImagesCountMeta(_imgsOnLoad.length); // 開頁時順手把計數索引補正確（供 cc_tooltip.js 用，避免遷移後首次沒有這把 key）
+  if(_imgsOnLoad.length) document.getElementById('cpanel-vedic').classList.add('collapsed');
 }
 
 // ══ MYSELF ══
@@ -601,7 +631,7 @@ function renderMyself(){
 
 async function genMyself(){
   const ctx  = chartContext();
-  const imgs = getImages();
+  const imgs = await getImages();
   if(!ctx && !imgs.length){ alert('請先在設定頁貼入星盤資料或上傳印度星盤圖'); return; }
 
   const btn      = document.getElementById('myself-btn');
@@ -901,8 +931,8 @@ M月：[${chartType === 'combined' ? '雙系統共振核心主題（8-14字）+ 
 }
 
 async function genForecast(cacheKey){
-  if(!hasChart()){ alert('請先在設定頁貼入星盤資料'); return; }
-  const imgs = getImages();
+  if(!(await hasChart())){ alert('請先在設定頁貼入星盤資料'); return; }
+  const imgs = await getImages();
   if(selChartType === 'vedic' && !imgs.length){
     alert('請先在設定頁上傳印度星盤圖片'); return;
   }
@@ -1003,7 +1033,7 @@ async function sendChat(){
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if(!text) return;
-  if(!hasChart()){ alert('請先在設定頁貼入星盤資料'); return; }
+  if(!(await hasChart())){ alert('請先在設定頁貼入星盤資料'); return; }
 
   input.value = '';
   const btn = document.getElementById('chat-send');
@@ -1015,11 +1045,10 @@ async function sendChat(){
   try{
     const name = getName();
     const ctx = chartContext();
-    const imgs = getImages();
+    const imgs = await getImages();
     const useVision = imgs.length > 0 && chatHistory.length === 1;
 
-    const imgs2 = getImages();
-    const chatMode = (ctx && imgs2.length) ? '雙系統整合' : imgs2.length ? '古典印度占星' : '現代西方占星';
+    const chatMode = (ctx && imgs.length) ? '雙系統整合' : imgs.length ? '古典印度占星' : '現代西方占星';
     const chartRef = ctx ? `\n\n西洋星盤資料：\n${ctx}` : '';
     const systemMsg = {role:'system', content:`${ASTRO_SYSTEM_ROLE}\n\n本次以【解析視角：${chatMode}】回答。${chartRef}\n\n請用繁體中文，全程以「你」稱呼，給出針對此星盤配置的具體觀察，不說泛泛廢話。回答簡明有深度。`};
 
@@ -1067,7 +1096,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 
 // ── CC Brief (background, silent) ──
 async function genCCBrief(){
-  if(!hasChart()) return;
+  if(!(await hasChart())) return;
   const ctx = chartContext();
   if(!ctx) return;
   const now = new Date();
@@ -1097,9 +1126,12 @@ async function genCCBrief(){
 }
 
 // ── Init ──
-loadSettingForm();
-loadChatHistory();
-switchTab(localStorage.getItem('astro_active_tab') || 'setting');
+(async function(){
+  await migrateImagesToIDB(); // 先確保命盤圖片搬完，loadSettingForm 才讀得到正確資料
+  await loadSettingForm();
+  loadChatHistory();
+  switchTab(localStorage.getItem('astro_active_tab') || 'setting');
+})();
 // Chart.js 縮放重繪（DPR 變化偵測）
 (function(){var lastDPR=window.devicePixelRatio;function redrawCharts(){if(window.Chart&&window.Chart.instances){Object.values(window.Chart.instances).forEach(function(c){try{c.resize();}catch(e){}});}}function watchDPR(){var mq=window.matchMedia('(resolution: '+lastDPR+'dppx)');mq.addEventListener('change',function(){lastDPR=window.devicePixelRatio;redrawCharts();watchDPR();},{once:true});}watchDPR();var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(redrawCharts,150);});})();
 </script>

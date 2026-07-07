@@ -96,6 +96,23 @@
     return snap;
   }
 
+  // 圖片類 key 已搬到 IndexedDB（cc_store.js），localStorage 只剩 __idb 索引，掃不到真正內容。
+  // 全量上傳前把這些 key 的實際內容從 IndexedDB 讀回來，合併進快照，走原本的大 key 分塊機制。
+  // 只用在 uploadFull（本來就是 async），不影響 quickSync/maybeAutoFull 的同步 hash 判斷邏輯。
+  async function mergeMigratedKeys(snap) {
+    const merged = Object.assign({}, snap);
+    if (!window.ccStore) return merged; // 此頁未載入 cc_store.js，維持原樣（不中斷備份）
+    const idbKeys = window.CC_IDB_IMAGE_KEYS || [];
+    for (const k of idbKeys) {
+      if (!isSafeKey(k)) continue;
+      try {
+        const v = await window.ccStore.get(k);
+        if (v != null && !PAT_RE.test(v)) merged[k] = v;
+      } catch (e) { /* 讀取失敗就保留 snap 原值（可能是 localStorage 尚未遷移完的舊值） */ }
+    }
+    return merged;
+  }
+
   // djb2 —— 對快照（排除噪音 key）算變更指紋
   function snapHash(snap) {
     let h = 5381;
@@ -152,8 +169,9 @@
     }
   }
   async function _uploadFullInner(c) {
-    const full = buildSnapshot();
-    const hash = snapHash(full);
+    const syncSnap = buildSnapshot();
+    const hash = snapHash(syncSnap); // 沿用 localStorage-only 快照算 hash，維持既有節流/變更偵測語意
+    const full = await mergeMigratedKeys(syncSnap); // 上傳內容則補上已遷移到 IndexedDB 的圖片真實內容
     const small = {};
     const big = {};
     const skippedBig = [];

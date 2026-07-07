@@ -200,6 +200,7 @@
 </div>
 <div id="sync-msg"></div>
 
+<script src="cc_store.js"></script>
 <script>
 'use strict';
 const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1', LI_KEY='cc_linkedin_v2';
@@ -437,26 +438,58 @@ function applyBG(preset){
   bg.style.background=preset.bg;
   wp.classList.remove('active');
   localStorage.setItem(WP_KEY,'preset:'+preset.key);
+  // 切回預設色時，順手清掉舊的自訂桌布（IndexedDB 大 blob 不留孤兒資料）
+  if(localStorage.getItem(WP_KEY+'__idb')==='1'){
+    localStorage.removeItem(WP_KEY+'__idb');
+    if(window.ccStore) ccStore.del(WP_KEY).catch(()=>{});
+  }
 }
-function applyCustomWP(dataUrl){
+// 只畫面呈現，不落地儲存（loadWP 從 IndexedDB 讀回時用這個，避免每次載入都重寫一次）
+function paintCustomWP(dataUrl){
   const wp=document.getElementById('bg-wallpaper');
   wp.style.backgroundImage='url('+dataUrl+')';
   wp.classList.add('active');
-  localStorage.setItem(WP_KEY,'custom:'+dataUrl);
 }
-function resetWP(){
+async function applyCustomWP(dataUrl){
+  paintCustomWP(dataUrl);
+  if(!window.ccStore){ localStorage.setItem(WP_KEY,'custom:'+dataUrl); return; } // 極端 fallback：無 cc_store.js 時退回舊行為
+  try{
+    await ccStore.put(WP_KEY,'custom:'+dataUrl);
+    localStorage.removeItem(WP_KEY);
+    localStorage.setItem(WP_KEY+'__idb','1');
+  }catch(e){ console.warn('[cc_wp] 儲存自訂桌布到 IndexedDB 失敗，改存 localStorage：',e); localStorage.setItem(WP_KEY,'custom:'+dataUrl); }
+}
+async function resetWP(){
   document.getElementById('bg-wallpaper').classList.remove('active');
   document.getElementById('bg-default').style.background='';
   localStorage.removeItem(WP_KEY);
+  const wasIdb=localStorage.getItem(WP_KEY+'__idb')==='1';
+  localStorage.removeItem(WP_KEY+'__idb');
+  if(wasIdb&&window.ccStore){ try{ await ccStore.del(WP_KEY); }catch(e){} }
 }
-function loadWP(){
+// 一次性遷移：頁面載入時把舊版存在 localStorage 的自訂桌布搬去 IndexedDB
+async function migrateWPToIDB(){
+  if(!window.ccStore) return;
+  try{ await ccStore.migrate(WP_KEY); }catch(e){ console.warn('[cc_wp] 遷移失敗，保留原狀：',e); }
+}
+async function loadWP(){
+  await migrateWPToIDB();
   const v=localStorage.getItem(WP_KEY)||'';
   if(v.startsWith('preset:')){
     const k=v.slice(7);
     const p=WP_PRESETS.find(x=>x.key===k);
     if(p)applyBG(p);
-  } else if(v.startsWith('custom:')){
-    applyCustomWP(v.slice(7));
+    return;
+  }
+  if(v.startsWith('custom:')){ // 尚未遷移成功時的保底相容
+    paintCustomWP(v.slice(7));
+    return;
+  }
+  if(localStorage.getItem(WP_KEY+'__idb')==='1'&&window.ccStore){
+    try{
+      const idbV=await ccStore.get(WP_KEY);
+      if(idbV&&idbV.indexOf('custom:')===0) paintCustomWP(idbV.slice(7));
+    }catch(e){ console.warn('[cc_wp] 讀取 IndexedDB 桌布失敗：',e); }
   }
 }
 
@@ -973,10 +1006,20 @@ async function syncDownload(){
     if(!snap||typeof snap!=='object'||Array.isArray(snap))throw new Error('資料結構錯誤，請重新 Upload');
     const MANIFEST_KEY='__cc_manifest';
     const skipped=[];
+    const IDB_KEYS=window.CC_IDB_IMAGE_KEYS||[];
+    // 已遷移到 IndexedDB 的圖片類 key：還原時寫回 IndexedDB 而非 localStorage
+    async function restoreOne(k,v){
+      if(IDB_KEYS.includes(k)&&window.ccStore){
+        try{ await ccStore.put(k,v); localStorage.removeItem(k); localStorage.setItem(k+'__idb','1'); return true; }
+        catch(e){ console.warn('[Sync] 還原到 IndexedDB 失敗，改存 localStorage：',k,e); }
+      }
+      try{ localStorage.setItem(k,v); return true; }
+      catch(e){ if(e.name==='QuotaExceededError'){ return false; } throw e; }
+    }
     for(const[k,v] of Object.entries(snap)){
       if(v==null||k===MANIFEST_KEY)continue;
-      try{localStorage.setItem(k,v);}
-      catch(e){if(e.name==='QuotaExceededError'){skipped.push(k);}else throw e;}
+      const ok=await restoreOne(k,v);
+      if(!ok)skipped.push(k);
     }
     // 大型 key 分塊還原（cc_big__ 檔案，由 __cc_manifest 索引）
     const incomplete=[];let bigRestored=0;
@@ -997,8 +1040,8 @@ async function syncDownload(){
         val+=c;
       }
       if(!ok){incomplete.push(bk);continue;}
-      try{localStorage.setItem(bk,val);bigRestored++;}
-      catch(e){if(e.name==='QuotaExceededError'){skipped.push(bk);}else throw e;}
+      const saved=await restoreOne(bk,val);
+      if(saved)bigRestored++; else skipped.push(bk);
     }
     if(bigRestored)try{localStorage.setItem('cc_big_manifest',snap[MANIFEST_KEY]||'{}');}catch(e){}
     if(btn)btn.textContent='✓';

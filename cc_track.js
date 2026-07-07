@@ -253,15 +253,17 @@
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
+        // __idb 索引 key 只是一個 '1' 標記，不單獨列一行；下方會用它找出對應的 IndexedDB 合併行
+        if (k.slice(-6) === '__idb') continue;
         rows.push({ k: k, len: (localStorage.getItem(k) || '').length });
       }
     } catch (e) {}
     rows.sort(function (a, b) { return b.len - a.len; });
     var checks = [];
-    rows.forEach(function (r) {
+    function _ccRenderRow(r) {
       var isCache = Object.prototype.hasOwnProperty.call(CC_CACHE_KEYS, r.k);
       var isLegacy = _ccLegacyDeletable(r.k);
-      var canDel = isCache || isLegacy;
+      var canDel = (isCache || isLegacy) && !r.isIdb;
       var isCred = CC_CRED_RE.test(r.k);
       var row = document.createElement('label');
       row.setAttribute('style', 'display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid #e4e0d6;font-size:12px;cursor:' + (canDel ? 'pointer' : 'default') + ';');
@@ -281,20 +283,50 @@
       name.appendChild(line1);
       var line2 = document.createElement('span');
       line2.setAttribute('style', 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#9e9890;');
-      line2.textContent = r.k + (isCache ? '　— ' + CC_CACHE_KEYS[r.k] : '');
+      line2.textContent = r.k + (isCache ? '　— ' + CC_CACHE_KEYS[r.k] : r.isIdb ? '　— 已搬 IndexedDB，不計入 5MB 上限' : '');
       name.appendChild(line2);
       row.appendChild(name);
       var tag = document.createElement('span');
-      tag.setAttribute('style', 'flex:none;font-size:10px;padding:1px 7px;border-radius:8px;background:' + (isCache ? '#dce8d8' : isLegacy ? '#f0dcb0' : isCred ? '#e8e0d0' : '#e4e0d6') + ';color:#55514a;');
-      tag.textContent = isCache ? '快取' : isLegacy ? '舊版' : isCred ? '設定' : '資料';
+      tag.setAttribute('style', 'flex:none;font-size:10px;padding:1px 7px;border-radius:8px;background:' + (r.isIdb ? '#d8e2ec' : isCache ? '#dce8d8' : isLegacy ? '#f0dcb0' : isCred ? '#e8e0d0' : '#e4e0d6') + ';color:#55514a;');
+      tag.textContent = r.isIdb ? 'IndexedDB' : isCache ? '快取' : isLegacy ? '舊版' : isCred ? '設定' : '資料';
       row.appendChild(tag);
       var sz = document.createElement('span');
       sz.setAttribute('style', 'flex:none;width:72px;text-align:right;font-variant-numeric:tabular-nums;color:#55514a;');
-      sz.textContent = _ccFmtSize(r.len + r.k.length);
+      sz.textContent = r.sizeLabel || _ccFmtSize(r.len + r.k.length);
       row.appendChild(sz);
-      list.appendChild(row);
-    });
+      return row;
+    }
+    rows.forEach(function (r) { list.appendChild(_ccRenderRow(r)); });
     panel.appendChild(list);
+
+    // 已搬 IndexedDB 的圖片類 key：另外非同步查詢實際大小，補一行（不計入上方 5MB 總量，因為
+    // _ccEstimateBytes() 只掃 localStorage；這裡單純是給使用者看清楚資料還在，沒有不見）。
+    (function () {
+      var idbKeys = window.CC_IDB_IMAGE_KEYS || [];
+      var migrated = idbKeys.filter(function (key) {
+        try { return localStorage.getItem(key + '__idb') === '1'; } catch (e) { return false; }
+      });
+      if (!migrated.length || !window.ccStore) return;
+      var totalIdbBytes = 0;
+      var pending = migrated.length;
+      migrated.forEach(function (key) {
+        window.ccStore.get(key).then(function (v) {
+          var len = (v || '').length;
+          totalIdbBytes += (len + key.length) * 2;
+          list.appendChild(_ccRenderRow({ k: key, len: len, isIdb: true, sizeLabel: _ccFmtSize(len + key.length) }));
+        }).catch(function () {
+          list.appendChild(_ccRenderRow({ k: key, len: 0, isIdb: true, sizeLabel: '讀取失敗' }));
+        }).finally(function () {
+          pending--;
+          if (pending === 0 && totalIdbBytes > 0) {
+            var extra = document.createElement('div');
+            extra.setAttribute('style', 'padding:6px 18px 0;font-size:10.5px;color:#7a9ab0;');
+            extra.textContent = '另有 ' + (totalIdbBytes / 1048576).toFixed(2) + ' MB 圖片資料存在 IndexedDB，不受此頁 5MB 上限影響。';
+            panel.insertBefore(extra, list);
+          }
+        });
+      });
+    })();
 
     var foot = document.createElement('div');
     foot.setAttribute('style', 'display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid #e4e0d6;');
