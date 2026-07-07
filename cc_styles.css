@@ -97,6 +97,18 @@ body{position:relative;}
   transition:background .2s;
 }
 #dev-btn:hover{background:rgba(255,255,255,.9);}
+/* ── Storage Btn（Dev Dashboard 圓圈正下方，同大小同風格）── */
+#storage-btn{
+  position:fixed;top:68px;left:68px;z-index:50;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(244,241,236,.82);border:1px solid var(--bstr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  color:var(--sub);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(40,38,32,.1),0 1px 0 rgba(255,255,255,.7) inset;
+  transition:background .2s;
+}
+#storage-btn:hover{background:rgba(255,255,255,.9);}
 /* ── Life Tracker Btn ── */
 #lto-btn{
   position:fixed;top:68px;left:22px;z-index:50;
@@ -466,6 +478,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   #lab-btn{display:none!important;}
   /* Dev Dashboard 為 Mac 專屬入口，手機版隱藏，避免與 lto-btn 重疊 */
   #dev-btn{display:none!important;}
+  #storage-btn{display:none!important;}
   #lto-btn{top:22px!important;left:66px!important;z-index:110!important;}
   #lto-panel{top:66px!important;left:22px!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(244,241,236,.99)!important;}
   #lab-mobile-card{display:block;position:relative;z-index:100;width:100%;max-width:400px;margin-bottom:12px;}

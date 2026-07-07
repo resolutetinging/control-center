@@ -330,4 +330,7 @@
   }
 
   setTimeout(_ccCheckQuota, 3000);
+
+  // 供頁面按鈕直接開啟儲存空間面板（CC 首頁 #storage-btn 等）
+  window.ccOpenStoragePanel = _ccOpenStoragePanel;
 })();
