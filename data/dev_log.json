@@ -1,5 +1,5 @@
 {
-  "generated_through": "2026-07-07",
+  "generated_through": "2026-07-08",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
     {
@@ -379,6 +379,90 @@
       "file": "index.html",
       "summary": "lto-btn 圖示與連結更新",
       "reason": "maintain"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "睡眠因果回溯視覺統一：T-1卡改仿上週狀態回顧的小方塊風格，移除重複區塊",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "例行資料更新：7/8 睡眠資料，175 筆有效夜晚數據",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "因果回溯標題對齊全站 .lbl 規格；往前3日心理日誌改三欄常駐取代 hover 彈窗（解決內容被卡掉）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "因子重構 Phase B 讀取端：getMoods() 新增 categories 欄位穿透",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "因子重構 Phase B 寫入端：新增 Categories 資料結構＋規則式自動歸類",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "補齊編輯既有記錄的 Categories 欄位（原編輯畫面缺口）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "新增因子導向雷達圖卡片（因子重構 Phase C）",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "校準內容品質門檻：兩個具體事實放寬為一事實＋一具名主體",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "分類拆分：外部家庭/人際事件 → 家庭＋外部人際，含既有記錄遷移",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "雷達圖資料窗格改為可切換 7/14/30/180 天",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "修正三維相關性卡睡眠戰力線寫死讀 trend7 的 bug（選半年時空白）；抽出共用函式",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-08",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "雷達圖新增 3 個二元因子 Tab：家庭／外部人際／工作任務壓力",
+      "reason": "spec_change"
     }
   ],
   "hotspots": [
@@ -403,13 +487,13 @@
     {
       "project": "AI Tracker",
       "file": "update_data.py",
-      "count": 11,
+      "count": 12,
       "top_reason": "debug"
     },
     {
       "project": "Mental Dashboard",
       "file": "mental-dashboard.html",
-      "count": 7,
+      "count": 10,
       "top_reason": "spec_change"
     },
     {
@@ -421,7 +505,7 @@
     {
       "project": "SAS Hub",
       "file": "index.html",
-      "count": 4,
+      "count": 11,
       "top_reason": "spec_change"
     },
     {
