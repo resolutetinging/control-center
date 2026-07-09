@@ -620,7 +620,6 @@ function renderTab(tab){
     const skipDur=gs.skipDur||60;
     const workTime=gs.workTime||15;
     const catUrl=localStorage.getItem('cc_cat_gif')||'';
-    const nexusKey=localStorage.getItem('nexus_access')||'';
     const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower:(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower:'—');
     const isSnoozed=!!localStorage.getItem('guard_snooze_'+TODAY);
     const snoozeBar=isSnoozed?'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:var(--rsm);padding:8px 12px;margin-bottom:16px;"><span style="font-size:.7rem;color:var(--warn)">⚠ 今日 Guard 已靜默</span><button onclick="clearGuardSnooze()" style="font-size:.65rem;padding:4px 10px;border-radius:12px;border:.5px solid var(--bstr);background:transparent;color:var(--sub);cursor:pointer;">解除靜默</button></div>':'';
@@ -647,9 +646,6 @@ function renderTab(tab){
         </div>
         <div class="s-lbl">GIF / 圖片 URL</div>
         <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址" style="margin-bottom:18px;"/>
-        <div class="s-lbl">NexusPortal 密語</div>
-        <div style="font-size:11px;color:var(--faint);margin-bottom:8px;line-height:1.6;">存在本機瀏覽器（不進源碼、不進雲端備份）。填入後左上 🌳 面板的連結會自動帶擁有者權限。</div>
-        <input class="s-inp" type="password" id="gs-nexus" value="${nexusKey}" placeholder="貼上 NexusPortal access 密語" style="margin-bottom:18px;"/>
         <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
       </div>
     `;
@@ -674,6 +670,7 @@ function renderTab(tab){
     const k=localStorage.getItem(GROQ_KEY)||'';
     const pat=localStorage.getItem('gh_pat')||'';
     const gid=localStorage.getItem('gist_id')||'';
+    const nexusKey=localStorage.getItem('nexus_access')||'';
     el.innerHTML=`
       <div class="s-title">API 設定</div>
       <div class="s-sec">
@@ -690,6 +687,12 @@ function renderTab(tab){
         <div class="s-lbl">Gist ID</div>
         <input class="s-inp" id="gs-gid" value="${gid}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
         <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步採白名單制：生活數據 key 存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>，大型資料（圖片等）自動分塊為 cc_big__ 檔案；憑證類 key 一律不上傳。開頁後亦會自動備份（資料有變更時，10 分鐘節流）。</div>
+        <div class="s-lbl">NexusPortal 密語</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <input class="s-inp" type="password" id="gs-nexus" value="${nexusKey}" placeholder="貼上 NexusPortal access 密語" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <button onclick="toggleVis('gs-nexus',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
+        </div>
+        <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">僅存本機瀏覽器（不進源碼、不進 Gist 備份）。填入後左上 🌳 面板連結自動帶擁有者權限，未填時 Edit Mode 隱藏。</div>
         <button class="s-btn s-btn-pr" onclick="saveAPI()">儲存</button>
       </div>
     `;
@@ -717,10 +720,6 @@ function saveGS(){
   const skipDur=parseInt(document.getElementById('gs-skip')?.value)||60;
   const catUrl=(document.getElementById('gs-cat')?.value||'').trim();
   if(catUrl)localStorage.setItem('cc_cat_gif',catUrl);else localStorage.removeItem('cc_cat_gif');
-  /* NexusPortal 密語：僅存本機（勿加入 cc_autosync SAFE_STATIC_KEYS，避免進 Gist 備份） */
-  const nexusKey=(document.getElementById('gs-nexus')?.value||'').trim();
-  if(nexusKey)localStorage.setItem('nexus_access',nexusKey);else localStorage.removeItem('nexus_access');
-  applyNexusLinks();
   localStorage.setItem(GS_KEY,JSON.stringify({endTime,workTime,skipDur}));
   closeSettings();checkGuard();
 }
@@ -750,6 +749,10 @@ function saveAPI(){
   if(k)localStorage.setItem(GROQ_KEY,k);
   if(pat)localStorage.setItem('gh_pat',pat);else localStorage.removeItem('gh_pat');
   if(gid)localStorage.setItem('gist_id',gid);else localStorage.removeItem('gist_id');
+  /* NexusPortal 密語：僅存本機（勿加入 cc_autosync SAFE_STATIC_KEYS，避免進 Gist 備份） */
+  const nexusKey=(document.getElementById('gs-nexus')?.value||'').trim();
+  if(nexusKey)localStorage.setItem('nexus_access',nexusKey);else localStorage.removeItem('nexus_access');
+  applyNexusLinks();
   closeSettings();
 }
 
