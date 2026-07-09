@@ -2,7 +2,7 @@
  * cc_tooltip.js — Dock hover tooltip（E 階段自 index.html 抽出，2026-07-06）
  * 依賴（呼叫期才取用）：LIVE、rfToday()、localStorage、#tooltip 元素
  * 對外提供：esc()（Lab 分析結果與 Dev Dashboard 於事件期使用）
- * 順手修正：english case 誤用未定義的 ttHead() → h()（hover 英語沙盒圖示會 ReferenceError）
+ * 依需求移除：english（English Sandbox）圖示不提供 hover 提示，buildTT 無此 case，交由 default 回傳空字串
  */
 // ── LEAN TOOLTIP ──
 const ttp=document.getElementById('tooltip');
@@ -215,19 +215,6 @@ function buildTT(id){
       out+=hr();
       out+=`<div class="tt-head" style="margin-bottom:5px">${dateLbl}</div>`;
       (brief.today||[]).forEach(l=>{const p=l.split('|');const k=esc((p[0]||l).trim().replace(/^本日\s*/,dateLbl+' '));out+=advRow(k,esc((p[1]||'').trim()));});
-      return out;
-    }
-    case 'english':{
-      const lib=JSON.parse(localStorage.getItem('es_idiom_lib')||'[]');
-      const saved=JSON.parse(localStorage.getItem('es_saved_phrases')||'[]');
-      let out=h('🎯 English Sandbox');
-      out+=row('Small Talk','破冰接球 + AI 三階潤飾');
-      out+=row('Idiom Arcade','道地片語克漏字拆彈');
-      if(lib.length||saved.length){
-        out+=hr();
-        if(lib.length) out+=row('字庫',lib.length+' 個片語');
-        if(saved.length) out+=row('精華句',saved.length+' 句收藏');
-      }
       return out;
     }
     default:return'';

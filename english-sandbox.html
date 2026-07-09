@@ -547,6 +547,10 @@ function safeParseJson(raw){
   return JSON.parse(m[0]);
 }
 
+// ── 簡轉繁保底（Groq 小模型偶爾夾雜簡體字/日文漢字，prompt 約束不可靠，做後處理雙保險）──
+// s2t()/s2tDeep() 已抽出至共用檔 cc_zht.js（見檔尾 <script src="cc_zht.js">），
+// 唯一事實來源在該檔，勿在此處重新定義；下方各呼叫點沿用全域 s2t()/s2tDeep()
+
 // ── Key check ──
 function checkKey(){
   document.getElementById('key-notice').style.display = getKey() ? 'none' : 'block';
@@ -801,8 +805,8 @@ Output ONLY valid JSON:
   "ball": "≤30 words — answers first, then a specific contextual follow-up question"
 }`;
 
-    const raw = await callGroq(prompt, 600, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (繁體中文). Never mix in Vietnamese, Simplified Chinese, Japanese, or any other language.', true);
-    results = safeParseJson(raw);
+    const raw = await callGroq(prompt, 600, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.', true);
+    results = s2tDeep(safeParseJson(raw));
 
     // Opener 中文說明（永遠顯示）
     if(results.opener_zh){
@@ -996,8 +1000,8 @@ Write a concise performance report in Traditional Chinese (繁體中文). Struct
 2. （具體建議）
 3. （具體建議）`;
   try{
-    const r = await callGroq(prompt, 600, 'You are an English conversation coach. Output in Traditional Chinese (繁體中文) only.');
-    body.textContent = r;
+    const r = await callGroq(prompt, 600, 'You are an English conversation coach. Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).');
+    body.textContent = s2t(r);
   }catch(e){
     body.textContent = '分析失敗：'+e.message;
   }
@@ -1154,13 +1158,13 @@ Rules:
 - sentence: realistic business English; blank fits exactly one idiom (2-4 words)
 - correct: the one right answer
 - distractors: exactly 3 — real English phrases that sound plausible but are wrong in context
-- zh: Traditional Chinese ONLY; 2-6 characters; the core meaning as a short translation (no "就是", no "的意思")
-- explain_zh: Traditional Chinese ONLY; max 3 short casual sentences; no grammar labels; plain everyday tone
+- zh: Traditional Chinese ONLY (Taiwan standard, 繁體中文; never Simplified Chinese, never Japanese); 2-6 characters; the core meaning as a short translation (no "就是", no "的意思")
+- explain_zh: Traditional Chinese ONLY (Taiwan standard, 繁體中文; never Simplified Chinese, never Japanese); max 3 short casual sentences; no grammar labels; plain everyday tone
 - example: a different natural sentence using the same correct idiom`;
 
     const _fetchCandidate = async () => {
-      const raw = await callGroq(prompt, 400, '', true);
-      return safeParseJson(raw);
+      const raw = await callGroq(prompt, 400, 'You output ONLY valid JSON. All Chinese fields (zh, explain_zh) must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).', true);
+      return s2tDeep(safeParseJson(raw));
     };
     const _hasDupParticle = (sentence, correct) => {
       const last = (correct||'').trim().split(/\s+/).pop().toLowerCase();
@@ -1524,6 +1528,7 @@ renderSaved();
 renderLib();
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
+<script src="cc_zht.js"></script>
 <script src="cc_store.js"></script>
 <script src="cc_track.js" data-cc-key="english" data-cc-label="English Sandbox"></script>
 </body>
