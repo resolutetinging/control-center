@@ -4,6 +4,41 @@
   "timeline": [
     {
       "date": "2026-07-09",
+      "project": "Control Center",
+      "file": "cc_zht.js",
+      "summary": "新建共用簡轉繁保底（266字含日文新字體）；English Sandbox hover tooltip 移除",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Groq 輸出繁中保底：prompt 禁令＋s2t 渲染保底（修簡體字混入）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "Groq 輸出繁中保底（修 7/6 日文混入）＋v2.12 能量加權密度警示制（修時段越長越易誤判爆衝）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "WordVault",
+      "file": "WordVault.html",
+      "summary": "三版（成人/kids/kids_v2）Groq 輸出繁中保底",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "公開產物淨化＋iCloud自動備份＋密語安全化聯動＋Switch Lens新視窗（詳見txt）",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
       "summary": "供給架構重建：一分類一次LLM呼叫＋RSS擴充7條＋enrich輪流揀選＋roundup彙整文過濾",
@@ -532,19 +567,19 @@
     {
       "project": "NexusPortal",
       "file": "index.html",
-      "count": 31,
+      "count": 32,
       "top_reason": "debug"
     },
     {
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "count": 15,
+      "count": 16,
       "top_reason": "debug"
     },
     {
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "count": 14,
+      "count": 16,
       "top_reason": "spec_change"
     },
     {
@@ -562,7 +597,7 @@
     {
       "project": "WordVault",
       "file": "WordVault.html",
-      "count": 6,
+      "count": 7,
       "top_reason": "debug"
     },
     {
