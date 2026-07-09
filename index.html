@@ -39,7 +39,7 @@
   <a class="lto-row lto-lens" data-lens="astrology" href="https://nexus-portal-epq.pages.dev/?lens=astrology" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◆</span>Astrology</a>
   <a class="lto-row lto-lens" data-lens="engineering" href="https://nexus-portal-epq.pages.dev/?lens=engineering" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">≡</span>Engineering</a>
   <div id="lto-edit-sep" class="lto-sep"></div>
-  <a id="lto-edit-row" class="lto-row" href="https://nexus-portal-epq.pages.dev/?access=tina_nexus_2026_secure&lens=myself" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">✎</span>Edit Mode</a>
+  <a id="lto-edit-row" class="lto-row" href="https://nexus-portal-epq.pages.dev/" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">✎</span>Edit Mode</a>
 </div>
 <button id="lab-btn" onclick="openLab()" title="實驗中">🧪</button>
 
@@ -620,6 +620,7 @@ function renderTab(tab){
     const skipDur=gs.skipDur||60;
     const workTime=gs.workTime||15;
     const catUrl=localStorage.getItem('cc_cat_gif')||'';
+    const nexusKey=localStorage.getItem('nexus_access')||'';
     const cpDisplay=LIVE.sleep?.combatPower!=null?LIVE.sleep.combatPower:(LIVE.optimizer?.combatPower!=null?LIVE.optimizer.combatPower:'—');
     const isSnoozed=!!localStorage.getItem('guard_snooze_'+TODAY);
     const snoozeBar=isSnoozed?'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:var(--rsm);padding:8px 12px;margin-bottom:16px;"><span style="font-size:.7rem;color:var(--warn)">⚠ 今日 Guard 已靜默</span><button onclick="clearGuardSnooze()" style="font-size:.65rem;padding:4px 10px;border-radius:12px;border:.5px solid var(--bstr);background:transparent;color:var(--sub);cursor:pointer;">解除靜默</button></div>':'';
@@ -646,6 +647,9 @@ function renderTab(tab){
         </div>
         <div class="s-lbl">GIF / 圖片 URL</div>
         <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址" style="margin-bottom:18px;"/>
+        <div class="s-lbl">NexusPortal 密語</div>
+        <div style="font-size:11px;color:var(--faint);margin-bottom:8px;line-height:1.6;">存在本機瀏覽器（不進源碼、不進雲端備份）。填入後左上 🌳 面板的連結會自動帶擁有者權限。</div>
+        <input class="s-inp" type="password" id="gs-nexus" value="${nexusKey}" placeholder="貼上 NexusPortal access 密語" style="margin-bottom:18px;"/>
         <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
       </div>
     `;
@@ -713,6 +717,10 @@ function saveGS(){
   const skipDur=parseInt(document.getElementById('gs-skip')?.value)||60;
   const catUrl=(document.getElementById('gs-cat')?.value||'').trim();
   if(catUrl)localStorage.setItem('cc_cat_gif',catUrl);else localStorage.removeItem('cc_cat_gif');
+  /* NexusPortal 密語：僅存本機（勿加入 cc_autosync SAFE_STATIC_KEYS，避免進 Gist 備份） */
+  const nexusKey=(document.getElementById('gs-nexus')?.value||'').trim();
+  if(nexusKey)localStorage.setItem('nexus_access',nexusKey);else localStorage.removeItem('nexus_access');
+  applyNexusLinks();
   localStorage.setItem(GS_KEY,JSON.stringify({endTime,workTime,skipDur}));
   closeSettings();checkGuard();
 }
@@ -1068,10 +1076,12 @@ function toggleLtoPanel(e){
   p.classList.toggle('open');
   if(opening){
     var isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
+    var hasKey=!!(localStorage.getItem('nexus_access')||'').trim();
     var editRow=document.getElementById('lto-edit-row');
     var editSep=document.getElementById('lto-edit-sep');
-    if(editRow)editRow.style.display=isTouch?'none':'flex';
-    if(editSep)editSep.style.display=isTouch?'none':'block';
+    /* 無密語時 Edit Mode 沒有意義（會被當訪客打回 public），一併隱藏 */
+    if(editRow)editRow.style.display=(isTouch||!hasKey)?'none':'flex';
+    if(editSep)editSep.style.display=(isTouch||!hasKey)?'none':'block';
   }
 }
 document.addEventListener('click',function(e){
@@ -1081,16 +1091,21 @@ document.addEventListener('click',function(e){
   if(p.contains(e.target)||(btn&&btn.contains(e.target)))return;
   p.classList.remove('open');
 });
-/* Mac（非觸控）才在 lens 連結上補 access key，讓 NexusPortal 讀 localStorage */
-(function(){
+/* Mac（非觸控）且本機已存密語時，才在 lens 連結補 access key。
+   密語存 localStorage nexus_access（設定頁填寫），不寫死在源碼——CC repo 公開，明碼即洩漏（2026-07-09 資安修正） */
+function applyNexusLinks(){
+  var NP_BASE='https://nexus-portal-epq.pages.dev/';
   var isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
-  if(isTouch)return;
-  var NP_KEY='?access=tina_nexus_2026_secure&lens=';
+  var key=(localStorage.getItem('nexus_access')||'').trim();
+  var qs=(!isTouch&&key)?('?access='+encodeURIComponent(key)+'&lens='):'?lens=';
   document.querySelectorAll('#lto-panel .lto-lens').forEach(function(a){
     var lens=a.getAttribute('data-lens');
-    if(lens)a.href='https://nexus-portal-epq.pages.dev/'+NP_KEY+lens;
+    if(lens)a.href=NP_BASE+qs+lens;
   });
-})();
+  var editRow=document.getElementById('lto-edit-row');
+  if(editRow)editRow.href=key?(NP_BASE+'?access='+encodeURIComponent(key)+'&lens=myself'):NP_BASE;
+}
+applyNexusLinks();
 
 // ── INIT ──
 loadWP();
