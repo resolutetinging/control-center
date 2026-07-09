@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-07-09",
+      "project": "AI Tracker",
+      "file": "repo",
+      "summary": "公開repo外洩清理：4份dev log下架（孤本救回正本區）+gitignore防再犯",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "Daily Optimizer",
+      "file": "repo",
+      "summary": "agent誤commit的dev log下架+gitignore；教訓：驗收必核commit實際檔案清單",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-07-09",
       "project": "Control Center",
       "file": "index.html",
       "summary": "Sync Pill 加備份健康度指示（上次完整備份N小時前，>48h警示）",
