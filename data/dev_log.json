@@ -5,6 +5,20 @@
     {
       "date": "2026-07-09",
       "project": "Control Center",
+      "file": "index.html",
+      "summary": "Sync Pill 加備份健康度指示（上次完整備份N小時前，>48h警示）",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "雙token分離：repo級操作改用at_repo_token（fine-grained限單repo），與gist備份token隔離，fallback相容",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "Control Center",
       "file": "cc_zht.js",
       "summary": "新建共用簡轉繁保底（266字含日文新字體）；English Sandbox hover tooltip 移除",
       "reason": "spec_change"
@@ -609,7 +623,7 @@
     {
       "project": "Control Center",
       "file": "index.html",
-      "count": 13,
+      "count": 14,
       "top_reason": "spec_change"
     },
     {
@@ -627,7 +641,7 @@
     {
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "count": 1,
+      "count": 2,
       "top_reason": "spec_change"
     }
   ],
