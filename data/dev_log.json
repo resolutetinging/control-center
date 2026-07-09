@@ -1,7 +1,70 @@
 {
-  "generated_through": "2026-07-08",
+  "generated_through": "2026-07-09",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-09",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "供給架構重建：一分類一次LLM呼叫＋RSS擴充7條＋enrich輪流揀選＋roundup彙整文過濾",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "漏斗儀表 run_stats.json：各階段計數落地，14天滾動",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "前端「今日掃描N篇→高訊號M篇→核心K則」誠實顯示",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "Through My Lenses 新名稱＋astrology Intro 預覽卡＋「精選解讀」用字",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "公開視角暖麻砂預設底（修正首版覆蓋圖層蓋住內容破版＋側欄透明融入）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "Switch Lens／指揮官快切改開新視窗",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "公開產物淨化：烘焙自動剔除memo/隱藏公司名/隱藏卡片＋iCloud自動異地備份；第二次資安複檢無must-fix",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "NexusPortal密語安全化：移出公開源碼改存本機動態組連結（修Edit Mode被降級訪客bug）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-09",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "密語欄位搬至API設定區塊（比照PAT/Groq模式）",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-07-08",
       "project": "SAS Hub",
@@ -469,7 +532,7 @@
     {
       "project": "NexusPortal",
       "file": "index.html",
-      "count": 27,
+      "count": 31,
       "top_reason": "debug"
     },
     {
@@ -487,7 +550,7 @@
     {
       "project": "AI Tracker",
       "file": "update_data.py",
-      "count": 12,
+      "count": 14,
       "top_reason": "debug"
     },
     {
@@ -511,7 +574,7 @@
     {
       "project": "Control Center",
       "file": "index.html",
-      "count": 11,
+      "count": 13,
       "top_reason": "spec_change"
     },
     {
@@ -524,6 +587,12 @@
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
       "count": 4,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "count": 1,
       "top_reason": "spec_change"
     }
   ],
