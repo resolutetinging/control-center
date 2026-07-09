@@ -188,6 +188,7 @@
 <!-- Sync Pill -->
 <div id="sync-pill">
   <div id="sync-time"></div>
+  <div id="backup-health" style="font-size:9px;color:var(--faint);white-space:nowrap;line-height:1;min-height:10px;"></div>
   <div id="sync-btns">
     <button id="sync-up" onclick="syncUpload()" title="Upload localStorage → Gist">↑</button>
     <div id="sync-sep"></div>
@@ -497,6 +498,7 @@ function tick(){
   const s=String(n.getSeconds()).padStart(2,'0');
   document.getElementById('clock').textContent=h+':'+m;
   document.getElementById('clock-sec').textContent=':'+s;
+  if(s==='00')updateBackupHealth();
   const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const yyyy=n.getFullYear(),mm=String(n.getMonth()+1).padStart(2,'0'),dd=String(n.getDate()).padStart(2,'0');
   document.getElementById('date-line').textContent=yyyy+'/'+mm+'/'+dd+' · '+WD[n.getDay()];
@@ -934,6 +936,23 @@ function updateSyncTime(){
   const t=localStorage.getItem('cc_last_sync')||'';
   el.textContent=t?'↑ '+t:'';
 }
+// 備份健康度：cc_auto_at 只在 cc_autosync.js 全量備份「成功後」才寫入（見 markFullSynced），
+// 用它判斷真正的最後一次完整備份時間，避免只看 cc_last_sync 誤判（quickSync 輕量同步也會更新那個）。
+function updateBackupHealth(){
+  const el=document.getElementById('backup-health');
+  if(!el)return;
+  const at=parseInt(localStorage.getItem('cc_auto_at')||'0',10);
+  if(!at){
+    el.textContent='尚未備份';
+    el.style.color='var(--warn)';
+    return;
+  }
+  const diffMin=Math.max(0,Math.floor((Date.now()-at)/60000));
+  const diffHr=Math.floor(diffMin/60);
+  const label=diffHr<1?(diffMin+' 分鐘前'):(diffHr+' 小時前');
+  el.textContent='上次完整備份：'+label;
+  el.style.color=diffHr>=48?'var(--warn)':'var(--faint)';
+}
 let _syncMsgT=null;
 function showSyncMsg(txt,isErr=false){
   const el=document.getElementById('sync-msg');
@@ -1117,6 +1136,7 @@ checkGuard();setInterval(checkGuard,30000);
 updateUnsetFlags();
 initLiveData();
 updateSyncTime();
+updateBackupHealth();
 document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});
 
 // ── 🧪 Lab ──
