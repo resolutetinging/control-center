@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-07-09",
+  "generated_through": "2026-07-10",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-10",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "當日檢視UX：編輯/刪除單筆後返回當天清單；每筆加Categories預覽pills",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-10",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "移除手動輸入戰力（舊遠端解析架構遺物），失敗時改本機快取值提示",
+      "reason": "maintain"
+    },
     {
       "date": "2026-07-09",
       "project": "AI Tracker",
@@ -607,7 +621,7 @@
     {
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "count": 16,
+      "count": 17,
       "top_reason": "spec_change"
     },
     {
@@ -619,7 +633,7 @@
     {
       "project": "Mental Dashboard",
       "file": "mental-dashboard.html",
-      "count": 10,
+      "count": 11,
       "top_reason": "spec_change"
     },
     {
