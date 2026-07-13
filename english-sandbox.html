@@ -783,6 +783,7 @@ TASK 2 — Write 3 DISTINCT model English replies that the LEARNER could have sa
 CRITICAL FRAMING: These are SUBSTITUTE FIRST RESPONSES — what the learner could have said INSTEAD of their actual reply, the moment they heard the opener. The learner's actual reply above does NOT exist for this task. Do NOT continue the learner's reply, do NOT build on anything the learner said, do NOT write anything that only makes sense AFTER the learner already spoke. Imagine the learner's reply was never given. You are showing three alternative ways to respond to the opener from scratch.
 
 SHARED RULES (all 3 replies):
+- LANGUAGE (ABSOLUTE): safe, pro, ball MUST be written 100% in English. NEVER write any Chinese character in these three fields — not even if the learner's reply above is in Chinese. Chinese in safe/pro/ball is a format error.
 - SOURCE: Respond ONLY to the opener. Ignore the learner's actual reply entirely — treat it as if it doesn't exist.
 - ROLE: Learner's perspective — they just heard the opener for the first time and are now responding.
 - DIRECT QUESTION RULE: If the opener asks a direct question ("how was your weekend?", "is that a new setup?"), every reply MUST answer it before anything else.
@@ -805,13 +806,27 @@ Output ONLY valid JSON:
   "fb_ball_verdict": "caught|partial|missed",
   "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
   "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節",
-  "safe": "≤20 words — simple, appropriate, no idioms",
-  "pro": "≤25 words — includes ≥1 colloquial/idiomatic expression, calibrated tone",
-  "ball": "≤30 words — answers first, then a specific contextual follow-up question"
+  "safe": "ENGLISH ONLY — ≤20 words — simple, appropriate, no idioms",
+  "pro": "ENGLISH ONLY — ≤25 words — includes ≥1 colloquial/idiomatic expression, calibrated tone",
+  "ball": "ENGLISH ONLY — ≤30 words — answers first, then a specific contextual follow-up question"
 }`;
 
-    const raw = await callGroq(prompt, 600, 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.', true);
+    const submitSys = 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language. EXCEPTION — the fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
+    const raw = await callGroq(prompt, 600, submitSys, true);
     results = s2tDeep(safeParseJson(raw));
+
+    // 三階潤飾語言保底：prompt 約束不可靠（比照 s2t 雙保險原則），
+    // safe/pro/ball 若被模型寫成中文，單次重試換取英文版；仍失敗則原樣顯示不無限重試
+    const _hasCJK = s => /[一-鿿]/.test(s||'');
+    if(['safe','pro','ball'].some(t=>_hasCJK(results[t]))){
+      try{
+        const raw2 = await callGroq(prompt, 600, submitSys, true);
+        const r2 = s2tDeep(safeParseJson(raw2));
+        ['safe','pro','ball'].forEach(t=>{
+          if(_hasCJK(results[t]) && r2[t] && !_hasCJK(r2[t])) results[t]=r2[t];
+        });
+      }catch(_e){ /* 重試失敗即放棄，保留第一次結果 */ }
+    }
 
     // Opener 中文說明（永遠顯示）
     if(results.opener_zh){
@@ -986,6 +1001,8 @@ async function runOverallAnalysis(){
   const prompt = `You are an English conversation coach. Analyze this learner's Small Talk practice session (${sessionLog.length} rounds, catch rate: ${caught} caught / ${partial} partial / ${missed} missed).
 
 ${lines}
+
+ANTI-FABRICATION IRON RULE: This session contains EXACTLY ${sessionLog.length} rounds — Round 1 to Round ${sessionLog.length}, all shown above. Every example, quote, and observation in your report MUST come verbatim from these rounds. NEVER mention a round number beyond Round ${sessionLog.length}. NEVER invent, imagine, or "recall" any opener, reply, or mistake that is not literally written above — fabricated examples make the report worthless.
 
 Write a concise performance report in Traditional Chinese (繁體中文). Structure:
 
