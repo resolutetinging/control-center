@@ -566,6 +566,11 @@ function saveInlineKey(){
 function pickSit(key){
   if(curSit === key) return;
   curSit = key;
+  // 換情境 = 開新一輪練習：清空上一輪記錄與綜合分析殘留，
+  // 綜合分析按鈕待新情境累積滿 2 輪後才重新出現
+  sessionLog = [];
+  $hide('overall-section'); $('overall-body').textContent='';
+  $('overall-btn').style.display='none';
   document.querySelectorAll('.sit-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('sit-'+key).classList.add('active');
   genOpener();
@@ -854,7 +859,7 @@ Output ONLY valid JSON:
     // 記錄本輪至 sessionLog
     if(inp){
       sessionLog.push({
-        sit: curSit?.zh||'', opener: curOpener, reply: inp,
+        sit: SITS[curSit]?.label||'', opener: curOpener, reply: inp,
         verdict: (results.fb_ball_verdict||'').trim().toLowerCase(),
         fbTone: results.fb_tone||'', fbAdd: results.fb_add||''
       });
