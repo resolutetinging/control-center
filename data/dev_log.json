@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-10",
+  "generated_through": "2026-07-13",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-13",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "修三道閘門翻殺core根因：禁句誤殺具名歸因/NAMED_ENTITY_PAT CJK邊界regression/validate_body三桶合併截斷（歸因儀表首次實戰破案）",
+      "reason": "debug"
+    },
     {
       "date": "2026-07-10",
       "project": "Mental Dashboard",
@@ -627,7 +634,7 @@
     {
       "project": "AI Tracker",
       "file": "update_data.py",
-      "count": 14,
+      "count": 15,
       "top_reason": "debug"
     },
     {
