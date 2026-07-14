@@ -217,6 +217,23 @@ function buildTT(id){
       (brief.today||[]).forEach(l=>{const p=l.split('|');const k=esc((p[0]||l).trim().replace(/^本日\s*/,dateLbl+' '));out+=advRow(k,esc((p[1]||'').trim()));});
       return out;
     }
+    case 'scratch':{
+      // Scratchpad inbox：逐則顯示內容＋建立日期（cc_scratch_v1，零 history 設計故不顯示已轉入項）
+      let sc=null;try{sc=JSON.parse(localStorage.getItem('cc_scratch_v1')||'null');}catch{}
+      const items=(sc&&Array.isArray(sc.items))?sc.items:[];
+      if(!items.length)return h('🗂 Scratchpad')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">Inbox 已清空 ✓</div>`;
+      const fd=ts=>{const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()}`;};
+      const MAX=8;
+      let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
+      items.slice(0,MAX).forEach(it=>{
+        const age=Math.floor((Date.now()-it.ts)/86400000);
+        const raw=(it.text||'').replace(/\n/g,' ');
+        const txt=esc(raw.slice(0,26))+(raw.length>26?'…':'');
+        out+=`<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.type==='todo'?'📌':'💡'} ${txt}</span><span class="tt-v${age>=3?' a':''}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${age>=1?`・${age}天`:''}</span></div>`;
+      });
+      if(items.length>MAX)out+=hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">…還有 ${items.length-MAX} 則</div>`;
+      return out;
+    }
     default:return'';
   }
 }
