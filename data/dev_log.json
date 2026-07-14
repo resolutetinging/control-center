@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-14",
+      "project": "Control Center",
+      "file": "scratchpad.html",
+      "summary": "新增 Scratchpad 雜記收件匣 v1.0：GTD inbox（快速輸入/三選一review/躺N天徽章/transfer=move寫入Optimizer任務庫ondemand/零history/空間治理），spec先行",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-14",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "v1.7 字庫同義收斂：相同中文意思聚組（列表徽章/背誦合併卡/星號雙索引），順帶修考驗干擾選項未排除同義的bug",
@@ -698,6 +705,12 @@
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "count": 2,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "Control Center",
+      "file": "scratchpad.html",
+      "count": 1,
       "top_reason": "spec_change"
     }
   ],
