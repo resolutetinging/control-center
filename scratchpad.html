@@ -41,7 +41,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 .it:last-child{border-bottom:none}
 .it-type{flex-shrink:0;font-size:12px;line-height:1.5;width:18px;text-align:center}
 .it-main{flex:1;min-width:0}
-.it-text{font-size:13px;color:var(--ink);line-height:1.55;word-break:break-word;white-space:pre-wrap}
+.it-text{font-size:13px;color:var(--ink);line-height:1.55;word-break:break-word;white-space:pre-wrap;border-radius:6px;padding:1px 4px;margin:-1px -4px;transition:background .15s}
+.it-text:hover{background:rgba(74,106,138,.06)}
+.it-text:focus{outline:none;background:#fff;box-shadow:0 0 0 1.5px var(--ac)}
 .it-age{display:inline-block;font-size:10px;color:var(--faint);background:var(--bg2);border-radius:8px;padding:1px 7px;margin-top:4px}
 .it-age.old{background:rgba(190,120,40,.14);color:#8a5a20;font-weight:700}
 .it-acts{display:flex;gap:5px;flex-shrink:0;align-items:center}
@@ -57,6 +59,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 .done-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);opacity:.5;flex-shrink:0}
 
 .foot{text-align:center;font-size:10.5px;color:var(--faint);margin-top:6px}
+
+/* hover tooltip（inbox item：完整內容＋建立日期） */
+#tip{position:fixed;z-index:9998;max-width:320px;background:#38342e;color:#f4f0e8;border-radius:10px;padding:9px 12px;font-size:12px;line-height:1.55;box-shadow:0 4px 14px rgba(40,38,32,.25);opacity:0;transition:opacity .12s;pointer-events:none;word-break:break-word;white-space:pre-wrap}
+#tip.show{opacity:1}
+.tip-date{display:block;margin-top:6px;font-size:10.5px;color:#b8b2a8;letter-spacing:.02em}
+.it{cursor:default}
 
 /* toast */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#38342e;color:#f4f0e8;font-size:12px;padding:7px 16px;border-radius:20px;z-index:9999;opacity:0;transition:opacity .2s;white-space:nowrap;display:flex;gap:10px;align-items:center;pointer-events:none}
@@ -81,7 +89,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
       <input class="in-inp" id="q-inp" placeholder="丟進來，Enter 即存" maxlength="2000"
              onkeydown="if(event.key==='Enter'){event.preventDefault();addItem();}">
     </div>
-    <div class="in-hint">開頭打「-」自動變 todo ・ daily review 時每則二選一：→ Optimizer 或刪除，決定不了就先跳過</div>
+    <div class="in-hint">開頭打「-」自動變 todo ・ 點內容可直接編輯 ・ daily review 時每則二選一：→ Optimizer 或刪除，決定不了就先跳過</div>
   </div>
 
   <!-- Inbox -->
@@ -100,6 +108,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 </div>
 
 <div id="toast"></div>
+<div id="tip"></div>
 
 <script>
 const KEY='cc_scratch_v1';
@@ -146,15 +155,32 @@ function addItem(){
 
 function ageDays(ts){return Math.floor((Date.now()-ts)/86400000);}
 
+// inline 編輯：blur 存檔（sanitize 同新增）；Escape 或清空 → 還原原文；建立日期 ts 不變
+function editItem(el){
+  const d=load();
+  const it=d.items.find(x=>x.ts===Number(el.dataset.ts));
+  if(!it)return;
+  if(el._esc){el._esc=0;el.textContent=it.text;return;}
+  const txt=sanitize(el.textContent);
+  if(!txt){el.textContent=it.text;toast('內容不可為空，已還原');return;}
+  if(txt===it.text)return;
+  it.text=txt;
+  save(d);
+  el.textContent=txt; // 以 sanitize 後結果回寫顯示
+  toast('已更新');
+}
+
 function render(){
   const d=load();
   $('inbox-count').textContent=d.items.length?`(${d.items.length})`:'';
   $('inbox-list').innerHTML=d.items.length?d.items.map(it=>{
     const a=ageDays(it.ts);
-    return`<div class="it">
+    return`<div class="it" data-ts="${it.ts}">
       <div class="it-type">${it.type==='todo'?'📌':'💡'}</div>
       <div class="it-main">
-        <div class="it-text">${esc(it.text)}</div>
+        <div class="it-text" contenteditable="true" spellcheck="false" data-ts="${it.ts}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}else if(event.key==='Escape'){this._esc=1;this.blur();}"
+          onblur="editItem(this)">${esc(it.text)}</div>
         ${a>=1?`<span class="it-age${a>=3?' old':''}">躺了 ${a} 天</span>`:''}
       </div>
       <div class="it-acts">
@@ -231,6 +257,39 @@ function toast(msg,undo){
   clearTimeout(_toastTid);
   _toastTid=setTimeout(()=>{t.classList.remove('show');if(undo)_lastDel=null;},undo?6000:1800);
 }
+
+// ── hover tooltip：inbox item 完整內容＋建立日期（事件委派，重渲不掉監聽）──
+function fmtDate(ts){
+  const d=new Date(ts),p=n=>String(n).padStart(2,'0');
+  return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function moveTip(e){
+  const t=$('tip');
+  const pad=14,w=t.offsetWidth,h=t.offsetHeight;
+  let x=e.clientX+pad,y=e.clientY+pad;
+  if(x+w>window.innerWidth-8)x=e.clientX-w-pad;
+  if(y+h>window.innerHeight-8)y=e.clientY-h-pad;
+  t.style.left=Math.max(8,x)+'px';t.style.top=Math.max(8,y)+'px';
+}
+(function(){
+  const list=$('inbox-list'),t=$('tip');
+  list.addEventListener('mouseover',e=>{
+    const row=e.target.closest('.it');
+    if(!row||!list.contains(row))return;
+    if(row.contains(document.activeElement))return; // 編輯中不跳 tooltip
+    const it=load().items.find(x=>x.ts===Number(row.dataset.ts));
+    if(!it)return;
+    const a=ageDays(it.ts);
+    t.innerHTML=`${it.type==='todo'?'📌':'💡'} ${esc(it.text)}<span class="tip-date">建立：${fmtDate(it.ts)}${a>=1?`（躺了 ${a} 天）`:'（今天）'}</span>`;
+    t.classList.add('show');
+    moveTip(e);
+  });
+  list.addEventListener('mousemove',e=>{if(t.classList.contains('show'))moveTip(e);});
+  list.addEventListener('mouseout',e=>{
+    const row=e.target.closest('.it');
+    if(row&&!row.contains(e.relatedTarget))t.classList.remove('show');
+  });
+})();
 
 render();
 </script>
