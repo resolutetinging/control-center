@@ -1,7 +1,28 @@
 {
-  "generated_through": "2026-07-13",
+  "generated_through": "2026-07-14",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-14",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "v1.7 字庫同義收斂：相同中文意思聚組（列表徽章/背誦合併卡/星號雙索引），順帶修考驗干擾選項未排除同義的bug",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-13",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "v1.6 三階潤飾強制英文（prompt+code重試雙保險）；綜合分析防虛構輪次（ANTI-FABRICATION）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-13",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "v1.5 換情境重置綜合分析（sessionLog清空/分析區隱藏），修sit欄永遠空白",
+      "reason": "debug"
+    },
     {
       "date": "2026-07-13",
       "project": "AI Tracker",
@@ -622,7 +643,7 @@
     {
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "count": 16,
+      "count": 19,
       "top_reason": "debug"
     },
     {
