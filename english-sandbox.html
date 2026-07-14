@@ -120,6 +120,9 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 .lib-item-en{font-weight:700;font-size:12px;color:var(--ink);line-height:1.35;}
 .lib-item-zh{font-size:11.5px;color:var(--sub);line-height:1.35;}
 .lib-item-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.lib-group{border:.5px solid var(--bstr);border-radius:8px;padding:2px 8px 4px;margin:6px 0;background:rgba(61,106,82,.04);}
+.lib-group-hdr{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--en);padding:6px 2px 2px;}
+.lib-group-badge{font-size:10px;background:rgba(61,106,82,.12);color:var(--en);border-radius:8px;padding:1px 6px;font-weight:700;white-space:nowrap;}
 .lib-chevron{font-size:10px;color:var(--faint);opacity:.6;transition:transform .18s;margin-left:2px;}
 .lib-chevron.open{transform:rotate(180deg);}
 .lib-detail{display:none;padding:5px 4px 9px;border-bottom:.5px solid var(--border);}
@@ -1310,20 +1313,32 @@ function getZhHint(item){
   return '';
 }
 
+// 同義收斂 key：以 LLM 給的 zh 短譯為準，退回 explain_zh 抽取的 hint；
+// 空字串不參與分組（每筆自成一組），避免無意義欄位被歸為同一組
+function _zhKey(item){ return ((item.zh||'').trim() || getZhHint(item) || '').trim(); }
+
 function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   const tc=$('lib-tab-count'); if(tc) tc.textContent=lib.length||'';
   const tc2=$('lib-tab-count2'); if(tc2) tc2.textContent=lib.length?`(${lib.length})`:'';
   const ni=$('lib-n'); if(ni&&!ni._touched) ni.max=Math.max(lib.length,4);
-  $('lib-list').innerHTML = lib.length
-    ? lib.map((item,i)=>{
-        const zhHint = getZhHint(item);
-        const starred = !!item.starred;
-        const hasMeta = item.example || item.explain_zh || item.topic || item.errorCount;
-        return `
+  if(!lib.length){ $('lib-list').innerHTML='<div class="saved-empty">尚無收藏，答題後點「加入字庫」</div>'; return; }
+  // 同義收斂：相同中文意思（_zhKey）的 idiom 聚成一組，組序依首見順序；
+  // 組內成員一律用「原始 lib index」，星號/刪除/展開沿用既有函式不位移
+  const groups=[]; const gmap={};
+  lib.forEach((item,i)=>{
+    const key=_zhKey(item);
+    if(key && gmap[key]!==undefined){ groups[gmap[key]].idx.push(i); }
+    else { if(key) gmap[key]=groups.length; groups.push({key, idx:[i]}); }
+  });
+  const row=(item,i,inGroup)=>{
+    const zhHint = getZhHint(item);
+    const starred = !!item.starred;
+    const hasMeta = item.example || item.explain_zh || item.topic || item.errorCount;
+    return `
         <div class="lib-item" onclick="toggleLibDetail(${i})">
           <div class="lib-item-en">${esc(item.idiom)}</div>
-          <div class="lib-item-zh">${esc(zhHint||'—')}</div>
+          <div class="lib-item-zh">${inGroup?'':esc(zhHint||'—')}</div>
           <div class="lib-item-actions">
             <button class="star-btn${starred?' on':''}" onclick="event.stopPropagation();toggleStar(${i})" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
             ${hasMeta?`<span class="lib-chevron" id="lib-chev-${i}">▾</span>`:''}
@@ -1338,8 +1353,14 @@ function renderLib(){
             ${item.topic?`<span style="font-size:10.5px;color:var(--faint)">${esc(item.topic)}</span>`:''}
           </div>
         </div>`:''}`;
-      }).join('')
-    : '<div class="saved-empty">尚無收藏，答題後點「加入字庫」</div>';
+  };
+  $('lib-list').innerHTML = groups.map(g=>{
+    if(g.idx.length===1) return row(lib[g.idx[0]], g.idx[0], false);
+    return `<div class="lib-group">
+      <div class="lib-group-hdr">${esc(g.key)}<span class="lib-group-badge">同義 ×${g.idx.length}</span></div>
+      ${g.idx.map(i=>row(lib[i], i, true)).join('')}
+    </div>`;
+  }).join('');
 }
 
 function toggleLibDetail(i){
@@ -1384,12 +1405,29 @@ function _pickLibPool(){
   }
   return pool.slice(0, n);
 }
+// 同義收斂：把抽到的項目展開為「意義組」——同義 idiom（_zhKey 相同）即使
+// 未被抽中也從全字庫拉進同一組合併呈現；同組成員只出現一次（seenTs 去重）
+function _groupStudyPool(picked){
+  const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  const groups=[]; const seenTs=new Set();
+  for(const it of picked){
+    if(seenTs.has(it.ts)) continue;
+    const key=_zhKey(it);
+    let members = key ? lib.filter(x=>_zhKey(x)===key) : [];
+    if(!members.length) members=[it];
+    members.forEach(m=>seenTs.add(m.ts));
+    groups.push({ zh: key || getZhHint(it) || it.zh || '—', members });
+  }
+  return groups;
+}
 function startLibStudy(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   if(lib.length < 1){ alert('字庫是空的，先收藏一些 idiom 吧！'); return; }
   if(lib.length < 4){ alert('至少需要 4 個 idiom 才能開始。'); return; }
-  libStudyPool = _pickLibPool();
-  document.getElementById('lib-study-count').textContent = libStudyPool.length + ' 個 idiom';
+  libStudyPool = _groupStudyPool(_pickLibPool());
+  const total = libStudyPool.reduce((s,g)=>s+g.members.length,0);
+  document.getElementById('lib-study-count').textContent =
+    total===libStudyPool.length ? total+' 個 idiom' : `${libStudyPool.length} 組 · ${total} 個 idiom（同義已收斂）`;
   renderLibStudyCards();
   document.getElementById('lib-main-view').style.display='none';
   document.getElementById('lib-study-view').style.display='block';
@@ -1397,36 +1435,37 @@ function startLibStudy(){
 }
 function renderLibStudyCards(){
   const el = document.getElementById('lib-study-cards');
-  el.innerHTML = libStudyPool.map((item,i)=>{
-    const zh = getZhHint(item)||item.zh||'';
-    const starred=!!item.starred;
-    return`<div class="lsc" id="lsc-${i}" onclick="toggleLsc(${i})">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:8px;">
-        <div class="lsc-idiom" style="margin-bottom:0">${esc(item.idiom)}</div>
-        <div class="lsc-zh" style="margin-bottom:0">${esc(zh||'—')}</div>
+  el.innerHTML = libStudyPool.map((g,i)=>{
+    const multi = g.members.length>1;
+    const front = g.members.map((m,j)=>`
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:8px;${j?'margin-top:5px;':''}">
+        <div class="lsc-idiom" style="margin-bottom:0">${esc(m.idiom)}</div>
+        <div class="lsc-zh" style="margin-bottom:0">${j===0?esc(g.zh||'—')+(multi?' <span class="lib-group-badge">同義 ×'+g.members.length+'</span>':''):''}</div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-          <button class="star-btn${starred?' on':''}" id="lsc-star-${i}" onclick="toggleStudyStar(${i});event.stopPropagation();" title="${starred?'取消標記':'標記重點'}">${starred?'★':'☆'}</button>
-          <span class="lib-chevron" id="lsch-${i}">▾</span>
+          <button class="star-btn${m.starred?' on':''}" id="lsc-star-${i}-${j}" onclick="toggleStudyStar(${i},${j});event.stopPropagation();" title="${m.starred?'取消標記':'標記重點'}">${m.starred?'★':'☆'}</button>
+          ${j===0?`<span class="lib-chevron" id="lsch-${i}">▾</span>`:'<span style="width:16px;display:inline-block"></span>'}
         </div>
-      </div>
-      <div class="lsc-back" id="lscb-${i}" style="display:none;">
-        ${item.explain_zh?`<div class="lsc-explain">${esc(item.explain_zh)}</div>`:''}
-        ${item.example?`<div class="lsc-example">${esc(item.example)}</div>`:''}
-      </div>
+      </div>`).join('');
+    const back = g.members.map(m=>`
+        ${multi?`<div class="lsc-idiom" style="margin-top:8px;">${esc(m.idiom)}</div>`:''}
+        ${m.explain_zh?`<div class="lsc-explain">${esc(m.explain_zh)}</div>`:''}
+        ${m.example?`<div class="lsc-example">${esc(m.example)}</div>`:''}`).join('');
+    return`<div class="lsc" id="lsc-${i}" onclick="toggleLsc(${i})">
+      ${front}
+      <div class="lsc-back" id="lscb-${i}" style="display:none;">${back}</div>
     </div>`;
   }).join('');
 }
-function toggleStudyStar(i){
-  libStudyPool[i].starred = !libStudyPool[i].starred;
-  const starred = libStudyPool[i].starred;
+function toggleStudyStar(i,j){
+  const m = libStudyPool[i].members[j];
+  m.starred = !m.starred;
   // update button immediately without re-render (preserves open/close state)
-  const btn = document.getElementById('lsc-star-'+i);
-  if(btn){ btn.textContent=starred?'★':'☆'; btn.className='star-btn'+(starred?' on':''); btn.title=starred?'取消標記':'標記重點'; }
+  const btn = document.getElementById('lsc-star-'+i+'-'+j);
+  if(btn){ btn.textContent=m.starred?'★':'☆'; btn.className='star-btn'+(m.starred?' on':''); btn.title=m.starred?'取消標記':'標記重點'; }
   // persist to lib storage by ts
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
-  const ts = libStudyPool[i].ts;
-  const idx = lib.findIndex(x=>x.ts===ts);
-  if(idx>-1){ lib[idx].starred=starred; localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib)); }
+  const idx = lib.findIndex(x=>x.ts===m.ts);
+  if(idx>-1){ lib[idx].starred=m.starred; localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib)); }
 }
 function toggleLsc(i){
   const back=document.getElementById('lscb-'+i);
@@ -1442,7 +1481,8 @@ function exitLibStudy(){
 
 // ── 字庫考驗 ──
 let libQuizState = null;
-function startLibQuizFromStudy(){ _startLibQuiz(libStudyPool); }
+// libStudyPool 已是意義組結構，考驗仍以單一 idiom 出題，攤平組成員
+function startLibQuizFromStudy(){ _startLibQuiz(libStudyPool.flatMap(g=>g.members)); }
 function startLibQuizDirect(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   if(lib.length < 4){ alert('至少需要 4 個 idiom 才能考驗。'); return; }
@@ -1472,8 +1512,11 @@ function renderLibQuizQ(){
   const mode = Math.random()<0.5 ? 'en2zh' : 'zh2en';
   // distractors from pool + fill from allLib if needed
   const others = [...st.pool.filter((_,i)=>i!==st.index), ...st.allLib.filter(x=>x.idiom!==cur.idiom)];
+  // 干擾選項排除與題目同義的項目（_zhKey 相同）：否則 en2zh 會出現兩個相同
+  // 中文選項、zh2en 會出現兩個都算對的 idiom（同義收斂後字庫必然有同義組）
+  const curKey=_zhKey(cur);
   const picked=[]; const seen=new Set([cur.idiom]);
-  for(const o of others){ if(!seen.has(o.idiom)&&picked.length<3){seen.add(o.idiom);picked.push(o);} }
+  for(const o of others){ if(!seen.has(o.idiom)&&(!curKey||_zhKey(o)!==curKey)&&picked.length<3){seen.add(o.idiom);picked.push(o);} }
   let question, correctAns, opts;
   if(mode==='en2zh'){
     question=cur.idiom; correctAns=zh;
