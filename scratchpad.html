@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%220.9em%22 font-size=%2290%22>🗂</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scratchpad</title>
+<style>
+/* ── BASE: CC 共用色系 ── */
+:root{
+  --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
+  --ink:#28261f;--sub:#55514a;--faint:#7a7570;
+  --border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
+  --shadow:0 1px 4px rgba(40,38,32,.07);
+  --ac:#4a6a8a;--ac-l:#5a80a4;--ac-tint:rgba(74,106,138,.08);--ac-tint2:rgba(74,106,138,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px}
+.nav-title{font-size:14px;font-weight:700;color:var(--ac);padding:13px 0;letter-spacing:.02em;white-space:nowrap}
+.nav-sub{font-size:11px;color:var(--faint);margin-left:10px;white-space:nowrap}
+.back-link{margin-left:auto;font-size:11.5px;color:var(--faint);text-decoration:none;padding:5px 9px;border-radius:6px;transition:background .15s;white-space:nowrap}
+.back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
+
+.wrap{padding:20px 16px 40px;max-width:640px;margin:0 auto}
+.panel{background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.panel-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+
+/* ── 快速輸入 ── */
+.in-row{display:flex;gap:8px;align-items:center}
+.in-type{flex-shrink:0;font-size:12px;font-weight:700;padding:9px 12px;border-radius:9px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.in-type.t-todo{background:rgba(190,120,40,.12);color:#8a5a20;border-color:rgba(190,120,40,.3)}
+.in-inp{flex:1;padding:9px 12px;border:.5px solid var(--bstr);border-radius:9px;background:#fff;font-size:13.5px;font-family:inherit;color:var(--ink);outline:none;min-width:0}
+.in-inp:focus{border-color:var(--ac)}
+.in-hint{font-size:10.5px;color:var(--faint);margin-top:8px;line-height:1.5}
+
+/* ── Inbox 清單 ── */
+.it{display:flex;align-items:flex-start;gap:8px;padding:10px 2px;border-bottom:.5px solid var(--border)}
+.it:last-child{border-bottom:none}
+.it-type{flex-shrink:0;font-size:12px;line-height:1.5;width:18px;text-align:center}
+.it-main{flex:1;min-width:0}
+.it-text{font-size:13px;color:var(--ink);line-height:1.55;word-break:break-word;white-space:pre-wrap}
+.it-age{display:inline-block;font-size:10px;color:var(--faint);background:var(--bg2);border-radius:8px;padding:1px 7px;margin-top:4px}
+.it-age.old{background:rgba(190,120,40,.14);color:#8a5a20;font-weight:700}
+.it-acts{display:flex;gap:5px;flex-shrink:0;align-items:center}
+.act-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.act-btn.to-opt{background:var(--ac-tint);color:var(--ac);border-color:var(--ac-tint2)}
+.act-btn.to-opt:hover{background:var(--ac-tint2)}
+.act-btn.del:hover{background:rgba(192,80,80,.12);color:#a04040;border-color:rgba(192,80,80,.3)}
+.empty{text-align:center;color:var(--faint);font-size:12.5px;padding:18px 0}
+
+/* ── 已轉入唯讀 ── */
+.done-it{display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:.5px solid var(--border);font-size:12.5px;color:var(--sub)}
+.done-it:last-child{border-bottom:none}
+.done-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);opacity:.5;flex-shrink:0}
+
+.foot{text-align:center;font-size:10.5px;color:var(--faint);margin-top:6px}
+
+/* toast */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#38342e;color:#f4f0e8;font-size:12px;padding:7px 16px;border-radius:20px;z-index:9999;opacity:0;transition:opacity .2s;white-space:nowrap;display:flex;gap:10px;align-items:center;pointer-events:none}
+#toast.show{opacity:1;pointer-events:auto}
+#toast button{background:none;border:none;color:#8ab4d8;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-title">🗂 Scratchpad</div>
+  <div class="nav-sub">inbox — 轉入 Optimizer 或刪除，不留 history</div>
+  <a class="back-link" href="./index.html">← Control Center</a>
+</div>
+
+<div class="wrap">
+
+  <!-- 快速輸入 -->
+  <div class="panel">
+    <div class="in-row">
+      <button class="in-type" id="type-btn" onclick="toggleType()">💡 note</button>
+      <input class="in-inp" id="q-inp" placeholder="丟進來，Enter 即存" maxlength="2000"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();addItem();}">
+    </div>
+    <div class="in-hint">開頭打「-」自動變 todo ・ daily review 時每則二選一：→ Optimizer 或刪除，決定不了就先跳過</div>
+  </div>
+
+  <!-- Inbox -->
+  <div class="panel">
+    <div class="panel-lbl">Inbox <span id="inbox-count" style="letter-spacing:0"></span></div>
+    <div id="inbox-list"></div>
+  </div>
+
+  <!-- 已轉入 Optimizer（唯讀） -->
+  <div class="panel">
+    <div class="panel-lbl">已轉入 Optimizer・雜項收件 <span style="letter-spacing:0;font-weight:400;text-transform:none">（唯讀，完成/清理請在 Optimizer 操作）</span></div>
+    <div id="opt-list"></div>
+  </div>
+
+  <div class="foot" id="usage"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const KEY='cc_scratch_v1';
+const TASKS_KEY='tina_tasks_v3';
+const SCRATCH_CAT='scratch_inbox';
+const MAX_ITEMS=200;
+let curType='note';
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{"items":[]}');return Array.isArray(d.items)?d:{items:[]};}catch(e){return{items:[]};}}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
+
+// 空間治理：純文字鐵律——剝 HTML 標籤與 data: URI，單則上限 2000 字
+function sanitize(t){
+  t=String(t).replace(/<[^>]*>/g,'').replace(/data:[^\s"']{20,}/g,'[已移除內嵌資料]');
+  return t.trim().slice(0,2000);
+}
+
+function toggleType(){
+  curType=curType==='note'?'todo':'note';
+  const b=$('type-btn');
+  b.textContent=curType==='todo'?'📌 todo':'💡 note';
+  b.className='in-type'+(curType==='todo'?' t-todo':'');
+}
+
+function addItem(){
+  const inp=$('q-inp');
+  let text=sanitize(inp.value);
+  if(!text)return;
+  let type=curType;
+  if(/^-\s*/.test(text)){type='todo';text=text.replace(/^-\s*/,'');}
+  if(!text)return;
+  const d=load();
+  if(d.items.length>=MAX_ITEMS){toast('Inbox 已達 '+MAX_ITEMS+' 則上限，先清理再新增');return;}
+  // ts 兼 unique id：同毫秒連續輸入會碰撞（transfer/刪除會誤抓別則），碰撞時 +1 避開
+  let ts=Date.now();
+  while(d.items.some(x=>x.ts===ts))ts++;
+  d.items.unshift({ts,text,type});
+  save(d);
+  inp.value='';
+  render();
+}
+
+function ageDays(ts){return Math.floor((Date.now()-ts)/86400000);}
+
+function render(){
+  const d=load();
+  $('inbox-count').textContent=d.items.length?`(${d.items.length})`:'';
+  $('inbox-list').innerHTML=d.items.length?d.items.map(it=>{
+    const a=ageDays(it.ts);
+    return`<div class="it">
+      <div class="it-type">${it.type==='todo'?'📌':'💡'}</div>
+      <div class="it-main">
+        <div class="it-text">${esc(it.text)}</div>
+        ${a>=1?`<span class="it-age${a>=3?' old':''}">躺了 ${a} 天</span>`:''}
+      </div>
+      <div class="it-acts">
+        <button class="act-btn to-opt" onclick="transfer(${it.ts})">→ Optimizer</button>
+        <button class="act-btn del" onclick="delItem(${it.ts})">刪除</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty">Inbox 已清空 ✓</div>';
+  renderOpt();
+  const bytes=(localStorage.getItem(KEY)||'').length*2;
+  $('usage').textContent=`cc_scratch_v1 佔用 ${(bytes/1024).toFixed(1)} KB`;
+}
+
+// 唯讀：Optimizer 任務庫中「雜項收件」分類現況（零額外狀態，直接讀 tina_tasks_v3）
+function renderOpt(){
+  let tasks=[];
+  try{
+    const td=JSON.parse(localStorage.getItem(TASKS_KEY)||'null');
+    if(td&&Array.isArray(td.tasks))tasks=td.tasks.filter(t=>t.catKey===SCRATCH_CAT);
+  }catch(e){}
+  $('opt-list').innerHTML=tasks.length
+    ?tasks.map(t=>`<div class="done-it"><div class="done-dot"></div>${esc(t.text)}</div>`).join('')
+    :'<div class="empty">尚無轉入項目</div>';
+}
+
+// transfer = move：寫入 tina_tasks_v3（ondemand，排程走 Optimizer 既有 toggle 機制），即自 inbox 移除
+function transfer(ts){
+  const raw=localStorage.getItem(TASKS_KEY);
+  if(!raw){alert('找不到 Optimizer 任務庫（tina_tasks_v3）。\n請先在此裝置開啟過 Daily Optimizer 完成初始化。');return;}
+  let td;
+  try{td=JSON.parse(raw);}catch(e){alert('任務庫資料解析失敗，未寫入。');return;}
+  if(!Array.isArray(td.tasks)||!Array.isArray(td.categories)){alert('任務庫結構異常，未寫入。');return;}
+  const d=load();
+  const it=d.items.find(x=>x.ts===ts);
+  if(!it)return;
+  if(!td.categories.some(c=>c.key===SCRATCH_CAT)){
+    td.categories.push({key:SCRATCH_CAT,label:'雜項收件',freq:'ondemand'});
+  }
+  const nid=Math.max(...td.tasks.map(t=>t.id||0),9)+1;
+  td.tasks.push({id:nid,text:it.text,catKey:SCRATCH_CAT,freq:'ondemand',energy:'mid'});
+  localStorage.setItem(TASKS_KEY,JSON.stringify(td));
+  d.items=d.items.filter(x=>x.ts!==ts);
+  save(d);
+  render();
+  toast('已轉入 Optimizer（按需）— 到 Optimizer 手動加入 routine');
+}
+
+// 刪除：附 6 秒復原（防誤觸，不留 history）
+let _lastDel=null,_toastTid=null;
+function delItem(ts){
+  const d=load();
+  const it=d.items.find(x=>x.ts===ts);
+  if(!it)return;
+  _lastDel=it;
+  d.items=d.items.filter(x=>x.ts!==ts);
+  save(d);
+  render();
+  toast('已刪除','undo');
+}
+function undoDel(){
+  if(!_lastDel)return;
+  const d=load();
+  d.items.unshift(_lastDel);
+  d.items.sort((a,b)=>b.ts-a.ts);
+  save(d);
+  _lastDel=null;
+  render();
+  toast('已復原');
+}
+function toast(msg,undo){
+  const t=$('toast');
+  t.innerHTML=esc(msg)+(undo?'<button onclick="undoDel()">復原</button>':'');
+  t.classList.add('show');
+  clearTimeout(_toastTid);
+  _toastTid=setTimeout(()=>{t.classList.remove('show');if(undo)_lastDel=null;},undo?6000:1800);
+}
+
+render();
+</script>
+<script src="cc_autosync.js"></script>
+<script src="cc_track.js" data-cc-key="scratch" data-cc-label="Scratchpad"></script>
+</body>
+</html>

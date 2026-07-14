@@ -42,6 +42,8 @@
     'astro_chat', 'astro_cc_brief',
     // English Sandbox
     'es_idiom_lib', 'es_saved_phrases',
+    // Scratchpad（雜記收件匣）
+    'cc_scratch_v1',
     // External Me（life_tracker_v1）
     'lto_matrix',
     // WordVault 成人版＋Kids
