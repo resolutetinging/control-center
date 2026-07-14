@@ -5,6 +5,13 @@
     {
       "date": "2026-07-15",
       "project": "Control Center",
+      "file": "cc_tooltip.js",
+      "summary": "Scratchpad v1.2：Dock 🗂 icon hover 補 case（原靜默失敗）——Inbox 摘要 tooltip（逐則+躺N天amber）；教訓：新增 Dock icon 必同步加 cc_tooltip case",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "Control Center",
       "file": "scratchpad.html",
       "summary": "Scratchpad v1.1：hover tooltip（完整內容+建立時間+躺N天）、inline編輯（ts不變/同sanitize管線/Escape還原）、多裝置同步鏈驗證",
       "reason": "spec_change"
