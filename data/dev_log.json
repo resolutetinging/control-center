@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-14",
+  "generated_through": "2026-07-15",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-15",
+      "project": "Control Center",
+      "file": "scratchpad.html",
+      "summary": "Scratchpad v1.1：hover tooltip（完整內容+建立時間+躺N天）、inline編輯（ts不變/同sanitize管線/Escape還原）、多裝置同步鏈驗證",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-07-14",
       "project": "Control Center",
@@ -710,7 +717,7 @@
     {
       "project": "Control Center",
       "file": "scratchpad.html",
-      "count": 1,
+      "count": 2,
       "top_reason": "spec_change"
     }
   ],
