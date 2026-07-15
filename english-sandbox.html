@@ -123,6 +123,8 @@ textarea:disabled{opacity:.5;cursor:not-allowed}
 .lib-group{border:.5px solid var(--bstr);border-radius:8px;padding:2px 8px 4px;margin:6px 0;background:rgba(61,106,82,.04);}
 .lib-group-hdr{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--en);padding:6px 2px 2px;}
 .lib-group-badge{font-size:10px;background:rgba(61,106,82,.12);color:var(--en);border-radius:8px;padding:1px 6px;font-weight:700;white-space:nowrap;}
+.lib-group-dup{border-color:rgba(192,80,80,.3);background:rgba(192,80,80,.045);}
+.lib-group-badge-dup{background:rgba(192,80,80,.15);color:#b04040;}
 .lib-chevron{font-size:10px;color:var(--faint);opacity:.6;transition:transform .18s;margin-left:2px;}
 .lib-chevron.open{transform:rotate(180deg);}
 .lib-detail{display:none;padding:5px 4px 9px;border-bottom:.5px solid var(--border);}
@@ -1352,6 +1354,7 @@ function getZhHint(item){
 // 同義收斂 key：以 LLM 給的 zh 短譯為準，退回 explain_zh 抽取的 hint；
 // 空字串不參與分組（每筆自成一組），避免無意義欄位被歸為同一組
 function _zhKey(item){ return ((item.zh||'').trim() || getZhHint(item) || '').trim(); }
+function _enKey(item){ return (item.idiom||'').trim().toLowerCase(); }
 
 function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
@@ -1359,10 +1362,24 @@ function renderLib(){
   const tc2=$('lib-tab-count2'); if(tc2) tc2.textContent=lib.length?`(${lib.length})`:'';
   const ni=$('lib-n'); if(ni&&!ni._touched) ni.max=Math.max(lib.length,4);
   if(!lib.length){ $('lib-list').innerHTML='<div class="saved-empty">尚無收藏，答題後點「加入字庫」</div>'; return; }
+  // 英文完全重複偵測（同一慣用語被重複收藏，例如考驗答對同一題兩次）：
+  // 獨立於同義分組之上，浮到列表最上方讓使用者人工判斷去留，不併入下方同義分組
+  const dupMap={};
+  lib.forEach((item,i)=>{
+    const ek=_enKey(item);
+    if(ek) (dupMap[ek]=dupMap[ek]||[]).push(i);
+  });
+  const dupIdx=new Set();
+  const dupGroups=Object.values(dupMap).filter(idx=>idx.length>1).map(idx=>{
+    idx.forEach(i=>dupIdx.add(i));
+    return {idx};
+  });
+
   // 同義收斂：相同中文意思（_zhKey）的 idiom 聚成一組，組序依首見順序；
-  // 組內成員一律用「原始 lib index」，星號/刪除/展開沿用既有函式不位移
+  // 組內成員一律用「原始 lib index」，星號/刪除/展開沿用既有函式不位移；已列進英文重複區的 index 跳過，不重複顯示
   const groups=[]; const gmap={};
   lib.forEach((item,i)=>{
+    if(dupIdx.has(i)) return;
     const key=_zhKey(item);
     if(key && gmap[key]!==undefined){ groups[gmap[key]].idx.push(i); }
     else { if(key) gmap[key]=groups.length; groups.push({key, idx:[i]}); }
@@ -1390,7 +1407,12 @@ function renderLib(){
           </div>
         </div>`:''}`;
   };
-  $('lib-list').innerHTML = groups.map(g=>{
+  const dupHtml = dupGroups.length ? `<div style="font-size:10.5px;color:#b04040;margin-bottom:6px;">🔁 偵測到 ${dupGroups.length} 組英文完全重複，建議人工確認後刪除多餘項目</div>`
+    + dupGroups.map(g=>`<div class="lib-group lib-group-dup">
+      <div class="lib-group-hdr">${esc(lib[g.idx[0]].idiom)}<span class="lib-group-badge lib-group-badge-dup">重複 ×${g.idx.length}</span></div>
+      ${g.idx.map(i=>row(lib[i], i, false)).join('')}
+    </div>`).join('') : '';
+  $('lib-list').innerHTML = dupHtml + groups.map(g=>{
     if(g.idx.length===1) return row(lib[g.idx[0]], g.idx[0], false);
     return `<div class="lib-group">
       <div class="lib-group-hdr">${esc(g.key)}<span class="lib-group-badge">同義 ×${g.idx.length}</span></div>
