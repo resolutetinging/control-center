@@ -100,7 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 
   <!-- 已轉入 Optimizer（唯讀） -->
   <div class="panel">
-    <div class="panel-lbl">已轉入 Optimizer・雜項收件 <span style="letter-spacing:0;font-weight:400;text-transform:none">（唯讀，完成/清理請在 Optimizer 操作）</span></div>
+    <div class="panel-lbl">已轉入 Optimizer・發想收件 <span style="letter-spacing:0;font-weight:400;text-transform:none">（唯讀，完成/清理請在 Optimizer 操作）</span></div>
     <div id="opt-list"></div>
   </div>
 
@@ -194,11 +194,16 @@ function render(){
   $('usage').textContent=`cc_scratch_v1 佔用 ${(bytes/1024).toFixed(1)} KB`;
 }
 
-// 唯讀：Optimizer 任務庫中「雜項收件」分類現況（零額外狀態，直接讀 tina_tasks_v3）
+// 唯讀：Optimizer 任務庫中「發想收件」分類現況（零額外狀態，直接讀 tina_tasks_v3）
 function renderOpt(){
   let tasks=[];
   try{
     const td=JSON.parse(localStorage.getItem(TASKS_KEY)||'null');
+    // 分類改名遷移：舊資料的 label 仍是「雜項收件」則就地改名並寫回，不建立第二個分類
+    if(td&&Array.isArray(td.categories)){
+      const cat=td.categories.find(c=>c.key===SCRATCH_CAT);
+      if(cat&&cat.label!=='發想收件'){cat.label='發想收件';localStorage.setItem(TASKS_KEY,JSON.stringify(td));}
+    }
     if(td&&Array.isArray(td.tasks))tasks=td.tasks.filter(t=>t.catKey===SCRATCH_CAT);
   }catch(e){}
   $('opt-list').innerHTML=tasks.length
@@ -217,7 +222,7 @@ function transfer(ts){
   const it=d.items.find(x=>x.ts===ts);
   if(!it)return;
   if(!td.categories.some(c=>c.key===SCRATCH_CAT)){
-    td.categories.push({key:SCRATCH_CAT,label:'雜項收件',freq:'ondemand'});
+    td.categories.push({key:SCRATCH_CAT,label:'發想收件',freq:'ondemand'});
   }
   const nid=Math.max(...td.tasks.map(t=>t.id||0),9)+1;
   td.tasks.push({id:nid,text:it.text,catKey:SCRATCH_CAT,freq:'ondemand',energy:'mid'});
