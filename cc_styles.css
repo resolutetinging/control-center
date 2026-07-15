@@ -266,6 +266,7 @@ body{position:relative;}
 }
 #tooltip.tt-hide{opacity:0;transform:translateY(8px);}
 .tt-head{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:9px;}
+.tt-sub{font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;}
 .tt-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:2px 0;}
 .tt-k{font-size:11px;color:var(--faint);font-weight:600;}
 .tt-v{font-size:12px;font-weight:600;color:var(--ink);}

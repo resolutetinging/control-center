@@ -10,6 +10,7 @@ let ttT;
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
 function advRow(k,v){return`<div class="tt-adv"><span class="tt-adv-k">${k}</span><span class="tt-adv-v">${v}</span></div>`;}
+function sub(t){return`<div class="tt-sub">${t}</div>`;}
 function hr(){return`<div class="tt-hr"></div>`;}
 function spark(vals){
   const B='▁▂▃▄▅▆▇█';
@@ -34,7 +35,7 @@ function buildTT(id){
         const rc=JSON.parse(localStorage.getItem('sas_weekly_recap')||'null');
         const isMonday=new Date().getDay()===1;
         if(rc&&rc.text&&(isMonday||Date.now()-rc.ts<7*86400000)){
-          recapHtml=hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:3px 0;"><span class="tt-k">📋 上週回顧</span><span style="font-size:10.5px;color:var(--ink);line-height:1.55;margin-top:3px;">${rc.text}</span></div>`;
+          recapHtml=hr()+`<div style="padding:3px 0;">${sub('📋 上週回顧')}<div style="font-size:10.5px;color:var(--ink);line-height:1.55;">${rc.text}</div></div>`;
         }
       }catch(e){}
       const cpSingle=LIVE.sleep?.combatSingle??null;
@@ -60,7 +61,7 @@ function buildTT(id){
         combatRows=row('今日戰力（3夜加權）',cp,cp==='—'?'':(+cp>=75?'g':+cp>=50?'a':'r'));
       }
       const enduranceHtmlFinal=endTime?hr()+row('體能續航至',endTime+'　·　加權基準',endColor):'';
-      return h('SAS Hub')+combatRows+enduranceHtmlFinal+hr()+`<div class="tt-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:3px 0;"><span class="tt-k">配速建議</span><span style="font-size:11.5px;color:var(--ink);font-weight:500;margin-top:2px;">${pace}</span></div>`+recapHtml;
+      return h('SAS Hub')+combatRows+enduranceHtmlFinal+hr()+`<div style="padding:3px 0;">${sub('配速建議')}<div style="font-size:11.5px;color:var(--ink);font-weight:500;">${pace}</div></div>`+recapHtml;
     }
     case 'sleep':{
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 Sleep Dashboard 以更新資料</div>`;
@@ -89,7 +90,7 @@ function buildTT(id){
         const dArr=latestDeep>prevDeep?'↑':latestDeep<prevDeep?'↓':'→';
         const rArr=latestRem>prevRem?'↑':latestRem<prevRem?'↓':'→';
         out+=hr()
-          +`<div style="font-size:9.5px;color:var(--faint);letter-spacing:.06em;margin-bottom:6px;">近${s.trend7.length}日趨勢</div>`
+          +sub(`近${s.trend7.length}日趨勢`)
           +`<div class="tt-row"><span class="tt-k">${dot('#8aabcc')}Deep</span><span class="tt-v tt-spark" style="color:#8aabcc;">${spark(deepVals)}</span><span class="tt-v ${latestDeep>=18?'g':latestDeep>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${dArr}</span></div>`
           +`<div class="tt-row"><span class="tt-k">${dot('#a898b8')}REM</span><span class="tt-v tt-spark" style="color:#a898b8;">${spark(remVals)}</span><span class="tt-v ${latestRem>=18?'g':latestRem>=12?'a':'r'}" style="font-size:10px;margin-left:4px;">${rArr}</span></div>`;
       }
@@ -210,10 +211,10 @@ function buildTT(id){
       const dateLbl=`${_n.getMonth()+1}/${_n.getDate()}`;
       const monthLbl=`${_n.getMonth()+1}月`;
       let out=h(`⭐ Astro  ${monthLbl} & ${dateLbl}`);
-      out+=`<div class="tt-head" style="margin-bottom:5px">本月</div>`;
+      out+=sub('本月');
       (brief.thisMonth||[]).forEach(l=>{const p=l.split('|');out+=advRow(esc((p[0]||l).trim()),esc((p[1]||'').trim()));});
       out+=hr();
-      out+=`<div class="tt-head" style="margin-bottom:5px">${dateLbl}</div>`;
+      out+=sub(dateLbl);
       (brief.today||[]).forEach(l=>{const p=l.split('|');const k=esc((p[0]||l).trim().replace(/^本日\s*/,dateLbl+' '));out+=advRow(k,esc((p[1]||'').trim()));});
       return out;
     }
@@ -246,11 +247,11 @@ function buildTT(id){
       };
       let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
       if(todos.length){
-        out+=`<div style="font-size:10px;color:var(--faint);font-weight:600;padding:3px 0 1px;">/To Do</div>`;
+        out+=sub('/To Do');
         todos.forEach(it=>out+=rowHtml(it,true));
       }
       if(notes.length){
-        out+=`<div style="font-size:10px;color:var(--faint);font-weight:600;padding:5px 0 1px;">/Notes</div>`;
+        out+=sub('/Notes');
         notes.forEach(it=>out+=rowHtml(it,false));
       }
       if(items.length>MAX)out+=hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">…還有 ${items.length-MAX} 則</div>`;
