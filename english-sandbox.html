@@ -348,6 +348,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
         <div class="fb-block-lbl">🎾 有沒有接住對方的球</div>
         <div id="fb-ball-verdict"></div>
         <div class="fb-block-body" id="fb-content-text"></div>
+        <div class="resp-footer">
+          <button class="save-btn" id="save-fb_content" onclick="savePhrase('fb_content')">⭐ 收藏</button>
+        </div>
       </div>
       <div class="fb-block fb-add fb-section">
         <div class="fb-block-lbl">💡 可以再補充什麼</div>
@@ -873,7 +876,7 @@ Output ONLY valid JSON:
     $('text-safe').textContent = results.safe||'—';
     $('text-pro').textContent  = results.pro||'—';
     $('text-ball').textContent = results.ball||'—';
-    ['safe','pro','ball'].forEach(t=>{ const b=$('save-'+t); b.textContent='⭐ 收藏'; b.classList.remove('saved'); });
+    ['safe','pro','ball','fb_content'].forEach(t=>{ const b=$('save-'+t); if(b){ b.textContent='⭐ 收藏'; b.classList.remove('saved'); } });
     // 記錄本輪至 sessionLog
     if(inp){
       sessionLog.push({
@@ -897,7 +900,7 @@ function savePhrase(type){
   const text = results[type] || ($('text-'+type)?.textContent||'').trim();
   if(!text || text === '—') { showSaveToast('⚠ 尚無內容，請先送出回應'); return; }
   const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
-  const typeLabel = {safe:'🛡 Safe',pro:'💼 Pro',ball:'🎾 Ball-tosser'};
+  const typeLabel = {safe:'🛡 Safe',pro:'💼 Pro',ball:'🎾 Ball-tosser',fb_content:'🎾 接球分析'};
   saved.unshift({ text, type:typeLabel[type], sit:SITS[curSit]?.label||'', opener:curOpener, ts:Date.now() });
   if(saved.length>60) saved.pop();
   localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
