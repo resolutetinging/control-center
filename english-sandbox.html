@@ -236,6 +236,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .combo-txt{font-size:13px;line-height:1.55;flex:1}
 .combo-a .combo-txt{color:var(--ink)}
 .combo-b .combo-txt{color:var(--sub)}
+.combo-txt-zh{font-size:11px;color:var(--faint);line-height:1.45;margin-top:2px}
 .combo-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:.5px solid var(--border)}
 .combo-foot-meta{font-size:10px;color:var(--faint)}
 .combo-del-btn{background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;padding:0;line-height:1}
@@ -901,7 +902,7 @@ function savePhrase(type){
   if(!text || text === '—') { showSaveToast('⚠ 尚無內容，請先送出回應'); return; }
   const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
   const typeLabel = {safe:'🛡 Safe',pro:'💼 Pro',ball:'🎾 Ball-tosser',fb_content:'🎾 接球分析'};
-  saved.unshift({ text, type:typeLabel[type], sit:SITS[curSit]?.label||'', opener:curOpener, ts:Date.now() });
+  saved.unshift({ text, type:typeLabel[type], sit:SITS[curSit]?.label||'', opener:curOpener, opener_zh:results.opener_zh||'', ts:Date.now() });
   if(saved.length>60) saved.pop();
   localStorage.setItem(SAVED_KEY,JSON.stringify(saved));
   const btn=$('save-'+type);
@@ -949,7 +950,10 @@ function renderCombos(){
       <div class="combo-card">
         <div class="combo-turn combo-a">
           <span class="combo-who">A</span>
-          <span class="combo-txt">"${esc(item.opener||'—')}"</span>
+          <div style="flex:1;min-width:0;">
+            <span class="combo-txt">"${esc(item.opener||'—')}"</span>
+            ${item.opener_zh ? `<div class="combo-txt-zh">${esc(item.opener_zh)}</div>` : ''}
+          </div>
         </div>
         <div class="combo-turn combo-b">
           <span class="combo-who">B</span>
@@ -964,6 +968,35 @@ function renderCombos(){
         </div>
       </div>`; }).join('')
     : '<div class="combo-empty">'+(curComboSit==='all'?'尚無收藏對話，在 Small Talk 答題後點 ⭐ 收藏':'此分類尚無收藏對話')+'</div>';
+}
+
+// 舊收藏補齊中文說明：opener_zh 是 07-15 才開始存的欄位，之前存的組合沒有這欄位，
+// 無法從 localStorage 補回原始資料，只能重新請 Groq 翻譯 opener 補上；
+// 每次頁面只自動嘗試一次（_comboZhBackfillTried），避免重複進出收藏頁重複呼叫 API
+let _comboZhBackfillTried = false;
+async function backfillComboZh(){
+  if(_comboZhBackfillTried) return;
+  _comboZhBackfillTried = true;
+  if(!getKey()) return; // 沒 API key 就靜默略過，不打擾使用者
+  const saved = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+  const missing = saved.filter(it=>it.opener && !it.opener_zh);
+  if(!missing.length) return;
+  const CHUNK = 15;
+  try{
+    for(let i=0;i<missing.length;i+=CHUNK){
+      const batch = missing.slice(i, i+CHUNK);
+      const prompt = `Translate each English sentence into a casual Traditional Chinese (Taiwan) explanation of what it means and what tone/emotion it carries, like explaining to a friend. Each ≤45 characters. Return ONLY a JSON array of strings in the same order, no extra text.\n\n`
+        + batch.map((it,idx)=>`${idx+1}. "${it.opener}"`).join('\n');
+      const raw = await callGroq(prompt, 900, '', false);
+      const m = raw.match(/\[[\s\S]*\]/);
+      if(!m) continue;
+      let arr; try{ arr = JSON.parse(m[0]); }catch{ continue; }
+      const zhArr = (typeof s2tDeep==='function') ? s2tDeep(arr) : arr;
+      batch.forEach((it,idx)=>{ if(zhArr[idx]) it.opener_zh = String(zhArr[idx]).trim(); });
+    }
+    localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+    renderCombos();
+  }catch(e){ /* 背景補齊失敗不打擾使用者，下次進頁面前面 getKey/missing 判斷會再略過已補好的部分 */ }
 }
 function toggleComboStar(i){
   const saved=JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
@@ -1056,7 +1089,7 @@ function switchTab(tab){
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if(tab==='lib') renderLib();
-  if(tab==='combo') renderCombos();
+  if(tab==='combo'){ renderCombos(); backfillComboZh(); }
 }
 
 // ── Helpers ──
@@ -1446,7 +1479,7 @@ function renderLibStudyCards(){
         <div class="lsc-zh" style="margin-bottom:0">${j===0?esc(g.zh||'—')+(multi?' <span class="lib-group-badge">同義 ×'+g.members.length+'</span>':''):''}</div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
           <button class="star-btn${m.starred?' on':''}" id="lsc-star-${i}-${j}" onclick="toggleStudyStar(${i},${j});event.stopPropagation();" title="${m.starred?'取消標記':'標記重點'}">${m.starred?'★':'☆'}</button>
-          ${j===0?`<span class="lib-chevron" id="lsch-${i}">▾</span>`:'<span style="width:16px;display:inline-block"></span>'}
+          ${j===0?`<span class="lib-chevron" id="lsch-${i}" style="width:16px;display:inline-block;text-align:center;margin-left:0;">▾</span>`:'<span style="width:16px;display:inline-block"></span>'}
         </div>
       </div>`).join('');
     const back = g.members.map(m=>`
