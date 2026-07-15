@@ -242,7 +242,7 @@ function buildTT(id){
         const txt=esc(raw.slice(0,26))+(raw.length>26?'…':'');
         const wd=workdays(it.ts);
         const cls=(redRule&&wd>7)?' r':'';
-        return `<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${txt}</span><span class="tt-v${cls}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${wd>=1?`・${wd}工作天`:''}</span></div>`;
+        return `<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${txt}</span><span class="tt-v${cls}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${wd>=1?`・${wd}wd`:''}</span></div>`;
       };
       let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
       if(todos.length){
