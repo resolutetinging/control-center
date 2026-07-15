@@ -218,19 +218,41 @@ function buildTT(id){
       return out;
     }
     case 'scratch':{
-      // Scratchpad inbox：逐則顯示內容＋建立日期（cc_scratch_v1，零 history 設計故不顯示已轉入項）
+      // Scratchpad inbox：分 /To Do、/Notes 兩區塊顯示（cc_scratch_v1，零 history 設計故不顯示已轉入項）
       let sc=null;try{sc=JSON.parse(localStorage.getItem('cc_scratch_v1')||'null');}catch{}
       const items=(sc&&Array.isArray(sc.items))?sc.items:[];
       if(!items.length)return h('🗂 Scratchpad')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">Inbox 已清空 ✓</div>`;
       const fd=ts=>{const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()}`;};
+      // 存在天數＝建立日之後至今的工作天數（不含週末），供 To Do 逾期紅字判斷
+      const workdays=ts=>{
+        const start=new Date(ts);start.setHours(0,0,0,0);
+        const end=new Date();end.setHours(0,0,0,0);
+        const days=Math.round((end-start)/86400000);
+        if(days<=0)return 0;
+        let wd=0;
+        for(let i=1;i<=days;i++){if([0,6].indexOf(new Date(start.getTime()+i*86400000).getDay())<0)wd++;}
+        return wd;
+      };
       const MAX=8;
-      let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
-      items.slice(0,MAX).forEach(it=>{
-        const age=Math.floor((Date.now()-it.ts)/86400000);
+      const shown=items.slice(0,MAX);
+      const todos=shown.filter(it=>it.type==='todo');
+      const notes=shown.filter(it=>it.type!=='todo');
+      const rowHtml=(it,redRule)=>{
         const raw=(it.text||'').replace(/\n/g,' ');
         const txt=esc(raw.slice(0,26))+(raw.length>26?'…':'');
-        out+=`<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.type==='todo'?'📌':'💡'} ${txt}</span><span class="tt-v${age>=3?' a':''}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${age>=1?`・${age}天`:''}</span></div>`;
-      });
+        const wd=workdays(it.ts);
+        const cls=(redRule&&wd>7)?' r':'';
+        return `<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${txt}</span><span class="tt-v${cls}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${wd>=1?`・${wd}工作天`:''}</span></div>`;
+      };
+      let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
+      if(todos.length){
+        out+=`<div style="font-size:10px;color:var(--faint);font-weight:600;padding:3px 0 1px;">/To Do</div>`;
+        todos.forEach(it=>out+=rowHtml(it,true));
+      }
+      if(notes.length){
+        out+=`<div style="font-size:10px;color:var(--faint);font-weight:600;padding:5px 0 1px;">/Notes</div>`;
+        notes.forEach(it=>out+=rowHtml(it,false));
+      }
       if(items.length>MAX)out+=hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">…還有 ${items.length-MAX} 則</div>`;
       return out;
     }
