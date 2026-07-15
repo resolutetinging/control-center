@@ -1369,11 +1369,16 @@ function renderLib(){
     const ek=_enKey(item);
     if(ek) (dupMap[ek]=dupMap[ek]||[]).push(i);
   });
+  // 已人工確認「不同情境語意都可存在」的整組（每個成員都有 dupConfirmed）不再顯示於重複區，
+  // 但只要組內出現任一尚未確認的新成員（例如之後又重複收藏一次），整組會再度浮現
   const dupIdx=new Set();
-  const dupGroups=Object.values(dupMap).filter(idx=>idx.length>1).map(idx=>{
-    idx.forEach(i=>dupIdx.add(i));
-    return {idx};
-  });
+  const dupGroups=Object.values(dupMap)
+    .filter(idx=>idx.length>1)
+    .filter(idx=>!idx.every(i=>lib[i].dupConfirmed))
+    .map(idx=>{
+      idx.forEach(i=>dupIdx.add(i));
+      return {idx};
+    });
 
   // 同義收斂：相同中文意思（_zhKey）的 idiom 聚成一組，組序依首見順序；
   // 組內成員一律用「原始 lib index」，星號/刪除/展開沿用既有函式不位移；已列進英文重複區的 index 跳過，不重複顯示
@@ -1407,9 +1412,12 @@ function renderLib(){
           </div>
         </div>`:''}`;
   };
-  const dupHtml = dupGroups.length ? `<div style="font-size:10.5px;color:#b04040;margin-bottom:6px;">🔁 偵測到 ${dupGroups.length} 組英文完全重複，建議人工確認後刪除多餘項目</div>`
+  const dupHtml = dupGroups.length ? `<div style="font-size:10.5px;color:#b04040;margin-bottom:6px;">🔁 偵測到 ${dupGroups.length} 組英文完全重複，確認是不同情境都要保留可按「確認保留」，否則建議人工刪除多餘項目</div>`
     + dupGroups.map(g=>`<div class="lib-group lib-group-dup">
-      <div class="lib-group-hdr">${esc(lib[g.idx[0]].idiom)}<span class="lib-group-badge lib-group-badge-dup">重複 ×${g.idx.length}</span></div>
+      <div class="lib-group-hdr" style="justify-content:space-between;">
+        <span>${esc(lib[g.idx[0]].idiom)}<span class="lib-group-badge lib-group-badge-dup">重複 ×${g.idx.length}</span></span>
+        <button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:2px 8px;color:#b04040;" onclick="event.stopPropagation();confirmDupGroup([${g.idx.join(',')}])">✓ 確認保留</button>
+      </div>
       ${g.idx.map(i=>row(lib[i], i, false)).join('')}
     </div>`).join('') : '';
   $('lib-list').innerHTML = dupHtml + groups.map(g=>{
@@ -1436,6 +1444,14 @@ function toggleStar(i){
   const lib=JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
   if(!lib[i])return;
   lib[i].starred=!lib[i].starred;
+  localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib));
+  renderLib();
+}
+// 人工確認「這組英文重複是不同情境語意，都要保留」：整組成員標記 dupConfirmed，
+// renderLib() 的重複偵測會跳過已全員確認的組，避免同一組每次開字庫都被重複回報
+function confirmDupGroup(idxArr){
+  const lib=JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
+  idxArr.forEach(i=>{ if(lib[i]) lib[i].dupConfirmed=true; });
   localStorage.setItem(IDIOM_LIB_KEY,JSON.stringify(lib));
   renderLib();
 }
