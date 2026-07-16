@@ -29,10 +29,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 .panel-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
 
 /* ── 快速輸入 ── */
-.in-row{display:flex;gap:8px;align-items:center}
+.in-row{display:flex;gap:8px;align-items:flex-start}
 .in-type{flex-shrink:0;font-size:12px;font-weight:700;padding:9px 12px;border-radius:9px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .in-type.t-todo{background:rgba(190,120,40,.12);color:#8a5a20;border-color:rgba(190,120,40,.3)}
-.in-inp{flex:1;padding:9px 12px;border:.5px solid var(--bstr);border-radius:9px;background:#fff;font-size:13.5px;font-family:inherit;color:var(--ink);outline:none;min-width:0}
+.in-inp{flex:1;padding:9px 12px;border:.5px solid var(--bstr);border-radius:9px;background:#fff;font-size:13.5px;font-family:inherit;line-height:1.5;color:var(--ink);outline:none;min-width:0;resize:none;overflow:hidden;max-height:220px}
 .in-inp:focus{border-color:var(--ac)}
 .in-hint{font-size:10.5px;color:var(--faint);margin-top:8px;line-height:1.5}
 
@@ -86,10 +86,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
   <div class="panel">
     <div class="in-row">
       <button class="in-type" id="type-btn" onclick="toggleType()">💡 note</button>
-      <input class="in-inp" id="q-inp" placeholder="丟進來，Enter 即存" maxlength="2000"
-             onkeydown="if(event.key==='Enter'){event.preventDefault();addItem();}">
+      <textarea class="in-inp" id="q-inp" rows="1" placeholder="丟進來，Enter 即存" maxlength="2000"
+             oninput="autoGrowInput(this)"
+             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addItem();}"></textarea>
     </div>
-    <div class="in-hint">開頭打「-」自動變 todo ・ 點內容可直接編輯 ・ daily review 時每則二選一：→ Optimizer 或刪除，決定不了就先跳過</div>
+    <div class="in-hint">開頭打「-」自動變 todo ・ Shift+Enter 換行 ・ 點內容可直接編輯 ・ daily review 時每則二選一：→ Optimizer 或刪除，決定不了就先跳過</div>
   </div>
 
   <!-- Inbox -->
@@ -135,6 +136,14 @@ function toggleType(){
   b.className='in-type'+(curType==='todo'?' t-todo':'');
 }
 
+// 多行輸入框自動長高：scrollHeight量測前先reset height，超過上限交回原生scroll
+function autoGrowInput(el){
+  el.style.height='auto';
+  const max=220;
+  el.style.height=Math.min(el.scrollHeight,max)+'px';
+  el.style.overflowY=el.scrollHeight>max?'auto':'hidden';
+}
+
 function addItem(){
   const inp=$('q-inp');
   let text=sanitize(inp.value);
@@ -150,6 +159,7 @@ function addItem(){
   d.items.unshift({ts,text,type});
   save(d);
   inp.value='';
+  autoGrowInput(inp);
   render();
 }
 
