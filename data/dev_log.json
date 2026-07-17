@@ -1,7 +1,168 @@
 {
-  "generated_through": "2026-07-15",
+  "generated_through": "2026-07-17",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-17",
+      "project": "Control Center",
+      "file": "cc_autosync.js",
+      "summary": "全生態系跨裝置同步稽核：SAFE_STATIC_KEYS 補上 9 個真正遺漏的使用者資料 key（cc_cat_gif/optimizer_jobsearch_mode/sas_risk_flags/sas_combat_date/sas_combat_weekday/wordvault_reminder_days/wvk_parent_pwd/nexus_pb/nexus_ptm）——同源共用 localStorage，開任一 CC 頁面就會連其他 App 資料一起備份，但白名單未同步更新會漏備",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "移除獨立 GitHub Gist 同步功能（gistPush/gistPull/gistCreds/gistStatus＋設定頁卡片）——發現與 Control Center 的 cc_autosync.js 共用同一個裸 gist_id，其「抓第一個檔案覆蓋」寫法差點蓋掉 Astro 命盤圖片；wellness_v5 已在白名單內故安全移除；教訓已記入 rules/lessons.md",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py",
+      "summary": "封存 v1 sleep_dashboard.html：確認 v2 為實際上線版本，v1 移至 archive/，腳本停止對其寫入/commit，CLAUDE.md 同步改寫三檔分工說明",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Sleep Dashboard",
+      "file": "com.sleep.dashboard.update.plist",
+      "summary": "LaunchAgent 加 RunAtLoad＋StartCalendarInterval 改四個每日觸發時段（09:30/13:00/18:00/22:00）——修正筆電睡眠時排程完全不執行的問題",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py",
+      "summary": "git_push() 加入推送後驗證機制（比對 HEAD 與 FETCH_HEAD，失敗重試2次後拋錯）＋改用 origin 具名遠端——查明 07-13~07-16 曾多次假性顯示推送成功，實際 GitHub 未收到 commit",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "Control Center",
+      "file": "scratchpad.html",
+      "summary": "To Do / Notes 輸入框改支援多行（Shift+Enter 換行，Enter 送出），textarea 自動長高",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "水管排程加段間緩衝強制修正＋單段時長上限規則——prompt 與 sanitizePipes() 雙層修法，避免 AI 生成的相鄰水管分秒緊貼、單段過長",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "風險燈號卡片加入可收合的「燈號定義」說明區塊，預設收合",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "風險燈號移除重複的小圓點指示，只留文字內表情符號",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "風險燈號穩定性修正：意志力透支訊號改看昨日已定案資料而非今日即時完成率，避免燈色隨當天勾選任務變動；近7天壓力指數燈號新增（範圍含週末，屬綜觀指標）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "Guard 讀取 SAS Hub 複合風險燈號 sas_risk_flags，24h 內 level==='r' 時併入強制休息觸發判斷",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "Overview 新增常駐綜合風險燈號：今日燈合成四訊號（戰力/續航/睡眠負債/意志力透支），取代原本零散的個別警示",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-16",
+      "project": "AI Tracker",
+      "file": "update_data.py",
+      "summary": "前端 ai_tracker_v6.html 接上 cc_zht.js 繁中保底；後端 prompt 新增「合併非合並」等具體用詞提醒——根因是 LLM 用詞選字錯誤非簡體字殘留",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "字庫重複組加「確認保留」機制，人工確認過的不同情境重複不再重複回報",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "字庫新增英文完全重複偵測（獨立於既有中文同義詞分組），重複項目浮至列表最上方",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "收藏組合加入問題中文說明（含舊資料自動批次補齊）；順手修正背誦畫面星星對齊（placeholder 與真實 chevron 寬度不一致）",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Small Talk「有沒有接住對方的球」AI 回饋內容加上收藏星星按鈕",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "WordVault",
+      "file": "WordVault.html",
+      "summary": "新增「⭐ 收藏」分頁，只顯示已標記星星的單字；順手修正 restoreLastTab() 白名單漏了 starred 導致重整被導回匯入頁",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "Control Center",
+      "file": "cc_tooltip.js",
+      "summary": "統一 Dock hover 副標樣式：新增共用 sub()/.tt-sub，取代 sas-hub/astro/scratchpad 三處 ad-hoc inline style，比照 sleep hover 對齊；已寫入 spec 4.3.1節",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "Control Center",
+      "file": "scratchpad.html",
+      "summary": "轉入 Optimizer 的分類名稱「雜項收件」改為「發想收件」，含舊資料就地遷移邏輯",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "「當前能耗配置與代償對照」卡片改為預設收合，比照歷史頁行為",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "Control Center",
+      "file": "cc_tooltip.js",
+      "summary": "Scratchpad hover 天數標籤改英文縮寫 wd，內文精簡",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-15",
+      "project": "Control Center",
+      "file": "cc_tooltip.js",
+      "summary": "Scratchpad Dock hover 改為 /To Do、/Notes 分區顯示，待辦逾7工作天（不含週末）標紅",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-07-15",
       "project": "Control Center",
@@ -664,43 +825,55 @@
     {
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "count": 19,
+      "count": 23,
       "top_reason": "debug"
     },
     {
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "count": 17,
+      "count": 19,
       "top_reason": "spec_change"
     },
     {
       "project": "AI Tracker",
       "file": "update_data.py",
-      "count": 15,
-      "top_reason": "debug"
-    },
-    {
-      "project": "Mental Dashboard",
-      "file": "mental-dashboard.html",
-      "count": 11,
-      "top_reason": "spec_change"
-    },
-    {
-      "project": "WordVault",
-      "file": "WordVault.html",
-      "count": 7,
+      "count": 16,
       "top_reason": "debug"
     },
     {
       "project": "SAS Hub",
       "file": "index.html",
-      "count": 11,
+      "count": 15,
       "top_reason": "spec_change"
     },
     {
       "project": "Control Center",
       "file": "index.html",
-      "count": 14,
+      "count": 15,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "count": 12,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "WordVault",
+      "file": "WordVault.html",
+      "count": 8,
+      "top_reason": "debug"
+    },
+    {
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "count": 4,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "Control Center",
+      "file": "scratchpad.html",
+      "count": 4,
       "top_reason": "spec_change"
     },
     {
@@ -710,9 +883,9 @@
       "top_reason": "spec_change"
     },
     {
-      "project": "Sleep Dashboard",
-      "file": "sleep_dashboard_v2.html",
-      "count": 4,
+      "project": "Control Center",
+      "file": "cc_tooltip.js",
+      "count": 3,
       "top_reason": "spec_change"
     },
     {
@@ -722,10 +895,22 @@
       "top_reason": "spec_change"
     },
     {
-      "project": "Control Center",
-      "file": "scratchpad.html",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py",
       "count": 2,
-      "top_reason": "spec_change"
+      "top_reason": "maintain"
+    },
+    {
+      "project": "Control Center",
+      "file": "cc_autosync.js",
+      "count": 1,
+      "top_reason": "debug"
+    },
+    {
+      "project": "Sleep Dashboard",
+      "file": "com.sleep.dashboard.update.plist",
+      "count": 1,
+      "top_reason": "debug"
     }
   ],
   "reason_labels": {
