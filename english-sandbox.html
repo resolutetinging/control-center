@@ -763,13 +763,18 @@ async function submitResp(){
   try{
     const sit = SITS[curSit];
     const userResp = inp||'(no response — they froze)';
-    const prompt = `You are a business English conversation coach doing two separate tasks.
+    // TASK 1（分析學習者回覆）與 TASK 2（三階替代回覆）拆成兩支獨立呼叫。
+    // 根因：原本合併成一支 prompt 時，學習者的實際回覆文字仍會出現在同一個 context 裡，
+    // 即使明講「忽略它」，模型仍常把回覆內容洩漏進 TASK 2（例如複誦對方原句、或把學習者回覆裡
+    // 提到的細節誤植成替代回覆的話題），造成三階潤飾邏輯不合理。結構性修法：TASK 2 的 prompt
+    // 從頭到尾就不放入學習者回覆文字，讓模型physically看不到，而非「看得到但要求忽略」。
+    const promptA = `You are a business English conversation coach analyzing a learner's reply to a native speaker's opener.
 
 Situation: ${sit.en}
 Native speaker's opener: "${curOpener}"
 Learner's reply: "${userResp}"
 
-TASK 1 — Four JSON fields about the learner's reply AND the opener:
+Write 5 JSON fields about the learner's reply AND the opener:
 
 opener_zh: 用繁體中文白話解釋：(1)對方這句話的字面意思是什麼（說清楚情境背景）；(2)對方說這句話帶著什麼情緒或感受（例如：欣喜、輕鬆、期待、久違感）。語氣輕鬆像在跟朋友解釋。不要做負面推論或說「暗示某事不夠/不足」，只描述說話者當下的心情和語境。限45字。
 
@@ -788,17 +793,30 @@ fb_content: 用繁體中文說明接球狀況，根據 verdict 調整語氣：
 
 fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
 
-TASK 2 — Write 3 DISTINCT model English replies that the LEARNER could have said in response to the opener.
-CRITICAL FRAMING: These are SUBSTITUTE FIRST RESPONSES — what the learner could have said INSTEAD of their actual reply, the moment they heard the opener. The learner's actual reply above does NOT exist for this task. Do NOT continue the learner's reply, do NOT build on anything the learner said, do NOT write anything that only makes sense AFTER the learner already spoke. Imagine the learner's reply was never given. You are showing three alternative ways to respond to the opener from scratch.
+Output ONLY valid JSON:
+{
+  "opener_zh": "繁體中文（≤45字）",
+  "fb_tone": "繁體中文語氣分析（≤40字）",
+  "fb_ball_verdict": "caught|partial|missed",
+  "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
+  "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節"
+}`;
+
+    const promptB = `You are a business English conversation coach writing 3 DISTINCT model English replies that a learner could say the moment they hear a native speaker's opener.
+
+Situation: ${sit.en}
+Native speaker's opener: "${curOpener}"
+
+You have NOT been shown any other reply — there is none. Write 3 alternative first responses to the opener from scratch.
 
 SHARED RULES (all 3 replies):
-- LANGUAGE (ABSOLUTE): safe, pro, ball MUST be written 100% in English. NEVER write any Chinese character in these three fields — not even if the learner's reply above is in Chinese. Chinese in safe/pro/ball is a format error.
-- SOURCE: Respond ONLY to the opener. Ignore the learner's actual reply entirely — treat it as if it doesn't exist.
+- LANGUAGE (ABSOLUTE): safe, pro, ball MUST be written 100% in English. NEVER write any Chinese character.
 - ROLE: Learner's perspective — they just heard the opener for the first time and are now responding.
 - DIRECT QUESTION RULE: If the opener asks a direct question ("how was your weekend?", "is that a new setup?"), every reply MUST answer it before anything else.
-- Anti-echo: do NOT mirror the opener's phrasing mechanically. Referencing the same topic when answering a direct question is fine.
+- Anti-echo (STRICT): do NOT reuse the opener's key words or phrases verbatim, and do NOT restate what the opener already said back at them. Referencing the same topic in your own words when answering a direct question is fine — repeating their exact wording is not.
   BAD → opener: "Running a bit behind, huh." → bad: "Running a bit behind, yeah, traffic I guess." ← mirrors phrasing
-  GOOD → same opener → good: "Sorry about that — I got caught in a quick call. Ready now."
+  BAD → opener: "Your background looks really sharp today." → bad: "Your background looks sharp, did you use a new camera?" ← echoes "background looks sharp" straight back
+  GOOD → opener: "Running a bit behind, huh." → good: "Sorry about that — I got caught in a quick call. Ready now."
 - No filler-only replies: "Oh interesting!" / "That sounds like a plan!" / "Sounds good!" as standalone responses are NOT acceptable unless they add genuine content.
 
 INDIVIDUAL REQUIREMENTS:
@@ -810,27 +828,27 @@ ALL THREE must use different words, phrases, and sentence structures. If two rep
 
 Output ONLY valid JSON:
 {
-  "opener_zh": "繁體中文（≤45字）",
-  "fb_tone": "繁體中文語氣分析（≤40字）",
-  "fb_ball_verdict": "caught|partial|missed",
-  "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
-  "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節",
   "safe": "ENGLISH ONLY — ≤20 words — simple, appropriate, no idioms",
   "pro": "ENGLISH ONLY — ≤25 words — includes ≥1 colloquial/idiomatic expression, calibrated tone",
   "ball": "ENGLISH ONLY — ≤30 words — answers first, then a specific contextual follow-up question"
 }`;
 
-    const submitSys = 'You output ONLY valid JSON. All Chinese fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language. EXCEPTION — the fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
-    const raw = await callGroq(prompt, 600, submitSys, true);
-    results = s2tDeep(safeParseJson(raw));
+    const sysA = 'You output ONLY valid JSON. All fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.';
+    const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
+
+    const [rawA, rawB] = await Promise.all([
+      callGroq(promptA, 400, sysA, true),
+      callGroq(promptB, 300, sysB, true)
+    ]);
+    results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB)});
 
     // 三階潤飾語言保底：prompt 約束不可靠（比照 s2t 雙保險原則），
-    // safe/pro/ball 若被模型寫成中文，單次重試換取英文版；仍失敗則原樣顯示不無限重試
+    // safe/pro/ball 若被模型寫成中文，單次重試 promptB 換取英文版；仍失敗則原樣顯示不無限重試
     const _hasCJK = s => /[一-鿿]/.test(s||'');
     if(['safe','pro','ball'].some(t=>_hasCJK(results[t]))){
       try{
-        const raw2 = await callGroq(prompt, 600, submitSys, true);
-        const r2 = s2tDeep(safeParseJson(raw2));
+        const rawB2 = await callGroq(promptB, 300, sysB, true);
+        const r2 = s2tDeep(safeParseJson(rawB2));
         ['safe','pro','ball'].forEach(t=>{
           if(_hasCJK(results[t]) && r2[t] && !_hasCJK(r2[t])) results[t]=r2[t];
         });
