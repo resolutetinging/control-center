@@ -1287,10 +1287,8 @@ function renderDevDashboard(){
           const projects=byDate[date];
           const rows=Object.keys(projects).map(proj=>{
             const items=projects[proj];
-            // 同一天同一個 html 檔若改了不只一次，逐條 bullet 呈現，不再用「＋」擠成一行看不清楚
-            const summaryHtml=items.length>1
-              ?'<ul class="dev-tl-bullets">'+items.map(s=>`<li>${esc(s)}</li>`).join('')+'</ul>'
-              :esc(items[0]||'');
+            // 統一都用 bullet 呈現（含只有1筆的情況），同一天內各專案排版才一致，不會有的有點有的沒點
+            const summaryHtml='<ul class="dev-tl-bullets">'+items.map(s=>`<li>${esc(s)}</li>`).join('')+'</ul>';
             return `<div class="dev-tl-row"><span class="dev-tl-proj">${esc(proj)}</span><div class="dev-tl-summary">${summaryHtml}</div></div>`;
           }).join('');
           return `<div class="dev-tl-item">
