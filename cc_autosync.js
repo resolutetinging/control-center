@@ -23,7 +23,7 @@
     'guard_settings_v1',
     // CC 主頁
     'cc_links_v2', 'cc_wp_v1', 'cc_linkedin_v2', 'cc_last_sync', 'cc_lab_projects',
-    'cc_usage_stats',
+    'cc_usage_stats', 'cc_cat_gif',
     // Oasis
     'oasis_keywords', 'oasis_saved', 'oasis_authors', 'oasis_cache', 'oasis_status',
     // Worship
@@ -31,10 +31,12 @@
     // Daily Optimizer（任務庫與設定）
     'tina_tasks_v3', 'tina_tasks_v2', 'tina_tasks',
     'optimizer_custom_locs', 'optimizer_custom_feels', 'optimizer_custom_cafs',
+    'optimizer_jobsearch_mode',
     // SAS Hub / Sleep Dashboard
     'sas_sleep_latest', 'sas_combat', 'sas_combat_weighted', 'sas_combat_single',
     'sas_endurance', 'sas_dta', 'sas_pipe_review', 'sas_settings',
-    'sas_weekly_recap', 'cc_energy_weights',
+    'sas_weekly_recap', 'cc_energy_weights', 'sas_risk_flags',
+    'sas_combat_date', 'sas_combat_weekday',
     // Mental Dashboard
     'wellness_v5', 'md_card_st', 'md_last_view', 'mental_custom_emotions',
     // Astro Bot
@@ -48,8 +50,11 @@
     'lto_matrix',
     // WordVault 成人版＋Kids
     'wordvault_v1', 'wordvault_v1-kids', 'wvk_kids_profiles',
+    'wordvault_reminder_days', 'wvk_parent_pwd',
     // AI Tracker 詞彙表/分類策展
     'custom_cats', 'gloss_cat', 'gloss_user_terms', 'gloss_hidden', 'gloss_hist_overrides',
+    // NexusPortal
+    'nexus_pb', 'nexus_ptm',
   ]);
 
   // 動態 key 前綴白名單（每日覆盤 / AI Tracker 筆記 / Guard 靜默）
