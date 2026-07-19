@@ -1,7 +1,56 @@
 {
-  "generated_through": "2026-07-17",
+  "generated_through": "2026-07-19",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-19",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py",
+      "summary": "修正 git push 流程無 timeout 導致永久卡死，連帶讓 LaunchAgent 整天排程失效——7/18 22:00 那次 git pull --rebase 在 SSH 層卡住超過24小時，launchd 誤判「上一次還在跑」跳過 7/19 全天四個排程時段。雙層防線：SSH 加 ConnectTimeout/ServerAlive，Python 層全部 git 呼叫加 timeout=30",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "修正因子導向雷達圖卡片時有時無：整卡隱藏門檻誤把「配對<14天信心不足但仍可畫」跟「配對<3天真算不出來」混用，14天視窗內任一天缺值就整卡消失，跟用了幾天無關",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "開發履歷時間軸：單筆記錄也統一用 bullet 呈現，避免有的專案有點有的沒點顯得不工整",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "開發履歷時間軸：同一天同檔案多筆修改改用 bullet 條列，取代原本用「＋」擠成一行",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "排程加即時定位：新增 highlightCurrentPipe()，比對現在時間標示並自動捲動到目前所在的時段方塊，解決手動找很久的問題",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "拆分三階潤飾為兩支獨立 API 呼叫，修正邏輯不合理與複誦對方原句問題——TASK1(分析回覆)與TASK2(產生替代回覆)不再合併同一prompt，promptB完全不含學習者回覆文字避免內容洩漏",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-17",
+      "project": "(system)",
+      "file": "check_dev_log.sh",
+      "summary": "新增 dev log 防遺忘 PostToolUse hook：每次 git push 後檢查 dev_log.json 是否更新到今天，過期則強制提醒 Claude，一天只警一次——回應使用者「為何連續三次忘記」的追問，從機制面而非自律解決",
+      "reason": "maintain"
+    },
     {
       "date": "2026-07-17",
       "project": "Control Center",
@@ -825,13 +874,19 @@
     {
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "count": 23,
+      "count": 24,
       "top_reason": "debug"
     },
     {
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "count": 19,
+      "count": 20,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "Control Center",
+      "file": "index.html",
+      "count": 17,
       "top_reason": "spec_change"
     },
     {
@@ -843,13 +898,7 @@
     {
       "project": "SAS Hub",
       "file": "index.html",
-      "count": 15,
-      "top_reason": "spec_change"
-    },
-    {
-      "project": "Control Center",
-      "file": "index.html",
-      "count": 15,
+      "count": 16,
       "top_reason": "spec_change"
     },
     {
@@ -889,16 +938,16 @@
       "top_reason": "spec_change"
     },
     {
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py",
+      "count": 3,
+      "top_reason": "maintain"
+    },
+    {
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "count": 2,
       "top_reason": "spec_change"
-    },
-    {
-      "project": "Sleep Dashboard",
-      "file": "update_dashboard.py",
-      "count": 2,
-      "top_reason": "maintain"
     },
     {
       "project": "Control Center",
@@ -911,6 +960,12 @@
       "file": "com.sleep.dashboard.update.plist",
       "count": 1,
       "top_reason": "debug"
+    },
+    {
+      "project": "(system)",
+      "file": "check_dev_log.sh",
+      "count": 1,
+      "top_reason": "maintain"
     }
   ],
   "reason_labels": {
