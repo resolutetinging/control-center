@@ -224,16 +224,8 @@ function buildTT(id){
       const items=(sc&&Array.isArray(sc.items))?sc.items:[];
       if(!items.length)return h('🗂 Scratchpad')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">Inbox 已清空 ✓</div>`;
       const fd=ts=>{const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()}`;};
-      // 存在天數＝建立日之後至今的工作天數（不含週末），供 To Do 逾期紅字判斷
-      const workdays=ts=>{
-        const start=new Date(ts);start.setHours(0,0,0,0);
-        const end=new Date();end.setHours(0,0,0,0);
-        const days=Math.round((end-start)/86400000);
-        if(days<=0)return 0;
-        let wd=0;
-        for(let i=1;i<=days;i++){if([0,6].indexOf(new Date(start.getTime()+i*86400000).getDay())<0)wd++;}
-        return wd;
-      };
+      // 存在天數＝建立日之後至今的日曆天數，比照 scratchpad.html 內文的 ageDays()／「躺了 N 天」，逾期紅字門檻同步對齊內文的 a>=3
+      const ageDays=ts=>Math.floor((Date.now()-ts)/86400000);
       const MAX=8;
       const shown=items.slice(0,MAX);
       const todos=shown.filter(it=>it.type==='todo');
@@ -241,9 +233,9 @@ function buildTT(id){
       const rowHtml=(it,redRule)=>{
         const raw=(it.text||'').replace(/\n/g,' ');
         const txt=esc(raw.slice(0,26))+(raw.length>26?'…':'');
-        const wd=workdays(it.ts);
-        const cls=(redRule&&wd>7)?' r':'';
-        return `<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${txt}</span><span class="tt-v${cls}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${wd>=1?`・${wd}wd`:''}</span></div>`;
+        const a=ageDays(it.ts);
+        const cls=(redRule&&a>=3)?' r':'';
+        return `<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${txt}</span><span class="tt-v${cls}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${a>=1?`・躺了${a}天`:''}</span></div>`;
       };
       let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
       if(todos.length){
