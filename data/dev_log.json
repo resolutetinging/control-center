@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-20",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "三階潤飾 prompt 修正話題跳躍：使用者反映 pro/ball 回覆品質不好，實測案例是 opener 稱讚視訊背景，ball 版追問卻跳去問器材設備——換句話說閃避了逐字重複規則但偷換話題。新增「Stay on the SAME topic」「Setting fit」兩條規則並用該案例當 BAD/GOOD 範例。sonnet 審查提醒：STRICT 規則已疊到5條，小模型可能因規則過多而收斂成保守制式回答，日後觀察若慣用語變公式化，優先懷疑規則疊加而非再加規則堵漏",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-20",
       "project": "Control Center",
       "file": "cc_tooltip.js",
       "summary": "scratchpad tooltip 改回用共用 row() 模板：原本因長文字截斷需求繞過共用 helper 手刻 inline style，違反 cc-spec 4.3.1「一律用共用 helper 組版面」；改法為 row() 新增第4參數 truncate，截斷用樣式搬到 cc_styles.css 的 .tt-k-trunc/.tt-v-shrink 兩個 class，不影響其餘20多處 row() 呼叫",
