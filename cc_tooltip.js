@@ -8,7 +8,7 @@
 const ttp=document.getElementById('tooltip');
 let ttT;
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function row(k,v,c=''){return`<div class="tt-row"><span class="tt-k">${k}</span><span class="tt-v${c?' '+c:''}">${v}</span></div>`;}
+function row(k,v,c='',trunc=false){return`<div class="tt-row"><span class="tt-k${trunc?' tt-k-trunc':''}">${k}</span><span class="tt-v${c?' '+c:''}${trunc?' tt-v-shrink':''}">${v}</span></div>`;}
 function advRow(k,v){return`<div class="tt-adv"><span class="tt-adv-k">${k}</span><span class="tt-adv-v">${v}</span></div>`;}
 function sub(t){return`<div class="tt-sub">${t}</div>`;}
 function hr(){return`<div class="tt-hr"></div>`;}
@@ -234,8 +234,8 @@ function buildTT(id){
         const raw=(it.text||'').replace(/\n/g,' ');
         const txt=esc(raw.slice(0,26))+(raw.length>26?'…':'');
         const a=ageDays(it.ts);
-        const cls=(redRule&&a>=3)?' r':'';
-        return `<div class="tt-row"><span class="tt-k" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${txt}</span><span class="tt-v${cls}" style="flex-shrink:0;margin-left:8px;">${fd(it.ts)}${a>=1?`・躺了${a}天`:''}</span></div>`;
+        const cls=(redRule&&a>=3)?'r':'';
+        return row(`- ${txt}`,`${fd(it.ts)}${a>=1?`・躺了${a}天`:''}`,cls,true);
       };
       let out=h(`🗂 Scratchpad · Inbox ${items.length} 則`);
       if(todos.length){
