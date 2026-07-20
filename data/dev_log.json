@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-20",
+      "project": "Control Center",
+      "file": "cc_tooltip.js",
+      "summary": "CC Dock scratchpad tooltip 天數顯示改「躺了N天」對齊內文：使用者反映原本的工作天縮寫（Nwd）不直觀，改用跟 scratchpad.html 內文一致的日曆天算法（ageDays），逾期紅字門檻同步從 >7個工作天 改為 ≥3天",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-20",
       "project": "Sleep Dashboard",
       "file": ".nojekyll",
       "summary": "修正 GitHub Pages 部署失敗（build #336）：repo 缺 .nojekyll 導致每次 build 都跑不必要的 Jekyll 處理（誤把 CLAUDE.md 當頁面渲染、套用 jekyll-theme-primer），這次因 jekyll-github-metadata 外掛呼叫 GitHub Pages API 遇到對方 503 暫時故障整個炸掉；新增 .nojekyll 徹底移除對 Jekyll/GitHub Metadata API 的依賴",
