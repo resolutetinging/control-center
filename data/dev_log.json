@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-21",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "修正圖表桌面版被誤壓扁：上一輪修手機版壓縮問題時把maintainAspectRatio:false跟固定高度寫死套用到全部螢幕尺寸，誤傷桌面版原本靠寬度自動抓比例的行為（變扁）。新增_isMobileChart()（innerWidth<=600同CSS斷點），5個圖表改!_isMobileChart()——桌面恢復true(原行為)/手機維持false。教訓：上一輪驗證只確認CSS層疊邏輯正確，沒比較改動前後的實際渲染高度，這個驗證盲點導致誤傷沒被抓到",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-21",
       "project": "Control Center",
       "file": "cc_autosync.js + index.html",
       "summary": "桌布(cc_wp_v1)改為裝置獨立設定，不再跨裝置同步：使用者反映Mac上傳後iPhone下載會覆蓋iPhone自己的桌布，查證後確認這是現行spec的既有設計但不符期待。cc_wp_v1從cc_autosync.js的SAFE_STATIC_KEYS移除（上傳端）＋index.html的syncDownload() restore迴圈額外排除（下載端），兩邊都改才能避免Gist裡舊資料下次下載時還是蓋過去。spec同步更新§3.1/§3.2/版本紀錄v2.10",
