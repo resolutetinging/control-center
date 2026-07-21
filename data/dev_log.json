@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-20",
+  "generated_through": "2026-07-21",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-21",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "修正事後啟用任務未補進覆盤/AI反饋的漏洞：任務庫「按需→每日」切換若發生在今天已存過覆盤之後，重載頁面時原本用凍結的saved.items當來源不重查getEffectiveTasks()，新啟用任務消失於覆盤與AI反饋外。改成一律即時查getEffectiveTasks()，renderReview()內建還原邏輯確保舊資料不遺失，休假模式刻意不動",
+      "reason": "debug"
+    },
     {
       "date": "2026-07-20",
       "project": "English Sandbox",
