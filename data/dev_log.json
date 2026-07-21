@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-21",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "修正三道品質關卡誤殺優質新聞：用run_stats.json逐日llm_ratings vs final比對證實排程正常非停擺，但app分類12天核心新聞存活率0%、hw近乎全滅，是把關機制誤殺非生成端問題。validate_body縮小為只判兩種明確幻覺型態（原「摘要找不到逐字對應就砍」誤殺內容越紮實越易被冤枉）；禁句命中改成只刪該句保留卡片；除明確造假/客觀缺來源外，其餘關卡降級目標統一從noise(消失)改opp(仍顯示)。opus診斷+opus實作+sonnet獨立驗證三階段完成",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-21",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "修正事後啟用任務未補進覆盤/AI反饋的漏洞：任務庫「按需→每日」切換若發生在今天已存過覆盤之後，重載頁面時原本用凍結的saved.items當來源不重查getEffectiveTasks()，新啟用任務消失於覆盤與AI反饋外。改成一律即時查getEffectiveTasks()，renderReview()內建還原邏輯確保舊資料不遺失，休假模式刻意不動",
