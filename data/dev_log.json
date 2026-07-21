@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-07-21",
+      "project": "Control Center",
+      "file": "cc_autosync.js + index.html",
+      "summary": "桌布(cc_wp_v1)改為裝置獨立設定，不再跨裝置同步：使用者反映Mac上傳後iPhone下載會覆蓋iPhone自己的桌布，查證後確認這是現行spec的既有設計但不符期待。cc_wp_v1從cc_autosync.js的SAFE_STATIC_KEYS移除（上傳端）＋index.html的syncDownload() restore迴圈額外排除（下載端），兩邊都改才能避免Gist裡舊資料下次下載時還是蓋過去。spec同步更新§3.1/§3.2/版本紀錄v2.10",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-21",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "修正手機版圖表被壓縮變形：mobile CSS用!important把圖表高度硬壓90px但Chart.js未關maintainAspectRatio，內部長寬比計算跟CSS高度打架致文字重疊。高度限制從canvas移到.chart-wrap外層wrapper，5個圖表加maintainAspectRatio:false，hypnoChart容器結構不同刻意未動",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-21",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html + index.html",
       "summary": "新增睡眠分期代償分析：算Core/REM/Deep兩兩佔比（排除總睡眠長短干擾）的Pearson相關係數，真實188夜資料顯示Core↔REM r=-0.75強代償、Deep↔Core r=-0.66、Deep↔REM r=-0.01幾乎獨立；|r|>=0.4才顯示可能狀況＋建議文字避免對雜訊過度解讀。SAS Hub槓桿分析同步擴充：情緒分數分頁補上深睡/REM因子（任務完成率分頁本就有），跟REM/Deep vs隔天表現的跨系統驗證需求對齊",
