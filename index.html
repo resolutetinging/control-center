@@ -1058,7 +1058,8 @@ async function syncDownload(){
       catch(e){ if(e.name==='QuotaExceededError'){ return false; } throw e; }
     }
     for(const[k,v] of Object.entries(snap)){
-      if(v==null||k===MANIFEST_KEY)continue;
+      // cc_wp_v1（桌布）刻意排除還原：各裝置桌布各自獨立，不隨同步覆蓋（2026-07-21起）
+      if(v==null||k===MANIFEST_KEY||k==='cc_wp_v1')continue;
       const ok=await restoreOne(k,v);
       if(!ok)skipped.push(k);
     }
