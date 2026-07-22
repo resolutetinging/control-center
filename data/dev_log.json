@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-22",
+      "project": "Control Center",
+      "file": "index.html + cc_styles.css",
+      "summary": "Guard觸發原因文字接上畫面顯示：triggerGuard()算出的msgs原因文字（續航/風險/低戰力三種）此前從未渲染，新增#guard-reason元素顯示，CSS仿既有#guard-snooze-btn視覺。順手修正msgs「戰力剩X%」的%符號——比對codebase其他戰力顯示格式皆不帶%。使用者提供SAS Hub續航13:00、今日戰力40兩個數值協助判斷11:53觸發原因為低戰力。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-22",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
       "summary": "清醒關聯卡片文字格式仿上方代償卡片：nullFindingHtml「解讀：」改「建議：」、藍字(#5c7a96)、移除底色方框改純文字排版、靠左對齊，跟row()的adviceHtml格式一致。",
