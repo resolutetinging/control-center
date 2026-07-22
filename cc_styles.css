@@ -373,7 +373,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 @keyframes catRise{from{opacity:0;transform:scale(1.08);}to{opacity:1;transform:scale(1);}}
 #cat-speech{display:none!important;}
 #guard-ctrl{display:none!important;}
-#guard-reason{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);left:50%;transform:translateX(-50%);font-size:.78rem;padding:8px 18px;border-radius:20px;border:.5px solid rgba(255,255,255,.25);background:rgba(0,0,0,.28);color:rgba(255,255,255,.85);z-index:10000;letter-spacing:.02em;text-align:center;max-width:min(86vw,420px);line-height:1.5;}
+#guard-reason{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);left:50%;transform:translateX(-50%);font-size:.78rem;padding:8px 18px;border-radius:20px;border:.5px solid rgba(255,255,255,.25);background:rgba(0,0,0,.28);color:rgba(255,255,255,.85);z-index:10000;letter-spacing:.02em;text-align:center;max-width:min(86vw,420px);line-height:1.5;white-space:normal;overflow-wrap:break-word;word-break:break-word;}
 #guard-snooze-btn{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-size:.72rem;padding:8px 22px;border-radius:20px;border:.5px solid rgba(255,255,255,.25);background:rgba(0,0,0,.28);color:rgba(255,255,255,.75);cursor:pointer;z-index:10000;letter-spacing:.03em;white-space:nowrap;}
 #guard-snooze-btn:hover{background:rgba(0,0,0,.45);color:#fff;}
 
