@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-22",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "清醒關聯卡片（#fragmentationCorrelation）新增無關聯解讀文字：兩個相關係數都|r|<0.2時，不套代償卡片「|r|>=0.4才給建議」的門檻（那是防中度雜訊誤判方向），改直接顯示「沒關聯」本身的結論——片段化壓縮的是總睡眠時長而非睡眠結構分配，並提醒樣本數有限建議觀察更長時間。真實90天資料awake vs deep% r=-0.12、rem% r=-0.09，目前確實會觸發顯示。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-22",
       "project": "Mental Dashboard",
       "file": "mental-dashboard.html",
       "summary": "修正因子細項選取藍底卡在前一個選項：renderSub()/toggleSub()原本用sub.replace(/\\W/g,'_')產生DOM id，\\W只認ASCII，中文全被替換成底線，導致等長中文細項（如「無聊」「迷茫」）id撞名，getElementById抓到DOM中第一個同id元素，選取狀態正確但藍底高亮跟錯按鈕跑。改直接用原始字串當id，跟情緒標籤id=\"ec-${t}\"既有用法一致。",
