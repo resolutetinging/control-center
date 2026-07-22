@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-22",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "修正因子細項選取藍底卡在前一個選項：renderSub()/toggleSub()原本用sub.replace(/\\W/g,'_')產生DOM id，\\W只認ASCII，中文全被替換成底線，導致等長中文細項（如「無聊」「迷茫」）id撞名，getElementById抓到DOM中第一個同id元素，選取狀態正確但藍底高亮跟錯按鈕跑。改直接用原始字串當id，跟情緒標籤id=\"ec-${t}\"既有用法一致。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-22",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
       "summary": "新增清醒時間與睡眠結構關聯分析（#fragmentationCorrelation）：回答awake是否犧牲Deep/REM結構佔比，與既有代償分析（結構內部三階段互相消長）分開兩張卡。比較過原始分鐘數vs佔比兩種算法，原始分鐘數有「總睡眠短→所有分期都變少」假關聯，改用佔比（沿用_stagePctFor）才是乾淨的結構性關聯。真實189夜資料：awake vs deep% r=-0.137、awake vs rem% r=-0.141，弱負相關，沿用既有|r|>=0.4才顯示建議文字的門檻。",
