@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-07-21",
+  "generated_through": "2026-07-22",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-22",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "新增清醒時間與睡眠結構關聯分析（#fragmentationCorrelation）：回答awake是否犧牲Deep/REM結構佔比，與既有代償分析（結構內部三階段互相消長）分開兩張卡。比較過原始分鐘數vs佔比兩種算法，原始分鐘數有「總睡眠短→所有分期都變少」假關聯，改用佔比（沿用_stagePctFor）才是乾淨的結構性關聯。真實189夜資料：awake vs deep% r=-0.137、awake vs rem% r=-0.141，弱負相關，沿用既有|r|>=0.4才顯示建議文字的門檻。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-22",
+      "project": "AI Tracker",
+      "file": "project_aitracker_status.md（記憶檔）",
+      "summary": "記錄7/30財報監測待辦新增觀察標的：新聞點名Alphabet、Tesla、Intel財報將考驗AI資本支出，註記下次更新「📌靜態參考值」卡片時納入這三檔（Tesla/Intel原不在CapEx四大CSP清單內）。無程式碼改動。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-07-21",
       "project": "Sleep Dashboard",
