@@ -170,6 +170,7 @@
 <div id="guard-overlay" style="display:none;">
   <div id="cat-stage">
     <div id="big-cat">🐱</div>
+    <div id="guard-reason"></div>
     <div id="cat-speech"></div>
     <button id="guard-snooze-btn" onclick="snoozeGuard()">今日不再提醒</button>
   </div>
@@ -841,8 +842,10 @@ function triggerGuard(reason='low',riskFlags=[]){
   const{stamina,endTime,workTime}=getEffective();
   const msgs=reason==='risk'?'偵測到多項風險訊號同時出現（'+riskFlags.join('、')+'），建議立即休息 ⚠️'
     :reason==='endurance'?'體能續航已結束，建議切換輕量任務或短暫休息 🔋'
-    :stamina<40?'戰力剩 '+stamina+'%，需要充電了！':'已過 '+endTime+'，該歇歇了！';
+    :stamina<40?'戰力剩 '+stamina+'，需要充電了！':'已過 '+endTime+'，該歇歇了！';
   const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
+  const reasonEl=document.getElementById('guard-reason');
+  if(reasonEl)reasonEl.textContent=msgs;
   renderCatDisplay();
   const cat=document.getElementById('big-cat');
   cat.style.animation='none';void cat.offsetWidth;
