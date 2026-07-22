@@ -6,6 +6,13 @@
       "date": "2026-07-22",
       "project": "Control Center",
       "file": "index.html + cc_styles.css",
+      "summary": "Guard原因文字換行修正：risk/endurance訊息「建議」前加<br>手動斷行避免孤立換行，reasonEl改innerHTML讓<br>真的渲染，CSS補white-space:normal/overflow-wrap:break-word/word-break:break-word明確化自動換行，max-width維持不變。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-22",
+      "project": "Control Center",
+      "file": "index.html + cc_styles.css",
       "summary": "Guard觸發原因文字接上畫面顯示：triggerGuard()算出的msgs原因文字（續航/風險/低戰力三種）此前從未渲染，新增#guard-reason元素顯示，CSS仿既有#guard-snooze-btn視覺。順手修正msgs「戰力剩X%」的%符號——比對codebase其他戰力顯示格式皆不帶%。使用者提供SAS Hub續航13:00、今日戰力40兩個數值協助判斷11:53觸發原因為低戰力。",
       "reason": "spec_change"
     },
