@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-22",
+  "generated_through": "2026-07-23",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-23",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "修正insight=None導致GitHub Actions排程崩潰：07-21禁句刪句修法裡item['insight']=new_insight or None，insight整句被刪光時設成None，下游downgrade_cross_item_duplicates()用.get('insight','')取值卻因key存在值為None而回傳None，None+str直接TypeError。改回new_insight（不產生None）＋下游兩處.get改防禦寫法(xxx.get('insight') or '')，根因+下游雙層修復。fresh-context subagent用真實禁句pattern重現crash場景驗證修復前後行為差異。",
+      "reason": "debug"
+    },
     {
       "date": "2026-07-22",
       "project": "Control Center",
