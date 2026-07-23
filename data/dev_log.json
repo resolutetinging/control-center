@@ -5,6 +5,13 @@
     {
       "date": "2026-07-23",
       "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "實作「核心0則」修法：validate_body原本LLM單方面判downgrade就砍opp，新增_has_deterministic_hallucination_signal()共用函式重跑確定性pattern，LLM懷疑且確定性pattern也命中才真降評，否則保留原評級；_body_is_low_quality的CJK bigram門檻0.45→0.55。fresh-context subagent用importlib載入真實模組實測：今天實際被誤殺的AMD/Meta兩則新聞不再被判定捏造，Google Cloud踩線案例(46.15%重疊)新舊門檻判定確實不同，反向測試真捏造/真重複句仍攔得住，關卡未形同虛設。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-07-23",
+      "project": "AI Tracker",
       "file": "scripts/update_data.py（唯讀診斷，未改檔）",
       "summary": "「核心0則」根因診斷：run_stats顯示llm_ratings原評5則core全數降級（100%降級率），派opus逐函式推演確認是關卡過嚴——validate_body對單則核心新聞誤判捏造（per_cat_budget三分類並存時摘要僅1000字截斷具體數字）、_body_is_low_quality門檻0.45對「同主題不同事實」太緊(46%踩線)。另有2則新聞整條消失(非降評)機制未定案需runtime log。建議修法已記入memory，待使用者確認後實作。",
       "reason": "debug"
