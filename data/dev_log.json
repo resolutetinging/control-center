@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-23",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "Guard訊息移除手動換行改純CSS自動換行：風險旗標清單長度是動態的，前一輪加的「建議」前手動<br>在旗標較多時跟自動換行打架，變成3行且出現孤兒短行。移除risk/endurance兩處手動<br>，回歸純CSS自動換行。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-23",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
       "summary": "實作「核心0則」修法：validate_body原本LLM單方面判downgrade就砍opp，新增_has_deterministic_hallucination_signal()共用函式重跑確定性pattern，LLM懷疑且確定性pattern也命中才真降評，否則保留原評級；_body_is_low_quality的CJK bigram門檻0.45→0.55。fresh-context subagent用importlib載入真實模組實測：今天實際被誤殺的AMD/Meta兩則新聞不再被判定捏造，Google Cloud踩線案例(46.15%重疊)新舊門檻判定確實不同，反向測試真捏造/真重複句仍攔得住，關卡未形同虛設。",
