@@ -5,6 +5,20 @@
     {
       "date": "2026-07-23",
       "project": "AI Tracker",
+      "file": "scripts/update_data.py（唯讀診斷，未改檔）",
+      "summary": "「核心0則」根因診斷：run_stats顯示llm_ratings原評5則core全數降級（100%降級率），派opus逐函式推演確認是關卡過嚴——validate_body對單則核心新聞誤判捏造（per_cat_budget三分類並存時摘要僅1000字截斷具體數字）、_body_is_low_quality門檻0.45對「同主題不同事實」太緊(46%踩線)。另有2則新聞整條消失(非降評)機制未定案需runtime log。建議修法已記入memory，待使用者確認後實作。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-23",
+      "project": "AI Tracker",
+      "file": "data/history.json + scripts/update_data.py",
+      "summary": "修正公司名誤譯（谷歌→Google、蘋果→Apple、高通→Qualcomm）與中國大陸用語（硬件/軟件/視頻/智能製造/應用程序/范圍/計算機/網絡/質量）：遞迴修正history.json全欄位（含chain.label/glossary_new.def，第一輪只查title/body/impact/insight漏欄位，第二輪補齊），LLM system prompt用詞清單同步擴充防再犯。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-07-23",
+      "project": "AI Tracker",
       "file": "scripts/update_data.py",
       "summary": "修正insight=None導致GitHub Actions排程崩潰：07-21禁句刪句修法裡item['insight']=new_insight or None，insight整句被刪光時設成None，下游downgrade_cross_item_duplicates()用.get('insight','')取值卻因key存在值為None而回傳None，None+str直接TypeError。改回new_insight（不產生None）＋下游兩處.get改防禦寫法(xxx.get('insight') or '')，根因+下游雙層修復。fresh-context subagent用真實禁句pattern重現crash場景驗證修復前後行為差異。",
       "reason": "debug"
