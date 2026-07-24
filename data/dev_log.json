@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-23",
+  "generated_through": "2026-07-24",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-24",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "「今日行程」欄位（calInput textarea，貼Google Calendar內容用）改可從右下角垂直拉大：新增#calInput{resize:vertical}用id選擇器精準覆蓋.area共用class的resize:none，不影響同class的#notes欄位。選vertical不選both因textarea寬度100%，拉寬會跑版。",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-07-23",
       "project": "Control Center",
