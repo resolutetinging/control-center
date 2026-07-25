@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-24",
+  "generated_through": "2026-07-25",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-25",
+      "project": "Sleep Dashboard",
+      "file": "index.html + sleep_dashboard_v2.html",
+      "summary": "確認自動抓iCloud資料實際時間點並加儀表板備註：三方比對發現spec/記憶檔皆與現況有落差（spec寫每日09:30一次、記憶檔誤寫GitHub Pages觸發），查plist與repo CLAUDE.md確認實際是本機LaunchAgent自07-17起每日4次（09:30/13:00/18:00/22:00）+登入時觸發run_update.sh。在兩檔的手動更新按鈕title與旁邊加上「自動更新09:30/13:00/18:00/22:00」文字備註。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-07-24",
       "project": "Daily Optimizer",
