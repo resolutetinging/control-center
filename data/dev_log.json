@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-25",
+  "generated_through": "2026-07-27",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-27",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Small Talk情境8→13：新增interview（面試前暖場，刻意不涉及專業/職能差異）、party（歡送歡迎會）、reception（訪客接待）、airport（出差候機）、printer（影印機前排隊），先跟使用者確認選項再實作。SITS常數為唯一資料來源，同步更新按鈕列，維持既有label+en格式與泛用職場register。同步更新spec（v1.5）與專案記憶檔。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-07-25",
       "project": "Sleep Dashboard",
