@@ -287,6 +287,11 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="sit-btn" id="sit-firstday" onclick="pickSit('firstday')">🆕 新人第一天</button>
       <button class="sit-btn" id="sit-weekend"  onclick="pickSit('weekend')">🌤 週一回來後</button>
       <button class="sit-btn" id="sit-remote"   onclick="pickSit('remote')">💻 視訊等待空檔</button>
+      <button class="sit-btn" id="sit-interview" onclick="pickSit('interview')">🎤 面試前暖場</button>
+      <button class="sit-btn" id="sit-party"    onclick="pickSit('party')">🎉 歡送歡迎會</button>
+      <button class="sit-btn" id="sit-reception" onclick="pickSit('reception')">🛎 訪客接待</button>
+      <button class="sit-btn" id="sit-airport"  onclick="pickSit('airport')">✈️ 出差候機</button>
+      <button class="sit-btn" id="sit-printer"  onclick="pickSit('printer')">🖨️ 影印機前排隊</button>
     </div>
   </div>
 
@@ -517,6 +522,11 @@ const SITS = {
   firstday: { label: '🆕 新人第一天', en: 'a new employee making small talk with teammates on their very first day at work' },
   weekend:  { label: '🌤 週一回來後', en: 'chatting with a coworker on Monday morning, catching up after the weekend' },
   remote:   { label: '💻 視訊等待', en: 'waiting for other participants to join a video call, filling the silence with a coworker already on the call' },
+  interview: { label: '🎤 面試前暖場', en: 'making small talk with the interviewer in the minute before the formal interview questions begin, no job-specific topics' },
+  party:    { label: '🎉 歡送歡迎會', en: 'mingling at an office farewell or welcome party, chatting with a coworker you don\'t know very well' },
+  reception: { label: '🛎 訪客接待', en: 'greeting a visiting client in the office lobby while waiting for someone else to arrive' },
+  airport:  { label: '✈️ 出差候機', en: 'waiting at the airport gate on a business trip, chatting with a coworker or fellow traveler' },
+  printer:  { label: '🖨️ 影印機前排隊', en: 'waiting in a short line at the office printer, a brief and low-stakes moment' },
 };
 
 // ── State ──
