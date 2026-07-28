@@ -13,6 +13,13 @@
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
+      "summary": "Timeline起始點對齊+斗數對齊Work樣式：使用者截圖回報單節點的姓名學自訂軌道視覺上置中(getTrackYearRange原本floor取整年致窄範圍軌道被壓縮居中)，且要求斗數的橫排晶片特例改對齊Work的河流樣式。修法：起點改用最早節點精確日期不floor取整確保永遠貼齊0%；divination移除特例過濾統一走renderRiverTrack()，刪除已無呼叫端的renderDivinationMilestones()。副作用：斗數因此也失去點擊看detail的modal，但跟Work現況一致屬對齊非退步。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "index.html",
       "summary": "Timeline管理擴充+移除工作屬性：管理清單改列全部軌道(內建三軌只能改色不可刪+自訂軌道)，新增builtinTrackColors覆蓋值與統一的setTrackColor()；移除使用需求低且engineering頁無圖例說明的工作屬性欄位(node.type/ENG_TYPE_COLORS/engTypeColor)。fresh-context subagent審查6項風險點皆未發現must-fix。",
       "reason": "user_request"
     },
