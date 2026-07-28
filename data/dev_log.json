@@ -27,7 +27,21 @@
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
-      "summary": "Timeline軌道改為可自訂新增：原本TRACK_META/TRACK_ORDER寫死3軌且全觀視角是寫死畫兩排不同樣式，跟使用者確認新軌道畫法後（比照Work走河流樣式，creative懸空不處理），新增customTracks[]+deriveTrackVisuals()+rebuildCustomTracks()+DM設定頁新增/刪除UI。fresh-context subagent審查抓到hasContent判斷遺漏customTracks的must-fix，已修正。bake工具是否同步customTracks到baked data尚未確認。",
+      "summary": "Timeline軌道改為可自訂新增：原本TRACK_META/TRACK_ORDER寫死3軌且全觀視角是寫死畫兩排不同樣式，跟使用者確認新軌道畫法後（比照Work走河流樣式，creative懸空不處理），新增customTracks[]+deriveTrackVisuals()+rebuildCustomTracks()+DM設定頁新增/刪除UI。fresh-context subagent審查抓到hasContent判斷遺漏customTracks的must-fix，已修正。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "NexusPortal_private/inject_baked.py（無git）",
+      "summary": "bake腳本補上customTracks欄位：釐清「private資料夾不外流」跟「bake白名單漏欄位」是兩回事，inject_baked.py組bake dict時確實沒把customTracks列入白名單，會導致訪客視角看不到新增的自訂Timeline。補上一行data.get('customTracks',[])，py_compile驗證語法正確。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "修正interview/reception情境角色錯位：使用者回報「面試前暖場」生成出面試官誇自己辦公室的不合邏輯開場白。根因是sit.en套進共用模板時沒錨定「learner是誰、空間屬於誰」，順帶檢查同類主客不對等情境reception也有同樣風險一併修正（非whack-a-mole只補回報的那一個），party/airport/printer因雙方對等不受影響維持原文。",
       "reason": "user_request"
     },
     {
