@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "Timeline標題旁新增時長顯示：computeTrackDuration(trackId)算該軌道最早節點到現在的時長，格式x year(s) y month(s)，myselfTrackHdr()加第二參數渲染在標題旁。Node模擬Work(13年10個月)/姓名學(剛起步0年0個月)/無資料軌道皆符合預期。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "午餐13:00-14:00強制校正：使用者截圖回報今天pipeline午休排到11:30-12:20跟prompt規則2不符，且馬上要重新生成故需立即修正。確認Calendar行程有強制注入code防護但午餐時段沒有，純靠prompt文字約束。sanitizePipes()新增校正步驟：Calendar佔用則略過、已有rest管重疊視為已安排、否則切開衝突水管插入強制午休。Node模擬4情境（含完整重現截圖案例）皆符合預期，push後curl確認已部署。",
