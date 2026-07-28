@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-27",
+  "generated_through": "2026-07-28",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-28",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "新增跨天過載頻率記錄：抽出computeOverloadInfo()共用過載判定邏輯，新增logOverloadDay()寫入sas_overload_log（date/overloadCount/allDone，休假與無pipes日跳過，只留60天），改掛在saveReview()每天自動觸發（不依賴手動點AI反饋按鈕，避免漏天）。修正抽出過程中savedPipes/savedAssign變數遺留參照的執行期錯誤。SAS Hub端讀取呈現待接續。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-07-27",
       "project": "English Sandbox",
