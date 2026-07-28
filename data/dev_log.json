@@ -6,7 +6,14 @@
       "date": "2026-07-28",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "summary": "新增跨天過載頻率記錄：抽出computeOverloadInfo()共用過載判定邏輯，新增logOverloadDay()寫入sas_overload_log（date/overloadCount/allDone，休假與無pipes日跳過，只留60天），改掛在saveReview()每天自動觸發（不依賴手動點AI反饋按鈕，避免漏天）。修正抽出過程中savedPipes/savedAssign變數遺留參照的執行期錯誤。SAS Hub端讀取呈現待接續。",
+      "summary": "新增跨天過載頻率記錄：抽出computeOverloadInfo()共用過載判定邏輯，新增logOverloadDay()寫入sas_overload_log（date/overloadCount/allDone，休假與無pipes日跳過，只留60天），改掛在saveReview()每天自動觸發（不依賴手動點AI反饋按鈕，避免漏天）。修正抽出過程中savedPipes/savedAssign變數遺留參照的執行期錯誤。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "常駐風險燈號新增第三排「配速」：buildOverloadFreq()讀Daily Optimizer寫的sas_overload_log，近14天視窗統計過載天數與沒扛住(allDone===false)天數，門檻（初版待校準）沒扛住≥3或過載≥10天→紅、過載≥5或沒扛住≥1→橙。因本輪未裝Claude in Chrome無法直接截圖驗證，改用node模擬DOM/localStorage跑5組情境確認邏輯正確。",
       "reason": "user_request"
     },
     {
