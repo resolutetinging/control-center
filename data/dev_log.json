@@ -4,6 +4,27 @@
   "timeline": [
     {
       "date": "2026-07-28",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "午餐13:00-14:00強制校正：使用者截圖回報今天pipeline午休排到11:30-12:20跟prompt規則2不符，且馬上要重新生成故需立即修正。確認Calendar行程有強制注入code防護但午餐時段沒有，純靠prompt文字約束。sanitizePipes()新增校正步驟：Calendar佔用則略過、已有rest管重疊視為已安排、否則切開衝突水管插入強制午休。Node模擬4情境（含完整重現截圖案例）皆符合預期，push後curl確認已部署。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "Timeline管理擴充+移除工作屬性：管理清單改列全部軌道(內建三軌只能改色不可刪+自訂軌道)，新增builtinTrackColors覆蓋值與統一的setTrackColor()；移除使用需求低且engineering頁無圖例說明的工作屬性欄位(node.type/ENG_TYPE_COLORS/engTypeColor)。fresh-context subagent審查6項風險點皆未發現must-fix。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "Timeline各軌道改用獨立年份刻度軸：使用者截圖顯示新增的姓名學自訂軌道因只有近期資料，跟其他軌道共用2012-2026比例尺時被壓成看不見的細線。新增getTrackYearRange()依各軌道自己資料算範圍、buildYearMarks()自適應刻度間距，renderRiverTrack()內建自己的axis-row不再共用外部軸。Node模擬Work跨14年/姓名學單月資料/無資料退回全域三種情境皆符合預期。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "Spec/nexus-portal-spec-v1.0.md（無程式改動）",
       "summary": "釐清Timeline顯示範圍與lens存取層級：使用者一度誤以為myself=public，查證renderContent()分派邏輯後確認myself是唯一需?access=密語驗證的私人頁，其餘5個lens皆公開。結論：訪客可見的timeline只在engineering一處，myself的多軌timeline是私人頁設計如此非落差，使用者確認不需改code，spec補上說明段落+v1.2。",
