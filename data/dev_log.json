@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "Spec/nexus-portal-spec-v1.0.md（無程式改動）",
+      "summary": "釐清Timeline顯示範圍與lens存取層級：使用者一度誤以為myself=public，查證renderContent()分派邏輯後確認myself是唯一需?access=密語驗證的私人頁，其餘5個lens皆公開。結論：訪客可見的timeline只在engineering一處，myself的多軌timeline是私人頁設計如此非落差，使用者確認不需改code，spec補上說明段落+v1.2。",
+      "reason": "clarification"
+    },
+    {
+      "date": "2026-07-28",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "新增跨天過載頻率記錄：抽出computeOverloadInfo()共用過載判定邏輯，新增logOverloadDay()寫入sas_overload_log（date/overloadCount/allDone，休假與無pipes日跳過，只留60天），改掛在saveReview()每天自動觸發（不依賴手動點AI反饋按鈕，避免漏天）。修正抽出過程中savedPipes/savedAssign變數遺留參照的執行期錯誤。",
