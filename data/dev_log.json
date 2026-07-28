@@ -17,6 +17,20 @@
       "reason": "user_request"
     },
     {
+      "date": "2026-07-28",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "配速燈號窗口修正：使用者提醒Optimizer週末常態無資料，發現「近14個日曆天」窗口會被週末稀釋、紅燈門檻比設計時假設更難觸發，改為log.slice(-14)近14筆有記錄的天，不受使用頻率影響。過程中node模擬測試抓到一個遺漏的log變數宣告錯誤並修正。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-28",
+      "project": "NexusPortal",
+      "file": "index.html",
+      "summary": "Timeline軌道改為可自訂新增：原本TRACK_META/TRACK_ORDER寫死3軌且全觀視角是寫死畫兩排不同樣式，跟使用者確認新軌道畫法後（比照Work走河流樣式，creative懸空不處理），新增customTracks[]+deriveTrackVisuals()+rebuildCustomTracks()+DM設定頁新增/刪除UI。fresh-context subagent審查抓到hasContent判斷遺漏customTracks的must-fix，已修正。bake工具是否同步customTracks到baked data尚未確認。",
+      "reason": "user_request"
+    },
+    {
       "date": "2026-07-27",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
