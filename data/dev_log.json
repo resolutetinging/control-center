@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-28",
+  "generated_through": "2026-07-29",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-29",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Small Talk開場白角色錯位根因修正：使用者回報interview情境（面試前暖場）提出的問題角色不符——面試官才是問話方，回答的人是被面試者。查根因發現genOpener()產生開場白的prompt從未告訴LLM「這句話是對方角色講的，不是learner講的」，07-28的修法只補了SITS.interview的情境敘述文字，沒補到prompt本身的角色指派。修法：在prompt的Rules新增一條通用規則，明確要求開場白必須由對方角色對learner說、且情境若點名learner身份（job candidate/host greeting visitor）開場白就要從對方視角（interviewer/visitor）出發，同時修正interview與reception兩個主客不對等情境。node --check通過，fresh-context subagent驗證5項驗收條件皆過。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",

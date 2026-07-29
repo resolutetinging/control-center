@@ -631,6 +631,7 @@ Rules:
 - Under 18 words
 - Sound genuinely casual and spontaneous — NOT textbook English
 - Fits naturally in the exact situation described
+- The line is spoken TO the learner BY the other person in the scene — never phrase it as something the learner themselves would say. If the situation names a specific role for the learner (e.g. job candidate, host greeting a visitor), the opener must come from the other role's perspective (e.g. the interviewer speaking to the candidate, the visitor speaking to the host)
 - Output ONLY the single sentence, no quotes or explanations${avoidClause}`;
     const raw = await callGroq(prompt, 60);
     curOpener = raw.replace(/^["'`]|["'`]$/g,'').trim();
