@@ -6,6 +6,13 @@
       "date": "2026-07-29",
       "project": "Refueler",
       "file": "refueler.html",
+      "summary": "水分月曆比照咖啡拉大三色階差異：使用者要求水分月曆做一樣的效果。.cal-cell.w-ok/w-warn/w-low三種色相（綠/橘/紅）原本透明度都壓在.08-.1幾乎看不出色相差異，改依嚴重度遞增拉開為.16/.32/.5，水分不足天呈明顯深紅，同步更新圖例色塊。node --check通過，三種badge文字色在新底色濃度下對比計算仍足夠。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-29",
+      "project": "Refueler",
+      "file": "refueler.html",
       "summary": "咖啡月曆杯數色階拉大差異：使用者反映月曆上不同杯數的天底色差異太小不易分辨。.cal-cell.c1~c4透明度從等差.09/.18/.28/.38改為遞增.12/.28/.46/.65，4+杯天明顯呈飽和焦糖橘，同步更新圖例色塊。node --check通過，文字色var(--coffee)在新底色濃度下對比仍足夠。",
       "reason": "user_request"
     },
