@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-07-29",
+      "project": "Refueler",
+      "file": "refueler.html",
+      "summary": "咖啡月曆杯數色階拉大差異：使用者反映月曆上不同杯數的天底色差異太小不易分辨。.cal-cell.c1~c4透明度從等差.09/.18/.28/.38改為遞增.12/.28/.46/.65，4+杯天明顯呈飽和焦糖橘，同步更新圖例色塊。node --check通過，文字色var(--coffee)在新底色濃度下對比仍足夠。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-29",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "Small Talk開場白角色錯位根因修正：使用者回報interview情境（面試前暖場）提出的問題角色不符——面試官才是問話方，回答的人是被面試者。查根因發現genOpener()產生開場白的prompt從未告訴LLM「這句話是對方角色講的，不是learner講的」，07-28的修法只補了SITS.interview的情境敘述文字，沒補到prompt本身的角色指派。修法：在prompt的Rules新增一條通用規則，明確要求開場白必須由對方角色對learner說、且情境若點名learner身份（job candidate/host greeting visitor）開場白就要從對方視角（interviewer/visitor）出發，同時修正interview與reception兩個主客不對等情境。node --check通過，fresh-context subagent驗證5項驗收條件皆過。",
