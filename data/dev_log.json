@@ -6,6 +6,13 @@
       "date": "2026-07-30",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
+      "summary": "文法審核卡新增AI追問聊天功能：使用者截圖回報「feedback應為give feedback」的修正建議好奇原因，希望能追問AI釐清。#gr-card內修正後區塊下方新增小型聊天區，全域grContext存這一輪{orig,note,fixed}，askGrammarWhy()用獨立prompt帶入三欄位+使用者問題，只回答該問題不重新解釋整個修正，純文字繁中回覆。每輪submitResp()重新渲染時自動重置grContext與聊天記錄，appendGrChat()用textContent寫入防XSS。node --check通過，fresh-context subagent驗證9項條件全過，git diff --stat純新增66行0刪除未動到接球判斷與文法審核本身。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-07-30",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
       "summary": "新增文法／語句寫法審核卡：使用者要求在檢視接球結果時新增獨立卡片專審文法/語句寫法，但不能影響small talk溝通品質判斷，位置放AI三階潤飾下面。新增第三支獨立LLM呼叫promptC（gr_ok/gr_note/gr_fixed），完全不與promptA的接球判斷共用prompt，物理隔離避免污染；只在使用者有輸入文字時才呼叫。#gr-card插在ball resp-card之後、result-action-bar之前，沿用既有CSS class未新增樣式。node --check通過，fresh-context subagent驗證6項條件全過，git diff --stat只動一檔。",
       "reason": "user_request"
     },
