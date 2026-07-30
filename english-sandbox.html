@@ -402,6 +402,20 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       </div>
     </div>
 
+    <!-- 文法／語句寫法審核：獨立於接球判斷，只審文法句構，不影響溝通品質判斷 -->
+    <div class="fb-card" id="gr-card" style="display:none">
+      <div class="fb-tag">✍️ 文法／語句寫法審核</div>
+      <div class="fb-orig" id="gr-orig"></div>
+      <div class="fb-block fb-section" id="gr-block">
+        <div id="gr-verdict"></div>
+        <div class="fb-block-body" id="gr-note-text"></div>
+      </div>
+      <div class="fb-block fb-add fb-section" id="gr-fixed-block" style="display:none">
+        <div class="fb-block-lbl">✅ 修正後</div>
+        <div class="fb-block-body" id="gr-fixed-text"></div>
+      </div>
+    </div>
+
     <div class="result-action-bar">
       <button class="btn btn-ghost" onclick="resetAll()">↩ 換下一句</button>
       <button class="btn btn-ghost" id="overall-btn" onclick="runOverallAnalysis()" style="display:none">📊 綜合分析</button>
@@ -849,14 +863,29 @@ Output ONLY valid JSON:
   "ball": "ENGLISH ONLY — ≤30 words — answers first, then a specific contextual follow-up question"
 }`;
 
+    // TASK 3（文法／語句寫法審核）獨立成第三支呼叫，只審文法句構，不放接球判斷邏輯，
+    // 物理隔離避免污染 fb_ball_verdict（比照 07-17 教訓：合併 prompt 會讓文字互相洩漏）
+    const promptC = `You are an English grammar and sentence-structure reviewer for a business English learner's practice tool.
+
+Learner's written reply: "${userResp}"
+
+Your ONLY job: check grammar, verb tense, subject-verb agreement, article usage, word order, and sentence structure. Do NOT evaluate tone, vocabulary sophistication, idiomaticity, or whether this is a good conversational response — those are judged elsewhere and are out of scope here.
+
+Output ONLY valid JSON:
+{
+  "gr_ok": true|false — true only if there are zero grammar/structure errors,
+  "gr_note": "繁體中文（≤50字）具體指出文法或語句結構問題在哪裡、為什麼要這樣改；若完全沒有問題，說「文法與句構正確」",
+  "gr_fixed": "ENGLISH ONLY — the grammatically corrected version of the learner's exact sentence, keeping their original meaning and word choice as much as possible. If gr_ok is true, repeat the original sentence unchanged."
+}`;
+
     const sysA = 'You output ONLY valid JSON. All fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.';
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
+    const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string.';
 
-    const [rawA, rawB] = await Promise.all([
-      callGroq(promptA, 400, sysA, true),
-      callGroq(promptB, 300, sysB, true)
-    ]);
-    results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB)});
+    const callsArr = [callGroq(promptA, 400, sysA, true), callGroq(promptB, 300, sysB, true)];
+    if(inp) callsArr.push(callGroq(promptC, 250, sysC, true));
+    const [rawA, rawB, rawC] = await Promise.all(callsArr);
+    results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB), ...(rawC?safeParseJson(rawC):{})});
 
     // 三階潤飾語言保底：prompt 約束不可靠（比照 s2t 雙保險原則），
     // safe/pro/ball 若被模型寫成中文，單次重試 promptB 換取英文版；仍失敗則原樣顯示不無限重試
@@ -908,6 +937,28 @@ Output ONLY valid JSON:
       $('fb-card').style.display='block';
     } else {
       $('fb-card').style.display='none';
+    }
+
+    // 文法／語句寫法審核卡（獨立於接球判斷，不影響 fb_ball_verdict）
+    if(inp && results.gr_note){
+      $('gr-orig').textContent = inp;
+      $('gr-note-text').textContent = results.gr_note;
+      const grOk = results.gr_ok===true || results.gr_ok==='true';
+      $('gr-verdict').innerHTML = grOk
+        ? `<span class="ball-verdict v-caught">✅ 文法正確</span>`
+        : `<span class="ball-verdict v-partial">✍️ 文法待修正</span>`;
+      const grBlock = $('gr-block');
+      grBlock.classList.remove('fb-caught','fb-partial','fb-issue');
+      grBlock.classList.add(grOk ? 'fb-caught' : 'fb-partial');
+      if(!grOk && results.gr_fixed){
+        $('gr-fixed-text').textContent = results.gr_fixed;
+        $('gr-fixed-block').style.display='block';
+      } else {
+        $('gr-fixed-block').style.display='none';
+      }
+      $('gr-card').style.display='block';
+    } else {
+      $('gr-card').style.display='none';
     }
 
     $('text-safe').textContent = results.safe||'—';
