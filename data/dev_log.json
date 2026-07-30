@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-07-29",
+  "generated_through": "2026-07-30",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-07-30",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "新增文法／語句寫法審核卡：使用者要求在檢視接球結果時新增獨立卡片專審文法/語句寫法，但不能影響small talk溝通品質判斷，位置放AI三階潤飾下面。新增第三支獨立LLM呼叫promptC（gr_ok/gr_note/gr_fixed），完全不與promptA的接球判斷共用prompt，物理隔離避免污染；只在使用者有輸入文字時才呼叫。#gr-card插在ball resp-card之後、result-action-bar之前，沿用既有CSS class未新增樣式。node --check通過，fresh-context subagent驗證6項條件全過，git diff --stat只動一檔。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-07-29",
       "project": "Refueler",
