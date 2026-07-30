@@ -215,6 +215,16 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
 /* ── ENHANCED FEEDBACK ── */
 .fb-section{margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)}
+.gr-chat-log{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
+.gr-chat-log:empty{display:none}
+.gr-chat-msg{font-size:12.5px;line-height:1.6;padding:7px 11px;border-radius:9px;max-width:92%}
+.gr-chat-msg.gr-chat-user{align-self:flex-end;background:rgba(40,38,32,.06);color:var(--sub)}
+.gr-chat-msg.gr-chat-ai{align-self:flex-start;background:var(--en-tint);color:#2a4a38}
+.gr-ask-row{display:flex;gap:7px}
+.gr-ask-row input[type=text]{flex:1;background:var(--bg2);border:1.5px solid transparent;border-radius:9px;padding:8px 11px;color:var(--ink);font-size:12.5px;font-family:inherit;outline:none;transition:border .18s,background .18s}
+.gr-ask-row input[type=text]:focus{border-color:var(--en-l);background:#fff}
+.gr-ask-row button{padding:8px 14px;border:none;border-radius:9px;background:var(--en);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.gr-ask-row button:disabled{opacity:.5;cursor:default}
 
 /* ── PLACEHOLDER ── */
 .placeholder{padding:70px 20px;text-align:center}
@@ -414,6 +424,14 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
         <div class="fb-block-lbl">✅ 修正後</div>
         <div class="fb-block-body" id="gr-fixed-text"></div>
       </div>
+      <div class="gr-ask-block fb-section" id="gr-ask-block" style="display:none">
+        <div class="fb-block-lbl">🤖 想問 AI 為什麼這樣改？</div>
+        <div class="gr-chat-log" id="gr-chat-log"></div>
+        <div class="gr-ask-row">
+          <input type="text" id="gr-ask-input" placeholder="例如：為什麼feedback要改成give feedback？" onkeydown="if(event.key==='Enter')askGrammarWhy()">
+          <button id="gr-ask-btn" onclick="askGrammarWhy()">問</button>
+        </div>
+      </div>
     </div>
 
     <div class="result-action-bar">
@@ -553,6 +571,7 @@ let timerMode = 30;
 let results = {};
 let usedOpeners = []; // 追蹤已出現的 opener，避免重複
 let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
+let grContext = null; // 文法審核追問用：{orig,note,fixed}，換下一句時重置
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
@@ -957,8 +976,16 @@ Output ONLY valid JSON:
         $('gr-fixed-block').style.display='none';
       }
       $('gr-card').style.display='block';
+      // 追問區：換新一輪就重置對話記錄，context 只給這一輪的句子
+      grContext = { orig: inp, note: results.gr_note||'', fixed: results.gr_fixed||inp };
+      $('gr-chat-log').innerHTML='';
+      $('gr-ask-input').value='';
+      $('gr-ask-block').style.display='block';
     } else {
       $('gr-card').style.display='none';
+      $('gr-ask-block').style.display='none';
+      $('gr-chat-log').innerHTML='';
+      grContext = null;
     }
 
     $('text-safe').textContent = results.safe||'—';
@@ -981,6 +1008,45 @@ Output ONLY valid JSON:
     $('user-input').disabled=false; $('submit-btn').disabled=false;
     alert('分析失敗：'+e.message);
   }
+}
+
+// ── Grammar review 追問（獨立小call，只針對這一輪的gr_note/gr_fixed問答，不影響任何判斷邏輯）──
+function appendGrChat(role, text){
+  const log = $('gr-chat-log');
+  const bubble = document.createElement('div');
+  bubble.className = 'gr-chat-msg gr-chat-'+role;
+  bubble.textContent = (role==='user'?'你：':'🤖 ')+text;
+  log.appendChild(bubble);
+  log.scrollTop = log.scrollHeight;
+}
+async function askGrammarWhy(){
+  if(!grContext) return;
+  const inp = $('gr-ask-input');
+  const q = inp.value.trim();
+  if(!q) return;
+  const btn = $('gr-ask-btn');
+  btn.disabled = true; inp.disabled = true; btn.textContent = '…';
+  appendGrChat('user', q);
+  inp.value='';
+  try{
+    const prompt = `You are an English grammar tutor. You just reviewed a business English learner's sentence and gave a correction. The learner now has a follow-up question about that specific correction.
+
+Learner's original sentence: "${grContext.orig}"
+Your correction note: "${grContext.note}"
+Corrected sentence: "${grContext.fixed}"
+
+Learner's follow-up question: "${q}"
+
+Answer ONLY this specific question — do not re-explain the whole correction from scratch. Be concrete; give a short example if it helps clarify (e.g. contrast the wrong usage vs. the correct one). Keep it focused and easy to understand for an intermediate learner.
+
+Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤120字.`;
+    const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
+    const raw = await callGroq(prompt, 220, sys, false);
+    appendGrChat('ai', s2t((raw||'').trim()));
+  }catch(e){
+    appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。');
+  }
+  btn.disabled = false; inp.disabled = false; btn.textContent = '問';
 }
 
 // ── Save ──
