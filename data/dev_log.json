@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-07-30",
+  "generated_through": "2026-08-02",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-02",
+      "project": "Sleep Dashboard",
+      "file": "run_update.sh / json_cache",
+      "summary": "8/2資料手動補跑＋根因排除：使用者發現22:00自動更新後8/2資料未進dashboard。查log確認LaunchAgent其實準時在22:03成功執行，非排程漏跑；比對發現當時iCloud匯出檔deep/rem/core/awake全為0，update_dashboard.py的total_min<60驗證正確判定為無效資料跳過，非腳本bug。使用者重跑iPhone Shortcut產生新檔後，發現真正卡住的是run_update.sh複製邏輯「cache已有非空檔案就跳過」不會覆蓋舊的0值cache，手動刪除該份cache後重跑才抓到新資料，200筆有效夜晚數據更新為2026-08-02。額外確認SAS Hub Sleep分頁iframe同源寫入localStorage、切回Overview會rerenderOv()重讀不需整頁重整。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-08-02",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "入睡/起床趨勢圖補上資料點圓圈：使用者截圖回報該圖沒有資料點圓圈，其他趨勢圖都有，不知道游標要移到哪查看數值。查根因updateRegularity()畫的regularityTrendChart寫死pointRadius:0，比照同檔其他趨勢圖（Deep/REM/Core/Awake%）動態寫法pointR=data.length>60?0:2＋pointHoverRadius:4補上。node --check通過，git diff --stat只動3行目標程式碼。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-07-30",
       "project": "English Sandbox",
