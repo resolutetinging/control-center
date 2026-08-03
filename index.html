@@ -1286,13 +1286,25 @@ function renderDevDashboard(){
         if(!byDate[it.date][proj])byDate[it.date][proj]=[];
         byDate[it.date][proj].push(it.summary||'');
       });
+      // summary 慣例格式為「標題：句子1。句子2。…」，拆成標題+子句多層bullet，
+      // 避免長段文字擠成一整塊難以掃視；找不到冒號（舊格式簡短紀錄）就整句當標題、不拆子句
+      function splitSummary(s){
+        const ci=s.indexOf('：');
+        const headline=(ci>-1&&ci<160)?s.slice(0,ci):s;
+        const rest=(ci>-1&&ci<160)?s.slice(ci+1):'';
+        const sentences=rest.split('。').map(x=>x.trim()).filter(Boolean);
+        return{headline,sentences};
+      }
       const tlHtml=dateOrder.length
         ?'<div class="dev-timeline">'+dateOrder.map(date=>{
           const projects=byDate[date];
           const rows=Object.keys(projects).map(proj=>{
             const items=projects[proj];
-            // 統一都用 bullet 呈現（含只有1筆的情況），同一天內各專案排版才一致，不會有的有點有的沒點
-            const summaryHtml='<ul class="dev-tl-bullets">'+items.map(s=>`<li>${esc(s)}</li>`).join('')+'</ul>';
+            const summaryHtml='<ul class="dev-tl-bullets">'+items.map(s=>{
+              const{headline,sentences}=splitSummary(s);
+              const sub=sentences.length?'<ul class="dev-tl-sub">'+sentences.map(x=>`<li>${esc(x)}。</li>`).join('')+'</ul>':'';
+              return `<li>${esc(headline)}${sub}</li>`;
+            }).join('')+'</ul>';
             return `<div class="dev-tl-row"><span class="dev-tl-proj">${esc(proj)}</span><div class="dev-tl-summary">${summaryHtml}</div></div>`;
           }).join('');
           return `<div class="dev-tl-item">

@@ -197,8 +197,11 @@ body{position:relative;}
 .dev-tl-row{display:flex;gap:7px;align-items:flex-start;flex-wrap:wrap;}
 .dev-tl-proj{font-size:11px;font-weight:700;color:var(--deep);flex-shrink:0;padding-top:1px;}
 .dev-tl-summary{font-size:11px;color:var(--sub);line-height:1.5;min-width:0;}
-.dev-tl-bullets{margin:0;padding-left:15px;display:flex;flex-direction:column;gap:3px;}
+.dev-tl-bullets{margin:0;padding-left:15px;display:flex;flex-direction:column;gap:5px;}
 .dev-tl-bullets li{font-size:11px;color:var(--sub);line-height:1.5;}
+.dev-tl-bullets>li{font-weight:600;color:var(--ink);}
+.dev-tl-sub{margin:3px 0 0;padding-left:14px;display:flex;flex-direction:column;gap:2px;list-style:disc;}
+.dev-tl-bullets .dev-tl-sub li{font-weight:400;font-size:10.5px;color:var(--sub);line-height:1.5;}
 /* 熱點/使用頻率：並排兩欄 */
 .dev-grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
 @media(max-width:640px){.dev-grid2{grid-template-columns:1fr;}}
