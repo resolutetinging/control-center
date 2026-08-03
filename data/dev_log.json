@@ -5,6 +5,20 @@
     {
       "date": "2026-08-03",
       "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "新增impact空洞內容偵測，防止「換句話說」的core誤判：使用者追問8/1「冷」標籤沒出現的原因，指出Oracle/Gemini那則impact只是把body換句話說沒有真正供應鏈分析，質疑coreCount該不該納入內容有效性。查根因是validate_impact只查因果依據/邏輯矛盾，沒查「是不是空話換句話說」，而_body_is_low_quality已有成熟的重疊率+具體性判準但只套用在body。派subagent延用同一套判準設計_impact_is_shallow()（CJK bigram單向包含率>0.20且impact無數字/具名實體才判shallow），對全部39筆歷史core/opp資料回測校準門檻，抓到9筆含Oracle本身，抽查5筆確認未誤殺具體分析。downgrade_shallow_impact()把命中的core降為opp不刪除不清空impact，接入pipeline。py_compile通過，只動update_data.py未回溯改history.json歷史評級。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-03",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py / history.json",
+      "summary": "補資訊/信息用詞清單＋語言鐵律防非中文混入：使用者回報8/2一則body同時出現越南文nhưng與中國大陸用語信息混雜。查現有用詞清單沒有信息→資訊這組，也完全沒有禁止混入其他語言的通用規則。兩處sys_msg補上資訊詞對＋新增語言鐵律段落明講禁止越南文/日文/韓文混入，判斷這是新一類問題改用通用規則而非whack-a-mole正則。同步修正history.json裡該筆已發布的舊資料。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-03",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "更新2026 Q2財報靜態參考值＋納入Intel/Tesla監測：記憶檔記著每季財報後需更新，7/30後應納入Alphabet/Tesla/Intel，今天8/3已超過門檻。先派研究subagent（WebSearch）查證Amazon/Google/Microsoft/Meta最新CapEx guidance、Google Cloud成長、Tesla AI5/Optimus、Intel 18A進度，每個數字要求附來源禁止用訓練記憶補。更新HW面板（HBM供需比查無來源的3倍數字移除改用Micron fully committed描述、CoWoS微調、新增Intel 18A卡片與signal pill、新增Tesla AI5轉Samsung pill）、Corp面板（CapEx卡片與長條圖全換最新guidance，Microsoft因財年制不同單獨標註FY27不列入$558B合計，Google Cloud 63%→82%YoY）、App panel（Physical AI/AI晶片文字補Tesla/Intel最新進度）。派第二個fresh-context subagent核對算術（$558B合計、長條圖寬度%）與每個數字來源對應，7項驗收全過，1項用詞微調（Intel+50%→+50%以上更貼近原文）已修正。push時遇GitHub Actions自動更新已推進遠端，git pull --rebase乾淨無衝突。",
       "reason": "user_request"
