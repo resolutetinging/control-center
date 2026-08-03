@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-03",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "新增文法收藏獨立分頁：使用者要求文法審核卡的修正項目可以⭐收藏，但收藏區域不可跟Small Talk既有的收藏組合混在一起，要開新分頁，收藏內容為我的接球/文法待修正/修正後三項。新增獨立localStorage key es_grammar_lib（跟既有es_saved_phrases完全分開），新分頁「✍️ 文法追蹤」+對應tab按鈕，#gr-fixed-block加收藏按鈕存這一輪的grContext（orig/note/fixed），renderGrammarLib()重用既有.combo-card等CSS class渲染列表，save-grammar按鈕每輪自動重置。順帶處理第5個分頁按鈕可能讓窄螢幕nav bar溢出擠掉返回連結的風險，.nav加overflow-x:auto。node --check通過，fresh-context subagent驗證8項條件全數通過。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-03",
       "project": "Sleep Dashboard",
       "file": "index.html",
       "summary": "週報AI分析補系統層級語言鐵律+補給建議事實錨定：使用者回報上週整體分析出現三個問題——「咖啑」不存在的亂碼字、咖啡建議方向顛倒（寫成避免上午8點前攝取應為避免下午/傍晚）、水分建議超標（4-5000ml/日不合理）。查根因是aiCall()完全沒有system message，沒有語言限制也沒有事實/安全錨定，llama-3.1-8b-instant自由生成容易吐錯字編造數字，且prompt自帶的範例句子疑似被LLM直接照抄套數字非真算過資料。修法：aiCall()加system message（語言鐵律+數字安全範圍，比照AI Tracker/English Sandbox同類修法）；補給優化建議加咖啡因半衰期/攝取時機方向、水分安全上限事實錨定；跨維度洞察段落明講範例句子不可照抄當結論。node --check通過，純prompt調整需使用者下次重新生成時肉眼驗證。",
