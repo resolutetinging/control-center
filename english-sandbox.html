@@ -18,7 +18,9 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
 
 /* ── NAV ── */
-.nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px}
+.nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav .back-link{flex-shrink:0}
 .nav-title{font-size:14px;font-weight:700;color:var(--en);padding:13px 0;margin-right:18px;letter-spacing:.02em;white-space:nowrap}
 .tab-btn{padding:13px 15px;background:none;border:none;color:var(--faint);font-size:12.5px;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;font-family:inherit;line-height:1}
 .tab-btn.active{color:var(--en);border-bottom-color:var(--en);font-weight:600}
@@ -268,6 +270,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <button class="tab-btn" id="tab-idiom" onclick="switchTab('idiom')">Idiom 拆彈遊戲</button>
   <button class="tab-btn" id="tab-lib" onclick="switchTab('lib')">📚 字庫 <span id="lib-tab-count" style="font-size:10px;background:rgba(61,106,82,.15);color:var(--en);border-radius:9px;padding:1px 5px;margin-left:2px;font-weight:700"></span></button>
   <button class="tab-btn" id="tab-combo" onclick="switchTab('combo')">⭐ 收藏組合<span id="combo-nav-count" style="font-size:10px;background:rgba(160,130,50,.18);color:#9a7a3a;border-radius:9px;padding:1px 5px;margin-left:3px;font-weight:700;display:none"></span></button>
+  <button class="tab-btn" id="tab-grammar" onclick="switchTab('grammar')">✍️ 文法追蹤<span id="grammar-nav-count" style="font-size:10px;background:rgba(160,130,50,.18);color:#9a7a3a;border-radius:9px;padding:1px 5px;margin-left:3px;font-weight:700;display:none"></span></button>
   <a href="./index.html" class="back-link">← CC</a>
 </nav>
 
@@ -423,6 +426,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <div class="fb-block fb-add fb-section" id="gr-fixed-block" style="display:none">
         <div class="fb-block-lbl">✅ 修正後</div>
         <div class="fb-block-body" id="gr-fixed-text"></div>
+        <div class="resp-footer">
+          <button class="save-btn" id="save-grammar" onclick="saveGrammarItem()">⭐ 收藏</button>
+        </div>
       </div>
       <div class="gr-ask-block fb-section" id="gr-ask-block" style="display:none">
         <div class="fb-block-lbl">🤖 想問 AI 為什麼這樣改？</div>
@@ -542,9 +548,19 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <div id="combo-list"></div>
 </div><!-- /page-combo -->
 
+<!-- ════════════ PAGE 5: GRAMMAR TRACKING ════════════ -->
+<div class="page" id="page-grammar">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">✍️ 文法修正收藏</div>
+    <button class="btn btn-ghost btn-sm" onclick="clearGrammarLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
+  </div>
+  <div id="grammar-list"></div>
+</div><!-- /page-grammar -->
+
 <script>
 // ── Constants ──
 const SAVED_KEY = 'es_saved_phrases';
+const GRAMMAR_KEY = 'es_grammar_lib';
 const SITS = {
   coffee:   { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
   meeting:  { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
@@ -972,6 +988,8 @@ Output ONLY valid JSON:
       if(!grOk && results.gr_fixed){
         $('gr-fixed-text').textContent = results.gr_fixed;
         $('gr-fixed-block').style.display='block';
+        const gsBtn=$('save-grammar');
+        if(gsBtn){ gsBtn.textContent='⭐ 收藏'; gsBtn.classList.remove('saved'); }
       } else {
         $('gr-fixed-block').style.display='none';
       }
@@ -1174,6 +1192,56 @@ function clearCombos(){
   renderSaved();
 }
 
+// ── Grammar Tracking Page（獨立收藏，不與Small Talk收藏組合共用SAVED_KEY）──
+function saveGrammarItem(){
+  if(!grContext || !grContext.note){ showSaveToast('⚠ 尚無內容，請先送出回應'); return; }
+  const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  lib.unshift({ orig:grContext.orig, note:grContext.note, fixed:grContext.fixed, sit:SITS[curSit]?.label||'', ts:Date.now() });
+  if(lib.length>60) lib.pop();
+  localStorage.setItem(GRAMMAR_KEY, JSON.stringify(lib));
+  const btn=$('save-grammar');
+  if(btn){ btn.textContent='✓ 已收藏'; btn.classList.add('saved'); }
+  showSaveToast('✓ 已收藏', true);
+  renderGrammarNavCount();
+}
+function renderGrammarNavCount(){
+  const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  const nb=$('grammar-nav-count');
+  if(nb){ nb.textContent=lib.length||''; nb.style.display=lib.length?'inline':'none'; }
+}
+function renderGrammarLib(){
+  const lib=JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  const body=$('grammar-list');
+  if(!body) return;
+  body.innerHTML=lib.length
+    ? lib.map((item,i)=>`
+      <div class="combo-card">
+        <div class="fb-block-lbl">🎾 我的接球</div>
+        <div class="combo-txt">"${esc(item.orig)}"</div>
+        <div class="fb-block-lbl" style="margin-top:8px;">✍️ 文法待修正</div>
+        <div class="combo-txt-zh">${esc(item.note)}</div>
+        <div class="fb-block-lbl" style="margin-top:8px;">✅ 修正後</div>
+        <div class="combo-txt">"${esc(item.fixed)}"</div>
+        <div class="combo-foot">
+          <span class="combo-foot-meta">${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
+          <button class="combo-del-btn" onclick="delGrammarItem(${i})">✕</button>
+        </div>
+      </div>`).join('')
+    : '<div class="combo-empty">尚無文法收藏，在 Small Talk 文法審核卡點 ⭐ 收藏</div>';
+  renderGrammarNavCount();
+}
+function delGrammarItem(i){
+  const lib=JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  lib.splice(i,1);
+  localStorage.setItem(GRAMMAR_KEY,JSON.stringify(lib));
+  renderGrammarLib();
+}
+function clearGrammarLib(){
+  if(!confirm('確定清空全部文法收藏？')) return;
+  localStorage.removeItem(GRAMMAR_KEY);
+  renderGrammarLib();
+}
+
 // ── Reset ──
 async function runOverallAnalysis(){
   if(sessionLog.length<2) return;
@@ -1237,12 +1305,13 @@ function resetAll(){
 
 // ── Tab switch ──
 function switchTab(tab){
-  ['talk','idiom','lib','combo'].forEach(t=>{
+  ['talk','idiom','lib','combo','grammar'].forEach(t=>{
     document.getElementById('page-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
   if(tab==='lib') renderLib();
   if(tab==='combo'){ renderCombos(); backfillComboZh(); }
+  if(tab==='grammar') renderGrammarLib();
 }
 
 // ── Helpers ──
@@ -1815,6 +1884,7 @@ function disableTopicBtns(v){ document.querySelectorAll('#topic-row .sit-btn').f
 // ── Init ──
 checkKey();
 renderSaved();
+renderGrammarNavCount();
 renderLib();
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
