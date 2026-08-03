@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-03",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "建議任務加隨機挑選，避免天天卡在同一批：使用者觀察到pipeline建議的「適合進行」任務看起來只在固定4個項目間輪流出現，問現況spec怎麼規劃。查spec v2.0記錄hint改由client端buildHintFromTasks()生成取代LLM（避免簡體字/亂編任務名品質問題），但從未規劃輪替機制，程式碼pool.slice(0,3)永遠取分類篩選後陣列前3個是靜態選取非bug，high/mid分類篩選重疊容易撞出同一批任務。使用者確認先前模型不夠聰明修語言問題卡很久沒再定義輪替邏輯。新增Fisher-Yates洗牌_shufflePick(arr,n)取代slice(0,3)。node --check通過，Node模擬5種情境（8項任務跑10次驗證有變化/池<3/fallback全部/空tasks/重疊分類）皆符合預期，git diff --stat只動一檔。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-03",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "文法收藏加分類標籤(拼字/斷句/時態/結構/冠詞/單複數/介系詞)：使用者要求文法收藏能加分類tag，先提4類請評估，建議加冠詞、單複數（中文母語者最典型錯誤類型），確認後再加介系詞共7類，並要求tag顯示在文法追蹤頁最上層作篩選。promptC新增gr_cat欄位在同一次API呼叫內完成分類，前端用GR_CATS白名單驗證LLM回傳值防污染，grOk為true時強制清空避免誤標。文法追蹤頁新增#grammar-cat-tabs篩選容器，篩選/防呆刪除邏輯照抄既有combo-sit-tabs已驗證模式(lib.indexOf(item)取真實索引)。node --check通過，fresh-context subagent驗證8項條件全過，純prompt改動待下次UI實測。",
