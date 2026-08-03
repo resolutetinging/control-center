@@ -6,6 +6,13 @@
       "date": "2026-08-03",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
+      "summary": "文法收藏加分類標籤(拼字/斷句/時態/結構/冠詞/單複數/介系詞)：使用者要求文法收藏能加分類tag，先提4類請評估，建議加冠詞、單複數（中文母語者最典型錯誤類型），確認後再加介系詞共7類，並要求tag顯示在文法追蹤頁最上層作篩選。promptC新增gr_cat欄位在同一次API呼叫內完成分類，前端用GR_CATS白名單驗證LLM回傳值防污染，grOk為true時強制清空避免誤標。文法追蹤頁新增#grammar-cat-tabs篩選容器，篩選/防呆刪除邏輯照抄既有combo-sit-tabs已驗證模式(lib.indexOf(item)取真實索引)。node --check通過，fresh-context subagent驗證8項條件全過，純prompt改動待下次UI實測。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-03",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
       "summary": "新增文法收藏獨立分頁：使用者要求文法審核卡的修正項目可以⭐收藏，但收藏區域不可跟Small Talk既有的收藏組合混在一起，要開新分頁，收藏內容為我的接球/文法待修正/修正後三項。新增獨立localStorage key es_grammar_lib（跟既有es_saved_phrases完全分開），新分頁「✍️ 文法追蹤」+對應tab按鈕，#gr-fixed-block加收藏按鈕存這一輪的grContext（orig/note/fixed），renderGrammarLib()重用既有.combo-card等CSS class渲染列表，save-grammar按鈕每輪自動重置。順帶處理第5個分頁按鈕可能讓窄螢幕nav bar溢出擠掉返回連結的風險，.nav加overflow-x:auto。node --check通過，fresh-context subagent驗證8項條件全數通過。",
       "reason": "user_request"
     },
