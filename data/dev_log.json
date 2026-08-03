@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-02",
+  "generated_through": "2026-08-03",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-03",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "更新2026 Q2財報靜態參考值＋納入Intel/Tesla監測：記憶檔記著每季財報後需更新，7/30後應納入Alphabet/Tesla/Intel，今天8/3已超過門檻。先派研究subagent（WebSearch）查證Amazon/Google/Microsoft/Meta最新CapEx guidance、Google Cloud成長、Tesla AI5/Optimus、Intel 18A進度，每個數字要求附來源禁止用訓練記憶補。更新HW面板（HBM供需比查無來源的3倍數字移除改用Micron fully committed描述、CoWoS微調、新增Intel 18A卡片與signal pill、新增Tesla AI5轉Samsung pill）、Corp面板（CapEx卡片與長條圖全換最新guidance，Microsoft因財年制不同單獨標註FY27不列入$558B合計，Google Cloud 63%→82%YoY）、App panel（Physical AI/AI晶片文字補Tesla/Intel最新進度）。派第二個fresh-context subagent核對算術（$558B合計、長條圖寬度%）與每個數字來源對應，7項驗收全過，1項用詞微調（Intel+50%→+50%以上更貼近原文）已修正。push時遇GitHub Actions自動更新已推進遠端，git pull --rebase乾淨無衝突。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-02",
       "project": "Sleep Dashboard",
