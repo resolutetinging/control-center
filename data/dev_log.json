@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-03",
+      "project": "Control Center",
+      "file": "index.html / cc_styles.css",
+      "summary": "開發履歷改多層次bullet，長段summary拆標題+子句：使用者反映「生態系開發與運作狀態」面板內容太長難閱讀。查根因是renderDevDashboard()把每筆summary整段塞進單一<li>，而summary慣例格式是「標題：句子1。句子2。…」，長段變成文字牆。新增splitSummary()在冒號處拆標題（粗體）+句子巢狀bullet，找不到冒號的舊格式優雅降級維持單行。門檻拿全部170筆真實資料實測校準，89筆有冒號的100%正確拆分（原60字門檻太緊漏3筆，調高到160涵蓋全部），81筆無冒號向下相容。node --check通過，esc()沿用既有escape helper，cc_styles.css新增class只有index.html用爆炸半徑低。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-03",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
       "summary": "新增impact空洞內容偵測，防止「換句話說」的core誤判：使用者追問8/1「冷」標籤沒出現的原因，指出Oracle/Gemini那則impact只是把body換句話說沒有真正供應鏈分析，質疑coreCount該不該納入內容有效性。查根因是validate_impact只查因果依據/邏輯矛盾，沒查「是不是空話換句話說」，而_body_is_low_quality已有成熟的重疊率+具體性判準但只套用在body。派subagent延用同一套判準設計_impact_is_shallow()（CJK bigram單向包含率>0.20且impact無數字/具名實體才判shallow），對全部39筆歷史core/opp資料回測校準門檻，抓到9筆含Oracle本身，抽查5筆確認未誤殺具體分析。downgrade_shallow_impact()把命中的core降為opp不刪除不清空impact，接入pipeline。py_compile通過，只動update_data.py未回溯改history.json歷史評級。",
