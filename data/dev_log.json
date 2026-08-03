@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-03",
+      "project": "Sleep Dashboard",
+      "file": "index.html",
+      "summary": "週報AI分析補系統層級語言鐵律+補給建議事實錨定：使用者回報上週整體分析出現三個問題——「咖啑」不存在的亂碼字、咖啡建議方向顛倒（寫成避免上午8點前攝取應為避免下午/傍晚）、水分建議超標（4-5000ml/日不合理）。查根因是aiCall()完全沒有system message，沒有語言限制也沒有事實/安全錨定，llama-3.1-8b-instant自由生成容易吐錯字編造數字，且prompt自帶的範例句子疑似被LLM直接照抄套數字非真算過資料。修法：aiCall()加system message（語言鐵律+數字安全範圍，比照AI Tracker/English Sandbox同類修法）；補給優化建議加咖啡因半衰期/攝取時機方向、水分安全上限事實錨定；跨維度洞察段落明講範例句子不可照抄當結論。node --check通過，純prompt調整需使用者下次重新生成時肉眼驗證。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-03",
       "project": "Control Center",
       "file": "index.html / cc_styles.css",
       "summary": "開發履歷改多層次bullet，長段summary拆標題+子句：使用者反映「生態系開發與運作狀態」面板內容太長難閱讀。查根因是renderDevDashboard()把每筆summary整段塞進單一<li>，而summary慣例格式是「標題：句子1。句子2。…」，長段變成文字牆。新增splitSummary()在冒號處拆標題（粗體）+句子巢狀bullet，找不到冒號的舊格式優雅降級維持單行。門檻拿全部170筆真實資料實測校準，89筆有冒號的100%正確拆分（原60字門檻太緊漏3筆，調高到160涵蓋全部），81筆無冒號向下相容。node --check通過，esc()沿用既有escape helper，cc_styles.css新增class只有index.html用爆炸半徑低。",
