@@ -184,6 +184,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .ball-verdict.v-caught{background:rgba(61,106,82,.13);color:var(--en)}
 .ball-verdict.v-partial{background:rgba(160,130,50,.12);color:#7a6020}
 .ball-verdict.v-missed{background:rgba(176,96,50,.1);color:#8a4020}
+.gr-cat-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;background:rgba(160,130,50,.15);color:#9a7a3a;letter-spacing:.02em}
 
 /* ── IDIOM ARCADE ── */
 .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
@@ -554,6 +555,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">✍️ 文法修正收藏</div>
     <button class="btn btn-ghost btn-sm" onclick="clearGrammarLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
   </div>
+  <div class="combo-sit-tabs" id="grammar-cat-tabs"></div>
   <div id="grammar-list"></div>
 </div><!-- /page-grammar -->
 
@@ -561,6 +563,8 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 // ── Constants ──
 const SAVED_KEY = 'es_saved_phrases';
 const GRAMMAR_KEY = 'es_grammar_lib';
+const GR_CATS = ['拼字','斷句','時態','結構','冠詞','單複數','介系詞'];
+let curGrCat = 'all';
 const SITS = {
   coffee:   { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
   meeting:  { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
@@ -906,16 +910,19 @@ Learner's written reply: "${userResp}"
 
 Your ONLY job: check grammar, verb tense, subject-verb agreement, article usage, word order, and sentence structure. Do NOT evaluate tone, vocabulary sophistication, idiomaticity, or whether this is a good conversational response — those are judged elsewhere and are out of scope here.
 
+If gr_ok is false, classify the primary error into EXACTLY ONE of these categories (use the Traditional Chinese label exactly as written): "拼字"(spelling/typo) / "斷句"(missing conjunction, run-on sentence, punctuation) / "時態"(verb tense) / "結構"(word order, sentence structure) / "冠詞"(a/an/the) / "單複數"(plural, subject-verb agreement) / "介系詞"(preposition). Pick the single most significant category even if multiple issues exist.
+
 Output ONLY valid JSON:
 {
   "gr_ok": true|false — true only if there are zero grammar/structure errors,
   "gr_note": "繁體中文（≤50字）具體指出文法或語句結構問題在哪裡、為什麼要這樣改；若完全沒有問題，說「文法與句構正確」",
-  "gr_fixed": "ENGLISH ONLY — the grammatically corrected version of the learner's exact sentence, keeping their original meaning and word choice as much as possible. If gr_ok is true, repeat the original sentence unchanged."
+  "gr_fixed": "ENGLISH ONLY — the grammatically corrected version of the learner's exact sentence, keeping their original meaning and word choice as much as possible. If gr_ok is true, repeat the original sentence unchanged.",
+  "gr_cat": "拼字|斷句|時態|結構|冠詞|單複數|介系詞 — ONLY if gr_ok is false, otherwise empty string"
 }`;
 
     const sysA = 'You output ONLY valid JSON. All fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.';
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
-    const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string.';
+    const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the seven given Traditional Chinese labels (or empty string), never invent a new category name.';
 
     const callsArr = [callGroq(promptA, 400, sysA, true), callGroq(promptB, 300, sysB, true)];
     if(inp) callsArr.push(callGroq(promptC, 250, sysC, true));
@@ -979,9 +986,11 @@ Output ONLY valid JSON:
       $('gr-orig').textContent = inp;
       $('gr-note-text').textContent = results.gr_note;
       const grOk = results.gr_ok===true || results.gr_ok==='true';
+      const grCat = (!grOk && GR_CATS.includes(results.gr_cat)) ? results.gr_cat : '';
+      const grCatBadge = grCat ? `<span class="gr-cat-badge">${esc(grCat)}</span>` : '';
       $('gr-verdict').innerHTML = grOk
         ? `<span class="ball-verdict v-caught">✅ 文法正確</span>`
-        : `<span class="ball-verdict v-partial">✍️ 文法待修正</span>`;
+        : `<span class="ball-verdict v-partial">✍️ 文法待修正</span>${grCatBadge}`;
       const grBlock = $('gr-block');
       grBlock.classList.remove('fb-caught','fb-partial','fb-issue');
       grBlock.classList.add(grOk ? 'fb-caught' : 'fb-partial');
@@ -995,7 +1004,7 @@ Output ONLY valid JSON:
       }
       $('gr-card').style.display='block';
       // 追問區：換新一輪就重置對話記錄，context 只給這一輪的句子
-      grContext = { orig: inp, note: results.gr_note||'', fixed: results.gr_fixed||inp };
+      grContext = { orig: inp, note: results.gr_note||'', fixed: results.gr_fixed||inp, cat: grCat };
       $('gr-chat-log').innerHTML='';
       $('gr-ask-input').value='';
       $('gr-ask-block').style.display='block';
@@ -1196,7 +1205,7 @@ function clearCombos(){
 function saveGrammarItem(){
   if(!grContext || !grContext.note){ showSaveToast('⚠ 尚無內容，請先送出回應'); return; }
   const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
-  lib.unshift({ orig:grContext.orig, note:grContext.note, fixed:grContext.fixed, sit:SITS[curSit]?.label||'', ts:Date.now() });
+  lib.unshift({ orig:grContext.orig, note:grContext.note, fixed:grContext.fixed, cat:grContext.cat||'', sit:SITS[curSit]?.label||'', ts:Date.now() });
   if(lib.length>60) lib.pop();
   localStorage.setItem(GRAMMAR_KEY, JSON.stringify(lib));
   const btn=$('save-grammar');
@@ -1209,14 +1218,29 @@ function renderGrammarNavCount(){
   const nb=$('grammar-nav-count');
   if(nb){ nb.textContent=lib.length||''; nb.style.display=lib.length?'inline':'none'; }
 }
+function setGrCat(cat){ curGrCat=cat; renderGrammarLib(); }
 function renderGrammarLib(){
   const lib=JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
   const body=$('grammar-list');
+  const tabBar=$('grammar-cat-tabs');
   if(!body) return;
-  body.innerHTML=lib.length
-    ? lib.map((item,i)=>`
+
+  // 分類篩選 tab（比照 combo-sit-tabs 寫法）：只列出實際存在的分類，維持 GR_CATS 順序
+  if(tabBar){
+    const catsPresent=GR_CATS.filter(c=>lib.some(it=>it.cat===c));
+    tabBar.innerHTML = catsPresent.length
+      ? '<button class="combo-sit-tab'+(curGrCat==='all'?' active':'')+'" onclick="setGrCat(\'all\')">全部</button>'
+        + catsPresent.map(c=>'<button class="combo-sit-tab'+(curGrCat===c?' active':'')+'" onclick="setGrCat(\''+c+'\')">'+esc(c)+'</button>').join('')
+      : '';
+  }
+
+  const list = curGrCat==='all' ? lib : lib.filter(it=>it.cat===curGrCat);
+  body.innerHTML=list.length
+    ? list.map(item=>{
+        const origIdx=lib.indexOf(item);
+        return`
       <div class="combo-card">
-        <div class="fb-block-lbl">🎾 我的接球</div>
+        <div class="fb-block-lbl">🎾 我的接球${item.cat?` <span class="gr-cat-badge">${esc(item.cat)}</span>`:''}</div>
         <div class="combo-txt">"${esc(item.orig)}"</div>
         <div class="fb-block-lbl" style="margin-top:8px;">✍️ 文法待修正</div>
         <div class="combo-txt-zh">${esc(item.note)}</div>
@@ -1224,10 +1248,10 @@ function renderGrammarLib(){
         <div class="combo-txt">"${esc(item.fixed)}"</div>
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
-          <button class="combo-del-btn" onclick="delGrammarItem(${i})">✕</button>
+          <button class="combo-del-btn" onclick="delGrammarItem(${origIdx})">✕</button>
         </div>
-      </div>`).join('')
-    : '<div class="combo-empty">尚無文法收藏，在 Small Talk 文法審核卡點 ⭐ 收藏</div>';
+      </div>`; }).join('')
+    : '<div class="combo-empty">'+(curGrCat==='all'?'尚無文法收藏，在 Small Talk 文法審核卡點 ⭐ 收藏':'此分類尚無收藏')+'</div>';
   renderGrammarNavCount();
 }
 function delGrammarItem(i){
