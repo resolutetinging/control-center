@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-04",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "建議任務篩選改用energy欄位不再用catKey：使用者回報8/3隨機挑選修法今天實測沒生效，先排除舊資料/CDN快取（線上版本已確認最新），使用者澄清心裡想像是「AI判定輕量時段會從標記輕量的任務裡隨機挑」並附任務能耗設定畫面截圖。比對截圖發現問題更深層：buildHintFromTasks()篩選用catKey（學習/求職/日常事務），但使用者實際標記、calcPipePressure()算水管壓力也在用的是energy欄位（高耗能/中耗能/輕量），pipeType本該對齊energy不是catKey，兩套分類長期不一致。改用energy篩選對齊pipeType。用截圖裡實際任務資料模擬驗證：mid池從9個混雜各能耗等級收斂到4個真正中耗能任務，「英文練習」不再誤入高強度池、「姓名學命理學習」正確納入高強度池。node --check通過。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-04",
       "project": "SAS Hub / Control Center",
       "file": "index.html / cc_autosync.js",
       "summary": "追加處理殘留低優先發現（NaN防呆/去重複呼叫/人類圖配速提示/Gist白名單）：架構審查後殘留5項低優先發現，使用者確認3、4、5可執行、2一起做、1（共用函式大重構）留待今天任務結束後再討論。NaN防呆：getSleepQualityMap()新增Number.isFinite檢查，deepP/remP缺失時不寫入map，避免NaN讓alignClass()等判定誤判成狀態正常，影響風險燈號/意志力透支/三維相關性三張卡。去重複呼叫：buildInertiaAlert()/buildRiskLight()新增可選sqMap參數，updateCombat()算一次共用傳入，純效能無行為變更。人類圖配速提示：buildPacePills()原讀sas_settings（全生態系無寫入端恆空）改讀window._hdData.strat（loadHDProfile()已有wellness_v5.profile備援），順帶把pill顏色從.p-purple改.p-info避免資料修好後第一次違反禁紫紅色字規範。sas_overload_log加進Gist備份白名單。Node模擬NaN防呆邏輯驗證通過。",
