@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-04",
+      "project": "SAS Hub / Control Center",
+      "file": "index.html / cc_autosync.js",
+      "summary": "追加處理殘留低優先發現（NaN防呆/去重複呼叫/人類圖配速提示/Gist白名單）：架構審查後殘留5項低優先發現，使用者確認3、4、5可執行、2一起做、1（共用函式大重構）留待今天任務結束後再討論。NaN防呆：getSleepQualityMap()新增Number.isFinite檢查，deepP/remP缺失時不寫入map，避免NaN讓alignClass()等判定誤判成狀態正常，影響風險燈號/意志力透支/三維相關性三張卡。去重複呼叫：buildInertiaAlert()/buildRiskLight()新增可選sqMap參數，updateCombat()算一次共用傳入，純效能無行為變更。人類圖配速提示：buildPacePills()原讀sas_settings（全生態系無寫入端恆空）改讀window._hdData.strat（loadHDProfile()已有wellness_v5.profile備援），順帶把pill顏色從.p-purple改.p-info避免資料修好後第一次違反禁紫紅色字規範。sas_overload_log加進Gist備份白名單。Node模擬NaN防呆邏輯驗證通過。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-04",
       "project": "SAS Hub / Control Center / Daily Optimizer",
       "file": "index.html(×2) / daily_optimizer.html",
       "summary": "CC生態系跨維度資料流架構優化（6項）：使用者要求重新審查生態系分析/串接現況並提優化建議。先派opus重讀全部核心程式碼盤點資料流地圖、跨維度分析涵蓋範圍、斷點與不一致，產出6條建議，使用者確認全部進行。逐項處理：(1)修rev.reviewItems→rev.items欄位名bug，SAS Hub決策相關性卡從上線起因此永遠顯示資料不足；(2)alignClass()四處歷史日期判定改用當日睡眠代理值不再套今天combat，避免歷史紅點/崩盤預警隨今天狀態漂移；(3)週報AI prompt新增系統已算好的量化訊號段落餵給LLM；(4)評估後暫緩共用函式重構，因涉及近20處用詞尺度不一致風險過高不符最低優先項目該承擔的成本；(5)cc_energy_weights校正係數接上Daily Optimizer實際排程權重，之前只顯示文案未套用；(6)統一日期邊界為本地日，修正CC的TODAY常數與SAS Hub讀Refueler資料原本用UTC切字串，導致本地凌晨0-8點讀到昨天任務清單、熬夜咖啡歸錯天的問題，風險最高獨立commit。全部Node模擬驗證（含實際台北時區凌晨咖啡案例），推送後再派opus第二意見複核，8項驗收全過但抓到must-fix：cc_energy_weights寫入端原本無節流，接上真實排程後同一天內連續觸發會讓係數失控衝頂，已補上lastCorrected每日節流並驗證。",
