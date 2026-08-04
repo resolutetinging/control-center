@@ -37,6 +37,8 @@
     'sas_endurance', 'sas_dta', 'sas_pipe_review', 'sas_settings',
     'sas_weekly_recap', 'cc_energy_weights', 'sas_risk_flags',
     'sas_combat_date', 'sas_combat_weekday',
+    // 08-04：sas_overload_log（配速燈近14筆過載記錄）原本漏排，換裝置/清storage會靜默歸零
+    'sas_overload_log',
     // Mental Dashboard
     'wellness_v5', 'md_card_st', 'md_last_view', 'mental_custom_emotions',
     // Astro Bot
