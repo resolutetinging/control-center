@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-03",
+  "generated_through": "2026-08-04",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-04",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "CapEx長條圖縮短寬度+新增Q2較Q1季增減數字：使用者截圖回報「最新資本支出Guidance」長條圖右側文字被擠成多行，要求縮短bar讓出空間，並要求新增「這一季-上一季」的資本支出差異值。CSS層面.capex-track從flex:1改flex:0 0 55%，.capex-yoy從固定width:48px改flex:1自動吃剩餘寬度。派研究subagent查證四家公司2026 Q1實際capex（先前只查過guidance修訂值與Q2實際值），計算Q2較Q1季增減：Amazon+$9.9B/Google+$9.2B/Microsoft+$9.1B（FY26 Q3→Q4）/Meta+$11.3B，皆附來源。腳注補充Microsoft的Q1/Q2對應財年季非日曆季。node --check通過，git diff --stat只動一檔，push時再度遇GitHub Actions自動更新，git pull --rebase乾淨處理。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-03",
       "project": "Daily Optimizer",
