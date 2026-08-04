@@ -206,7 +206,11 @@
 <script>
 'use strict';
 const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1', LI_KEY='cc_linkedin_v2';
-const TODAY=new Date().toISOString().slice(0,10);
+// 08-04：TODAY改本地日（原UTC日），跟SAS Hub/Daily Optimizer的dkey()/todayKey()對齊——
+// 本地凌晨0-8點原本會讀到UTC「昨天」的review_/wellness_v5資料。CC規範仍是用TODAY常數，
+// 不呼叫其他檔案的today()函式（見feedback_cc_today_constant教訓，混用曾崩Guard設定頁）。
+function _localDateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const TODAY=_localDateKey(new Date());
 const SLEEP_URL='https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v2.html';
 const PROXIES=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`];
 
@@ -239,7 +243,7 @@ let LIVE={sleep:null,mental:null,optimizer:null,aitracker:null,linkedin:null};
 function loadMentalData(){
   try{
     const db=JSON.parse(localStorage.getItem('wellness_v5')||'{}');
-    const es=(db.entries||[]).filter(e=>e.timestamp&&e.timestamp.slice(0,10)===TODAY);
+    const es=(db.entries||[]).filter(e=>e.timestamp&&_localDateKey(new Date(e.timestamp))===TODAY);
     LIVE.mental={entries:es.map(e=>({
       time:e.timestamp?e.timestamp.slice(11,16):'',
       score:e.moodScore,
