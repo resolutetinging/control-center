@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-05",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "戰力/睡眠品質分定義釐清＋修正過時說明文字：使用者對08-04正名混淆兩者差異。說明兩者是不同算法——睡眠品質分只看單晚Deep/REM原始值用於跨維度分析，戰力是近3晚加權+睡眠債修正代表現在真實體感用於意志力透支判定/風險燈號/週報。使用者確認不統一改名，補進畫面「指標定義」互相對照說明。附帶修正一句過時文字：睡眠品質分歷史視窗08-04已改依裝置累積資料量最長回溯180天，畫面說明當時沒同步更新，仍寫「僅保留近7天」，一併修正。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-05",
       "project": "SAS Hub / Daily Optimizer",
       "file": "index.html / daily_optimizer.html",
       "summary": "sas_pipe_review累積化補14天無視警告率＋咖啡末杯時刻觀察：第二輪跨生態系優化第三、四順位。sas_pipe_review原本每次覆盤整個覆寫成單一物件，SAS Hub永遠只看得到最新一天。比照既有logOverloadDay()改成rolling array，讀取端同時支援舊物件與新陣列格式，新增近14天無視警告率統計（樣本<3安靜不顯示，且提前到early return之前計算避免常態情況看不到）。opus複核兩輪修正null元素防護、舊物件遷移、統計位置三項nice-to-have。另新增getRefuelerByDate()的lastCoffeeTime，T-1對照卡顯示末杯時刻，距入睡<6小時附觀察性提示（避免因果肯定句），跨午夜間隔計算正確。兩項皆獨立agent複核無must-fix。",
