@@ -210,6 +210,7 @@ body{
 /* ── Day Detail Panel ── */
 #day-detail{position:fixed;inset:0;z-index:500;background:rgba(40,38,32,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;}
 .dd-panel{background:var(--card);border-radius:var(--r);padding:22px;width:min(92vw,380px);max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg);border:.5px solid var(--border);}
+.dd-panel-wide{width:min(94vw,640px);}
 .dd-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;color:var(--ink);}
 .dd-cls{background:none;border:none;color:var(--faint);cursor:pointer;font-size:18px;}
 .dd-entry{padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px;color:var(--sub);}
@@ -684,6 +685,7 @@ function saveCoffeeEdit(id){
 }
 function showShopDetail(shop,editId=null){
   _shopName=shop;_ddKey=null;
+  document.getElementById('dd-panel').classList.add('dd-panel-wide');
   const d=loadRF();
   const es=(d.entries||[]).filter(e=>e.type==='coffee'&&(e.cafe||'（未填店名）')===shop).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const shopEsc=shop.replace(/'/g,"\\'");
@@ -744,9 +746,30 @@ function showShopDetail(shop,editId=null){
   }
 
   // ── 分月消費明細（最新月份在最上面）──
+  // 品項聚合：raw record上方先顯示這個月每個品項聚合幾次、共花多少，咖啡/甜點分開統計
+  function aggByItem(entries,itemKeyFn,priceFn){
+    const agg={};
+    entries.forEach(e=>{
+      const item=itemKeyFn(e)||'（未填）';
+      if(!agg[item])agg[item]={total:0,count:0};
+      agg[item].total+=priceFn(e);agg[item].count++;
+    });
+    return agg;
+  }
+  function renderItemAgg(title,agg){
+    const rows=Object.entries(agg).filter(([,v])=>v.count>0).sort((a,b)=>b[1].total-a[1].total);
+    if(!rows.length)return'';
+    const rowsHtml=rows.map(([item,v])=>
+      `<div class="cost-tree-row"><div class="cost-tree-name"><span class="cost-tree-lbl">${_x(item)}</span></div><span class="cost-tree-stats">${fmtM(v.total)}<span class="cost-tree-meta">${v.count}次</span></span></div>`
+    ).join('');
+    return `<div style="font-size:10px;font-weight:700;color:var(--faint);margin-top:8px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em;">${title}</div>${rowsHtml}`;
+  }
   const monthSections=monthKeysDesc.map(k=>{
     const g=monthMap[k];
     const mTotal=g.entries.reduce((s,e)=>s+(e.coffeePrice??e.price??0)+(e.dessertPrice??0),0);
+    const coffeeAgg=aggByItem(g.entries,e=>e.item,e=>e.coffeePrice??e.price??0);
+    const dessertAgg=aggByItem(g.entries.filter(e=>e.dessert),e=>e.dessert,e=>e.dessertPrice??0);
+    const aggHtml=renderItemAgg('☕ 咖啡品項',coffeeAgg)+renderItemAgg('🍰 甜點/餐食品項',dessertAgg);
     const rows=g.entries.map(e=>{
       const dt=new Date(e.timestamp);
       const dateStr=dt.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
@@ -770,7 +793,7 @@ function showShopDetail(shop,editId=null){
       const desc=[e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
       return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}</div><button class="log-edit" onclick="showShopDetail('${shopEsc}','${e.id}')">✏️</button></div>`;
     }).join('');
-    return `<div class="cost-bd-title" style="margin-top:14px;">${g.y}年${MN[g.m]} · ${fmtM(mTotal)} · ${g.entries.length}筆</div>${rows}`;
+    return `<div class="cost-bd-title" style="margin-top:14px;">${g.y}年${MN[g.m]} · ${fmtM(mTotal)} · ${g.entries.length}筆</div>${aggHtml}<div style="margin-top:8px;padding-top:6px;border-top:.5px dashed var(--border);">${rows}</div>`;
   }).join('');
 
   document.getElementById('dd-panel').innerHTML=`<div class="dd-title"><span>☕ ${_x(shop)}</span><button class="dd-cls" onclick="closeDayDetail()">✕</button></div>
@@ -862,6 +885,7 @@ function wCalNext(){wCalM++;if(wCalM>11){wCalM=0;wCalY++;}renderWaterCalendar();
 // ── DAY DETAIL ──
 function showDayDetail(key,type,editId=null){
   _ddKey=key;_ddType=type;
+  document.getElementById('dd-panel').classList.remove('dd-panel-wide');
   const d=loadRF();
   const es=(d.entries||[]).filter(e=>e.type===type&&new Date(e.timestamp).toDateString()===key).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const dateLabel=new Date(key).toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
