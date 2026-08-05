@@ -394,6 +394,16 @@ body{
     </div>
   </div>
 
+  <!-- ⑥ Shop List (full width) -->
+  <div class="card" style="grid-column:1/-1;">
+    <div class="card-header">
+      <div class="sec-title"><span class="sec-emoji">🏪</span>店家</div>
+    </div>
+    <div class="card-body" id="shop-list">
+      <div style="font-size:12px;color:var(--faint);text-align:center;padding:8px 0;">載入中…</div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- AI Analysis Card -->
@@ -628,6 +638,7 @@ function delEntry(id){
 
 // ── RENDER LOGS ──
 let _ddKey=null,_ddType=null,_shopName=null;
+let _shopChartMode='coffee'; // 'coffee' | 'dessert' | 'all'（店家明細走勢圖，獨立於 selChartMode）
 function renderCoffeeLog(editId=null){
   const selDs=getRFDateStr();
   const d=loadRF();
@@ -667,7 +678,7 @@ function saveCoffeeEdit(id){
   const dp=parseFloat(document.getElementById('ec-dprice').value)||0;
   e.coffeePrice=cp;e.price=cp;e.dessertPrice=dp;
   saveRF(d);
-  if(_shopName){const newShop=e.cafe||'（未填店名）';showShopDetail(newShop);renderCostAnalysis();renderCoffeeChart();}
+  if(_shopName){const newShop=e.cafe||'（未填店名）';showShopDetail(newShop);renderCostAnalysis();renderShopList();renderCoffeeChart();}
   else if(_ddKey){showDayDetail(_ddKey,_ddType);}
   else{refresh();}
 }
@@ -676,30 +687,101 @@ function showShopDetail(shop,editId=null){
   const d=loadRF();
   const es=(d.entries||[]).filter(e=>e.type==='coffee'&&(e.cafe||'（未填店名）')===shop).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   const shopEsc=shop.replace(/'/g,"\\'");
-  const rows=es.map(e=>{
+
+  // 依年月分組（供分月明細與月度走勢圖共用）
+  const monthMap={};
+  es.forEach(e=>{
     const dt=new Date(e.timestamp);
-    const dateStr=dt.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
-    const t=dt.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    const key=dt.getFullYear()+'-'+dt.getMonth();
+    if(!monthMap[key])monthMap[key]={y:dt.getFullYear(),m:dt.getMonth(),entries:[]};
+    monthMap[key].entries.push(e);
+  });
+  const monthKeysDesc=Object.keys(monthMap).sort((a,b)=>{
+    const[ay,am]=a.split('-').map(Number);const[by,bm]=b.split('-').map(Number);
+    return by!==ay?by-ay:bm-am;
+  });
+  const monthKeysAsc=[...monthKeysDesc].reverse();
+
+  // ── 月度走勢圖（依 _shopChartMode 切換金額口徑，單一店家單色長條+折線）──
+  const monthTotals=monthKeysAsc.map(k=>monthMap[k].entries.reduce((s,e)=>{
     const cp=e.coffeePrice??e.price??0;const dp=e.dessertPrice??0;
-    if(e.id===editId){
-      return`<div class="log-edit-form" style="margin-bottom:8px;">
-        <div class="log-edit-grid">
-          <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
-          <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-          <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
-          <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
-          <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
-        </div>
-        <div class="log-edit-actions">
-          <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
-          <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="showShopDetail('${shopEsc}')">取消</button>
-        </div>
-      </div>`;
+    return s+(_shopChartMode==='coffee'?cp:_shopChartMode==='dessert'?dp:cp+dp);
+  },0));
+  const spanMonths=monthKeysAsc.length;
+  let chartSvg='';
+  if(spanMonths>0){
+    const maxVal=Math.max(...monthTotals,1);
+    const W=280,H=120,padL=36,padR=6,padT=14,padB=22;
+    const chartW=W-padL-padR;const chartH=H-padT-padB;
+    const gap=chartW/spanMonths;
+    const barW=Math.max(6,Math.min(26,Math.floor(gap*0.65)));
+    const step=maxVal<=500?100:maxVal<=1000?200:maxVal<=2000?500:maxVal<=5000?1000:2000;
+    const yMax=Math.ceil(maxVal/step)*step||step;
+    let svgGrid='',svgBars='';
+    for(let v=0;v<=yMax;v+=step){
+      const y=H-padB-Math.round(v/yMax*chartH);
+      svgGrid+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="rgba(40,38,32,.07)" stroke-width="1"/>`;
+      const lbl=v>=1000?Math.round(v/100)/10+'k':v;
+      svgGrid+=`<text x="${padL-3}" y="${y+3}" text-anchor="end" font-size="8" fill="#7a7570">${lbl}</text>`;
     }
-    const desc=[e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
-    return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}</div><button class="log-edit" onclick="showShopDetail('${shopEsc}','${e.id}')">✏️</button></div>`;
+    monthKeysAsc.forEach((k,i)=>{
+      const g=monthMap[k];
+      const cx=padL+(i+0.5)*gap;
+      const val=monthTotals[i];
+      const bh=Math.max(1,Math.round(val/yMax*chartH));
+      const barY=H-padB-bh;
+      svgBars+=`<rect x="${Math.round(cx-barW/2)}" y="${barY}" width="${barW}" height="${bh}" fill="#c47a3a" rx="2"/>`;
+      if(val>0)svgBars+=`<text x="${Math.round(cx)}" y="${barY-3}" text-anchor="middle" font-size="9" font-weight="700" fill="#4a4540">${fmtM(val)}</text>`;
+      const yy=String(g.y).slice(2);const mm=String(g.m+1).padStart(2,'0');
+      svgBars+=`<text x="${Math.round(cx)}" y="${H-padB+13}" text-anchor="middle" font-size="9" fill="#7a7570">${yy}/${mm}</text>`;
+    });
+    let svgLine='';
+    if(spanMonths>=2){
+      const pts=monthKeysAsc.map((k,i)=>({cx:Math.round(padL+(i+0.5)*gap),ty:H-padB-Math.round(monthTotals[i]/yMax*chartH)}));
+      svgLine=`<polyline points="${pts.map(p=>p.cx+','+p.ty).join(' ')}" fill="none" stroke="rgba(40,38,32,.32)" stroke-width="1.5" stroke-linejoin="round"/>`+pts.map(p=>`<circle cx="${p.cx}" cy="${p.ty}" r="2.8" fill="#4a4540" stroke="#f0ede8" stroke-width="1.5"/>`).join('');
+    }
+    chartSvg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}${svgLine}</svg>`;
+  }
+
+  // ── 分月消費明細（最新月份在最上面）──
+  const monthSections=monthKeysDesc.map(k=>{
+    const g=monthMap[k];
+    const mTotal=g.entries.reduce((s,e)=>s+(e.coffeePrice??e.price??0)+(e.dessertPrice??0),0);
+    const rows=g.entries.map(e=>{
+      const dt=new Date(e.timestamp);
+      const dateStr=dt.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+      const t=dt.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+      const cp=e.coffeePrice??e.price??0;const dp=e.dessertPrice??0;
+      if(e.id===editId){
+        return`<div class="log-edit-form" style="margin-bottom:8px;">
+          <div class="log-edit-grid">
+            <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
+            <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
+            <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+            <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
+            <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
+          </div>
+          <div class="log-edit-actions">
+            <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
+            <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="showShopDetail('${shopEsc}')">取消</button>
+          </div>
+        </div>`;
+      }
+      const desc=[e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
+      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}</div><button class="log-edit" onclick="showShopDetail('${shopEsc}','${e.id}')">✏️</button></div>`;
+    }).join('');
+    return `<div class="cost-bd-title" style="margin-top:14px;">${g.y}年${MN[g.m]} · ${fmtM(mTotal)} · ${g.entries.length}筆</div>${rows}`;
   }).join('');
-  document.getElementById('dd-panel').innerHTML=`<div class="dd-title"><span>☕ ${_x(shop)}</span><button class="dd-cls" onclick="closeDayDetail()">✕</button></div><div style="font-size:11px;color:var(--faint);margin-bottom:10px;">${es.length} 筆記錄（全部時間）</div>${rows||'<div style="color:var(--faint);font-size:13px;">無記錄</div>'}`;
+
+  document.getElementById('dd-panel').innerHTML=`<div class="dd-title"><span>☕ ${_x(shop)}</span><button class="dd-cls" onclick="closeDayDetail()">✕</button></div>
+    <div class="cost-chart-tabs">
+      <button class="cost-chart-tab${_shopChartMode==='coffee'?' active':''}" data-mode="coffee" onclick="_shopChartMode='coffee';showShopDetail('${shopEsc}')">☕ 咖啡</button>
+      <button class="cost-chart-tab${_shopChartMode==='dessert'?' active':''}" data-mode="dessert" onclick="_shopChartMode='dessert';showShopDetail('${shopEsc}')">🍰 甜點/餐食</button>
+      <button class="cost-chart-tab${_shopChartMode==='all'?' active':''}" data-mode="all" onclick="_shopChartMode='all';showShopDetail('${shopEsc}')">📊 全部</button>
+    </div>
+    <div style="min-height:60px;margin-bottom:10px;">${chartSvg}</div>
+    <div style="font-size:11px;color:var(--faint);margin-bottom:6px;">${es.length} 筆記錄（全部時間）</div>
+    ${monthSections||'<div style="color:var(--faint);font-size:13px;">無記錄</div>'}`;
   document.getElementById('day-detail').style.display='flex';
 }
 function renderWaterLog(){
@@ -748,8 +830,8 @@ function renderCoffeeCalendar(){
   }).join('');
   document.getElementById('c-cal-grid').innerHTML=blanks+cells;
 }
-function cCalPrev(){cCalM--;if(cCalM<0){cCalM=11;cCalY--;}renderCoffeeCalendar();renderCostAnalysis();}
-function cCalNext(){cCalM++;if(cCalM>11){cCalM=0;cCalY++;}renderCoffeeCalendar();renderCostAnalysis();}
+function cCalPrev(){cCalM--;if(cCalM<0){cCalM=11;cCalY--;}renderCoffeeCalendar();renderCostAnalysis();renderShopList();}
+function cCalNext(){cCalM++;if(cCalM>11){cCalM=0;cCalY++;}renderCoffeeCalendar();renderCostAnalysis();renderShopList();}
 
 function renderWaterCalendar(){
   const map=buildDateMap('water');
@@ -1041,6 +1123,31 @@ function renderCostAnalysis(){
   renderCoffeeChart();
 }
 
+// ── SHOP LIST ──
+function renderShopList(){
+  const el=document.getElementById('shop-list');if(!el)return;
+  const d=loadRF();const all=d.entries||[];
+  const coffeeAll=all.filter(e=>e.type==='coffee');
+  const shops={};
+  coffeeAll.forEach(e=>{
+    const shop=e.cafe||'（未填店名）';
+    const total=(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
+    if(!shops[shop])shops[shop]={total:0,count:0};
+    shops[shop].total+=total;shops[shop].count++;
+  });
+  const rows=Object.entries(shops)
+    .sort((a,b)=>b[1].total-a[1].total)
+    .map(([shop,data])=>{
+      const shopEsc=shop.replace(/'/g,"\\'");
+      return `<div class="cost-tree-row cost-tree-parent" style="cursor:pointer;" onclick="showShopDetail('${shopEsc}')">
+        <div class="cost-tree-name"><span class="cost-tree-lbl">${_x(shop)}</span></div>
+        <span class="cost-tree-stats">${fmtM(data.total)}<span class="cost-tree-meta">${data.count}次</span></span>
+        <span class="cost-tree-trend"></span>
+      </div>`;
+    }).join('');
+  el.innerHTML=rows||'<div style="font-size:12px;color:var(--faint);text-align:center;padding:8px 0;">尚無消費記錄</div>';
+}
+
 // ── AI STATS ──
 function renderAIStats(){
   const d=loadRF();const all=d.entries||[];
@@ -1207,6 +1314,7 @@ function refresh(){
   renderCoffeeLog();renderWaterLog();
   renderCoffeeCalendar();renderWaterCalendar();
   renderCostAnalysis();
+  renderShopList();
   renderAIStats();
 }
 
