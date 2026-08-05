@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-05",
+      "project": "SAS Hub / Daily Optimizer",
+      "file": "index.html / daily_optimizer.html",
+      "summary": "sas_pipe_review累積化補14天無視警告率＋咖啡末杯時刻觀察：第二輪跨生態系優化第三、四順位。sas_pipe_review原本每次覆盤整個覆寫成單一物件，SAS Hub永遠只看得到最新一天。比照既有logOverloadDay()改成rolling array，讀取端同時支援舊物件與新陣列格式，新增近14天無視警告率統計（樣本<3安靜不顯示，且提前到early return之前計算避免常態情況看不到）。opus複核兩輪修正null元素防護、舊物件遷移、統計位置三項nice-to-have。另新增getRefuelerByDate()的lastCoffeeTime，T-1對照卡顯示末杯時刻，距入睡<6小時附觀察性提示（避免因果肯定句），跨午夜間隔計算正確。兩項皆獨立agent複核無must-fix。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-05",
       "project": "Refueler",
       "file": "refueler.html",
       "summary": "新增「🏪 店家」消費趨勢卡片：使用者提出支線需求，點選店家可看月度消費走勢與對應明細。AskUserQuestion確認3個介面決定：新增獨立店家分頁入口、取代原本showShopDetail攤平清單、金額口徑可切換咖啡/甜點/合計三模式。新增renderShopList()依總消費排序列店家，showShopDetail()改為單店月度SVG走勢圖(YY/MM格式)+依月份分組明細，獨立狀態變數_shopChartMode不與主圖表互相干擾，4處呼叫點皆補上同步刷新。獨立agent逐條核對9項驗收條件全通過。純新增UI功能，未做瀏覽器實測，已告知使用者自行上線確認。",
