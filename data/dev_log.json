@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-05",
+      "project": "Refueler",
+      "file": "refueler.html",
+      "summary": "新增「🏪 店家」消費趨勢卡片：使用者提出支線需求，點選店家可看月度消費走勢與對應明細。AskUserQuestion確認3個介面決定：新增獨立店家分頁入口、取代原本showShopDetail攤平清單、金額口徑可切換咖啡/甜點/合計三模式。新增renderShopList()依總消費排序列店家，showShopDetail()改為單店月度SVG走勢圖(YY/MM格式)+依月份分組明細，獨立狀態變數_shopChartMode不與主圖表互相干擾，4處呼叫點皆補上同步刷新。獨立agent逐條核對9項驗收條件全通過。純新增UI功能，未做瀏覽器實測，已告知使用者自行上線確認。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-05",
       "project": "SAS Hub / Control Center",
       "file": "index.html(×2) / cc_autosync.js",
       "summary": "近7天燈補慢性耗竭死角＋早熄燈校正加示警＋接上Guard：第二輪跨生態系優化第二順位（項目3、4、7合併處理）。buildWeekPressure()補Total-Defense≥4推flag、≥5直接判紅的死角；buildWeekPressure()/buildOverloadFreq()新增sas_week_flags/sas_pace_flags寫入，Control Center的checkGuard()新增純顯示分支（紅燈只變色不強制中止，避免持續多天的狀態警告天天打斷操作）；runEnergyCorrection()連續早熄燈≥3天新增UI提示（原本只調cc_energy_weights無顯示）。附帶把兩把新key補進cc_autosync.js的SAFE_STATIC_KEYS白名單。opus獨立複核重點驗證Guard新分支確認不會觸發強制中止，無must-fix。",
