@@ -823,11 +823,26 @@ function checkGuard(){
     const rf=JSON.parse(localStorage.getItem('sas_risk_flags')||'null');
     if(rf&&rf.level==='r'&&(Date.now()-rf.ts)<24*60*60*1000){riskCritical=true;riskFlags=rf.flags||[];}
   }catch{}
+  // SAS Hub 近7天燈（sas_week_flags）／配速燈（sas_pace_flags）：反映的是持續好幾天的長期
+  // 狀態，不像今日燈是當天的即時狀態。若比照今日燈丟進 triggerGuard 強制中止，同一個持續
+  // 數日的警告會天天反覆打斷操作 → 這裡刻意跟上面的中止分支分開，只轉成視覺警示（變色＋
+  // 提示文字），不進 triggerGuard。窗口放寬到 48h（長期指標本來就不是每天都會重算）。
+  let chronicFlags=[];
+  ['sas_week_flags','sas_pace_flags'].forEach(k=>{
+    try{
+      const o=JSON.parse(localStorage.getItem(k)||'null');
+      if(o&&o.level==='r'&&(Date.now()-o.ts)<48*60*60*1000)chronicFlags=chronicFlags.concat(o.flags||[]);
+    }catch{}
+  });
   if(pastEndurance){triggerGuard('endurance');}
   else if(!newDay&&riskCritical){triggerGuard('risk',riskFlags);}
   else if(!newDay&&(stamina<40||now>end2)){triggerGuard('low');}
   else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
+  else if(chronicFlags.length){dot.className='warn';txt.textContent='Guard · 長期負荷';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
+  // 具體是哪幾項長期訊號掛在 pill 的 hover 提示上，不佔版面也不打斷操作
+  const gp=document.getElementById('guard-pill');
+  if(gp)gp.title=chronicFlags.length?('長期負荷訊號：'+chronicFlags.join('、')+'（僅提示，不中止操作）'):'';
 }
 function renderCatDisplay(){
   const url=localStorage.getItem('cc_cat_gif')||'';

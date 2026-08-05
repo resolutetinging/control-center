@@ -1,7 +1,35 @@
 {
-  "generated_through": "2026-08-04",
+  "generated_through": "2026-08-05",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-05",
+      "project": "SAS Hub / Control Center",
+      "file": "index.html(×2) / cc_autosync.js",
+      "summary": "近7天燈補慢性耗竭死角＋早熄燈校正加示警＋接上Guard：第二輪跨生態系優化第二順位（項目3、4、7合併處理）。buildWeekPressure()補Total-Defense≥4推flag、≥5直接判紅的死角；buildWeekPressure()/buildOverloadFreq()新增sas_week_flags/sas_pace_flags寫入，Control Center的checkGuard()新增純顯示分支（紅燈只變色不強制中止，避免持續多天的狀態警告天天打斷操作）；runEnergyCorrection()連續早熄燈≥3天新增UI提示（原本只調cc_energy_weights無顯示）。附帶把兩把新key補進cc_autosync.js的SAFE_STATIC_KEYS白名單。opus獨立複核重點驗證Guard新分支確認不會觸發強制中止，無must-fix。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-04",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "統一任務完成率計算口徑，⊘不做（有意識決定）不再誤記為失敗：第二輪跨生態系優化盤點（找缺口非修bug）產出8條機會，使用者選第一順位今天處理。使用者用AskUserQuestion定案規格：part記0.5分；整天全⊘不做特例記完成率100%但加連續發生警示（自訂答案）。新增共用helper calcCompletionRate()，10處呼叫點改用新口徑，3處判斷後保留原樣，新增buildNoDayAlert()。兩輪opus獨立複核：第一輪抓到1個must-fix（T-1卡片全no天與空items天顯示矛盾文字）+3個nice-to-have（停損率分母未排除no、restMode誤觸警示、null項目邊界），全修正後第二輪確認無誤可push。明確不動：Daily Optimizer自己的配速口徑（跨檔另議）、週摘要件加權顯示不一致（可接受取捨）。node --check通過，測試51案例全綠。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-04",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "補漏：三維相關性卡與槓桿條卡遺留的「戰力」字樣正名為「睡眠品質分」：使用者依卡片對照表人工檢查UI後回報漏改處。grep全檔確認4處：三維相關性卡分類邏輯說明文字＋圖表hover tooltip、槓桿條卡在情緒/完成率兩tab檢視睡眠品質分作為關聯因子時的影響文字fmtImpact()、品質分tab自己情緒洞察句其中一句。其餘戰力字樣皆確認為真實sas_combat戰力維度或使用者明說不用檢查的週報，非漏改。node --check通過。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-04",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "統一睡眠代理分數計算＋睡眠戰力正名睡眠品質分（架構優化第4項，先前暫緩後今日執行）：使用者確認要動，並要求完成後告知所有調整位置供其人工檢查。抽出共用_sleepProxyScore()核心公式，getSleepQualityMap()支援指定單一trend窗口。calcSleepToMoodLag()維持原7天窗口不變；buildCausalChainNarrative()/renderWeekStrip()/buildLeverageBars()改用共用函式並擴大至trend180窗口。predictedEndurance()因語意不同（缺一項數值視為整筆null vs 原本各欄位獨立fallback，會讓餵給cc_energy_weights排程校正的續航估算大幅偏移）刻意不套用共用函式維持原邏輯。派opus第二意見複核抓到3個問題：predictedEndurance()語意不符（已如上處理）、buildLeverageBars()把缺資料日期誤填0分污染Pearson相關係數（改null正確排除）、buildCausalChainNarrative()重構時意外遺失最少3晚資料防呆（補回ca.length<3判斷）。19處「睡眠戰力」正名為「睡眠品質分」（週報範例句與真戰力維度保留原字不動）。Node模擬各site驗證通過後，整理成卡片對照表交使用者人工檢查UI後才push。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-04",
       "project": "Daily Optimizer",
