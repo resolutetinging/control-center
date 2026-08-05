@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-05",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "新增「人際圈與睡眠/完成率關聯」跨App分析卡片：第二輪跨生態系優化第五順位，8條缺口清單最後一項。讀Mental Dashboard的wellness_v5，情緒紀錄friends類impactFactors的人名比對回profile.people/peopleCats兩層join，依分類統計互動天數、次日睡眠品質分、當日完成率。因無法直接驗證使用者實際資料品質，改用「配對成功率透明呈現」設計——卡片最上方誠實顯示配對成功率，過低額外警示。opus獨立複核抓到must-fix：樣本量原本只看互動天數未看實際有效資料天數，小樣本會冒充大樣本平均，違背卡片誠實揭露的設計初衷，已修正為兩個獨立判斷各需5筆有效樣本。兩輪複核確認無誤。至此8條缺口清單全數處理完畢（1項使用者確認擱置不做）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-05",
       "project": "Refueler",
       "file": "refueler.html",
       "summary": "店家卡片調整：拉寬容納8個月圖表＋明細上方新增月份-品項聚合。使用者對稍早新增的店家消費趨勢卡片提出兩點調整需求，進來時忙於SAS Hub另一批驗證工作沒立即接手，事後詢問完成狀態才發現遺漏補做。新增.dd-panel-wide(640px)，showShopDetail()套用、showDayDetail()（共用同一彈窗）移除避免互相污染寬度。每月份區塊內raw record上方新增aggByItem()/renderItemAgg()聚合，咖啡/甜點分開統計，沿用既有cost-tree樣式，raw record含編輯機制完整保留。node --check通過+自寫模擬驗證+獨立agent複核10項條件全通過。",
