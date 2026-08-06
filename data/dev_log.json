@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-06",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "文法追問聊天(askGrammarWhy)加字元白名單過濾：使用者回報「想問AI為什麼這樣改」的AI回應裡出現怪異字元。排除textContent顯示（非innerHTML）與s2t()繁中轉換（只處理CJK碼位不動英文/符號）兩種可能，判斷是Groq小模型生成品質問題非本地邏輯錯誤，無法精準定位單一根因字元，改做防禦性過濾。新增_sanitizePlainText()白名單（繁中/CJK標點/英文數字/常見標點），套用在s2t()之後。獨立agent複核：Node模擬legitimate文字（連字號、百分比、中英混排引號、標點）逐字不變，異常字元（零寬空白/私有使用區/emoji）正確濾掉且前後文完整保留，grep確認未誤動另一處s2t()呼叫點，node --check通過。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-06",
       "project": "WordVault",
       "file": "WordVault.html",
       "summary": "修正發音按鈕靜默失敗：使用者回報canine點🔊沒聲音。查根因curl -I實測字典API對canine回傳的音檔URL本身指向對方伺服器502的檔案，是外部API資料品質問題；但更根本的是WordVault原本邏輯拿到URL不驗證就直接快取＋播放，失敗被.play().catch(()=>{})吞掉不觸發備援，壞URL永久卡住每次重複靜默失敗。修法：字典API音檔改用既有_tryAudioLoad()驗證真的載入得起來才快取＋播放，失敗往CDN賽跑找備援；新增_clearAudioUrl()，快取URL驗證失敗就清掉重新走完整流程；刪除無驗證邏輯的舊_playAudioUrl()。opus複核三輪：確認canine修好後真的透過CDN賽跑發真人語音；抓到新設計讓最常用的「已快取」路徑從同步播放變非同步，可能被iOS自動播放限制擋掉完全無聲，已改回同步play()+error事件雙重判斷；確認五情境含防重複執行皆正確。多輪Node模擬驗證，node --check通過。",
