@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-06",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "「我的筆記」壓縮+分析趨勢加時間範圍選擇：使用者要求檢視有無整合/壓縮/更好應用機會。筆記存note_YYYY-MM-DD本機從不清理只會累積，且分析趨勢永遠把全部歷史塞進同一個LLM prompt稀釋近期重點。使用者確認方案：本機只留近7天(已同步Gist才清)+分析趨勢加30/60/90天/全部範圍選擇。opus獨立複核多輪抓到嚴重資料遺失風險：上傳Gist是整份覆蓋非合併，本機壓縮後同步會把Gist完整歷史蓋成7天。修正三個寫入入口(含一個原本沒被抓到的saveArchiveToGitHub())都改成先合併遠端再寫入，prune排在寫入成功之後。複核還抓到自己加的安全防呆邏輯本身是恆假死碼，已修正為檢查遠端原始天數+曾同步旗標的正確寫法。附帶修時區偏移、切換範圍race condition、舊cache key殘留。多輪Node模擬驗證，node --check通過。推送時撞上repo常見的Actions自動更新，rebase後推送。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-06",
       "project": "Control Center",
       "file": "cc_track.js",
       "summary": "修正localStorage配額預警：改用真實UTF-8位元組數，門檻對齊實測上限。使用者反映容量又到上限，用Blob量測實際只有2.33MB，但今天開AI Tracker時cc_track.js跳出「已用4.1MB」警示，兩數字對不上。查出cc_track.js原本用「字元數×2」概估位元組數(UTF-16概估)，對英數混中文內容系統性算錯（ASCII灌水快2倍、CJK反而低估因UTF-8的CJK是3bytes非2bytes），且「同源上限約5MB」假設比06-23實測的約10MB更保守，兩件事疊加造成假警報。新增共用helper _ccByteLen()用Blob量真實UTF-8位元組數，全檔統一改用；QUOTA_LIMIT_BYTES從4MB改6MB留安全margin；畫面文案同步更新。刻意不動cc_store.js裡「iPhone/iPad Safari上限約5MB」——那是特別限定iOS裝置的既有描述，跟這次修的泛指假設可能不是同一件事，沒把握判斷是否衝突，留給使用者確認不自己選一邊。node --check通過+自寫模擬驗證+opus獨立複核無must-fix，部署後線上curl驗證生效。",
