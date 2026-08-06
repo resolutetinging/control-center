@@ -1038,6 +1038,13 @@ Output ONLY valid JSON:
 }
 
 // ── Grammar review 追問（獨立小call，只針對這一輪的gr_note/gr_fixed問答，不影響任何判斷邏輯）──
+// 08-06：使用者回報askGrammarWhy()的回應裡出現怪異字元（推測是Groq小模型生成品質問題，
+// textContent顯示與s2t()繁中轉換都已排除是本地渲染/轉換造成，只能防禦性過濾）。
+// prompt已明示「plain text only, no markdown, ≤120字」，回應理論上只該有繁中/英文/數字/常見標點，
+// 任何不在白名單內的字元直接濾掉，避免顯示出破碎字元。
+function _sanitizePlainText(text){
+  return String(text||'').replace(/[^一-鿿　-〿a-zA-Z0-9\s.,!?'"()\-:：；、。，！？「」『』（）%]/g, '');
+}
 function appendGrChat(role, text){
   const log = $('gr-chat-log');
   const bubble = document.createElement('div');
@@ -1069,7 +1076,7 @@ Answer ONLY this specific question — do not re-explain the whole correction fr
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤120字.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
     const raw = await callGroq(prompt, 220, sys, false);
-    appendGrChat('ai', s2t((raw||'').trim()));
+    appendGrChat('ai', _sanitizePlainText(s2t((raw||'').trim())));
   }catch(e){
     appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。');
   }
