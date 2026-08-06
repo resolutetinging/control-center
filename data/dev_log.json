@@ -6,6 +6,13 @@
       "date": "2026-08-06",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "分析趨勢遇Groq 413自動縮減天數重試：緊接前一項的追加修正，使用者實測時仍跳出413，證明時間範圍選擇只降低機率沒根治。查證Groq官方文件確認llama-3.3-70b-versatile免費方案限制12,000 TPM，不能靠猜固定天數上限。改成失敗自動重試：413時保留最近60%天數（從最舊端捨棄）重試最多10次，觸發縮減時把實際分析範圍存進結果本身誠實顯示，非413失敗改解析Groq實際錯誤訊息。opus複核兩輪抓到收斂尾端卡死bug（天數縮到2時原地打轉浪費重試次數）及錯誤訊息插入innerHTML未跳脫的XSS面，皆修正並複核確認。多輪Node模擬驗證收斂性與跳脫，node --check通過。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-06",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "「我的筆記」壓縮+分析趨勢加時間範圍選擇：使用者要求檢視有無整合/壓縮/更好應用機會。筆記存note_YYYY-MM-DD本機從不清理只會累積，且分析趨勢永遠把全部歷史塞進同一個LLM prompt稀釋近期重點。使用者確認方案：本機只留近7天(已同步Gist才清)+分析趨勢加30/60/90天/全部範圍選擇。opus獨立複核多輪抓到嚴重資料遺失風險：上傳Gist是整份覆蓋非合併，本機壓縮後同步會把Gist完整歷史蓋成7天。修正三個寫入入口(含一個原本沒被抓到的saveArchiveToGitHub())都改成先合併遠端再寫入，prune排在寫入成功之後。複核還抓到自己加的安全防呆邏輯本身是恆假死碼，已修正為檢查遠端原始天數+曾同步旗標的正確寫法。附帶修時區偏移、切換範圍race condition、舊cache key殘留。多輪Node模擬驗證，node --check通過。推送時撞上repo常見的Actions自動更新，rebase後推送。",
       "reason": "user_request"
     },
