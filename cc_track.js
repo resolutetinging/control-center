@@ -3,7 +3,7 @@
  *
  * 用途：累積各 App 前景停留時間，寫入 localStorage 'cc_usage_stats'，
  *       供 Control Center 首頁 Dev Dashboard「使用頻率」讀取。
- *       同時偵測 localStorage 總用量，接近同源 ~5MB 上限時提醒使用者清理。
+ *       同時偵測 localStorage 總用量，接近同源實測上限（約10MB，2026-06-23測過）時提醒使用者清理。
  *
  * 使用方式：各頁面 </body> 前加：
  *   <script src="cc_track.js" data-cc-key="xxx" data-cc-label="顯示名稱"></script>
@@ -45,7 +45,9 @@
   setInterval(_ccFlush, 30000);
 
   // ── localStorage 配額預警 ──────────────────────────────────────
-  var QUOTA_LIMIT_BYTES = 4194304; // 4MB（同源上限約 5MB，提前預警）
+  // 08-05：QUOTA_LIMIT_BYTES 從 4MB（假設同源上限5MB）改為 6MB——同源上限06-23實測約10MB，
+  // 6MB 對10MB留足安全margin，仍屬「提前預警」但不再誤報。
+  var QUOTA_LIMIT_BYTES = 6291456; // 6MB（同源上限實測約10MB，留margin提前預警）
 
   function _ccTodayStr() {
     var d = new Date();
@@ -54,13 +56,20 @@
     return d.getFullYear() + '-' + m + '-' + day;
   }
 
+  // 08-05：真正的UTF-8位元組長度，取代原本「字元數×2」的UTF-16概估——
+  // 對這個環境常見的英數字混中文JSON內容，舊估法會把純ASCII部分灌水快2倍，
+  // 導致明明還有很大安全空間卻提早跳出警示（假警報）。
+  function _ccByteLen(s) {
+    try { return new Blob([s || '']).size; } catch (e) { return (s || '').length; }
+  }
+
   function _ccEstimateBytes() {
     var total = 0;
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
         var v = localStorage.getItem(k) || '';
-        total += (k.length + v.length) * 2; // UTF-16 概估
+        total += _ccByteLen(k) + _ccByteLen(v);
       }
     } catch (e) {}
     return total;
@@ -79,7 +88,7 @@
       'font-style:normal', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       'box-shadow:0 1px 3px rgba(40,38,32,.16)'
     ].join(';'));
-    bar.textContent = '⚠ 本站瀏覽器儲存空間已用 ' + mb + ' MB／約 5MB 上限，請先備份再清理';
+    bar.textContent = '⚠ 本站瀏覽器儲存空間已用 ' + mb + ' MB（實測上限約10MB，此為提前預警），請先備份再清理';
 
     var viewBtn = document.createElement('span');
     viewBtn.textContent = '檢視與清理';
@@ -221,8 +230,9 @@
     return { app: '❓ 未歸類', desc: '' };
   }
 
-  function _ccFmtSize(chars) {
-    var b = chars * 2;
+  // 08-05：參數改吃已經算好的真實byte數（呼叫端須用_ccByteLen()算過），不再內部×2估
+  function _ccFmtSize(bytes) {
+    var b = bytes;
     return b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
   }
 
@@ -255,7 +265,7 @@
         var k = localStorage.key(i);
         // __idb 索引 key 只是一個 '1' 標記，不單獨列一行；下方會用它找出對應的 IndexedDB 合併行
         if (k.slice(-6) === '__idb') continue;
-        rows.push({ k: k, len: (localStorage.getItem(k) || '').length });
+        rows.push({ k: k, len: _ccByteLen(localStorage.getItem(k) || '') });
       }
     } catch (e) {}
     rows.sort(function (a, b) { return b.len - a.len; });
@@ -283,7 +293,7 @@
       name.appendChild(line1);
       var line2 = document.createElement('span');
       line2.setAttribute('style', 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#9e9890;');
-      line2.textContent = r.k + (isCache ? '　— ' + CC_CACHE_KEYS[r.k] : r.isIdb ? '　— 已搬 IndexedDB，不計入 5MB 上限' : '');
+      line2.textContent = r.k + (isCache ? '　— ' + CC_CACHE_KEYS[r.k] : r.isIdb ? '　— 已搬 IndexedDB，不計入上方總量' : '');
       name.appendChild(line2);
       row.appendChild(name);
       var tag = document.createElement('span');
@@ -292,14 +302,14 @@
       row.appendChild(tag);
       var sz = document.createElement('span');
       sz.setAttribute('style', 'flex:none;width:72px;text-align:right;font-variant-numeric:tabular-nums;color:#55514a;');
-      sz.textContent = r.sizeLabel || _ccFmtSize(r.len + r.k.length);
+      sz.textContent = r.sizeLabel || _ccFmtSize(r.len + _ccByteLen(r.k));
       row.appendChild(sz);
       return row;
     }
     rows.forEach(function (r) { list.appendChild(_ccRenderRow(r)); });
     panel.appendChild(list);
 
-    // 已搬 IndexedDB 的圖片類 key：另外非同步查詢實際大小，補一行（不計入上方 5MB 總量，因為
+    // 已搬 IndexedDB 的圖片類 key：另外非同步查詢實際大小，補一行（不計入上方總量，因為
     // _ccEstimateBytes() 只掃 localStorage；這裡單純是給使用者看清楚資料還在，沒有不見）。
     (function () {
       var idbKeys = window.CC_IDB_IMAGE_KEYS || [];
@@ -311,9 +321,9 @@
       var pending = migrated.length;
       migrated.forEach(function (key) {
         window.ccStore.get(key).then(function (v) {
-          var len = (v || '').length;
-          totalIdbBytes += (len + key.length) * 2;
-          list.appendChild(_ccRenderRow({ k: key, len: len, isIdb: true, sizeLabel: _ccFmtSize(len + key.length) }));
+          var len = _ccByteLen(v || '');
+          totalIdbBytes += len + _ccByteLen(key);
+          list.appendChild(_ccRenderRow({ k: key, len: len, isIdb: true, sizeLabel: _ccFmtSize(len + _ccByteLen(key)) }));
         }).catch(function () {
           list.appendChild(_ccRenderRow({ k: key, len: 0, isIdb: true, sizeLabel: '讀取失敗' }));
         }).finally(function () {
@@ -321,7 +331,7 @@
           if (pending === 0 && totalIdbBytes > 0) {
             var extra = document.createElement('div');
             extra.setAttribute('style', 'padding:6px 18px 0;font-size:10.5px;color:#7a9ab0;');
-            extra.textContent = '另有 ' + (totalIdbBytes / 1048576).toFixed(2) + ' MB 圖片資料存在 IndexedDB，不受此頁 5MB 上限影響。';
+            extra.textContent = '另有 ' + (totalIdbBytes / 1048576).toFixed(2) + ' MB 圖片資料存在 IndexedDB，不計入上方總量。';
             panel.insertBefore(extra, list);
           }
         });
