@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-06",
+      "project": "WordVault",
+      "file": "WordVault.html",
+      "summary": "修正發音按鈕靜默失敗：使用者回報canine點🔊沒聲音。查根因curl -I實測字典API對canine回傳的音檔URL本身指向對方伺服器502的檔案，是外部API資料品質問題；但更根本的是WordVault原本邏輯拿到URL不驗證就直接快取＋播放，失敗被.play().catch(()=>{})吞掉不觸發備援，壞URL永久卡住每次重複靜默失敗。修法：字典API音檔改用既有_tryAudioLoad()驗證真的載入得起來才快取＋播放，失敗往CDN賽跑找備援；新增_clearAudioUrl()，快取URL驗證失敗就清掉重新走完整流程；刪除無驗證邏輯的舊_playAudioUrl()。opus複核三輪：確認canine修好後真的透過CDN賽跑發真人語音；抓到新設計讓最常用的「已快取」路徑從同步播放變非同步，可能被iOS自動播放限制擋掉完全無聲，已改回同步play()+error事件雙重判斷；確認五情境含防重複執行皆正確。多輪Node模擬驗證，node --check通過。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-06",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "拿掉分析趨勢的時間範圍選單+加深洞察內容：前一版加的30/60/90天/全部範圍選單，使用者實測回報不管選哪個都會被413自動縮減機制夾到差不多同一個實際天數，選單形同虛設。提供三方向供選，使用者選最簡單的「拿掉選單」，改成一律嘗試分析全部筆記讓縮減機制自己找範圍，cache key改回單一arc_summary。同一輪使用者追加要求分析內容更深入，AskUserQuestion確認方向（每條洞察更詳細+新增分析維度）：insight從4項加到5項(新增矛盾與待驗證)，每項要求3-4句附推論依據與日期佐證，max_tokens從1800提高到2600配合。opus複核兩輪抓到殘留孤兒變數(會丟ReferenceError)、LLM回傳內容插入innerHTML未跳脫的XSS縫隙、以及補的跳脫函式本身漏跳脫雙引號可被脫逃注入事件屬性，皆修正並複核確認。node --check通過。",
