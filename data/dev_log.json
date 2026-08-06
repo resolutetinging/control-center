@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-05",
+  "generated_through": "2026-08-06",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-06",
+      "project": "Control Center",
+      "file": "cc_track.js",
+      "summary": "修正localStorage配額預警：改用真實UTF-8位元組數，門檻對齊實測上限。使用者反映容量又到上限，用Blob量測實際只有2.33MB，但今天開AI Tracker時cc_track.js跳出「已用4.1MB」警示，兩數字對不上。查出cc_track.js原本用「字元數×2」概估位元組數(UTF-16概估)，對英數混中文內容系統性算錯（ASCII灌水快2倍、CJK反而低估因UTF-8的CJK是3bytes非2bytes），且「同源上限約5MB」假設比06-23實測的約10MB更保守，兩件事疊加造成假警報。新增共用helper _ccByteLen()用Blob量真實UTF-8位元組數，全檔統一改用；QUOTA_LIMIT_BYTES從4MB改6MB留安全margin；畫面文案同步更新。刻意不動cc_store.js裡「iPhone/iPad Safari上限約5MB」——那是特別限定iOS裝置的既有描述，跟這次修的泛指假設可能不是同一件事，沒把握判斷是否衝突，留給使用者確認不自己選一邊。node --check通過+自寫模擬驗證+opus獨立複核無must-fix，部署後線上curl驗證生效。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-05",
       "project": "SAS Hub",
