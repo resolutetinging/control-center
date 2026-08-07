@@ -468,6 +468,8 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="sit-btn" id="topic-project" onclick="pickTopic('project')">🚀 專案推進</button>
       <button class="sit-btn" id="topic-negotiate" onclick="pickTopic('negotiate')">🤝 談判協商</button>
       <button class="sit-btn" id="topic-career" onclick="pickTopic('career')">💪 職涯成長</button>
+      <button class="sit-btn" id="topic-service" onclick="pickTopic('service')">🎧 客戶服務</button>
+      <button class="sit-btn" id="topic-crossfunc" onclick="pickTopic('crossfunc')">🔄 跨部門協作</button>
       <button class="sit-btn" id="topic-social" onclick="pickTopic('social')">🌐 日常社交</button>
     </div>
   </div>
@@ -494,6 +496,14 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="reveal-idiom" id="reveal-idiom"></div>
     <div class="reveal-explain" id="reveal-explain"></div>
     <div class="reveal-example" id="reveal-example"></div>
+    <div class="gr-ask-block fb-section" id="idiom-ask-block">
+      <div class="fb-block-lbl">🤖 想問 AI 為什麼是這個答案？</div>
+      <div class="gr-chat-log" id="idiom-chat-log"></div>
+      <div class="gr-ask-row">
+        <input type="text" id="idiom-ask-input" placeholder="例如：為什麼不能選其他選項？" onkeydown="if(event.key==='Enter')askIdiomWhy()">
+        <button id="idiom-ask-btn" onclick="askIdiomWhy()">問</button>
+      </div>
+    </div>
     <div class="reveal-actions">
       <button class="btn btn-ghost btn-sm" id="add-lib-btn" onclick="addToLib()">📚 加入字庫</button>
       <button class="btn btn-primary btn-sm" onclick="genQuestion()">下一題 →</button>
@@ -592,6 +602,7 @@ let results = {};
 let usedOpeners = []; // 追蹤已出現的 opener，避免重複
 let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
 let grContext = null; // 文法審核追問用：{orig,note,fixed}，換下一句時重置
+let idiomContext = null; // 拆彈題目追問用：{sentence,options,correct,chosen,explain_zh}，換下一題時重置
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
@@ -1045,8 +1056,11 @@ Output ONLY valid JSON:
 function _sanitizePlainText(text){
   return String(text||'').replace(/[^一-鿿　-〿a-zA-Z0-9\s.,!?'"()\-:：；、。，！？「」『』（）%]/g, '');
 }
-function appendGrChat(role, text){
-  const log = $('gr-chat-log');
+// 08-07：logId參數化，讓文法追問(gr-chat-log)跟拆彈追問(idiom-chat-log)共用同一套顯示邏輯，
+// 不重複寫一份；不傳時維持原本行為(gr-chat-log)，呼叫端不用跟著改
+function appendGrChat(role, text, logId){
+  const log = $(logId||'gr-chat-log');
+  if(!log) return;
   const bubble = document.createElement('div');
   bubble.className = 'gr-chat-msg gr-chat-'+role;
   bubble.textContent = (role==='user'?'你：':'🤖 ')+text;
@@ -1079,6 +1093,37 @@ Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markd
     appendGrChat('ai', _sanitizePlainText(s2t((raw||'').trim())));
   }catch(e){
     appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。');
+  }
+  btn.disabled = false; inp.disabled = false; btn.textContent = '問';
+}
+
+async function askIdiomWhy(){
+  if(!idiomContext) return;
+  const inp = $('idiom-ask-input');
+  const q = inp.value.trim();
+  if(!q) return;
+  const btn = $('idiom-ask-btn');
+  btn.disabled = true; inp.disabled = true; btn.textContent = '…';
+  appendGrChat('user', q, 'idiom-chat-log');
+  inp.value='';
+  try{
+    const prompt = `You are an English idiom tutor. A learner just did a fill-in-the-blank idiom quiz question. The learner now has a follow-up question about it.
+
+Sentence: "${idiomContext.sentence}"
+Options: ${idiomContext.options.join(', ')}
+Correct answer: "${idiomContext.correct}"
+${idiomContext.chosen && idiomContext.chosen!==idiomContext.correct ? `Learner's (wrong) choice: "${idiomContext.chosen}"\n` : ''}Explanation already given: "${idiomContext.explain_zh}"
+
+Learner's follow-up question: "${q}"
+
+Answer ONLY this specific question — do not re-explain the whole thing from scratch. Be concrete; if it helps, contrast the correct answer against the wrong option(s) to clarify why they don't fit this context. Keep it focused and easy to understand for an intermediate learner.
+
+Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤120字.`;
+    const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
+    const raw = await callGroq(prompt, 220, sys, false);
+    appendGrChat('ai', _sanitizePlainText(s2t((raw||'').trim())), 'idiom-chat-log');
+  }catch(e){
+    appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。', 'idiom-chat-log');
   }
   btn.disabled = false; inp.disabled = false; btn.textContent = '問';
 }
@@ -1399,6 +1444,24 @@ const IDIOM_TOPICS = {
       'A new grad trying to impress in their first real job',
       'A professional deciding whether to take a risky new opportunity',
     ]},
+  service: { label:'🎧 客戶服務', en:'customer service, handling complaints, service recovery, and client support',
+    scenes:[
+      'A support rep calming down an angry customer over a billing error',
+      'A customer service manager apologizing for a shipping delay',
+      'An agent explaining a refund policy to a frustrated client',
+      'A customer success rep following up after resolving a complaint',
+      'A rep de-escalating a customer who is threatening to cancel a subscription',
+      'A team lead coaching a new rep on handling a difficult call',
+    ]},
+  crossfunc: { label:'🔄 跨部門協作', en:'cross-department collaboration, competing priorities, and workplace communication across teams',
+    scenes:[
+      'Two department heads disagreeing over shared resources',
+      'A product manager trying to get buy-in from engineering and sales at once',
+      'Someone diplomatically pushing back on an unrealistic ask from another team',
+      'A colleague from a different department asking for an urgent favor',
+      'A team explaining why a cross-team initiative is stalled',
+      'Someone navigating office politics to get a decision unblocked',
+    ]},
   social: { label:'🌐 日常社交', en:'casual conversation, small talk, social situations, and everyday English',
     scenes:[
       'Two acquaintances catching up after not seeing each other for months',
@@ -1431,6 +1494,8 @@ function pickTopic(key){
 async function genQuestion(){
   if(!curTopic) return;
   addedToLib = false;
+  idiomContext = null; // 換題就清掉上一題的追問context，避免answer揭曉前誤觸發追問
+  $('idiom-chat-log').innerHTML='';
   $hide('idiom-reveal'); $hide('idiom-question-card'); $show('loading-question');
   disableTopicBtns(true);
   const skipBtn = $('skip-btn');
@@ -1556,6 +1621,12 @@ function selectOpt(idx){
   const addBtn=$('add-lib-btn');
   if(addBtn){ addBtn.textContent='📚 加入字庫'; addBtn.disabled=false; }
   addedToLib=false;
+
+  // 追問區：這一題揭曉答案後才有內容可問，context只給這一題
+  idiomContext = { sentence: curQ.sentence, options: curQ._shuffled, correct: curQ.correct, chosen, explain_zh: curQ.explain_zh||'' };
+  $('idiom-chat-log').innerHTML='';
+  $('idiom-ask-input').value='';
+
   // 追蹤已出現 idiom，避免重複
   if(curQ.correct && !usedIdioms.includes(curQ.correct)){
     usedIdioms.push(curQ.correct);
