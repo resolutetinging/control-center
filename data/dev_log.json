@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-07",
+      "project": "WordVault",
+      "file": "WordVault.html",
+      "summary": "發音來源改並行賽跑，減少字典API不穩時的等待延遲：使用者測試cauldron發音有播出來但反映延遲相當久。curl實測dictionaryapi.dev對cauldron的-us/-au音檔皆502，跟前一天的canine同樣問題，確認是字典網站發音檔主機目前普遍不穩非單一字案例。原本_fetchAndPlayAudio()是循序流程先等字典音檔驗證失敗才開始CDN賽跑。改成字典API音檔與3個CDN來源一開始就同一組Promise.any()一起賽跑，誰先成功用誰。順手修prefetchAudioUrls()背景預抓同根因問題（原本沒驗證就快取，字典不穩時持續寫入壞快取）。opus複核兩輪：時間戳證實真並行非循序、四種勝出情境與失敗邊界皆正確無unhandledRejection、確認前一天改的speak()同步播放邏輯未被誤動。node --check通過。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-07",
       "project": "AI Tracker",
       "file": "(GitHub Actions / Pages部署，非程式碼)",
       "summary": "查明「寄信但dashboard本週記錄無內容」為GitHub Pages部署卡住，非資料管線bug。確認repo裡history.json/run_stats.json都證實8/7資料生成成功、email排程也成功執行，推翻「條目整條消失」的舊有未解疑點假設。透過curl比對repo與線上實際部署內容，發現線上停在8/6；查GitHub Actions API找到根因：緊接的pages build and deployment從8/6 16:04 UTC起卡在waiting狀態超過12小時未完成，屬GitHub平台端問題非本地程式碼。處理：推空commit觸發新部署取代卡住的舊部署。",
