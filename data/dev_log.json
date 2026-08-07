@@ -48,7 +48,7 @@
       "date": "2026-08-06",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "summary": "拿掉分析趨勢的時間範圍選單+加深洞察內容：前一版加的30/60/90天/全部範圍選單，使用者實測回報不管選哪個都會被413自動縮減機制夾到差不多同一個實際天數，選單形同虛設。提供三方向供選，使用者選最簡單的「拿掉選單」，改成一律嘗試分析全部筆記讓縮減機制自己找範圍，cache key改回單一arc_summary。同一輪使用者追加要求分析內容更深入，AskUserQuestion確認方向（每條洞察更詳細+新增分析維度）。insight從4項加到5項(新增矛盾與待驗證)，每項要求3-4句附推論依據與日期佐證。max_tokens從1800提高到2600配合。opus複核兩輪抓到殘留孤兒變數(會丟ReferenceError)、LLM回傳內容插入innerHTML未跳脫的XSS縫隙、以及補的跳脫函式本身漏跳脫雙引號可被脫逃注入事件屬性。皆修正並複核確認。node --check通過。",
+      "summary": "拿掉分析趨勢的時間範圍選單+加深洞察內容：前一版加的30/60/90天/全部範圍選單，使用者實測回報不管選哪個都會被413自動縮減機制夾到差不多同一個實際天數，選單形同虛設。提供三方向供選，使用者選最簡單的「拿掉選單」，改成一律嘗試分析全部筆記讓縮減機制自己找範圍，cache key改回單一arc_summary。同一輪使用者追加要求分析內容更深入，AskUserQuestion確認方向（每條洞察更詳細+新增分析維度）。insight從4項加到5項(新增矛盾與待驗證)，每項要求3-4句附推論依據與日期佐證。max_tokens從1800提高到2600配合。opus複核兩輪抓到殘留孤兒變數(會丟ReferenceError)。LLM回傳內容插入innerHTML未跳脫的XSS縫隙。以及補的跳脫函式本身漏跳脫雙引號可被脫逃注入事件屬性。皆修正並複核確認。node --check通過。",
       "reason": "user_request"
     },
     {
@@ -69,14 +69,14 @@
       "date": "2026-08-06",
       "project": "Control Center",
       "file": "cc_track.js",
-      "summary": "修正localStorage配額預警：改用真實UTF-8位元組數，門檻對齊實測上限。使用者反映容量又到上限，用Blob量測實際只有2.33MB，但今天開AI Tracker時cc_track.js跳出「已用4.1MB」警示，兩數字對不上。查出cc_track.js原本用「字元數×2」概估位元組數(UTF-16概估)，對英數混中文內容系統性算錯（ASCII灌水快2倍、CJK反而低估因UTF-8的CJK是3bytes非2bytes）。且「同源上限約5MB」假設比06-23實測的約10MB更保守。兩件事疊加造成假警報。新增共用helper _ccByteLen()用Blob量真實UTF-8位元組數，全檔統一改用。QUOTA_LIMIT_BYTES從4MB改6MB留安全margin。畫面文案同步更新。刻意不動cc_store.js裡「iPhone/iPad Safari上限約5MB」——那是特別限定iOS裝置的既有描述，跟這次修的泛指假設可能不是同一件事。沒把握判斷是否衝突，留給使用者確認，不自己選一邊。node --check通過+自寫模擬驗證+opus獨立複核無must-fix，部署後線上curl驗證生效。",
+      "summary": "修正localStorage配額預警：改用真實UTF-8位元組數，門檻對齊實測上限。使用者反映容量又到上限，用Blob量測實際只有2.33MB，但今天開AI Tracker時cc_track.js跳出「已用4.1MB」警示，兩數字對不上。查出cc_track.js原本用「字元數×2」概估位元組數(UTF-16概估)。對英數混中文內容系統性算錯（ASCII灌水快2倍、CJK反而低估因UTF-8的CJK是3bytes非2bytes）。且「同源上限約5MB」假設比06-23實測的約10MB更保守。兩件事疊加造成假警報。新增共用helper _ccByteLen()用Blob量真實UTF-8位元組數，全檔統一改用。QUOTA_LIMIT_BYTES從4MB改6MB留安全margin。畫面文案同步更新。刻意不動cc_store.js裡「iPhone/iPad Safari上限約5MB」——那是特別限定iOS裝置的既有描述，跟這次修的泛指假設可能不是同一件事。沒把握判斷是否衝突，留給使用者確認，不自己選一邊。node --check通過+自寫模擬驗證+opus獨立複核無must-fix，部署後線上curl驗證生效。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-05",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "新增「人際圈與睡眠/完成率關聯」跨App分析卡片：第二輪跨生態系優化第五順位，8條缺口清單最後一項。讀Mental Dashboard的wellness_v5，情緒紀錄friends類impactFactors的人名比對回profile.people/peopleCats兩層join。依分類統計互動天數、次日睡眠品質分、當日完成率。因無法直接驗證使用者實際資料品質，改用「配對成功率透明呈現」設計——卡片最上方誠實顯示配對成功率，過低額外警示。opus獨立複核抓到must-fix：樣本量原本只看互動天數未看實際有效資料天數，小樣本會冒充大樣本平均，違背卡片誠實揭露的設計初衷。已修正為兩個獨立判斷各需5筆有效樣本。兩輪複核確認無誤。至此8條缺口清單全數處理完畢（1項使用者確認擱置不做）。",
+      "summary": "新增「人際圈與睡眠/完成率關聯」跨App分析卡片：第二輪跨生態系優化第五順位，8條缺口清單最後一項。讀Mental Dashboard的wellness_v5。情緒紀錄friends類impactFactors的人名比對回profile.people/peopleCats兩層join。依分類統計互動天數、次日睡眠品質分、當日完成率。因無法直接驗證使用者實際資料品質，改用「配對成功率透明呈現」設計——卡片最上方誠實顯示配對成功率，過低額外警示。opus獨立複核抓到must-fix：樣本量原本只看互動天數未看實際有效資料天數，小樣本會冒充大樣本平均，違背卡片誠實揭露的設計初衷。已修正為兩個獨立判斷各需5筆有效樣本。兩輪複核確認無誤。至此8條缺口清單全數處理完畢（1項使用者確認擱置不做）。",
       "reason": "user_request"
     },
     {
@@ -111,14 +111,14 @@
       "date": "2026-08-05",
       "project": "SAS Hub / Control Center",
       "file": "index.html(×2) / cc_autosync.js",
-      "summary": "近7天燈補慢性耗竭死角＋早熄燈校正加示警＋接上Guard：第二輪跨生態系優化第二順位（項目3、4、7合併處理）。buildWeekPressure()補Total-Defense≥4推flag、≥5直接判紅的死角。buildWeekPressure()/buildOverloadFreq()新增sas_week_flags/sas_pace_flags寫入，Control Center的checkGuard()新增純顯示分支（紅燈只變色不強制中止，避免持續多天的狀態警告天天打斷操作）。runEnergyCorrection()連續早熄燈≥3天新增UI提示（原本只調cc_energy_weights無顯示）。附帶把兩把新key補進cc_autosync.js的SAFE_STATIC_KEYS白名單。opus獨立複核重點驗證Guard新分支確認不會觸發強制中止，無must-fix。",
+      "summary": "近7天燈補慢性耗竭死角＋早熄燈校正加示警＋接上Guard：第二輪跨生態系優化第二順位（項目3、4、7合併處理）。buildWeekPressure()補Total-Defense≥4推flag、≥5直接判紅的死角。buildWeekPressure()/buildOverloadFreq()新增sas_week_flags/sas_pace_flags寫入。Control Center的checkGuard()新增純顯示分支（紅燈只變色不強制中止，避免持續多天的狀態警告天天打斷操作）。runEnergyCorrection()連續早熄燈≥3天新增UI提示（原本只調cc_energy_weights無顯示）。附帶把兩把新key補進cc_autosync.js的SAFE_STATIC_KEYS白名單。opus獨立複核重點驗證Guard新分支確認不會觸發強制中止，無must-fix。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "統一任務完成率計算口徑，⊘不做（有意識決定）不再誤記為失敗：第二輪跨生態系優化盤點（找缺口非修bug）產出8條機會，使用者選第一順位今天處理。使用者用AskUserQuestion定案規格：part記0.5分；整天全⊘不做特例記完成率100%但加連續發生警示（自訂答案）。新增共用helper calcCompletionRate()，10處呼叫點改用新口徑，3處判斷後保留原樣，新增buildNoDayAlert()。兩輪opus獨立複核：第一輪抓到1個must-fix（T-1卡片全no天與空items天顯示矛盾文字）+3個nice-to-have（停損率分母未排除no、restMode誤觸警示、null項目邊界）。全修正後第二輪確認無誤可push。明確不動：Daily Optimizer自己的配速口徑（跨檔另議）、週摘要件加權顯示不一致（可接受取捨）。node --check通過，測試51案例全綠。",
+      "summary": "統一任務完成率計算口徑，⊘不做（有意識決定）不再誤記為失敗：第二輪跨生態系優化盤點（找缺口非修bug）產出8條機會，使用者選第一順位今天處理。使用者用AskUserQuestion定案規格：part記0.5分；整天全⊘不做特例記完成率100%但加連續發生警示（自訂答案）。新增共用helper calcCompletionRate()，10處呼叫點改用新口徑，3處判斷後保留原樣，新增buildNoDayAlert()。兩輪opus獨立複核：第一輪抓到1個must-fix（T-1卡片全no天與空items天顯示矛盾文字）。加3個nice-to-have（停損率分母未排除no、restMode誤觸警示、null項目邊界）。全修正後第二輪確認無誤可push。明確不動：Daily Optimizer自己的配速口徑（跨檔另議）、週摘要件加權顯示不一致（可接受取捨）。node --check通過，測試51案例全綠。",
       "reason": "user_request"
     },
     {
@@ -132,7 +132,7 @@
       "date": "2026-08-04",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "統一睡眠代理分數計算＋睡眠戰力正名睡眠品質分（架構優化第4項，先前暫緩後今日執行）：使用者確認要動，並要求完成後告知所有調整位置供其人工檢查。抽出共用_sleepProxyScore()核心公式，getSleepQualityMap()支援指定單一trend窗口。calcSleepToMoodLag()維持原7天窗口不變。buildCausalChainNarrative()/renderWeekStrip()/buildLeverageBars()改用共用函式並擴大至trend180窗口。predictedEndurance()因語意不同：缺一項數值視為整筆null，而原本各欄位獨立fallback，會讓餵給cc_energy_weights排程校正的續航估算大幅偏移。因此刻意不套用共用函式，維持原邏輯。派opus第二意見複核抓到3個問題。predictedEndurance()語意不符（已如上處理）。buildLeverageBars()把缺資料日期誤填0分污染Pearson相關係數（改null正確排除）。buildCausalChainNarrative()重構時意外遺失最少3晚資料防呆（補回ca.length<3判斷）。19處「睡眠戰力」正名為「睡眠品質分」（週報範例句與真戰力維度保留原字不動）。Node模擬各site驗證通過後，整理成卡片對照表交使用者人工檢查UI後才push。",
+      "summary": "統一睡眠代理分數計算＋睡眠戰力正名睡眠品質分（架構優化第4項，先前暫緩後今日執行）：使用者確認要動，並要求完成後告知所有調整位置供其人工檢查。抽出共用_sleepProxyScore()核心公式，getSleepQualityMap()支援指定單一trend窗口。calcSleepToMoodLag()維持原7天窗口不變。buildCausalChainNarrative()/renderWeekStrip()/buildLeverageBars()改用共用函式。並擴大至trend180窗口。predictedEndurance()因語意不同：缺一項數值視為整筆null。而原本各欄位獨立fallback，會讓餵給cc_energy_weights排程校正的續航估算大幅偏移。因此刻意不套用共用函式，維持原邏輯。派opus第二意見複核抓到3個問題。predictedEndurance()語意不符（已如上處理）。buildLeverageBars()把缺資料日期誤填0分污染Pearson相關係數（改null正確排除）。buildCausalChainNarrative()重構時意外遺失最少3晚資料防呆（補回ca.length<3判斷）。19處「睡眠戰力」正名為「睡眠品質分」（週報範例句與真戰力維度保留原字不動）。Node模擬各site驗證通過後，整理成卡片對照表交使用者人工檢查UI後才push。",
       "reason": "user_request"
     },
     {
@@ -146,49 +146,49 @@
       "date": "2026-08-04",
       "project": "SAS Hub / Control Center",
       "file": "index.html / cc_autosync.js",
-      "summary": "追加處理殘留低優先發現（NaN防呆/去重複呼叫/人類圖配速提示/Gist白名單）：架構審查後殘留5項低優先發現，使用者確認3、4、5可執行、2一起做、1（共用函式大重構）留待今天任務結束後再討論。NaN防呆：getSleepQualityMap()新增Number.isFinite檢查，deepP/remP缺失時不寫入map。避免NaN讓alignClass()等判定誤判成狀態正常，影響風險燈號/意志力透支/三維相關性三張卡。去重複呼叫：buildInertiaAlert()/buildRiskLight()新增可選sqMap參數，updateCombat()算一次共用傳入。純效能無行為變更。人類圖配速提示：buildPacePills()原讀sas_settings（全生態系無寫入端恆空），改讀window._hdData.strat（loadHDProfile()已有wellness_v5.profile備援）。順帶把pill顏色從.p-purple改.p-info，避免資料修好後第一次違反禁紫紅色字規範。sas_overload_log加進Gist備份白名單。Node模擬NaN防呆邏輯驗證通過。",
+      "summary": "追加處理殘留低優先發現（NaN防呆/去重複呼叫/人類圖配速提示/Gist白名單）：架構審查後殘留5項低優先發現，使用者確認3、4、5可執行、2一起做、1（共用函式大重構）留待今天任務結束後再討論。NaN防呆：getSleepQualityMap()新增Number.isFinite檢查，deepP/remP缺失時不寫入map。避免NaN讓alignClass()等判定誤判成狀態正常，影響風險燈號/意志力透支/三維相關性三張卡。去重複呼叫：buildInertiaAlert()/buildRiskLight()新增可選sqMap參數，updateCombat()算一次共用傳入。純效能無行為變更。人類圖配速提示：buildPacePills()原讀sas_settings（全生態系無寫入端恆空）。改讀window._hdData.strat（loadHDProfile()已有wellness_v5.profile備援）。順帶把pill顏色從.p-purple改.p-info，避免資料修好後第一次違反禁紫紅色字規範。sas_overload_log加進Gist備份白名單。Node模擬NaN防呆邏輯驗證通過。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub / Control Center / Daily Optimizer",
       "file": "index.html(×2) / daily_optimizer.html",
-      "summary": "CC生態系跨維度資料流架構優化（6項）：使用者要求重新審查生態系分析/串接現況並提優化建議。先派opus重讀全部核心程式碼盤點資料流地圖、跨維度分析涵蓋範圍、斷點與不一致，產出6條建議，使用者確認全部進行。逐項處理：(1)修rev.reviewItems→rev.items欄位名bug，SAS Hub決策相關性卡從上線起因此永遠顯示資料不足。(2)alignClass()四處歷史日期判定改用當日睡眠代理值不再套今天combat，避免歷史紅點/崩盤預警隨今天狀態漂移。(3)週報AI prompt新增系統已算好的量化訊號段落餵給LLM。(4)評估後暫緩共用函式重構，因涉及近20處用詞尺度不一致風險過高，不符最低優先項目該承擔的成本。(5)cc_energy_weights校正係數接上Daily Optimizer實際排程權重，之前只顯示文案未套用。(6)統一日期邊界為本地日，修正CC的TODAY常數與SAS Hub讀Refueler資料原本用UTC切字串，導致本地凌晨0-8點讀到昨天任務清單、熬夜咖啡歸錯天的問題，風險最高獨立commit。全部Node模擬驗證（含實際台北時區凌晨咖啡案例），推送後再派opus第二意見複核。8項驗收全過，但抓到must-fix：cc_energy_weights寫入端原本無節流，接上真實排程後同一天內連續觸發會讓係數失控衝頂。已補上lastCorrected每日節流並驗證。",
+      "summary": "CC生態系跨維度資料流架構優化（6項）：使用者要求重新審查生態系分析/串接現況並提優化建議。先派opus重讀全部核心程式碼盤點資料流地圖、跨維度分析涵蓋範圍、斷點與不一致，產出6條建議，使用者確認全部進行。逐項處理：(1)修rev.reviewItems→rev.items欄位名bug，SAS Hub決策相關性卡從上線起因此永遠顯示資料不足。(2)alignClass()四處歷史日期判定改用當日睡眠代理值不再套今天combat，避免歷史紅點/崩盤預警隨今天狀態漂移。(3)週報AI prompt新增系統已算好的量化訊號段落餵給LLM。(4)評估後暫緩共用函式重構，因涉及近20處用詞尺度不一致風險過高，不符最低優先項目該承擔的成本。(5)cc_energy_weights校正係數接上Daily Optimizer實際排程權重，之前只顯示文案未套用。(6)統一日期邊界為本地日。修正CC的TODAY常數與SAS Hub讀Refueler資料原本用UTC切字串。導致本地凌晨0-8點讀到昨天任務清單、熬夜咖啡歸錯天的問題，風險最高獨立commit。全部Node模擬驗證（含實際台北時區凌晨咖啡案例），推送後再派opus第二意見複核。8項驗收全過，但抓到must-fix：cc_energy_weights寫入端原本無節流，接上真實排程後同一天內連續觸發會讓係數失控衝頂。已補上lastCorrected每日節流並驗證。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "summary": "CapEx長條圖縮短寬度+新增Q2較Q1季增減數字：使用者截圖回報「最新資本支出Guidance」長條圖右側文字被擠成多行，要求縮短bar讓出空間，並要求新增「這一季-上一季」的資本支出差異值。CSS層面.capex-track從flex:1改flex:0 0 55%，.capex-yoy從固定width:48px改flex:1自動吃剩餘寬度。派研究subagent查證四家公司2026 Q1實際capex（先前只查過guidance修訂值與Q2實際值）。計算Q2較Q1季增減：Amazon+$9.9B/Google+$9.2B/Microsoft+$9.1B（FY26 Q3→Q4）/Meta+$11.3B，皆附來源。腳注補充Microsoft的Q1/Q2對應財年季非日曆季。node --check通過，git diff --stat只動一檔。push時再度遇GitHub Actions自動更新，git pull --rebase乾淨處理。",
+      "summary": "CapEx長條圖縮短寬度+新增Q2較Q1季增減數字：使用者截圖回報「最新資本支出Guidance」長條圖右側文字被擠成多行，要求縮短bar讓出空間，並要求新增「這一季-上一季」的資本支出差異值。CSS層面.capex-track從flex:1改flex:0 0 55%，.capex-yoy從固定width:48px改flex:1自動吃剩餘寬度。派研究subagent查證四家公司2026 Q1實際capex（先前只查過guidance修訂值與Q2實際值）。計算Q2較Q1季增減：Amazon+$9.9B/Google+$9.2B/Microsoft+$9.1B（FY26 Q3→Q4）/Meta+$11.3B。皆附來源。腳注補充Microsoft的Q1/Q2對應財年季非日曆季。node --check通過，git diff --stat只動一檔。push時再度遇GitHub Actions自動更新，git pull --rebase乾淨處理。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-03",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "summary": "建議任務加隨機挑選，避免天天卡在同一批：使用者觀察到pipeline建議的「適合進行」任務看起來只在固定4個項目間輪流出現，問現況spec怎麼規劃。查spec v2.0記錄hint改由client端buildHintFromTasks()生成取代LLM（避免簡體字/亂編任務名品質問題），但從未規劃輪替機制，程式碼pool.slice(0,3)永遠取分類篩選後陣列前3個是靜態選取非bug，high/mid分類篩選重疊容易撞出同一批任務。使用者確認先前模型不夠聰明修語言問題卡很久沒再定義輪替邏輯。新增Fisher-Yates洗牌_shufflePick(arr,n)取代slice(0,3)。node --check通過，Node模擬5種情境（8項任務跑10次驗證有變化/池<3/fallback全部/空tasks/重疊分類）皆符合預期，git diff --stat只動一檔。",
+      "summary": "建議任務加隨機挑選，避免天天卡在同一批：使用者觀察到pipeline建議的「適合進行」任務看起來只在固定4個項目間輪流出現，問現況spec怎麼規劃。查spec v2.0記錄hint改由client端buildHintFromTasks()生成取代LLM（避免簡體字/亂編任務名品質問題）。但從未規劃輪替機制，程式碼pool.slice(0,3)永遠取分類篩選後陣列前3個是靜態選取非bug。high/mid分類篩選重疊容易撞出同一批任務。使用者確認先前模型不夠聰明修語言問題卡很久沒再定義輪替邏輯。新增Fisher-Yates洗牌_shufflePick(arr,n)取代slice(0,3)。node --check通過。Node模擬5種情境（8項任務跑10次驗證有變化/池<3/fallback全部/空tasks/重疊分類）皆符合預期。git diff --stat只動一檔。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-03",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "文法收藏加分類標籤(拼字/斷句/時態/結構/冠詞/單複數/介系詞)：使用者要求文法收藏能加分類tag，先提4類請評估，建議加冠詞、單複數（中文母語者最典型錯誤類型），確認後再加介系詞共7類，並要求tag顯示在文法追蹤頁最上層作篩選。promptC新增gr_cat欄位在同一次API呼叫內完成分類，前端用GR_CATS白名單驗證LLM回傳值防污染，grOk為true時強制清空避免誤標。文法追蹤頁新增#grammar-cat-tabs篩選容器，篩選/防呆刪除邏輯照抄既有combo-sit-tabs已驗證模式(lib.indexOf(item)取真實索引)。node --check通過，fresh-context subagent驗證8項條件全過，純prompt改動待下次UI實測。",
+      "summary": "文法收藏加分類標籤(拼字/斷句/時態/結構/冠詞/單複數/介系詞)：使用者要求文法收藏能加分類tag，先提4類請評估。建議加冠詞、單複數（中文母語者最典型錯誤類型），確認後再加介系詞共7類。並要求tag顯示在文法追蹤頁最上層作篩選。promptC新增gr_cat欄位在同一次API呼叫內完成分類，前端用GR_CATS白名單驗證LLM回傳值防污染，grOk為true時強制清空避免誤標。文法追蹤頁新增#grammar-cat-tabs篩選容器。篩選/防呆刪除邏輯照抄既有combo-sit-tabs已驗證模式(lib.indexOf(item)取真實索引)。node --check通過，fresh-context subagent驗證8項條件全過，純prompt改動待下次UI實測。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-03",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "新增文法收藏獨立分頁：使用者要求文法審核卡的修正項目可以⭐收藏，但收藏區域不可跟Small Talk既有的收藏組合混在一起，要開新分頁，收藏內容為我的接球/文法待修正/修正後三項。新增獨立localStorage key es_grammar_lib（跟既有es_saved_phrases完全分開），新分頁「✍️ 文法追蹤」+對應tab按鈕，#gr-fixed-block加收藏按鈕存這一輪的grContext（orig/note/fixed），renderGrammarLib()重用既有.combo-card等CSS class渲染列表，save-grammar按鈕每輪自動重置。順帶處理第5個分頁按鈕可能讓窄螢幕nav bar溢出擠掉返回連結的風險，.nav加overflow-x:auto。node --check通過，fresh-context subagent驗證8項條件全數通過。",
+      "summary": "新增文法收藏獨立分頁：使用者要求文法審核卡的修正項目可以⭐收藏，但收藏區域不可跟Small Talk既有的收藏組合混在一起，要開新分頁，收藏內容為我的接球/文法待修正/修正後三項。新增獨立localStorage key es_grammar_lib（跟既有es_saved_phrases完全分開）。新分頁「✍️ 文法追蹤」+對應tab按鈕。#gr-fixed-block加收藏按鈕存這一輪的grContext（orig/note/fixed）。renderGrammarLib()重用既有.combo-card等CSS class渲染列表。save-grammar按鈕每輪自動重置。順帶處理第5個分頁按鈕可能讓窄螢幕nav bar溢出擠掉返回連結的風險，.nav加overflow-x:auto。node --check通過，fresh-context subagent驗證8項條件全數通過。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-03",
       "project": "Sleep Dashboard",
       "file": "index.html",
-      "summary": "週報AI分析補系統層級語言鐵律+補給建議事實錨定：使用者回報上週整體分析出現三個問題——「咖啑」不存在的亂碼字、咖啡建議方向顛倒（寫成避免上午8點前攝取應為避免下午/傍晚）、水分建議超標（4-5000ml/日不合理）。查根因是aiCall()完全沒有system message，沒有語言限制也沒有事實/安全錨定，llama-3.1-8b-instant自由生成容易吐錯字編造數字，且prompt自帶的範例句子疑似被LLM直接照抄套數字非真算過資料。修法：aiCall()加system message（語言鐵律+數字安全範圍，比照AI Tracker/English Sandbox同類修法）；補給優化建議加咖啡因半衰期/攝取時機方向、水分安全上限事實錨定；跨維度洞察段落明講範例句子不可照抄當結論。node --check通過，純prompt調整需使用者下次重新生成時肉眼驗證。",
+      "summary": "週報AI分析補系統層級語言鐵律+補給建議事實錨定：使用者回報上週整體分析出現三個問題——「咖啑」不存在的亂碼字。咖啡建議方向顛倒（寫成避免上午8點前攝取應為避免下午/傍晚）。水分建議超標（4-5000ml/日不合理）。查根因是aiCall()完全沒有system message，沒有語言限制也沒有事實/安全錨定。llama-3.1-8b-instant自由生成容易吐錯字編造數字。且prompt自帶的範例句子疑似被LLM直接照抄套數字非真算過資料。修法：aiCall()加system message（語言鐵律+數字安全範圍，比照AI Tracker/English Sandbox同類修法）。補給優化建議加咖啡因半衰期/攝取時機方向、水分安全上限事實錨定。跨維度洞察段落明講範例句子不可照抄當結論。node --check通過，純prompt調整需使用者下次重新生成時肉眼驗證。",
       "reason": "bug_fix"
     },
     {
@@ -202,7 +202,7 @@
       "date": "2026-08-03",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
-      "summary": "新增impact空洞內容偵測，防止「換句話說」的core誤判：使用者追問8/1「冷」標籤沒出現的原因，指出Oracle/Gemini那則impact只是把body換句話說沒有真正供應鏈分析，質疑coreCount該不該納入內容有效性。查根因是validate_impact只查因果依據/邏輯矛盾，沒查「是不是空話換句話說」，而_body_is_low_quality已有成熟的重疊率+具體性判準但只套用在body。派subagent延用同一套判準設計_impact_is_shallow()（CJK bigram單向包含率>0.20且impact無數字/具名實體才判shallow），對全部39筆歷史core/opp資料回測校準門檻，抓到9筆含Oracle本身，抽查5筆確認未誤殺具體分析。downgrade_shallow_impact()把命中的core降為opp不刪除不清空impact，接入pipeline。py_compile通過，只動update_data.py未回溯改history.json歷史評級。",
+      "summary": "新增impact空洞內容偵測，防止「換句話說」的core誤判：使用者追問8/1「冷」標籤沒出現的原因，指出Oracle/Gemini那則impact只是把body換句話說沒有真正供應鏈分析。質疑coreCount該不該納入內容有效性。查根因是validate_impact只查因果依據/邏輯矛盾，沒查「是不是空話換句話說」。而_body_is_low_quality已有成熟的重疊率+具體性判準但只套用在body。派subagent延用同一套判準設計_impact_is_shallow()。（CJK bigram單向包含率>0.20且impact無數字/具名實體才判shallow）。對全部39筆歷史core/opp資料回測校準門檻，抓到9筆含Oracle本身。抽查5筆確認未誤殺具體分析。downgrade_shallow_impact()把命中的core降為opp不刪除不清空impact，接入pipeline。py_compile通過，只動update_data.py未回溯改history.json歷史評級。",
       "reason": "user_request"
     },
     {
@@ -216,42 +216,42 @@
       "date": "2026-08-03",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "summary": "更新2026 Q2財報靜態參考值＋納入Intel/Tesla監測：記憶檔記著每季財報後需更新，7/30後應納入Alphabet/Tesla/Intel，今天8/3已超過門檻。先派研究subagent（WebSearch）查證Amazon/Google/Microsoft/Meta最新CapEx guidance、Google Cloud成長、Tesla AI5/Optimus、Intel 18A進度，每個數字要求附來源禁止用訓練記憶補。更新HW面板（HBM供需比查無來源的3倍數字移除改用Micron fully committed描述、CoWoS微調、新增Intel 18A卡片與signal pill、新增Tesla AI5轉Samsung pill）、Corp面板（CapEx卡片與長條圖全換最新guidance，Microsoft因財年制不同單獨標註FY27不列入$558B合計，Google Cloud 63%→82%YoY）、App panel（Physical AI/AI晶片文字補Tesla/Intel最新進度）。派第二個fresh-context subagent核對算術（$558B合計、長條圖寬度%）與每個數字來源對應，7項驗收全過，1項用詞微調（Intel+50%→+50%以上更貼近原文）已修正。push時遇GitHub Actions自動更新已推進遠端，git pull --rebase乾淨無衝突。",
+      "summary": "更新2026 Q2財報靜態參考值＋納入Intel/Tesla監測：記憶檔記著每季財報後需更新，7/30後應納入Alphabet/Tesla/Intel，今天8/3已超過門檻。先派研究subagent（WebSearch）查證Amazon/Google/Microsoft/Meta最新CapEx guidance。Google Cloud成長。Tesla AI5/Optimus、Intel 18A進度。每個數字要求附來源禁止用訓練記憶補。更新HW面板（HBM供需比查無來源的3倍數字移除改用Micron fully committed描述、CoWoS微調。新增Intel 18A卡片與signal pill、新增Tesla AI5轉Samsung pill）。Corp面板（CapEx卡片與長條圖全換最新guidance。Microsoft因財年制不同單獨標註FY27不列入$558B合計，Google Cloud 63%→82%YoY）。App panel（Physical AI/AI晶片文字補Tesla/Intel最新進度）。派第二個fresh-context subagent核對算術（$558B合計、長條圖寬度%）與每個數字來源對應。7項驗收全過，1項用詞微調（Intel+50%→+50%以上更貼近原文）已修正。push時遇GitHub Actions自動更新已推進遠端，git pull --rebase乾淨無衝突。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-02",
       "project": "Sleep Dashboard",
       "file": "run_update.sh / json_cache",
-      "summary": "8/2資料手動補跑＋根因排除：使用者發現22:00自動更新後8/2資料未進dashboard。查log確認LaunchAgent其實準時在22:03成功執行，非排程漏跑；比對發現當時iCloud匯出檔deep/rem/core/awake全為0，update_dashboard.py的total_min<60驗證正確判定為無效資料跳過，非腳本bug。使用者重跑iPhone Shortcut產生新檔後，發現真正卡住的是run_update.sh複製邏輯「cache已有非空檔案就跳過」不會覆蓋舊的0值cache，手動刪除該份cache後重跑才抓到新資料，200筆有效夜晚數據更新為2026-08-02。額外確認SAS Hub Sleep分頁iframe同源寫入localStorage、切回Overview會rerenderOv()重讀不需整頁重整。",
+      "summary": "8/2資料手動補跑＋根因排除：使用者發現22:00自動更新後8/2資料未進dashboard。查log確認LaunchAgent其實準時在22:03成功執行，非排程漏跑。比對發現當時iCloud匯出檔deep/rem/core/awake全為0。update_dashboard.py的total_min<60驗證正確判定為無效資料跳過，非腳本bug。使用者重跑iPhone Shortcut產生新檔後，發現真正卡住的是run_update.sh複製邏輯「cache已有非空檔案就跳過」不會覆蓋舊的0值cache。手動刪除該份cache後重跑才抓到新資料，200筆有效夜晚數據更新為2026-08-02。額外確認SAS Hub Sleep分頁iframe同源寫入localStorage、切回Overview會rerenderOv()重讀不需整頁重整。",
       "reason": "debug"
     },
     {
       "date": "2026-08-02",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
-      "summary": "入睡/起床趨勢圖補上資料點圓圈：使用者截圖回報該圖沒有資料點圓圈，其他趨勢圖都有，不知道游標要移到哪查看數值。查根因updateRegularity()畫的regularityTrendChart寫死pointRadius:0，比照同檔其他趨勢圖（Deep/REM/Core/Awake%）動態寫法pointR=data.length>60?0:2＋pointHoverRadius:4補上。node --check通過，git diff --stat只動3行目標程式碼。",
+      "summary": "入睡/起床趨勢圖補上資料點圓圈：使用者截圖回報該圖沒有資料點圓圈，其他趨勢圖都有，不知道游標要移到哪查看數值。查根因updateRegularity()畫的regularityTrendChart寫死pointRadius:0。比照同檔其他趨勢圖（Deep/REM/Core/Awake%）動態寫法。pointR=data.length>60?0:2＋pointHoverRadius:4補上。node --check通過，git diff --stat只動3行目標程式碼。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-30",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "文法審核卡新增AI追問聊天功能：使用者截圖回報「feedback應為give feedback」的修正建議好奇原因，希望能追問AI釐清。#gr-card內修正後區塊下方新增小型聊天區，全域grContext存這一輪{orig,note,fixed}，askGrammarWhy()用獨立prompt帶入三欄位+使用者問題，只回答該問題不重新解釋整個修正，純文字繁中回覆。每輪submitResp()重新渲染時自動重置grContext與聊天記錄，appendGrChat()用textContent寫入防XSS。node --check通過，fresh-context subagent驗證9項條件全過，git diff --stat純新增66行0刪除未動到接球判斷與文法審核本身。",
+      "summary": "文法審核卡新增AI追問聊天功能：使用者截圖回報「feedback應為give feedback」的修正建議好奇原因，希望能追問AI釐清。#gr-card內修正後區塊下方新增小型聊天區，全域grContext存這一輪{orig,note,fixed}。askGrammarWhy()用獨立prompt帶入三欄位+使用者問題，只回答該問題不重新解釋整個修正。純文字繁中回覆。每輪submitResp()重新渲染時自動重置grContext與聊天記錄，appendGrChat()用textContent寫入防XSS。node --check通過，fresh-context subagent驗證9項條件全過。git diff --stat純新增66行0刪除未動到接球判斷與文法審核本身。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-30",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "新增文法／語句寫法審核卡：使用者要求在檢視接球結果時新增獨立卡片專審文法/語句寫法，但不能影響small talk溝通品質判斷，位置放AI三階潤飾下面。新增第三支獨立LLM呼叫promptC（gr_ok/gr_note/gr_fixed），完全不與promptA的接球判斷共用prompt，物理隔離避免污染；只在使用者有輸入文字時才呼叫。#gr-card插在ball resp-card之後、result-action-bar之前，沿用既有CSS class未新增樣式。node --check通過，fresh-context subagent驗證6項條件全過，git diff --stat只動一檔。",
+      "summary": "新增文法／語句寫法審核卡：使用者要求在檢視接球結果時新增獨立卡片專審文法/語句寫法，但不能影響small talk溝通品質判斷，位置放AI三階潤飾下面。新增第三支獨立LLM呼叫promptC（gr_ok/gr_note/gr_fixed），完全不與promptA的接球判斷共用prompt，物理隔離避免污染。只在使用者有輸入文字時才呼叫。#gr-card插在ball resp-card之後、result-action-bar之前，沿用既有CSS class未新增樣式。node --check通過，fresh-context subagent驗證6項條件全過，git diff --stat只動一檔。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-29",
       "project": "Refueler",
       "file": "refueler.html",
-      "summary": "水分月曆比照咖啡拉大三色階差異：使用者要求水分月曆做一樣的效果。.cal-cell.w-ok/w-warn/w-low三種色相（綠/橘/紅）原本透明度都壓在.08-.1幾乎看不出色相差異，改依嚴重度遞增拉開為.16/.32/.5，水分不足天呈明顯深紅，同步更新圖例色塊。node --check通過，三種badge文字色在新底色濃度下對比計算仍足夠。",
+      "summary": "水分月曆比照咖啡拉大三色階差異：使用者要求水分月曆做一樣的效果。.cal-cell.w-ok/w-warn/w-low三種色相（綠/橘/紅）原本透明度都壓在.08-.1幾乎看不出色相差異。改依嚴重度遞增拉開為.16/.32/.5，水分不足天呈明顯深紅。同步更新圖例色塊。node --check通過，三種badge文字色在新底色濃度下對比計算仍足夠。",
       "reason": "user_request"
     },
     {
@@ -265,14 +265,14 @@
       "date": "2026-07-29",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "Small Talk開場白角色錯位根因修正：使用者回報interview情境（面試前暖場）提出的問題角色不符——面試官才是問話方，回答的人是被面試者。查根因發現genOpener()產生開場白的prompt從未告訴LLM「這句話是對方角色講的，不是learner講的」，07-28的修法只補了SITS.interview的情境敘述文字，沒補到prompt本身的角色指派。修法：在prompt的Rules新增一條通用規則，明確要求開場白必須由對方角色對learner說、且情境若點名learner身份（job candidate/host greeting visitor）開場白就要從對方視角（interviewer/visitor）出發，同時修正interview與reception兩個主客不對等情境。node --check通過，fresh-context subagent驗證5項驗收條件皆過。",
+      "summary": "Small Talk開場白角色錯位根因修正：使用者回報interview情境（面試前暖場）提出的問題角色不符——面試官才是問話方，回答的人是被面試者。查根因發現genOpener()產生開場白的prompt從未告訴LLM「這句話是對方角色講的，不是learner講的」。07-28的修法只補了SITS.interview的情境敘述文字，沒補到prompt本身的角色指派。修法：在prompt的Rules新增一條通用規則。明確要求開場白必須由對方角色對learner說。且情境若點名learner身份（job candidate/host greeting visitor）。開場白就要從對方視角（interviewer/visitor）出發。同時修正interview與reception兩個主客不對等情境。node --check通過，fresh-context subagent驗證5項驗收條件皆過。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
-      "summary": "Timeline標題旁新增時長顯示：computeTrackDuration(trackId)算該軌道最早節點到現在的時長，格式x year(s) y month(s)，myselfTrackHdr()加第二參數渲染在標題旁。Node模擬Work(13年10個月)/姓名學(剛起步0年0個月)/無資料軌道皆符合預期。",
+      "summary": "Timeline標題旁新增時長顯示：computeTrackDuration(trackId)算該軌道最早節點到現在的時長，格式x year(s) y month(s)。myselfTrackHdr()加第二參數渲染在標題旁。Node模擬Work(13年10個月)/姓名學(剛起步0年0個月)/無資料軌道皆符合預期。",
       "reason": "user_request"
     },
     {
@@ -286,91 +286,91 @@
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
-      "summary": "Timeline起始點對齊+斗數對齊Work樣式：使用者截圖回報單節點的姓名學自訂軌道視覺上置中(getTrackYearRange原本floor取整年致窄範圍軌道被壓縮居中)，且要求斗數的橫排晶片特例改對齊Work的河流樣式。修法：起點改用最早節點精確日期不floor取整確保永遠貼齊0%；divination移除特例過濾統一走renderRiverTrack()，刪除已無呼叫端的renderDivinationMilestones()。副作用：斗數因此也失去點擊看detail的modal，但跟Work現況一致屬對齊非退步。",
+      "summary": "Timeline起始點對齊+斗數對齊Work樣式：使用者截圖回報單節點的姓名學自訂軌道視覺上置中(getTrackYearRange原本floor取整年致窄範圍軌道被壓縮居中)。且要求斗數的橫排晶片特例改對齊Work的河流樣式。修法：起點改用最早節點精確日期不floor取整確保永遠貼齊0%。divination移除特例過濾統一走renderRiverTrack()，刪除已無呼叫端的renderDivinationMilestones()。副作用：斗數因此也失去點擊看detail的modal，但跟Work現況一致屬對齊非退步。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
-      "summary": "Timeline管理擴充+移除工作屬性：管理清單改列全部軌道(內建三軌只能改色不可刪+自訂軌道)，新增builtinTrackColors覆蓋值與統一的setTrackColor()；移除使用需求低且engineering頁無圖例說明的工作屬性欄位(node.type/ENG_TYPE_COLORS/engTypeColor)。fresh-context subagent審查6項風險點皆未發現must-fix。",
+      "summary": "Timeline管理擴充+移除工作屬性：管理清單改列全部軌道(內建三軌只能改色不可刪+自訂軌道)，新增builtinTrackColors覆蓋值與統一的setTrackColor()。移除使用需求低且engineering頁無圖例說明的工作屬性欄位(node.type/ENG_TYPE_COLORS/engTypeColor)。fresh-context subagent審查6項風險點皆未發現must-fix。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
-      "summary": "Timeline各軌道改用獨立年份刻度軸：使用者截圖顯示新增的姓名學自訂軌道因只有近期資料，跟其他軌道共用2012-2026比例尺時被壓成看不見的細線。新增getTrackYearRange()依各軌道自己資料算範圍、buildYearMarks()自適應刻度間距，renderRiverTrack()內建自己的axis-row不再共用外部軸。Node模擬Work跨14年/姓名學單月資料/無資料退回全域三種情境皆符合預期。",
+      "summary": "Timeline各軌道改用獨立年份刻度軸：使用者截圖顯示新增的姓名學自訂軌道因只有近期資料，跟其他軌道共用2012-2026比例尺時被壓成看不見的細線。新增getTrackYearRange()依各軌道自己資料算範圍、buildYearMarks()自適應刻度間距。renderRiverTrack()內建自己的axis-row不再共用外部軸。Node模擬Work跨14年/姓名學單月資料/無資料退回全域三種情境皆符合預期。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "Spec/nexus-portal-spec-v1.0.md（無程式改動）",
-      "summary": "釐清Timeline顯示範圍與lens存取層級：使用者一度誤以為myself=public，查證renderContent()分派邏輯後確認myself是唯一需?access=密語驗證的私人頁，其餘5個lens皆公開。結論：訪客可見的timeline只在engineering一處，myself的多軌timeline是私人頁設計如此非落差，使用者確認不需改code，spec補上說明段落+v1.2。",
+      "summary": "釐清Timeline顯示範圍與lens存取層級：使用者一度誤以為myself=public，查證renderContent()分派邏輯後確認myself是唯一需?access=密語驗證的私人頁。其餘5個lens皆公開。結論：訪客可見的timeline只在engineering一處，myself的多軌timeline是私人頁設計如此非落差。使用者確認不需改code，spec補上說明段落+v1.2。",
       "reason": "clarification"
     },
     {
       "date": "2026-07-28",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "summary": "新增跨天過載頻率記錄：抽出computeOverloadInfo()共用過載判定邏輯，新增logOverloadDay()寫入sas_overload_log（date/overloadCount/allDone，休假與無pipes日跳過，只留60天），改掛在saveReview()每天自動觸發（不依賴手動點AI反饋按鈕，避免漏天）。修正抽出過程中savedPipes/savedAssign變數遺留參照的執行期錯誤。",
+      "summary": "新增跨天過載頻率記錄：抽出computeOverloadInfo()共用過載判定邏輯。新增logOverloadDay()寫入sas_overload_log。（date/overloadCount/allDone，休假與無pipes日跳過，只留60天）。改掛在saveReview()每天自動觸發（不依賴手動點AI反饋按鈕，避免漏天）。修正抽出過程中savedPipes/savedAssign變數遺留參照的執行期錯誤。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "常駐風險燈號新增第三排「配速」：buildOverloadFreq()讀Daily Optimizer寫的sas_overload_log，近14天視窗統計過載天數與沒扛住(allDone===false)天數，門檻（初版待校準）沒扛住≥3或過載≥10天→紅、過載≥5或沒扛住≥1→橙。因本輪未裝Claude in Chrome無法直接截圖驗證，改用node模擬DOM/localStorage跑5組情境確認邏輯正確。",
+      "summary": "常駐風險燈號新增第三排「配速」：buildOverloadFreq()讀Daily Optimizer寫的sas_overload_log。近14天視窗統計過載天數與沒扛住(allDone===false)天數。門檻（初版待校準）沒扛住≥3或過載≥10天→紅、過載≥5或沒扛住≥1→橙。因本輪未裝Claude in Chrome無法直接截圖驗證，改用node模擬DOM/localStorage跑5組情境確認邏輯正確。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "配速燈號窗口修正：使用者提醒Optimizer週末常態無資料，發現「近14個日曆天」窗口會被週末稀釋、紅燈門檻比設計時假設更難觸發，改為log.slice(-14)近14筆有記錄的天，不受使用頻率影響。過程中node模擬測試抓到一個遺漏的log變數宣告錯誤並修正。",
+      "summary": "配速燈號窗口修正：使用者提醒Optimizer週末常態無資料，發現「近14個日曆天」窗口會被週末稀釋、紅燈門檻比設計時假設更難觸發。改為log.slice(-14)近14筆有記錄的天，不受使用頻率影響。過程中node模擬測試抓到一個遺漏的log變數宣告錯誤並修正。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "index.html",
-      "summary": "Timeline軌道改為可自訂新增：原本TRACK_META/TRACK_ORDER寫死3軌且全觀視角是寫死畫兩排不同樣式，跟使用者確認新軌道畫法後（比照Work走河流樣式，creative懸空不處理），新增customTracks[]+deriveTrackVisuals()+rebuildCustomTracks()+DM設定頁新增/刪除UI。fresh-context subagent審查抓到hasContent判斷遺漏customTracks的must-fix，已修正。",
+      "summary": "Timeline軌道改為可自訂新增：原本TRACK_META/TRACK_ORDER寫死3軌且全觀視角是寫死畫兩排不同樣式。跟使用者確認新軌道畫法後（比照Work走河流樣式，creative懸空不處理）。新增customTracks[]+deriveTrackVisuals()+rebuildCustomTracks()+DM設定頁新增/刪除UI。fresh-context subagent審查抓到hasContent判斷遺漏customTracks的must-fix，已修正。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-28",
       "project": "NexusPortal",
       "file": "NexusPortal_private/inject_baked.py（無git）",
-      "summary": "bake腳本補上customTracks欄位：釐清「private資料夾不外流」跟「bake白名單漏欄位」是兩回事，inject_baked.py組bake dict時確實沒把customTracks列入白名單，會導致訪客視角看不到新增的自訂Timeline。補上一行data.get('customTracks',[])，py_compile驗證語法正確。",
+      "summary": "bake腳本補上customTracks欄位：釐清「private資料夾不外流」跟「bake白名單漏欄位」是兩回事。inject_baked.py組bake dict時確實沒把customTracks列入白名單，會導致訪客視角看不到新增的自訂Timeline。補上一行data.get('customTracks',[])，py_compile驗證語法正確。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-07-28",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "修正interview/reception情境角色錯位：使用者回報「面試前暖場」生成出面試官誇自己辦公室的不合邏輯開場白。根因是sit.en套進共用模板時沒錨定「learner是誰、空間屬於誰」，順帶檢查同類主客不對等情境reception也有同樣風險一併修正（非whack-a-mole只補回報的那一個），party/airport/printer因雙方對等不受影響維持原文。",
+      "summary": "修正interview/reception情境角色錯位：使用者回報「面試前暖場」生成出面試官誇自己辦公室的不合邏輯開場白。根因是sit.en套進共用模板時沒錨定「learner是誰、空間屬於誰」。順帶檢查同類主客不對等情境reception也有同樣風險一併修正（非whack-a-mole只補回報的那一個）。party/airport/printer因雙方對等不受影響維持原文。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-27",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "Small Talk情境8→13：新增interview（面試前暖場，刻意不涉及專業/職能差異）、party（歡送歡迎會）、reception（訪客接待）、airport（出差候機）、printer（影印機前排隊），先跟使用者確認選項再實作。SITS常數為唯一資料來源，同步更新按鈕列，維持既有label+en格式與泛用職場register。同步更新spec（v1.5）與專案記憶檔。",
+      "summary": "Small Talk情境8→13：新增interview（面試前暖場，刻意不涉及專業/職能差異）、party（歡送歡迎會）、reception（訪客接待）。airport（出差候機）、printer（影印機前排隊）。先跟使用者確認選項再實作。SITS常數為唯一資料來源，同步更新按鈕列，維持既有label+en格式與泛用職場register。同步更新spec（v1.5）與專案記憶檔。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-25",
       "project": "Sleep Dashboard",
       "file": "index.html + sleep_dashboard_v2.html",
-      "summary": "確認自動抓iCloud資料實際時間點並加儀表板備註：三方比對發現spec/記憶檔皆與現況有落差（spec寫每日09:30一次、記憶檔誤寫GitHub Pages觸發），查plist與repo CLAUDE.md確認實際是本機LaunchAgent自07-17起每日4次（09:30/13:00/18:00/22:00）+登入時觸發run_update.sh。在兩檔的手動更新按鈕title與旁邊加上「自動更新09:30/13:00/18:00/22:00」文字備註。",
+      "summary": "確認自動抓iCloud資料實際時間點並加儀表板備註：三方比對發現spec/記憶檔皆與現況有落差（spec寫每日09:30一次、記憶檔誤寫GitHub Pages觸發）。查plist與repo CLAUDE.md確認實際是本機LaunchAgent自07-17起每日4次（09:30/13:00/18:00/22:00）。+登入時觸發run_update.sh。在兩檔的手動更新按鈕title與旁邊加上「自動更新09:30/13:00/18:00/22:00」文字備註。",
       "reason": "user_request"
     },
     {
       "date": "2026-07-24",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "summary": "「今日行程」欄位（calInput textarea，貼Google Calendar內容用）改可從右下角垂直拉大：新增#calInput{resize:vertical}用id選擇器精準覆蓋.area共用class的resize:none，不影響同class的#notes欄位。選vertical不選both因textarea寬度100%，拉寬會跑版。",
+      "summary": "「今日行程」欄位（calInput textarea，貼Google Calendar內容用）改可從右下角垂直拉大：新增#calInput{resize:vertical}用id選擇器精準覆蓋.area共用class的resize:none。不影響同class的#notes欄位。選vertical不選both因textarea寬度100%，拉寬會跑版。",
       "reason": "spec_change"
     },
     {
@@ -384,42 +384,42 @@
       "date": "2026-07-23",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
-      "summary": "實作「核心0則」修法：validate_body原本LLM單方面判downgrade就砍opp，新增_has_deterministic_hallucination_signal()共用函式重跑確定性pattern，LLM懷疑且確定性pattern也命中才真降評，否則保留原評級；_body_is_low_quality的CJK bigram門檻0.45→0.55。fresh-context subagent用importlib載入真實模組實測：今天實際被誤殺的AMD/Meta兩則新聞不再被判定捏造，Google Cloud踩線案例(46.15%重疊)新舊門檻判定確實不同，反向測試真捏造/真重複句仍攔得住，關卡未形同虛設。",
+      "summary": "實作「核心0則」修法：validate_body原本LLM單方面判downgrade就砍opp。新增_has_deterministic_hallucination_signal()共用函式重跑確定性pattern。LLM懷疑且確定性pattern也命中才真降評，否則保留原評級。_body_is_low_quality的CJK bigram門檻0.45→0.55。fresh-context subagent用importlib載入真實模組實測：今天實際被誤殺的AMD/Meta兩則新聞不再被判定捏造。Google Cloud踩線案例(46.15%重疊)新舊門檻判定確實不同。反向測試真捏造/真重複句仍攔得住，關卡未形同虛設。",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-23",
       "project": "AI Tracker",
       "file": "scripts/update_data.py（唯讀診斷，未改檔）",
-      "summary": "「核心0則」根因診斷：run_stats顯示llm_ratings原評5則core全數降級（100%降級率），派opus逐函式推演確認是關卡過嚴——validate_body對單則核心新聞誤判捏造（per_cat_budget三分類並存時摘要僅1000字截斷具體數字）、_body_is_low_quality門檻0.45對「同主題不同事實」太緊(46%踩線)。另有2則新聞整條消失(非降評)機制未定案需runtime log。建議修法已記入memory，待使用者確認後實作。",
+      "summary": "「核心0則」根因診斷：run_stats顯示llm_ratings原評5則core全數降級（100%降級率），派opus逐函式推演確認是關卡過嚴。validate_body對單則核心新聞誤判捏造（per_cat_budget三分類並存時摘要僅1000字截斷具體數字）。_body_is_low_quality門檻0.45對「同主題不同事實」太緊(46%踩線)。另有2則新聞整條消失(非降評)機制未定案需runtime log。建議修法已記入memory，待使用者確認後實作。",
       "reason": "debug"
     },
     {
       "date": "2026-07-23",
       "project": "AI Tracker",
       "file": "data/history.json + scripts/update_data.py",
-      "summary": "修正公司名誤譯（谷歌→Google、蘋果→Apple、高通→Qualcomm）與中國大陸用語（硬件/軟件/視頻/智能製造/應用程序/范圍/計算機/網絡/質量）：遞迴修正history.json全欄位（含chain.label/glossary_new.def，第一輪只查title/body/impact/insight漏欄位，第二輪補齊），LLM system prompt用詞清單同步擴充防再犯。",
+      "summary": "修正公司名誤譯（谷歌→Google、蘋果→Apple、高通→Qualcomm）與中國大陸用語（硬件/軟件/視頻/智能製造/應用程序/范圍/計算機/網絡/質量）：遞迴修正history.json全欄位。（含chain.label/glossary_new.def，第一輪只查title/body/impact/insight漏欄位，第二輪補齊）。LLM system prompt用詞清單同步擴充防再犯。",
       "reason": "debug"
     },
     {
       "date": "2026-07-23",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
-      "summary": "修正insight=None導致GitHub Actions排程崩潰：07-21禁句刪句修法裡item['insight']=new_insight or None，insight整句被刪光時設成None，下游downgrade_cross_item_duplicates()用.get('insight','')取值卻因key存在值為None而回傳None，None+str直接TypeError。改回new_insight（不產生None）＋下游兩處.get改防禦寫法(xxx.get('insight') or '')，根因+下游雙層修復。fresh-context subagent用真實禁句pattern重現crash場景驗證修復前後行為差異。",
+      "summary": "修正insight=None導致GitHub Actions排程崩潰：07-21禁句刪句修法裡item['insight']=new_insight or None，insight整句被刪光時設成None。下游downgrade_cross_item_duplicates()用.get('insight','')取值卻因key存在值為None而回傳None。None+str直接TypeError。改回new_insight（不產生None）＋下游兩處.get改防禦寫法(xxx.get('insight') or '')，根因+下游雙層修復。fresh-context subagent用真實禁句pattern重現crash場景驗證修復前後行為差異。",
       "reason": "debug"
     },
     {
       "date": "2026-07-22",
       "project": "Control Center",
       "file": "index.html + cc_styles.css",
-      "summary": "Guard原因文字換行修正：risk/endurance訊息「建議」前加<br>手動斷行避免孤立換行，reasonEl改innerHTML讓<br>真的渲染，CSS補white-space:normal/overflow-wrap:break-word/word-break:break-word明確化自動換行，max-width維持不變。",
+      "summary": "Guard原因文字換行修正：risk/endurance訊息「建議」前加<br>手動斷行避免孤立換行，reasonEl改innerHTML讓<br>真的渲染。CSS補white-space:normal/overflow-wrap:break-word/word-break:break-word明確化自動換行。max-width維持不變。",
       "reason": "debug"
     },
     {
       "date": "2026-07-22",
       "project": "Control Center",
       "file": "index.html + cc_styles.css",
-      "summary": "Guard觸發原因文字接上畫面顯示：triggerGuard()算出的msgs原因文字（續航/風險/低戰力三種）此前從未渲染，新增#guard-reason元素顯示，CSS仿既有#guard-snooze-btn視覺。順手修正msgs「戰力剩X%」的%符號——比對codebase其他戰力顯示格式皆不帶%。使用者提供SAS Hub續航13:00、今日戰力40兩個數值協助判斷11:53觸發原因為低戰力。",
+      "summary": "Guard觸發原因文字接上畫面顯示：triggerGuard()算出的msgs原因文字（續航/風險/低戰力三種）此前從未渲染，新增#guard-reason元素顯示。CSS仿既有#guard-snooze-btn視覺。順手修正msgs「戰力剩X%」的%符號——比對codebase其他戰力顯示格式皆不帶%。使用者提供SAS Hub續航13:00、今日戰力40兩個數值協助判斷11:53觸發原因為低戰力。",
       "reason": "spec_change"
     },
     {
@@ -433,70 +433,70 @@
       "date": "2026-07-22",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
-      "summary": "清醒關聯卡片（#fragmentationCorrelation）新增無關聯解讀文字：兩個相關係數都|r|<0.2時，不套代償卡片「|r|>=0.4才給建議」的門檻（那是防中度雜訊誤判方向），改直接顯示「沒關聯」本身的結論——片段化壓縮的是總睡眠時長而非睡眠結構分配，並提醒樣本數有限建議觀察更長時間。真實90天資料awake vs deep% r=-0.12、rem% r=-0.09，目前確實會觸發顯示。",
+      "summary": "清醒關聯卡片（#fragmentationCorrelation）新增無關聯解讀文字：兩個相關係數都|r|<0.2時，不套代償卡片「|r|>=0.4才給建議」的門檻（那是防中度雜訊誤判方向）。改直接顯示「沒關聯」本身的結論——片段化壓縮的是總睡眠時長而非睡眠結構分配。並提醒樣本數有限建議觀察更長時間。真實90天資料awake vs deep% r=-0.12、rem% r=-0.09，目前確實會觸發顯示。",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-22",
       "project": "Mental Dashboard",
       "file": "mental-dashboard.html",
-      "summary": "修正因子細項選取藍底卡在前一個選項：renderSub()/toggleSub()原本用sub.replace(/\\W/g,'_')產生DOM id，\\W只認ASCII，中文全被替換成底線，導致等長中文細項（如「無聊」「迷茫」）id撞名，getElementById抓到DOM中第一個同id元素，選取狀態正確但藍底高亮跟錯按鈕跑。改直接用原始字串當id，跟情緒標籤id=\"ec-${t}\"既有用法一致。",
+      "summary": "修正因子細項選取藍底卡在前一個選項：renderSub()/toggleSub()原本用sub.replace(/\\W/g,'_')產生DOM id，\\W只認ASCII。中文全被替換成底線，導致等長中文細項（如「無聊」「迷茫」）id撞名。getElementById抓到DOM中第一個同id元素，選取狀態正確但藍底高亮跟錯按鈕跑。改直接用原始字串當id，跟情緒標籤id=\"ec-${t}\"既有用法一致。",
       "reason": "debug"
     },
     {
       "date": "2026-07-22",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
-      "summary": "新增清醒時間與睡眠結構關聯分析（#fragmentationCorrelation）：回答awake是否犧牲Deep/REM結構佔比，與既有代償分析（結構內部三階段互相消長）分開兩張卡。比較過原始分鐘數vs佔比兩種算法，原始分鐘數有「總睡眠短→所有分期都變少」假關聯，改用佔比（沿用_stagePctFor）才是乾淨的結構性關聯。真實189夜資料：awake vs deep% r=-0.137、awake vs rem% r=-0.141，弱負相關，沿用既有|r|>=0.4才顯示建議文字的門檻。",
+      "summary": "新增清醒時間與睡眠結構關聯分析（#fragmentationCorrelation）：回答awake是否犧牲Deep/REM結構佔比，與既有代償分析（結構內部三階段互相消長）分開兩張卡。比較過原始分鐘數vs佔比兩種算法，原始分鐘數有「總睡眠短→所有分期都變少」假關聯，改用佔比（沿用_stagePctFor）才是乾淨的結構性關聯。真實189夜資料：awake vs deep% r=-0.137、awake vs rem% r=-0.141，弱負相關。沿用既有|r|>=0.4才顯示建議文字的門檻。",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-22",
       "project": "AI Tracker",
       "file": "project_aitracker_status.md（記憶檔）",
-      "summary": "記錄7/30財報監測待辦新增觀察標的：新聞點名Alphabet、Tesla、Intel財報將考驗AI資本支出，註記下次更新「📌靜態參考值」卡片時納入這三檔（Tesla/Intel原不在CapEx四大CSP清單內）。無程式碼改動。",
+      "summary": "記錄7/30財報監測待辦新增觀察標的：新聞點名Alphabet、Tesla、Intel財報將考驗AI資本支出。註記下次更新「📌靜態參考值」卡片時納入這三檔（Tesla/Intel原不在CapEx四大CSP清單內）。無程式碼改動。",
       "reason": "maintain"
     },
     {
       "date": "2026-07-21",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
-      "summary": "修正圖表桌面版被誤壓扁：上一輪修手機版壓縮問題時把maintainAspectRatio:false跟固定高度寫死套用到全部螢幕尺寸，誤傷桌面版原本靠寬度自動抓比例的行為（變扁）。新增_isMobileChart()（innerWidth<=600同CSS斷點），5個圖表改!_isMobileChart()——桌面恢復true(原行為)/手機維持false。教訓：上一輪驗證只確認CSS層疊邏輯正確，沒比較改動前後的實際渲染高度，這個驗證盲點導致誤傷沒被抓到",
+      "summary": "修正圖表桌面版被誤壓扁：上一輪修手機版壓縮問題時把maintainAspectRatio:false跟固定高度寫死套用到全部螢幕尺寸，誤傷桌面版原本靠寬度自動抓比例的行為（變扁）。新增_isMobileChart()（innerWidth<=600同CSS斷點）。5個圖表改!_isMobileChart()——桌面恢復true(原行為)/手機維持false。教訓：上一輪驗證只確認CSS層疊邏輯正確，沒比較改動前後的實際渲染高度，這個驗證盲點導致誤傷沒被抓到",
       "reason": "debug"
     },
     {
       "date": "2026-07-21",
       "project": "Control Center",
       "file": "cc_autosync.js + index.html",
-      "summary": "桌布(cc_wp_v1)改為裝置獨立設定，不再跨裝置同步：使用者反映Mac上傳後iPhone下載會覆蓋iPhone自己的桌布，查證後確認這是現行spec的既有設計但不符期待。cc_wp_v1從cc_autosync.js的SAFE_STATIC_KEYS移除（上傳端）＋index.html的syncDownload() restore迴圈額外排除（下載端），兩邊都改才能避免Gist裡舊資料下次下載時還是蓋過去。spec同步更新§3.1/§3.2/版本紀錄v2.10",
+      "summary": "桌布(cc_wp_v1)改為裝置獨立設定，不再跨裝置同步：使用者反映Mac上傳後iPhone下載會覆蓋iPhone自己的桌布，查證後確認這是現行spec的既有設計但不符期待。cc_wp_v1從cc_autosync.js的SAFE_STATIC_KEYS移除（上傳端）。＋index.html的syncDownload() restore迴圈額外排除（下載端）。兩邊都改才能避免Gist裡舊資料下次下載時還是蓋過去。spec同步更新§3.1/§3.2/版本紀錄v2.10",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-21",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
-      "summary": "修正手機版圖表被壓縮變形：mobile CSS用!important把圖表高度硬壓90px但Chart.js未關maintainAspectRatio，內部長寬比計算跟CSS高度打架致文字重疊。高度限制從canvas移到.chart-wrap外層wrapper，5個圖表加maintainAspectRatio:false，hypnoChart容器結構不同刻意未動",
+      "summary": "修正手機版圖表被壓縮變形：mobile CSS用!important把圖表高度硬壓90px但Chart.js未關maintainAspectRatio。內部長寬比計算跟CSS高度打架致文字重疊。高度限制從canvas移到.chart-wrap外層wrapper，5個圖表加maintainAspectRatio:false。hypnoChart容器結構不同刻意未動",
       "reason": "debug"
     },
     {
       "date": "2026-07-21",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html + index.html",
-      "summary": "新增睡眠分期代償分析：算Core/REM/Deep兩兩佔比（排除總睡眠長短干擾）的Pearson相關係數，真實188夜資料顯示Core↔REM r=-0.75強代償、Deep↔Core r=-0.66、Deep↔REM r=-0.01幾乎獨立；|r|>=0.4才顯示可能狀況＋建議文字避免對雜訊過度解讀。SAS Hub槓桿分析同步擴充：情緒分數分頁補上深睡/REM因子（任務完成率分頁本就有），跟REM/Deep vs隔天表現的跨系統驗證需求對齊",
+      "summary": "新增睡眠分期代償分析：算Core/REM/Deep兩兩佔比（排除總睡眠長短干擾）的Pearson相關係數。真實188夜資料顯示Core↔REM r=-0.75強代償、Deep↔Core r=-0.66、Deep↔REM r=-0.01幾乎獨立。|r|>=0.4才顯示可能狀況＋建議文字避免對雜訊過度解讀。SAS Hub槓桿分析同步擴充：情緒分數分頁補上深睡/REM因子（任務完成率分頁本就有），跟REM/Deep vs隔天表現的跨系統驗證需求對齊",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-21",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
-      "summary": "修正三道品質關卡誤殺優質新聞：用run_stats.json逐日llm_ratings vs final比對證實排程正常非停擺，但app分類12天核心新聞存活率0%、hw近乎全滅，是把關機制誤殺非生成端問題。validate_body縮小為只判兩種明確幻覺型態（原「摘要找不到逐字對應就砍」誤殺內容越紮實越易被冤枉）；禁句命中改成只刪該句保留卡片；除明確造假/客觀缺來源外，其餘關卡降級目標統一從noise(消失)改opp(仍顯示)。opus診斷+opus實作+sonnet獨立驗證三階段完成",
+      "summary": "修正三道品質關卡誤殺優質新聞：用run_stats.json逐日llm_ratings vs final比對證實排程正常非停擺。但app分類12天核心新聞存活率0%、hw近乎全滅，是把關機制誤殺非生成端問題。validate_body縮小為只判兩種明確幻覺型態（原「摘要找不到逐字對應就砍」誤殺內容越紮實越易被冤枉）。禁句命中改成只刪該句保留卡片。除明確造假/客觀缺來源外，其餘關卡降級目標統一從noise(消失)改opp(仍顯示)。opus診斷+opus實作+sonnet獨立驗證三階段完成",
       "reason": "debug"
     },
     {
       "date": "2026-07-21",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "summary": "修正事後啟用任務未補進覆盤/AI反饋的漏洞：任務庫「按需→每日」切換若發生在今天已存過覆盤之後，重載頁面時原本用凍結的saved.items當來源不重查getEffectiveTasks()，新啟用任務消失於覆盤與AI反饋外。改成一律即時查getEffectiveTasks()，renderReview()內建還原邏輯確保舊資料不遺失，休假模式刻意不動",
+      "summary": "修正事後啟用任務未補進覆盤/AI反饋的漏洞：任務庫「按需→每日」切換若發生在今天已存過覆盤之後，重載頁面時原本用凍結的saved.items當來源不重查getEffectiveTasks()。新啟用任務消失於覆盤與AI反饋外。改成一律即時查getEffectiveTasks()，renderReview()內建還原邏輯確保舊資料不遺失，休假模式刻意不動",
       "reason": "debug"
     },
     {
@@ -510,21 +510,21 @@
       "date": "2026-07-20",
       "project": "Control Center",
       "file": "cc_tooltip.js",
-      "summary": "scratchpad tooltip 改回用共用 row() 模板：原本因長文字截斷需求繞過共用 helper 手刻 inline style，違反 cc-spec 4.3.1「一律用共用 helper 組版面」；改法為 row() 新增第4參數 truncate，截斷用樣式搬到 cc_styles.css 的 .tt-k-trunc/.tt-v-shrink 兩個 class，不影響其餘20多處 row() 呼叫",
+      "summary": "scratchpad tooltip 改回用共用 row() 模板：原本因長文字截斷需求繞過共用 helper 手刻 inline style，違反 cc-spec 4.3.1「一律用共用 helper 組版面」。改法為 row() 新增第4參數 truncate。截斷用樣式搬到 cc_styles.css 的 .tt-k-trunc/.tt-v-shrink 兩個 class。不影響其餘20多處 row() 呼叫",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-20",
       "project": "Control Center",
       "file": "cc_tooltip.js",
-      "summary": "CC Dock scratchpad tooltip 天數顯示改「躺了N天」對齊內文：使用者反映原本的工作天縮寫（Nwd）不直觀，改用跟 scratchpad.html 內文一致的日曆天算法（ageDays），逾期紅字門檻同步從 >7個工作天 改為 ≥3天",
+      "summary": "CC Dock scratchpad tooltip 天數顯示改「躺了N天」對齊內文：使用者反映原本的工作天縮寫（Nwd）不直觀，改用跟 scratchpad.html 內文一致的日曆天算法（ageDays）。逾期紅字門檻同步從 >7個工作天 改為 ≥3天",
       "reason": "spec_change"
     },
     {
       "date": "2026-07-20",
       "project": "Sleep Dashboard",
       "file": ".nojekyll",
-      "summary": "修正 GitHub Pages 部署失敗（build #336）：repo 缺 .nojekyll 導致每次 build 都跑不必要的 Jekyll 處理（誤把 CLAUDE.md 當頁面渲染、套用 jekyll-theme-primer），這次因 jekyll-github-metadata 外掛呼叫 GitHub Pages API 遇到對方 503 暫時故障整個炸掉；新增 .nojekyll 徹底移除對 Jekyll/GitHub Metadata API 的依賴",
+      "summary": "修正 GitHub Pages 部署失敗（build #336）：repo 缺 .nojekyll 導致每次 build 都跑不必要的 Jekyll 處理。（誤把 CLAUDE.md 當頁面渲染、套用 jekyll-theme-primer）。這次因 jekyll-github-metadata 外掛呼叫 GitHub Pages API 遇到對方 503 暫時故障整個炸掉。新增 .nojekyll 徹底移除對 Jekyll/GitHub Metadata API 的依賴",
       "reason": "debug"
     },
     {
@@ -566,28 +566,28 @@
       "date": "2026-07-17",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "拆分三階潤飾為兩支獨立 API 呼叫，修正邏輯不合理與複誦對方原句問題——TASK1(分析回覆)與TASK2(產生替代回覆)不再合併同一prompt，promptB完全不含學習者回覆文字避免內容洩漏",
+      "summary": "拆分三階潤飾為兩支獨立 API 呼叫，修正邏輯不合理與複誦對方原句問題——TASK1(分析回覆)與TASK2(產生替代回覆)不再合併同一prompt。promptB完全不含學習者回覆文字避免內容洩漏",
       "reason": "debug"
     },
     {
       "date": "2026-07-17",
       "project": "(system)",
       "file": "check_dev_log.sh",
-      "summary": "新增 dev log 防遺忘 PostToolUse hook：每次 git push 後檢查 dev_log.json 是否更新到今天，過期則強制提醒 Claude，一天只警一次——回應使用者「為何連續三次忘記」的追問，從機制面而非自律解決",
+      "summary": "新增 dev log 防遺忘 PostToolUse hook：每次 git push 後檢查 dev_log.json 是否更新到今天，過期則強制提醒 Claude，一天只警一次。回應使用者「為何連續三次忘記」的追問，從機制面而非自律解決",
       "reason": "maintain"
     },
     {
       "date": "2026-07-17",
       "project": "Control Center",
       "file": "cc_autosync.js",
-      "summary": "全生態系跨裝置同步稽核：SAFE_STATIC_KEYS 補上 9 個真正遺漏的使用者資料 key（cc_cat_gif/optimizer_jobsearch_mode/sas_risk_flags/sas_combat_date/sas_combat_weekday/wordvault_reminder_days/wvk_parent_pwd/nexus_pb/nexus_ptm）——同源共用 localStorage，開任一 CC 頁面就會連其他 App 資料一起備份，但白名單未同步更新會漏備",
+      "summary": "全生態系跨裝置同步稽核：SAFE_STATIC_KEYS 補上 9 個真正遺漏的使用者資料 key。（cc_cat_gif/optimizer_jobsearch_mode/sas_risk_flags/sas_combat_date。sas_combat_weekday/wordvault_reminder_days/wvk_parent_pwd。nexus_pb/nexus_ptm）。同源共用 localStorage，開任一 CC 頁面就會連其他 App 資料一起備份，但白名單未同步更新會漏備",
       "reason": "debug"
     },
     {
       "date": "2026-07-17",
       "project": "Mental Dashboard",
       "file": "mental-dashboard.html",
-      "summary": "移除獨立 GitHub Gist 同步功能（gistPush/gistPull/gistCreds/gistStatus＋設定頁卡片）——發現與 Control Center 的 cc_autosync.js 共用同一個裸 gist_id，其「抓第一個檔案覆蓋」寫法差點蓋掉 Astro 命盤圖片；wellness_v5 已在白名單內故安全移除；教訓已記入 rules/lessons.md",
+      "summary": "移除獨立 GitHub Gist 同步功能（gistPush/gistPull/gistCreds/gistStatus＋設定頁卡片）——發現與 Control Center 的 cc_autosync.js 共用同一個裸 gist_id，其「抓第一個檔案覆蓋」寫法差點蓋掉 Astro 命盤圖片。wellness_v5 已在白名單內故安全移除。教訓已記入 rules/lessons.md",
       "reason": "debug"
     },
     {
@@ -601,14 +601,14 @@
       "date": "2026-07-17",
       "project": "Sleep Dashboard",
       "file": "com.sleep.dashboard.update.plist",
-      "summary": "LaunchAgent 加 RunAtLoad＋StartCalendarInterval 改四個每日觸發時段（09:30/13:00/18:00/22:00）——修正筆電睡眠時排程完全不執行的問題",
+      "summary": "LaunchAgent 加 RunAtLoad＋StartCalendarInterval 改四個每日觸發時段（09:30/13:00/18:00/22:00）。修正筆電睡眠時排程完全不執行的問題",
       "reason": "debug"
     },
     {
       "date": "2026-07-17",
       "project": "Sleep Dashboard",
       "file": "update_dashboard.py",
-      "summary": "git_push() 加入推送後驗證機制（比對 HEAD 與 FETCH_HEAD，失敗重試2次後拋錯）＋改用 origin 具名遠端——查明 07-13~07-16 曾多次假性顯示推送成功，實際 GitHub 未收到 commit",
+      "summary": "git_push() 加入推送後驗證機制（比對 HEAD 與 FETCH_HEAD，失敗重試2次後拋錯）＋改用 origin 具名遠端。查明 07-13~07-16 曾多次假性顯示推送成功，實際 GitHub 未收到 commit",
       "reason": "debug"
     },
     {
@@ -664,7 +664,7 @@
       "date": "2026-07-16",
       "project": "AI Tracker",
       "file": "update_data.py",
-      "summary": "前端 ai_tracker_v6.html 接上 cc_zht.js 繁中保底；後端 prompt 新增「合併非合並」等具體用詞提醒——根因是 LLM 用詞選字錯誤非簡體字殘留",
+      "summary": "前端 ai_tracker_v6.html 接上 cc_zht.js 繁中保底。後端 prompt 新增「合併非合並」等具體用詞提醒——根因是 LLM 用詞選字錯誤非簡體字殘留",
       "reason": "debug"
     },
     {
@@ -706,7 +706,7 @@
       "date": "2026-07-15",
       "project": "Control Center",
       "file": "cc_tooltip.js",
-      "summary": "統一 Dock hover 副標樣式：新增共用 sub()/.tt-sub，取代 sas-hub/astro/scratchpad 三處 ad-hoc inline style，比照 sleep hover 對齊；已寫入 spec 4.3.1節",
+      "summary": "統一 Dock hover 副標樣式：新增共用 sub()/.tt-sub，取代 sas-hub/astro/scratchpad 三處 ad-hoc inline style。比照 sleep hover 對齊。已寫入 spec 4.3.1節",
       "reason": "spec_change"
     },
     {
@@ -741,7 +741,7 @@
       "date": "2026-07-15",
       "project": "Control Center",
       "file": "cc_tooltip.js",
-      "summary": "Scratchpad v1.2：Dock 🗂 icon hover 補 case（原靜默失敗）——Inbox 摘要 tooltip（逐則+躺N天amber）；教訓：新增 Dock icon 必同步加 cc_tooltip case",
+      "summary": "Scratchpad v1.2：Dock 🗂 icon hover 補 case（原靜默失敗）——Inbox 摘要 tooltip（逐則+躺N天amber）。教訓：新增 Dock icon 必同步加 cc_tooltip case",
       "reason": "debug"
     },
     {
@@ -755,7 +755,7 @@
       "date": "2026-07-14",
       "project": "Control Center",
       "file": "scratchpad.html",
-      "summary": "新增 Scratchpad 雜記收件匣 v1.0：GTD inbox（快速輸入/三選一review/躺N天徽章/transfer=move寫入Optimizer任務庫ondemand/零history/空間治理），spec先行",
+      "summary": "新增 Scratchpad 雜記收件匣 v1.0：GTD inbox。（快速輸入/三選一review/躺N天徽章/transfer=move寫入Optimizer任務庫ondemand/零history/空間治理）。spec先行",
       "reason": "spec_change"
     },
     {
