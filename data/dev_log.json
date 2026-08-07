@@ -13,7 +13,7 @@
       "date": "2026-08-07",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "Idiom拆彈遊戲新增2個商業主題+答案揭曉後可追問AI：使用者要求情境擴增更多商業面，並仿Small Talk文法詢問區加想問AI為什麼的對話框。AskUserQuestion確認方向選「新增商業主題分類」。IDIOM_TOPICS新增service(客戶服務)/crossfunc(跨部門協作)兩主題各6場景。答案揭曉面板新增追問聊天框，appendGrChat()改參數化支援不同聊天容器id不重寫一份，新增askIdiomWhy()獨立prompt帶入該題句子/選項/正確答案/使用者選錯內容/既有解釋，沿用s2t()+_sanitizePlainText()雙重防護、每題重置對話同一套設計。獨立agent複核10項條件（id不衝突/CSS無父層依賴/node --check/色碼規範）全通過。",
+      "summary": "Idiom拆彈遊戲新增2個商業主題+答案揭曉後可追問AI：使用者要求情境擴增更多商業面，並仿Small Talk文法詢問區加想問AI為什麼的對話框。AskUserQuestion確認方向選「新增商業主題分類」。IDIOM_TOPICS新增service(客戶服務)/crossfunc(跨部門協作)兩主題各6場景。答案揭曉面板新增追問聊天框。appendGrChat()改參數化支援不同聊天容器id，不重寫一份。新增askIdiomWhy()獨立prompt，帶入該題句子/選項/正確答案/使用者選錯內容/既有解釋。沿用s2t()+_sanitizePlainText()雙重防護、每題重置對話，同一套設計。獨立agent複核10項條件（id不衝突/CSS無父層依賴/node --check/色碼規範）全通過。",
       "reason": "user_request"
     },
     {
