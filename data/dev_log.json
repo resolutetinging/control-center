@@ -20,35 +20,35 @@
       "date": "2026-08-07",
       "project": "WordVault",
       "file": "WordVault.html",
-      "summary": "發音來源改並行賽跑，減少字典API不穩時的等待延遲：使用者測試cauldron發音有播出來但反映延遲相當久。curl實測dictionaryapi.dev對cauldron的-us/-au音檔皆502，跟前一天的canine同樣問題，確認是字典網站發音檔主機目前普遍不穩非單一字案例。原本_fetchAndPlayAudio()是循序流程先等字典音檔驗證失敗才開始CDN賽跑。改成字典API音檔與3個CDN來源一開始就同一組Promise.any()一起賽跑，誰先成功用誰。順手修prefetchAudioUrls()背景預抓同根因問題（原本沒驗證就快取，字典不穩時持續寫入壞快取）。opus複核兩輪：時間戳證實真並行非循序、四種勝出情境與失敗邊界皆正確無unhandledRejection、確認前一天改的speak()同步播放邏輯未被誤動。node --check通過。",
+      "summary": "發音來源改並行賽跑，減少字典API不穩時的等待延遲：使用者測試cauldron發音有播出來但反映延遲相當久。curl實測dictionaryapi.dev對cauldron的-us/-au音檔皆502，跟前一天的canine同樣問題。確認是字典網站發音檔主機目前普遍不穩，非單一字案例。原本_fetchAndPlayAudio()是循序流程先等字典音檔驗證失敗才開始CDN賽跑。改成字典API音檔與3個CDN來源一開始就同一組Promise.any()一起賽跑，誰先成功用誰。順手修prefetchAudioUrls()背景預抓同根因問題（原本沒驗證就快取，字典不穩時持續寫入壞快取）。opus複核兩輪：時間戳證實真並行非循序、四種勝出情境與失敗邊界皆正確無unhandledRejection、確認前一天改的speak()同步播放邏輯未被誤動。node --check通過。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-07",
       "project": "AI Tracker",
       "file": "(GitHub Actions / Pages部署，非程式碼)",
-      "summary": "查明「寄信但dashboard本週記錄無內容」為GitHub Pages部署卡住，非資料管線bug。確認repo裡history.json/run_stats.json都證實8/7資料生成成功、email排程也成功執行，推翻「條目整條消失」的舊有未解疑點假設。透過curl比對repo與線上實際部署內容，發現線上停在8/6；查GitHub Actions API找到根因：緊接的pages build and deployment從8/6 16:04 UTC起卡在waiting狀態超過12小時未完成，屬GitHub平台端問題非本地程式碼。處理：推空commit觸發新部署取代卡住的舊部署。",
+      "summary": "查明「寄信但dashboard本週記錄無內容」為GitHub Pages部署卡住，非資料管線bug。確認repo裡history.json/run_stats.json都證實8/7資料生成成功、email排程也成功執行，推翻「條目整條消失」的舊有未解疑點假設。透過curl比對repo與線上實際部署內容，發現線上停在8/6；查GitHub Actions API找到根因：緊接的pages build and deployment從8/6 16:04 UTC起卡在waiting狀態超過12小時未完成。屬GitHub平台端問題，非本地程式碼。處理：推空commit觸發新部署取代卡住的舊部署。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-06",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
-      "summary": "文法追問聊天(askGrammarWhy)加字元白名單過濾：使用者回報「想問AI為什麼這樣改」的AI回應裡出現怪異字元。排除textContent顯示（非innerHTML）與s2t()繁中轉換（只處理CJK碼位不動英文/符號）兩種可能，判斷是Groq小模型生成品質問題非本地邏輯錯誤，無法精準定位單一根因字元，改做防禦性過濾。新增_sanitizePlainText()白名單（繁中/CJK標點/英文數字/常見標點），套用在s2t()之後。獨立agent複核：Node模擬legitimate文字（連字號、百分比、中英混排引號、標點）逐字不變，異常字元（零寬空白/私有使用區/emoji）正確濾掉且前後文完整保留，grep確認未誤動另一處s2t()呼叫點，node --check通過。",
+      "summary": "文法追問聊天(askGrammarWhy)加字元白名單過濾：使用者回報「想問AI為什麼這樣改」的AI回應裡出現怪異字元。排除textContent顯示（非innerHTML）與s2t()繁中轉換（只處理CJK碼位不動英文/符號）兩種可能。判斷是Groq小模型生成品質問題，非本地邏輯錯誤。無法精準定位單一根因字元，改做防禦性過濾。新增_sanitizePlainText()白名單（繁中/CJK標點/英文數字/常見標點），套用在s2t()之後。獨立agent複核：Node模擬legitimate文字（連字號、百分比、中英混排引號、標點）逐字不變。異常字元（零寬空白/私有使用區/emoji）正確濾掉，且前後文完整保留。grep確認未誤動另一處s2t()呼叫點，node --check通過。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-06",
       "project": "WordVault",
       "file": "WordVault.html",
-      "summary": "修正發音按鈕靜默失敗：使用者回報canine點🔊沒聲音。查根因curl -I實測字典API對canine回傳的音檔URL本身指向對方伺服器502的檔案，是外部API資料品質問題；但更根本的是WordVault原本邏輯拿到URL不驗證就直接快取＋播放，失敗被.play().catch(()=>{})吞掉不觸發備援，壞URL永久卡住每次重複靜默失敗。修法：字典API音檔改用既有_tryAudioLoad()驗證真的載入得起來才快取＋播放，失敗往CDN賽跑找備援；新增_clearAudioUrl()，快取URL驗證失敗就清掉重新走完整流程；刪除無驗證邏輯的舊_playAudioUrl()。opus複核三輪：確認canine修好後真的透過CDN賽跑發真人語音；抓到新設計讓最常用的「已快取」路徑從同步播放變非同步，可能被iOS自動播放限制擋掉完全無聲，已改回同步play()+error事件雙重判斷；確認五情境含防重複執行皆正確。多輪Node模擬驗證，node --check通過。",
+      "summary": "修正發音按鈕靜默失敗：使用者回報canine點🔊沒聲音。查根因curl -I實測字典API對canine回傳的音檔URL本身指向對方伺服器502的檔案，是外部API資料品質問題。但更根本的是WordVault原本邏輯拿到URL不驗證就直接快取＋播放，失敗被.play().catch(()=>{})吞掉不觸發備援。壞URL永久卡住，每次重複靜默失敗。修法：字典API音檔改用既有_tryAudioLoad()驗證真的載入得起來才快取＋播放，失敗往CDN賽跑找備援。新增_clearAudioUrl()，快取URL驗證失敗就清掉重新走完整流程。刪除無驗證邏輯的舊_playAudioUrl()。opus複核三輪：確認canine修好後真的透過CDN賽跑發真人語音。抓到新設計讓最常用的「已快取」路徑從同步播放變非同步，可能被iOS自動播放限制擋掉完全無聲，已改回同步play()+error事件雙重判斷。確認五情境含防重複執行皆正確。多輪Node模擬驗證，node --check通過。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-06",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "summary": "拿掉分析趨勢的時間範圍選單+加深洞察內容：前一版加的30/60/90天/全部範圍選單，使用者實測回報不管選哪個都會被413自動縮減機制夾到差不多同一個實際天數，選單形同虛設。提供三方向供選，使用者選最簡單的「拿掉選單」，改成一律嘗試分析全部筆記讓縮減機制自己找範圍，cache key改回單一arc_summary。同一輪使用者追加要求分析內容更深入，AskUserQuestion確認方向（每條洞察更詳細+新增分析維度）：insight從4項加到5項(新增矛盾與待驗證)，每項要求3-4句附推論依據與日期佐證，max_tokens從1800提高到2600配合。opus複核兩輪抓到殘留孤兒變數(會丟ReferenceError)、LLM回傳內容插入innerHTML未跳脫的XSS縫隙、以及補的跳脫函式本身漏跳脫雙引號可被脫逃注入事件屬性，皆修正並複核確認。node --check通過。",
+      "summary": "拿掉分析趨勢的時間範圍選單+加深洞察內容：前一版加的30/60/90天/全部範圍選單，使用者實測回報不管選哪個都會被413自動縮減機制夾到差不多同一個實際天數，選單形同虛設。提供三方向供選，使用者選最簡單的「拿掉選單」，改成一律嘗試分析全部筆記讓縮減機制自己找範圍，cache key改回單一arc_summary。同一輪使用者追加要求分析內容更深入，AskUserQuestion確認方向（每條洞察更詳細+新增分析維度）。insight從4項加到5項(新增矛盾與待驗證)，每項要求3-4句附推論依據與日期佐證。max_tokens從1800提高到2600配合。opus複核兩輪抓到殘留孤兒變數(會丟ReferenceError)、LLM回傳內容插入innerHTML未跳脫的XSS縫隙、以及補的跳脫函式本身漏跳脫雙引號可被脫逃注入事件屬性。皆修正並複核確認。node --check通過。",
       "reason": "user_request"
     },
     {
@@ -69,21 +69,21 @@
       "date": "2026-08-06",
       "project": "Control Center",
       "file": "cc_track.js",
-      "summary": "修正localStorage配額預警：改用真實UTF-8位元組數，門檻對齊實測上限。使用者反映容量又到上限，用Blob量測實際只有2.33MB，但今天開AI Tracker時cc_track.js跳出「已用4.1MB」警示，兩數字對不上。查出cc_track.js原本用「字元數×2」概估位元組數(UTF-16概估)，對英數混中文內容系統性算錯（ASCII灌水快2倍、CJK反而低估因UTF-8的CJK是3bytes非2bytes），且「同源上限約5MB」假設比06-23實測的約10MB更保守，兩件事疊加造成假警報。新增共用helper _ccByteLen()用Blob量真實UTF-8位元組數，全檔統一改用；QUOTA_LIMIT_BYTES從4MB改6MB留安全margin；畫面文案同步更新。刻意不動cc_store.js裡「iPhone/iPad Safari上限約5MB」——那是特別限定iOS裝置的既有描述，跟這次修的泛指假設可能不是同一件事，沒把握判斷是否衝突，留給使用者確認不自己選一邊。node --check通過+自寫模擬驗證+opus獨立複核無must-fix，部署後線上curl驗證生效。",
+      "summary": "修正localStorage配額預警：改用真實UTF-8位元組數，門檻對齊實測上限。使用者反映容量又到上限，用Blob量測實際只有2.33MB，但今天開AI Tracker時cc_track.js跳出「已用4.1MB」警示，兩數字對不上。查出cc_track.js原本用「字元數×2」概估位元組數(UTF-16概估)，對英數混中文內容系統性算錯（ASCII灌水快2倍、CJK反而低估因UTF-8的CJK是3bytes非2bytes）。且「同源上限約5MB」假設比06-23實測的約10MB更保守。兩件事疊加造成假警報。新增共用helper _ccByteLen()用Blob量真實UTF-8位元組數，全檔統一改用。QUOTA_LIMIT_BYTES從4MB改6MB留安全margin。畫面文案同步更新。刻意不動cc_store.js裡「iPhone/iPad Safari上限約5MB」——那是特別限定iOS裝置的既有描述，跟這次修的泛指假設可能不是同一件事。沒把握判斷是否衝突，留給使用者確認，不自己選一邊。node --check通過+自寫模擬驗證+opus獨立複核無must-fix，部署後線上curl驗證生效。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-05",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "新增「人際圈與睡眠/完成率關聯」跨App分析卡片：第二輪跨生態系優化第五順位，8條缺口清單最後一項。讀Mental Dashboard的wellness_v5，情緒紀錄friends類impactFactors的人名比對回profile.people/peopleCats兩層join，依分類統計互動天數、次日睡眠品質分、當日完成率。因無法直接驗證使用者實際資料品質，改用「配對成功率透明呈現」設計——卡片最上方誠實顯示配對成功率，過低額外警示。opus獨立複核抓到must-fix：樣本量原本只看互動天數未看實際有效資料天數，小樣本會冒充大樣本平均，違背卡片誠實揭露的設計初衷，已修正為兩個獨立判斷各需5筆有效樣本。兩輪複核確認無誤。至此8條缺口清單全數處理完畢（1項使用者確認擱置不做）。",
+      "summary": "新增「人際圈與睡眠/完成率關聯」跨App分析卡片：第二輪跨生態系優化第五順位，8條缺口清單最後一項。讀Mental Dashboard的wellness_v5，情緒紀錄friends類impactFactors的人名比對回profile.people/peopleCats兩層join。依分類統計互動天數、次日睡眠品質分、當日完成率。因無法直接驗證使用者實際資料品質，改用「配對成功率透明呈現」設計——卡片最上方誠實顯示配對成功率，過低額外警示。opus獨立複核抓到must-fix：樣本量原本只看互動天數未看實際有效資料天數，小樣本會冒充大樣本平均，違背卡片誠實揭露的設計初衷。已修正為兩個獨立判斷各需5筆有效樣本。兩輪複核確認無誤。至此8條缺口清單全數處理完畢（1項使用者確認擱置不做）。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-05",
       "project": "Refueler",
       "file": "refueler.html",
-      "summary": "店家卡片調整：拉寬容納8個月圖表＋明細上方新增月份-品項聚合。使用者對稍早新增的店家消費趨勢卡片提出兩點調整需求，進來時忙於SAS Hub另一批驗證工作沒立即接手，事後詢問完成狀態才發現遺漏補做。新增.dd-panel-wide(640px)，showShopDetail()套用、showDayDetail()（共用同一彈窗）移除避免互相污染寬度。每月份區塊內raw record上方新增aggByItem()/renderItemAgg()聚合，咖啡/甜點分開統計，沿用既有cost-tree樣式，raw record含編輯機制完整保留。node --check通過+自寫模擬驗證+獨立agent複核10項條件全通過。",
+      "summary": "店家卡片調整：拉寬容納8個月圖表＋明細上方新增月份-品項聚合。使用者對稍早新增的店家消費趨勢卡片提出兩點調整需求，進來時忙於SAS Hub另一批驗證工作沒立即接手，事後詢問完成狀態才發現遺漏補做。新增.dd-panel-wide(640px)，showShopDetail()套用、showDayDetail()（共用同一彈窗）移除避免互相污染寬度。每月份區塊內raw record上方新增aggByItem()/renderItemAgg()聚合，咖啡/甜點分開統計，沿用既有cost-tree樣式。raw record含編輯機制完整保留。node --check通過+自寫模擬驗證+獨立agent複核10項條件全通過。",
       "reason": "user_request"
     },
     {
@@ -97,70 +97,70 @@
       "date": "2026-08-05",
       "project": "SAS Hub / Daily Optimizer",
       "file": "index.html / daily_optimizer.html",
-      "summary": "sas_pipe_review累積化補14天無視警告率＋咖啡末杯時刻觀察：第二輪跨生態系優化第三、四順位。sas_pipe_review原本每次覆盤整個覆寫成單一物件，SAS Hub永遠只看得到最新一天。比照既有logOverloadDay()改成rolling array，讀取端同時支援舊物件與新陣列格式，新增近14天無視警告率統計（樣本<3安靜不顯示，且提前到early return之前計算避免常態情況看不到）。opus複核兩輪修正null元素防護、舊物件遷移、統計位置三項nice-to-have。另新增getRefuelerByDate()的lastCoffeeTime，T-1對照卡顯示末杯時刻，距入睡<6小時附觀察性提示（避免因果肯定句），跨午夜間隔計算正確。兩項皆獨立agent複核無must-fix。",
+      "summary": "sas_pipe_review累積化補14天無視警告率＋咖啡末杯時刻觀察：第二輪跨生態系優化第三、四順位。sas_pipe_review原本每次覆盤整個覆寫成單一物件，SAS Hub永遠只看得到最新一天。比照既有logOverloadDay()改成rolling array，讀取端同時支援舊物件與新陣列格式。新增近14天無視警告率統計（樣本<3安靜不顯示，且提前到early return之前計算，避免常態情況看不到）。opus複核兩輪修正null元素防護、舊物件遷移、統計位置三項nice-to-have。另新增getRefuelerByDate()的lastCoffeeTime，T-1對照卡顯示末杯時刻，距入睡<6小時附觀察性提示（避免因果肯定句）。跨午夜間隔計算正確。兩項皆獨立agent複核無must-fix。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-05",
       "project": "Refueler",
       "file": "refueler.html",
-      "summary": "新增「🏪 店家」消費趨勢卡片：使用者提出支線需求，點選店家可看月度消費走勢與對應明細。AskUserQuestion確認3個介面決定：新增獨立店家分頁入口、取代原本showShopDetail攤平清單、金額口徑可切換咖啡/甜點/合計三模式。新增renderShopList()依總消費排序列店家，showShopDetail()改為單店月度SVG走勢圖(YY/MM格式)+依月份分組明細，獨立狀態變數_shopChartMode不與主圖表互相干擾，4處呼叫點皆補上同步刷新。獨立agent逐條核對9項驗收條件全通過。純新增UI功能，未做瀏覽器實測，已告知使用者自行上線確認。",
+      "summary": "新增「🏪 店家」消費趨勢卡片：使用者提出支線需求，點選店家可看月度消費走勢與對應明細。AskUserQuestion確認3個介面決定：新增獨立店家分頁入口、取代原本showShopDetail攤平清單、金額口徑可切換咖啡/甜點/合計三模式。新增renderShopList()依總消費排序列店家，showShopDetail()改為單店月度SVG走勢圖(YY/MM格式)+依月份分組明細。獨立狀態變數_shopChartMode不與主圖表互相干擾，4處呼叫點皆補上同步刷新。獨立agent逐條核對9項驗收條件全通過。純新增UI功能，未做瀏覽器實測，已告知使用者自行上線確認。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-05",
       "project": "SAS Hub / Control Center",
       "file": "index.html(×2) / cc_autosync.js",
-      "summary": "近7天燈補慢性耗竭死角＋早熄燈校正加示警＋接上Guard：第二輪跨生態系優化第二順位（項目3、4、7合併處理）。buildWeekPressure()補Total-Defense≥4推flag、≥5直接判紅的死角；buildWeekPressure()/buildOverloadFreq()新增sas_week_flags/sas_pace_flags寫入，Control Center的checkGuard()新增純顯示分支（紅燈只變色不強制中止，避免持續多天的狀態警告天天打斷操作）；runEnergyCorrection()連續早熄燈≥3天新增UI提示（原本只調cc_energy_weights無顯示）。附帶把兩把新key補進cc_autosync.js的SAFE_STATIC_KEYS白名單。opus獨立複核重點驗證Guard新分支確認不會觸發強制中止，無must-fix。",
+      "summary": "近7天燈補慢性耗竭死角＋早熄燈校正加示警＋接上Guard：第二輪跨生態系優化第二順位（項目3、4、7合併處理）。buildWeekPressure()補Total-Defense≥4推flag、≥5直接判紅的死角。buildWeekPressure()/buildOverloadFreq()新增sas_week_flags/sas_pace_flags寫入，Control Center的checkGuard()新增純顯示分支（紅燈只變色不強制中止，避免持續多天的狀態警告天天打斷操作）。runEnergyCorrection()連續早熄燈≥3天新增UI提示（原本只調cc_energy_weights無顯示）。附帶把兩把新key補進cc_autosync.js的SAFE_STATIC_KEYS白名單。opus獨立複核重點驗證Guard新分支確認不會觸發強制中止，無must-fix。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "統一任務完成率計算口徑，⊘不做（有意識決定）不再誤記為失敗：第二輪跨生態系優化盤點（找缺口非修bug）產出8條機會，使用者選第一順位今天處理。使用者用AskUserQuestion定案規格：part記0.5分；整天全⊘不做特例記完成率100%但加連續發生警示（自訂答案）。新增共用helper calcCompletionRate()，10處呼叫點改用新口徑，3處判斷後保留原樣，新增buildNoDayAlert()。兩輪opus獨立複核：第一輪抓到1個must-fix（T-1卡片全no天與空items天顯示矛盾文字）+3個nice-to-have（停損率分母未排除no、restMode誤觸警示、null項目邊界），全修正後第二輪確認無誤可push。明確不動：Daily Optimizer自己的配速口徑（跨檔另議）、週摘要件加權顯示不一致（可接受取捨）。node --check通過，測試51案例全綠。",
+      "summary": "統一任務完成率計算口徑，⊘不做（有意識決定）不再誤記為失敗：第二輪跨生態系優化盤點（找缺口非修bug）產出8條機會，使用者選第一順位今天處理。使用者用AskUserQuestion定案規格：part記0.5分；整天全⊘不做特例記完成率100%但加連續發生警示（自訂答案）。新增共用helper calcCompletionRate()，10處呼叫點改用新口徑，3處判斷後保留原樣，新增buildNoDayAlert()。兩輪opus獨立複核：第一輪抓到1個must-fix（T-1卡片全no天與空items天顯示矛盾文字）+3個nice-to-have（停損率分母未排除no、restMode誤觸警示、null項目邊界）。全修正後第二輪確認無誤可push。明確不動：Daily Optimizer自己的配速口徑（跨檔另議）、週摘要件加權顯示不一致（可接受取捨）。node --check通過，測試51案例全綠。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "補漏：三維相關性卡與槓桿條卡遺留的「戰力」字樣正名為「睡眠品質分」：使用者依卡片對照表人工檢查UI後回報漏改處。grep全檔確認4處：三維相關性卡分類邏輯說明文字＋圖表hover tooltip、槓桿條卡在情緒/完成率兩tab檢視睡眠品質分作為關聯因子時的影響文字fmtImpact()、品質分tab自己情緒洞察句其中一句。其餘戰力字樣皆確認為真實sas_combat戰力維度或使用者明說不用檢查的週報，非漏改。node --check通過。",
+      "summary": "補漏：三維相關性卡與槓桿條卡遺留的「戰力」字樣正名為「睡眠品質分」：使用者依卡片對照表人工檢查UI後回報漏改處。grep全檔確認4處：三維相關性卡分類邏輯說明文字＋圖表hover tooltip。槓桿條卡在情緒/完成率兩tab檢視睡眠品質分作為關聯因子時的影響文字fmtImpact()。品質分tab自己情緒洞察句其中一句。其餘戰力字樣皆確認為真實sas_combat戰力維度或使用者明說不用檢查的週報，非漏改。node --check通過。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub",
       "file": "index.html",
-      "summary": "統一睡眠代理分數計算＋睡眠戰力正名睡眠品質分（架構優化第4項，先前暫緩後今日執行）：使用者確認要動，並要求完成後告知所有調整位置供其人工檢查。抽出共用_sleepProxyScore()核心公式，getSleepQualityMap()支援指定單一trend窗口。calcSleepToMoodLag()維持原7天窗口不變；buildCausalChainNarrative()/renderWeekStrip()/buildLeverageBars()改用共用函式並擴大至trend180窗口。predictedEndurance()因語意不同（缺一項數值視為整筆null vs 原本各欄位獨立fallback，會讓餵給cc_energy_weights排程校正的續航估算大幅偏移）刻意不套用共用函式維持原邏輯。派opus第二意見複核抓到3個問題：predictedEndurance()語意不符（已如上處理）、buildLeverageBars()把缺資料日期誤填0分污染Pearson相關係數（改null正確排除）、buildCausalChainNarrative()重構時意外遺失最少3晚資料防呆（補回ca.length<3判斷）。19處「睡眠戰力」正名為「睡眠品質分」（週報範例句與真戰力維度保留原字不動）。Node模擬各site驗證通過後，整理成卡片對照表交使用者人工檢查UI後才push。",
+      "summary": "統一睡眠代理分數計算＋睡眠戰力正名睡眠品質分（架構優化第4項，先前暫緩後今日執行）：使用者確認要動，並要求完成後告知所有調整位置供其人工檢查。抽出共用_sleepProxyScore()核心公式，getSleepQualityMap()支援指定單一trend窗口。calcSleepToMoodLag()維持原7天窗口不變。buildCausalChainNarrative()/renderWeekStrip()/buildLeverageBars()改用共用函式並擴大至trend180窗口。predictedEndurance()因語意不同：缺一項數值視為整筆null，而原本各欄位獨立fallback，會讓餵給cc_energy_weights排程校正的續航估算大幅偏移。因此刻意不套用共用函式，維持原邏輯。派opus第二意見複核抓到3個問題。predictedEndurance()語意不符（已如上處理）。buildLeverageBars()把缺資料日期誤填0分污染Pearson相關係數（改null正確排除）。buildCausalChainNarrative()重構時意外遺失最少3晚資料防呆（補回ca.length<3判斷）。19處「睡眠戰力」正名為「睡眠品質分」（週報範例句與真戰力維度保留原字不動）。Node模擬各site驗證通過後，整理成卡片對照表交使用者人工檢查UI後才push。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
-      "summary": "建議任務篩選改用energy欄位不再用catKey：使用者回報8/3隨機挑選修法今天實測沒生效，先排除舊資料/CDN快取（線上版本已確認最新），使用者澄清心裡想像是「AI判定輕量時段會從標記輕量的任務裡隨機挑」並附任務能耗設定畫面截圖。比對截圖發現問題更深層：buildHintFromTasks()篩選用catKey（學習/求職/日常事務），但使用者實際標記、calcPipePressure()算水管壓力也在用的是energy欄位（高耗能/中耗能/輕量），pipeType本該對齊energy不是catKey，兩套分類長期不一致。改用energy篩選對齊pipeType。用截圖裡實際任務資料模擬驗證：mid池從9個混雜各能耗等級收斂到4個真正中耗能任務，「英文練習」不再誤入高強度池、「姓名學命理學習」正確納入高強度池。node --check通過。",
+      "summary": "建議任務篩選改用energy欄位不再用catKey：使用者回報8/3隨機挑選修法今天實測沒生效，先排除舊資料/CDN快取（線上版本已確認最新）。使用者澄清心裡想像是「AI判定輕量時段會從標記輕量的任務裡隨機挑」，並附任務能耗設定畫面截圖。比對截圖發現問題更深層：buildHintFromTasks()篩選用catKey（學習/求職/日常事務）。但使用者實際標記、calcPipePressure()算水管壓力用的都是energy欄位（高耗能/中耗能/輕量）。pipeType本該對齊energy，不是catKey，兩套分類長期不一致。改用energy篩選對齊pipeType。用截圖裡實際任務資料模擬驗證：mid池從9個混雜各能耗等級收斂到4個真正中耗能任務，「英文練習」不再誤入高強度池、「姓名學命理學習」正確納入高強度池。node --check通過。",
       "reason": "bug_fix"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub / Control Center",
       "file": "index.html / cc_autosync.js",
-      "summary": "追加處理殘留低優先發現（NaN防呆/去重複呼叫/人類圖配速提示/Gist白名單）：架構審查後殘留5項低優先發現，使用者確認3、4、5可執行、2一起做、1（共用函式大重構）留待今天任務結束後再討論。NaN防呆：getSleepQualityMap()新增Number.isFinite檢查，deepP/remP缺失時不寫入map，避免NaN讓alignClass()等判定誤判成狀態正常，影響風險燈號/意志力透支/三維相關性三張卡。去重複呼叫：buildInertiaAlert()/buildRiskLight()新增可選sqMap參數，updateCombat()算一次共用傳入，純效能無行為變更。人類圖配速提示：buildPacePills()原讀sas_settings（全生態系無寫入端恆空）改讀window._hdData.strat（loadHDProfile()已有wellness_v5.profile備援），順帶把pill顏色從.p-purple改.p-info避免資料修好後第一次違反禁紫紅色字規範。sas_overload_log加進Gist備份白名單。Node模擬NaN防呆邏輯驗證通過。",
+      "summary": "追加處理殘留低優先發現（NaN防呆/去重複呼叫/人類圖配速提示/Gist白名單）：架構審查後殘留5項低優先發現，使用者確認3、4、5可執行、2一起做、1（共用函式大重構）留待今天任務結束後再討論。NaN防呆：getSleepQualityMap()新增Number.isFinite檢查，deepP/remP缺失時不寫入map。避免NaN讓alignClass()等判定誤判成狀態正常，影響風險燈號/意志力透支/三維相關性三張卡。去重複呼叫：buildInertiaAlert()/buildRiskLight()新增可選sqMap參數，updateCombat()算一次共用傳入。純效能無行為變更。人類圖配速提示：buildPacePills()原讀sas_settings（全生態系無寫入端恆空），改讀window._hdData.strat（loadHDProfile()已有wellness_v5.profile備援）。順帶把pill顏色從.p-purple改.p-info，避免資料修好後第一次違反禁紫紅色字規範。sas_overload_log加進Gist備份白名單。Node模擬NaN防呆邏輯驗證通過。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "SAS Hub / Control Center / Daily Optimizer",
       "file": "index.html(×2) / daily_optimizer.html",
-      "summary": "CC生態系跨維度資料流架構優化（6項）：使用者要求重新審查生態系分析/串接現況並提優化建議。先派opus重讀全部核心程式碼盤點資料流地圖、跨維度分析涵蓋範圍、斷點與不一致，產出6條建議，使用者確認全部進行。逐項處理：(1)修rev.reviewItems→rev.items欄位名bug，SAS Hub決策相關性卡從上線起因此永遠顯示資料不足；(2)alignClass()四處歷史日期判定改用當日睡眠代理值不再套今天combat，避免歷史紅點/崩盤預警隨今天狀態漂移；(3)週報AI prompt新增系統已算好的量化訊號段落餵給LLM；(4)評估後暫緩共用函式重構，因涉及近20處用詞尺度不一致風險過高不符最低優先項目該承擔的成本；(5)cc_energy_weights校正係數接上Daily Optimizer實際排程權重，之前只顯示文案未套用；(6)統一日期邊界為本地日，修正CC的TODAY常數與SAS Hub讀Refueler資料原本用UTC切字串，導致本地凌晨0-8點讀到昨天任務清單、熬夜咖啡歸錯天的問題，風險最高獨立commit。全部Node模擬驗證（含實際台北時區凌晨咖啡案例），推送後再派opus第二意見複核，8項驗收全過但抓到must-fix：cc_energy_weights寫入端原本無節流，接上真實排程後同一天內連續觸發會讓係數失控衝頂，已補上lastCorrected每日節流並驗證。",
+      "summary": "CC生態系跨維度資料流架構優化（6項）：使用者要求重新審查生態系分析/串接現況並提優化建議。先派opus重讀全部核心程式碼盤點資料流地圖、跨維度分析涵蓋範圍、斷點與不一致，產出6條建議，使用者確認全部進行。逐項處理：(1)修rev.reviewItems→rev.items欄位名bug，SAS Hub決策相關性卡從上線起因此永遠顯示資料不足。(2)alignClass()四處歷史日期判定改用當日睡眠代理值不再套今天combat，避免歷史紅點/崩盤預警隨今天狀態漂移。(3)週報AI prompt新增系統已算好的量化訊號段落餵給LLM。(4)評估後暫緩共用函式重構，因涉及近20處用詞尺度不一致風險過高，不符最低優先項目該承擔的成本。(5)cc_energy_weights校正係數接上Daily Optimizer實際排程權重，之前只顯示文案未套用。(6)統一日期邊界為本地日，修正CC的TODAY常數與SAS Hub讀Refueler資料原本用UTC切字串，導致本地凌晨0-8點讀到昨天任務清單、熬夜咖啡歸錯天的問題，風險最高獨立commit。全部Node模擬驗證（含實際台北時區凌晨咖啡案例），推送後再派opus第二意見複核。8項驗收全過，但抓到must-fix：cc_energy_weights寫入端原本無節流，接上真實排程後同一天內連續觸發會讓係數失控衝頂。已補上lastCorrected每日節流並驗證。",
       "reason": "user_request"
     },
     {
       "date": "2026-08-04",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "summary": "CapEx長條圖縮短寬度+新增Q2較Q1季增減數字：使用者截圖回報「最新資本支出Guidance」長條圖右側文字被擠成多行，要求縮短bar讓出空間，並要求新增「這一季-上一季」的資本支出差異值。CSS層面.capex-track從flex:1改flex:0 0 55%，.capex-yoy從固定width:48px改flex:1自動吃剩餘寬度。派研究subagent查證四家公司2026 Q1實際capex（先前只查過guidance修訂值與Q2實際值），計算Q2較Q1季增減：Amazon+$9.9B/Google+$9.2B/Microsoft+$9.1B（FY26 Q3→Q4）/Meta+$11.3B，皆附來源。腳注補充Microsoft的Q1/Q2對應財年季非日曆季。node --check通過，git diff --stat只動一檔，push時再度遇GitHub Actions自動更新，git pull --rebase乾淨處理。",
+      "summary": "CapEx長條圖縮短寬度+新增Q2較Q1季增減數字：使用者截圖回報「最新資本支出Guidance」長條圖右側文字被擠成多行，要求縮短bar讓出空間，並要求新增「這一季-上一季」的資本支出差異值。CSS層面.capex-track從flex:1改flex:0 0 55%，.capex-yoy從固定width:48px改flex:1自動吃剩餘寬度。派研究subagent查證四家公司2026 Q1實際capex（先前只查過guidance修訂值與Q2實際值）。計算Q2較Q1季增減：Amazon+$9.9B/Google+$9.2B/Microsoft+$9.1B（FY26 Q3→Q4）/Meta+$11.3B，皆附來源。腳注補充Microsoft的Q1/Q2對應財年季非日曆季。node --check通過，git diff --stat只動一檔。push時再度遇GitHub Actions自動更新，git pull --rebase乾淨處理。",
       "reason": "user_request"
     },
     {
