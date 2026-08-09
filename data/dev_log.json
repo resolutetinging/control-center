@@ -1,7 +1,35 @@
 {
-  "generated_through": "2026-08-07",
+  "generated_through": "2026-08-09",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-09",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py",
+      "summary": "睡眠資料0值時本機通知警示：使用者確認即使記錯來源這個警示仍有必要性，要求新增。update_dashboard.py原本total_min<60直接continue完全靜默不通知。新增近期（今天/昨天）視窗判斷，符合條件時用osascript跳macOS本機通知。.zero_data_alerted.json記錄已通知過的日期，避免LaunchAgent一天跑4次重複通知。fresh-context subagent複核抓到cutoff計算off-by-one（原本涵蓋3天含前天）已修正為精確2天視窗。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-09",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html",
+      "summary": "手動修復8/8睡眠資料0值並排除json_cache覆蓋陷阱：iCloud匯出的sleep_2026-08-08.txt是0值，使用者提供實際數值要求手動修正。換算成既有格式的小時小數並沿用看似真實的sleepStart，sleepEnd用總時數反推補上。查出json_cache還停在舊0值快取，這是記憶檔記過的覆蓋陷阱，先rm再重跑run_update.sh。驗證RAW資料8/8這筆數字與使用者提供數字相符，207筆資料，開一次v2頁同步localStorage。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-07",
+      "project": "Control Center",
+      "file": "cc_styles.css",
+      "summary": "修正Dev Dashboard時間軸dashboard名稱擠到同一行的排版問題：.dev-tl-row原本用display:flex+flex-wrap讓名稱與內容視空間自動並排。中文字元太容易斷行導致瀏覽器常誤判擠得下，英文較難斷行才會正確整塊換行，是不穩定的自動判斷。改用flex-direction:column固定垂直堆疊，名稱永遠自己一行、內容永遠下一行。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-07",
+      "project": "Control Center",
+      "file": "data/dev_log.json",
+      "summary": "Dev Dashboard時間軸長句補齊斷句：使用者截圖回報一則entry長句擠成超長bullet，查根因是splitSummary()靠句號拆子句，內文用逗號串接沒分隔。先修截圖那則，主動全檔掃描又發現8/4~8/7另有33處，使用者確認都修一修逐一補句號。再往前追溯7月中旬找到81處一併處理，委外subagent批次處理時有3處切在括號內部留下未閉合瑕疵，事後手動修正。教訓記回lessons.md：斷句慣例只存在記憶檔文字裡沒有主動檢查點，寫summary前要自檢每句長度。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-07",
       "project": "Mental Dashboard",
