@@ -995,8 +995,15 @@ Output ONLY valid JSON:
     // 文法／語句寫法審核卡（獨立於接球判斷，不影響 fb_ball_verdict）
     if(inp && results.gr_note){
       $('gr-orig').textContent = inp;
-      $('gr-note-text').textContent = results.gr_note;
-      const grOk = results.gr_ok===true || results.gr_ok==='true';
+      // 08-10：LLM有時會幻覺出不存在的錯誤（gr_ok=false但gr_fixed跟原句逐字相同，等於沒改），
+      // 使用者截圖回報這種no-op修正還是被標「文法待修正」很鬼打牆。gr_fixed跟原句相同就強制視為正確，
+      // 不依賴prompt準確性（比照s2t雙保險原則，防禦性判斷優先於信任LLM輸出）；
+      // 連gr_note顯示文字跟追問context都要蓋掉原本幻覺出來的說法，不然badge說正確、下面文字卻還在講不存在的錯誤
+      const grNoOpFix = (results.gr_fixed||'').trim() === inp.trim();
+      const grOk = results.gr_ok===true || results.gr_ok==='true' || grNoOpFix;
+      const grNoteDisplay = (grNoOpFix && !(results.gr_ok===true || results.gr_ok==='true'))
+        ? '文法與句構正確（AI原判斷有誤，已自動修正顯示）' : results.gr_note;
+      $('gr-note-text').textContent = grNoteDisplay;
       const grCat = (!grOk && GR_CATS.includes(results.gr_cat)) ? results.gr_cat : '';
       const grCatBadge = grCat ? `<span class="gr-cat-badge">${esc(grCat)}</span>` : '';
       $('gr-verdict').innerHTML = grOk
@@ -1015,7 +1022,7 @@ Output ONLY valid JSON:
       }
       $('gr-card').style.display='block';
       // 追問區：換新一輪就重置對話記錄，context 只給這一輪的句子
-      grContext = { orig: inp, note: results.gr_note||'', fixed: results.gr_fixed||inp, cat: grCat };
+      grContext = { orig: inp, note: grNoteDisplay||'', fixed: grOk?inp:(results.gr_fixed||inp), cat: grCat };
       $('gr-chat-log').innerHTML='';
       $('gr-ask-input').value='';
       $('gr-ask-block').style.display='block';
