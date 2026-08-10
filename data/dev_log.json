@@ -6,6 +6,13 @@
       "date": "2026-08-10",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
+      "summary": "Idiom拆彈答案揭曉新增「四個選項的意思」卡，每個選項各自可加入字庫：使用者反映答題後比較常想問別的選項的意思，原本只有正解有解釋。要求UX優化，維持反饋卡不變、下方新增四選項意思卡、各自有加入字庫鈕、再下方才是AI追問區塊。genQuestion()新增distractor_zh欄位，建立curQ._optZh對照表。selectOpt()新增渲染四選項意思卡，插在正確位置。原本單一加入字庫按鈕改成addOptToLib(idx)，正解沿用完整解釋，干擾選項只有短中文翻譯。fresh-context subagent複核grep確認舊識別字無殘留、renderLib()相容空字串、node --check通過。邏輯模擬正確，抓到2個nice-to-have非must-fix。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-10",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
       "summary": "Idiom拆彈題目prompt新增「唯一正解」規則，避免句子缺乏目的性導致別的答案也合理：使用者截圖回報真實案例，正解push back跟選項bring up都能合理代入同一句子，追問AI只會反覆重複同一套解釋不承認題目有歧義。查出genQuestion()的CRITICAL BLANK RULES只檢查文法正確性與慣用語完整性，沒有規則要求句子情境要唯一鎖定正解。新增規則5，要求生成後逐一把每個干擾選項代入空格自問是否也講得通，若也合理就要加具體細節排除掉，並用使用者這個真實案例當bad/good示範。node --check通過。",
       "reason": "user_request"
     },
