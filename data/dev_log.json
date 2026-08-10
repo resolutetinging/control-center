@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-09",
+  "generated_through": "2026-08-10",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-10",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "修正文法審核卡對no-op修正仍標「文法待修正」的鬼打牆問題：使用者截圖回報原句已有問號，AI卻判定有誤且gr_fixed跟原句逐字相同等於沒真的改。追問AI為什麼，對話反覆矛盾好幾輪才承認原句正確，畫面badge卻沒跟著更新。查根因是LLM幻覺出不存在的錯誤，promptC沒有防呆檢查這種自相矛盾情況。改用程式碼層防呆，gr_fixed跟原句逐字相同就強制視為grOk=true，不採信LLM宣稱的false。連note顯示文字與追問context都一併覆蓋掉原本幻覺說法。node --check通過，用截圖實際句子跑邏輯模擬驗證正確。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-09",
       "project": "Sleep Dashboard",
