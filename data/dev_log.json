@@ -6,6 +6,13 @@
       "date": "2026-08-10",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
+      "summary": "放寬opener_zh的「不要負面推論」限制，讓AI能點出反諷/自嘲式幽默語氣：使用者截圖回報一句話被解釋成單純正面情緒，直覺解讀怪怪的。查出這句其實是低調反諷/自嘲式幽默，暗示原本有機會出狀況、結果還好。追查promptA的opener_zh指示明確禁止負面推論，把這種語感過濾掉逼AI只能給扁平化正面解讀。放寬成允許點出自嘲/反諷/至少還好這類語感，但仍禁止過度延伸猜測對方在暗示更糟的事。node --check通過，純prompt文字調整風險低。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-10",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
       "summary": "修正文法審核卡對no-op修正仍標「文法待修正」的鬼打牆問題：使用者截圖回報原句已有問號，AI卻判定有誤且gr_fixed跟原句逐字相同等於沒真的改。追問AI為什麼，對話反覆矛盾好幾輪才承認原句正確，畫面badge卻沒跟著更新。查根因是LLM幻覺出不存在的錯誤，promptC沒有防呆檢查這種自相矛盾情況。改用程式碼層防呆，gr_fixed跟原句逐字相同就強制視為grOk=true，不採信LLM宣稱的false。連note顯示文字與追問context都一併覆蓋掉原本幻覺說法。node --check通過，用截圖實際句子跑邏輯模擬驗證正確。",
       "reason": "bug_fix"
     },
