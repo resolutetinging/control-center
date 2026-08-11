@@ -5,6 +5,20 @@
     {
       "date": "2026-08-11",
       "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "HW面板Intel卡換成AI伺服器/電力瓶頸，NVIDIA專區改真三角形金字塔+3欄卡片：使用者反饋Intel 18A產業影響性偏弱，選定AI伺服器缺貨交期+資料中心電力瓶頸兩張，銜接晶片到製程到整機到資料中心四層敘事。派研究subagent查證AI伺服器出貨年增31%創新高、美國資料中心用電2026年達41GW。NVIDIA專區cases新增scope+timeline欄位，金字塔改用clip-path畫真三角形，文字移到旁邊legend避免裁切。來源改可點擊連結，聯盟卡片上方新增整體動態摘要。opus複核node --check與JSON驗證、實跑模擬、clip-path逐層驗算全過，修正3個nice-to-have含未來週查證可能觸發的當機風險。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "修正HBM供需卡代表性不足、AMD/Broadcom比較基礎不一致問題：使用者質疑HBM供需卡只引用市占最小的Micron，AMD/Broadcom卡挑子分類營收跟其他公司總營收基礎不一致。查證SK Hynix/Samsung/Micron三大廠皆售罄，改寫成三廠皆售罄並點名市占最大的SK Hynix。AMD改用總營收，Broadcom改用排除VMware的半導體部門總營收，跟TSMC/SK Hynix/ASML的總營收基礎一致。node --check通過。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
       "file": "scripts/update_nvidia.py",
       "summary": "NVIDIA專區改成每週自動查證：使用者確認4大區塊要每天用LLM重新查證。評估後發現既有daily pipeline品質關卡是為新聞卡片schema設計無法沿用，且Groq每日額度已被共用打滿，建議並確認改成每週查證。資料改存data/nv_status.json，renderNvidia()改成async fetch讀取。新增scripts/update_nvidia.py獨立週查證。安全設計為絕不直接改寫nv_status.json實質內容，候選異動寫進nv_pending_review.json等人工複核。新增獨立週排程用GitHub原生cron觸發，不依賴外部cron-job.org。opus複核抓到2個must-fix：未定義的esc()函式會讓分頁卡死且靜默失敗、0新聞片段時仍呼叫Groq誘導憑空生成候選異動，皆已修正。py_compile+node --check通過，dry-run確認失敗路徑不寫入任何檔案。",
       "reason": "user_request"
