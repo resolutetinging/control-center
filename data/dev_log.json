@@ -6,6 +6,13 @@
       "date": "2026-08-11",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "HW面板補到top6，新增ASML/Broadcom/Samsung重點廠商財報卡：使用者追問還有哪些重大影響性公司值得monitor。提出建議並確認補到top6。ASML是比TSMC更上游的EUV機台瓶頸、Broadcom是客製ASIC路線第三股AI勢力、Samsung既有供應鏈圖只在箭頭裡提到值得補自己的卡。派研究subagent查證三家2026 Q2財報，皆附來源。查證中發現Samsung DS部門營益數字不合理（營益率70%不符半導體事業歷史表現），判斷是subagent查證誤植。刻意不採用可疑數字，只保留已交叉驗證的營收與HBM4/Tesla AI5進度。新增第三排metric-row三張卡，既有Tesla AI5 pill更新反映最新進度避免重複舖陳。node --check通過。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "HW面板新增TSMC/SK Hynix/AMD重點廠商財報卡，補齊硬體晶片指標性數據：使用者反映HW面板指標性數據不足，原本只有HBM供需/CoWoS產能/Intel 18A三張主題式卡片。缺具體廠商財報數字，指定要TSMC/SK Hynix/AMD。派研究subagent查證三家2026 Q2財報，各家挑一個最能反映AI晶片熱度的指標。TSMC HPC/AI營收占比66%、SK Hynix營收年增257%創新高、AMD資料中心營收67億美元YoY+107%，皆附IR/SEC/財經媒體來源。新增第二排metric-row三張公司卡，補2個signal-pill。查證發現SK Hynix HBM4量產季別在來源間有出入，刻意不寫進signal-pill避免引用有爭議的具體時間點。node --check通過，push遇自動更新已git pull --rebase處理。",
       "reason": "user_request"
     },
