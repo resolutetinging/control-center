@@ -6,6 +6,34 @@
       "date": "2026-08-11",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "修正供應鏈影響分析跟注意方向區塊間距太擠的問題：使用者截圖回報供應鏈影響分析box跟下方注意方向box幾乎貼在一起。查根因是.impact-box原本沒有margin-bottom，下面接的區塊只能靠自己的margin-top，多數元素也沒設，導致兩個box邊框幾乎直接相鄰。補上.impact-box的margin-bottom:12px，跟.card-body/.ethic-alert既有的12px間距規則一致。node --check通過，純CSS改動。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "data/nv_status.json",
+      "summary": "補實NVIDIA太空計畫卡片內容，新增Lunar Outpost月球車合作案：使用者反映太空計畫卡片內容太單薄，提供7/24筆記裡記錄的Lunar Outpost月球車合作案細節要求補進去。派研究subagent查證更新，發現筆記已過時。Space-1補實為Vera Rubin Space-1 Module加8/4剛宣布的SpaceX Starmind AI1衛星計畫。Lunar Outpost拆成獨立roadmap項目，跟Space-1是軌道資料中心vs月面邊緣AI兩條不同分支。查證發現筆記記載的2027年發射、Eagle車款已過時，NASA已選定Pegasus設計交付時程改為2028年，status欄位老實標註這個更正過程。node --check通過，實跑模擬確認20張卡正確渲染。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "移除個人洞察分頁，注意方向搬到本週記錄每則新聞的供應鏈影響分析下方：使用者反映個人洞察分頁實用性不高，跟本週記錄的差異只在注意方向這段文字，要求先確認再視情況移除。逐項比對確認供應鏈影響分析、Safety Alert在兩個分頁都重複顯示。CORE/NOISE/OPP分類篩選是唯一另一項獨有功能，但屬於換排序方式看而非獨有資訊，使用者判斷屬實。newsCard()新增showInsight參數，本週記錄3處呼叫改傳true，daily分頁呼叫維持不受影響。整個移除renderInsights等三函式、tab按鈕與panel容器、TCLS相關項目與專用CSS。node --check通過，模擬5項情境全過，grep確認無殘留。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "HW面板signal-pill依顏色排序，修正排版雜亂問題：使用者截圖回報signal-pill因flex-wrap換行導致顏色隨機交錯排版很亂。改成依顏色分組排序，5個紅色接3個黃色接1個綠色，純調整HTML順序不動文案。node --check通過。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "修正.sec-title跟前段內容距離太近、視覺上像屬於上一區塊的問題：使用者截圖回報分類標題跟上方卡片間距太小，看起來像上一區塊附屬文字，要求全部分頁統一調整。查出.sec-title是全站共用class，原本只有margin-bottom沒有margin-top。改成margin-top:30px讓標題貼近自己底下的內容、遠離上方不相干內容，一次套用全部分頁。HW面板既有3處inline style優先權高於class不受影響，維持原緊湊分組設計。node --check通過，純CSS改動。",
       "reason": "user_request"
     },
