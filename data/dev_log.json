@@ -5,6 +5,27 @@
     {
       "date": "2026-08-11",
       "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py",
+      "summary": "NVIDIA專區改成每週自動查證：使用者確認4大區塊要每天用LLM重新查證。評估後發現既有daily pipeline品質關卡是為新聞卡片schema設計無法沿用，且Groq每日額度已被共用打滿，建議並確認改成每週查證。資料改存data/nv_status.json，renderNvidia()改成async fetch讀取。新增scripts/update_nvidia.py獨立週查證。安全設計為絕不直接改寫nv_status.json實質內容，候選異動寫進nv_pending_review.json等人工複核。新增獨立週排程用GitHub原生cron觸發，不依賴外部cron-job.org。opus複核抓到2個must-fix：未定義的esc()函式會讓分頁卡死且靜默失敗、0新聞片段時仍呼叫Groq誘導憑空生成候選異動，皆已修正。py_compile+node --check通過，dry-run確認失敗路徑不寫入任何檔案。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "統一top6廠商財報卡格式：全部美元計價+YoY比較基礎，新增AI產業市占率/排名：使用者反映title/幣別/比較基礎不統一，要求統一成美元+YoY並新增市占率/排名。派兩組研究subagent平行查證，統一格式為公司營收YoY加百分比加季別/美元金額/市占率，皆附IR/財經媒體來源。Samsung查不到有可信來源的YoY成長率，刻意不硬編數字湊格式一致，卡片保留QoQ並老實註明YoY未查到可信來源。node --check通過。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "筆記趨勢分析新增TPD每日額度友善錯誤訊息：使用者遇到Rate limit reached...tokens per day (TPD)錯誤。這跟既有413單次請求過大是不同錯誤類型，縮減天數重試機制對TPD無效。新增_friendlyGroqError()辨識TPD錯誤，換成中文說明這是Groq帳號每日共用額度、換算等待時間成好讀格式。順手查證groq_key這把API key跟English Sandbox共用同一個localStorage key，訊息裡明確標註不是這個功能單獨的限制。node --check通過，實測regex正確解析等待時間。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "新增NVIDIA專區分頁：官方技術堆疊金字塔、已導入應用案例、產品roadmap、聯盟發展：使用者認為NVIDIA仍是AI供應鏈的game changer，要求新增獨立分頁含4個區塊。派兩組研究subagent平行查證官方技術堆疊、已導入案例（區分已上線vs概念驗證中）、進行中規劃項、聯盟發展，皆附來源。兩組subagent對NemoClaw這個產品名稱真實性判斷矛盾，刻意不採用有爭議的名稱。Vera Rubin是否已出貨、OpenAI投資到位金額遠低於原框架，皆保留矛盾說明不簡化成單一結論。新增獨立tab整合進既有TCLS/init()/renderAll()。fresh-context subagent複核8項驗收全數通過，未發現must-fix。",
       "reason": "user_request"
