@@ -6,6 +6,13 @@
       "date": "2026-08-11",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "修正.sec-title跟前段內容距離太近、視覺上像屬於上一區塊的問題：使用者截圖回報分類標題跟上方卡片間距太小，看起來像上一區塊附屬文字，要求全部分頁統一調整。查出.sec-title是全站共用class，原本只有margin-bottom沒有margin-top。改成margin-top:30px讓標題貼近自己底下的內容、遠離上方不相干內容，一次套用全部分頁。HW面板既有3處inline style優先權高於class不受影響，維持原緊湊分組設計。node --check通過，純CSS改動。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "HW面板Intel卡換成AI伺服器/電力瓶頸，NVIDIA專區改真三角形金字塔+3欄卡片：使用者反饋Intel 18A產業影響性偏弱，選定AI伺服器缺貨交期+資料中心電力瓶頸兩張，銜接晶片到製程到整機到資料中心四層敘事。派研究subagent查證AI伺服器出貨年增31%創新高、美國資料中心用電2026年達41GW。NVIDIA專區cases新增scope+timeline欄位，金字塔改用clip-path畫真三角形，文字移到旁邊legend避免裁切。來源改可點擊連結，聯盟卡片上方新增整體動態摘要。opus複核node --check與JSON驗證、實跑模擬、clip-path逐層驗算全過，修正3個nice-to-have含未來週查證可能觸發的當機風險。",
       "reason": "user_request"
     },
