@@ -5,6 +5,27 @@
     {
       "date": "2026-08-11",
       "project": "AI Tracker",
+      "file": "data/hw_corp_reference.json",
+      "summary": "HW/Corp財報卡改JSON單一來源，新增季底email banner：使用者要求每季季底最後一天，信件新聞上方加入硬體缺口/巨頭角力的財報banner，前提是先完成財報更新才納入。詢問使用者後選定JSON單一來源，避免網頁跟信件兩邊財報數字分開維護容易失去同步。新增hw_corp_reference.json比照NVIDIA專區架構，renderHW/renderCorp改成async fetch讀取。季底banner判斷3/31、6/30、9/30、12/31，讀同一份JSON組出email-safe banner。一律誠實標示JSON裡實際的last_updated季別，不假裝當天剛公布，讀檔失敗有try/except保護。兩輪fresh-context subagent複核全數通過未發現must-fix。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "每日信件移除最上方4個統計方塊，意義不足：使用者反映硬體缺口/巨頭角力/新興應用/CORE-OPP訊號分類這4個統計方塊意義不足，直接移除。py_compile通過，core_count/opp_count變數仍保留供信件標題列使用不受影響。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "修正供應鏈影響分析跟注意方向區塊間距太擠的問題：使用者截圖回報供應鏈影響分析box跟下方注意方向box幾乎貼在一起。查根因是.impact-box原本沒有margin-bottom，下面接的區塊只能靠自己的margin-top，多數元素也沒設，導致兩個box邊框幾乎直接相鄰。補上.impact-box的margin-bottom:12px，跟.card-body/.ethic-alert既有的12px間距規則一致。node --check通過，純CSS改動。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "修正供應鏈影響分析跟注意方向區塊間距太擠的問題：使用者截圖回報供應鏈影響分析box跟下方注意方向box幾乎貼在一起。查根因是.impact-box原本沒有margin-bottom，下面接的區塊只能靠自己的margin-top，多數元素也沒設，導致兩個box邊框幾乎直接相鄰。補上.impact-box的margin-bottom:12px，跟.card-body/.ethic-alert既有的12px間距規則一致。node --check通過，純CSS改動。",
       "reason": "user_request"
