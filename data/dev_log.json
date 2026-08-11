@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-11",
+      "project": "Ziwei Digest",
+      "file": "server.js",
+      "summary": "新增Ziwei Digest（紫微斗數命理老師Threads追蹤本機獨立app，全新專案）：使用者提出完整需求規格，追蹤指定帳號、歷史打包、每日抓取、人工篩選、本機分類、微調存檔，全程零衍生費用。先評估技術方案再確認才動手。抓取層用Playwright（無第三方讀取API只能瀏覽器自動化），分類層用關鍵字矩陣不做Ollama硬依賴。架構上跟使用者對齊這個app無法比照Control Center部署GitHub Pages，改本機獨立Node server桌面雙擊啟動。使用者追加要求關鍵字矩陣UI可手動擴充。建置login/scrape/classify腳本、Express server、四區前端UI、雙擊啟動器。用Playwright實跑兩輪端對端測試零JS錯誤。抓取腳本實際DOM selector無法在此session驗證，已誠實標註為預期中需維護校準的部分。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
       "project": "AI Tracker",
       "file": "data/hw_corp_reference.json",
       "summary": "HW/Corp財報卡改JSON單一來源，新增季底email banner：使用者要求每季季底最後一天，信件新聞上方加入硬體缺口/巨頭角力的財報banner，前提是先完成財報更新才納入。詢問使用者後選定JSON單一來源，避免網頁跟信件兩邊財報數字分開維護容易失去同步。新增hw_corp_reference.json比照NVIDIA專區架構，renderHW/renderCorp改成async fetch讀取。季底banner判斷3/31、6/30、9/30、12/31，讀同一份JSON組出email-safe banner。一律誠實標示JSON裡實際的last_updated季別，不假裝當天剛公布，讀檔失敗有try/except保護。兩輪fresh-context subagent複核全數通過未發現must-fix。",
