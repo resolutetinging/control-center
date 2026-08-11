@@ -26,13 +26,6 @@
     {
       "date": "2026-08-11",
       "project": "AI Tracker",
-      "file": "ai_tracker_v6.html",
-      "summary": "修正供應鏈影響分析跟注意方向區塊間距太擠的問題：使用者截圖回報供應鏈影響分析box跟下方注意方向box幾乎貼在一起。查根因是.impact-box原本沒有margin-bottom，下面接的區塊只能靠自己的margin-top，多數元素也沒設，導致兩個box邊框幾乎直接相鄰。補上.impact-box的margin-bottom:12px，跟.card-body/.ethic-alert既有的12px間距規則一致。node --check通過，純CSS改動。",
-      "reason": "user_request"
-    },
-    {
-      "date": "2026-08-11",
-      "project": "AI Tracker",
       "file": "data/nv_status.json",
       "summary": "補實NVIDIA太空計畫卡片內容，新增Lunar Outpost月球車合作案：使用者反映太空計畫卡片內容太單薄，提供7/24筆記裡記錄的Lunar Outpost月球車合作案細節要求補進去。派研究subagent查證更新，發現筆記已過時。Space-1補實為Vera Rubin Space-1 Module加8/4剛宣布的SpaceX Starmind AI1衛星計畫。Lunar Outpost拆成獨立roadmap項目，跟Space-1是軌道資料中心vs月面邊緣AI兩條不同分支。查證發現筆記記載的2027年發射、Eagle車款已過時，NASA已選定Pegasus設計交付時程改為2028年，status欄位老實標註這個更正過程。node --check通過，實跑模擬確認20張卡正確渲染。",
       "reason": "user_request"
