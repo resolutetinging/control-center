@@ -6,6 +6,13 @@
       "date": "2026-08-11",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "新增NVIDIA專區分頁：官方技術堆疊金字塔、已導入應用案例、產品roadmap、聯盟發展：使用者認為NVIDIA仍是AI供應鏈的game changer，要求新增獨立分頁含4個區塊。派兩組研究subagent平行查證官方技術堆疊、已導入案例（區分已上線vs概念驗證中）、進行中規劃項、聯盟發展，皆附來源。兩組subagent對NemoClaw這個產品名稱真實性判斷矛盾，刻意不採用有爭議的名稱。Vera Rubin是否已出貨、OpenAI投資到位金額遠低於原框架，皆保留矛盾說明不簡化成單一結論。新增獨立tab整合進既有TCLS/init()/renderAll()。fresh-context subagent複核8項驗收全數通過，未發現must-fix。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "HW面板補到top6，新增ASML/Broadcom/Samsung重點廠商財報卡：使用者追問還有哪些重大影響性公司值得monitor。提出建議並確認補到top6。ASML是比TSMC更上游的EUV機台瓶頸、Broadcom是客製ASIC路線第三股AI勢力、Samsung既有供應鏈圖只在箭頭裡提到值得補自己的卡。派研究subagent查證三家2026 Q2財報，皆附來源。查證中發現Samsung DS部門營益數字不合理（營益率70%不符半導體事業歷史表現），判斷是subagent查證誤植。刻意不採用可疑數字，只保留已交叉驗證的營收與HBM4/Tesla AI5進度。新增第三排metric-row三張卡，既有Tesla AI5 pill更新反映最新進度避免重複舖陳。node --check通過。",
       "reason": "user_request"
     },
