@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-12",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "修正拆彈題目(Idiom Fill in the Blank)代名詞重複導致4個選項都套不進句子的問題：使用者實測回報「Could you ______ me on...」配上fill me in/pick me up/turn me down/get me through這組選項，任一個代入空格都會跟句子裡固定的me重複，四個選項全部套不進去。查根因是既有_hasDupParticle只檢查correct答案最後一個字是否為介係詞重複，抓不到「動詞+受格代名詞+介副詞」代名詞在句中任何位置的情況，也完全沒檢查distractors。修法：prompt新增規則6用這個真實案例教model把代名詞留在選項裡；新增_hasDupPronoun檢查代名詞重複，改成同時檢查correct+3個distractors全部4個選項。單元測試涵蓋真實bug案例、修正版本、既有介係詞重複回歸測試、正常題目4項全通過，node --check通過。已commit（e8413c9）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-12",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "筆記趨勢分析：移除範圍自動縮減提示與定義整理區塊，把篇幅集中在insight分析深度：使用者反映「已自動聚焦最近N天」提示沒有資訊價值、「定義整理」只是列名詞沒有實質內容，要求重點放在insight分析深度。範圍固定改成近7天有筆記日期，不再事後解釋自動縮減，移除_rangeNote邏輯；拿掉definitions欄位跟死CSS；insight每項要求從3-4句加到4-6句、需點名具體公司數字、影響鏈要逐層說明傳導路徑，max_tokens提高到3400給更多篇幅。node --check通過，實際輸出深度留待使用者下次用真實Groq key驗證，未消耗共用額度自我測試。已commit（ca46634）push。",
