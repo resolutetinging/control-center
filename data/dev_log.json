@@ -6,6 +6,13 @@
       "date": "2026-08-12",
       "project": "SAS Hub",
       "file": "index.html",
+      "summary": "因子導向雷達圖：新增卡片下方常駐方向摘要，修正hover提示被截斷的問題：使用者要求正向/負向判斷內容常駐顯示在卡片下方不用每次hover/點擊才看得到，並截圖回報hover提示框內容被截斷看不完整。查根因是fmtRadarImpact()組成一整條長字串塞給Chart.js tooltip不會自動換行。修法：拆成_frImpactParts()回傳陣列，tooltip callback改用陣列讓Chart.js逐行畫出不再裁切；新增renderFactorRadarSummary()在卡片下方常駐列出所有算得出方向的軸（色點+標籤+方向+強度+r值）。Playwright注入合成資料驗證摘要區內容、tooltip陣列型態、既有點擊展開detail regression check皆正常，截圖確認視覺排版正常，零JS錯誤。已commit（4d3a616）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-12",
+      "project": "SAS Hub",
+      "file": "index.html",
       "summary": "修正因子導向雷達圖「一直顯示資料不足」問題：使用者實測回報家庭分頁一直資料不足但每天都在Mental Dashboard記錄。查證跨檔案資料契約（wellness_v5欄位、refueler_v1）皆一致無誤，找到兩個真正原因：(1)pearson()對null有兩種成因（配對天數<3、或有足夠天數但變異數=0），原本都顯示同一句「配對天數<3」但使用者是後者（家庭分類幾乎沒被標記，變異數趨近0），訊息文不對題，新增noVariance判斷分開講清楚；(2)_frCoffeeMap原本只在有喝咖啡的日子寫入map，沒喝的日子整天跳過配對，樣本數被腰斬，改成比照其他因子每天都寫入（沒喝=0）。Playwright注入合成資料驗證三種情境皆正確，零JS錯誤。已commit（285dfd9）push。",
       "reason": "user_request"
     },
