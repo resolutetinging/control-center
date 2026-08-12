@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-12",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "3張BETA卡片移除標籤，情緒雙軌對照理論基準線改為真正固定：使用者要求review已上線約10週的BETA卡片是否可拿掉標籤。先派subagent審查，排除「壓力固定示意值污染相關性分析」的疑慮（假資料屬另一張獨立卡片，未被引用），抓到真正問題：「情緒雙軌對照」標示18天固定週期的理論基準線算式混了Math.random()，每次重整都會變，跟標示矛盾。使用者確認全部進行：移除隨機項改真正確定性sine曲線；雙軌綜觀與行為相關性分析、睡眠變異亮燈與因果回溯兩張確認穩定拿掉BETA標籤；順手清掉過期的Beta觀察期提示文字、孤立死註解、.beta-badge死CSS。node --check通過，Playwright實測BETA文字歸零、RM陣列連續兩次載入相同、零JS錯誤。已commit（8741466）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-12",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "修正拆彈題目(Idiom Fill in the Blank)代名詞重複導致4個選項都套不進句子的問題：使用者實測回報「Could you ______ me on...」配上fill me in/pick me up/turn me down/get me through這組選項，任一個代入空格都會跟句子裡固定的me重複，四個選項全部套不進去。查根因是既有_hasDupParticle只檢查correct答案最後一個字是否為介係詞重複，抓不到「動詞+受格代名詞+介副詞」代名詞在句中任何位置的情況，也完全沒檢查distractors。修法：prompt新增規則6用這個真實案例教model把代名詞留在選項裡；新增_hasDupPronoun檢查代名詞重複，改成同時檢查correct+3個distractors全部4個選項。單元測試涵蓋真實bug案例、修正版本、既有介係詞重複回歸測試、正常題目4項全通過，node --check通過。已commit（e8413c9）push。",
