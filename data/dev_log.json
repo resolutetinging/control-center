@@ -6,6 +6,13 @@
       "date": "2026-08-12",
       "project": "SAS Hub",
       "file": "index.html",
+      "summary": "修正因子導向雷達圖「一直顯示資料不足」問題：使用者實測回報家庭分頁一直資料不足但每天都在Mental Dashboard記錄。查證跨檔案資料契約（wellness_v5欄位、refueler_v1）皆一致無誤，找到兩個真正原因：(1)pearson()對null有兩種成因（配對天數<3、或有足夠天數但變異數=0），原本都顯示同一句「配對天數<3」但使用者是後者（家庭分類幾乎沒被標記，變異數趨近0），訊息文不對題，新增noVariance判斷分開講清楚；(2)_frCoffeeMap原本只在有喝咖啡的日子寫入map，沒喝的日子整天跳過配對，樣本數被腰斬，改成比照其他因子每天都寫入（沒喝=0）。Playwright注入合成資料驗證三種情境皆正確，零JS錯誤。已commit（285dfd9）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-12",
+      "project": "SAS Hub",
+      "file": "index.html",
       "summary": "3張BETA卡片移除標籤，情緒雙軌對照理論基準線改為真正固定：使用者要求review已上線約10週的BETA卡片是否可拿掉標籤。先派subagent審查，排除「壓力固定示意值污染相關性分析」的疑慮（假資料屬另一張獨立卡片，未被引用），抓到真正問題：「情緒雙軌對照」標示18天固定週期的理論基準線算式混了Math.random()，每次重整都會變，跟標示矛盾。使用者確認全部進行：移除隨機項改真正確定性sine曲線；雙軌綜觀與行為相關性分析、睡眠變異亮燈與因果回溯兩張確認穩定拿掉BETA標籤；順手清掉過期的Beta觀察期提示文字、孤立死註解、.beta-badge死CSS。node --check通過，Playwright實測BETA文字歸零、RM陣列連續兩次載入相同、零JS錯誤。已commit（8741466）push。",
       "reason": "user_request"
     },
