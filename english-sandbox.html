@@ -1549,6 +1549,7 @@ CRITICAL BLANK RULES (violation = bad question):
 3. After inserting the correct answer into the blank, the full sentence must be grammatically natural.
 4. MOST COMMON MISTAKE — always double-check: if the correct answer ends with a preposition or particle (e.g. "excited about", "upset about", "interested in", "responsible for", "rise to", "get used to", "look forward to"), that preposition must NOT appear again immediately after the blank in the sentence. BAD: "The team was really ______ about the project" (correct="excited about") — "about" duplicates. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. BAD: "Let's make sure you ______ to new challenges" (correct="rise to") — "to" duplicates. GOOD: "The team was really ______ by the project's results" (correct="excited about"). GOOD: "He was ______ the news" (correct="upset about"). GOOD: "She needs to ______ the pressure of public speaking" (correct="rise to"). Mentally read the full sentence with the answer inserted before finalising.
 5. UNIQUE CORRECT ANSWER — the sentence must contain enough context that ONLY the correct answer makes sense in the blank, not just "sounds different from the distractors". Before finalizing, mentally substitute EACH distractor into the blank and ask: does the sentence still read as a coherent, natural thing someone would say? If a distractor also fits (even with a slightly different meaning), the sentence lacks disambiguating context and must be rewritten with an added detail, reason, or consequence that rules the distractor out. BAD (ambiguous, real failure case): "Could you ______ the deadline for this project so we can prioritize our tasks?" — both "push back" (postpone it) and "bring up" (mention it, so the team can then discuss reprioritizing) fit naturally; a learner has no way to know which is intended. GOOD (fixed): "Could you ______ the deadline for this project by two weeks so we can prioritize our tasks?" — adding "by two weeks" makes only "push back" grammatically and semantically valid; "bring up" cannot take a duration and becomes nonsensical.
+6. ALL FOUR OPTIONS MUST GRAMMATICALLY FIT THE SAME BLANK — this check from rule 5 is not just about meaning, it is about grammar too. If the correct idiom is a "verb + object pronoun (me/you/us/him/her/them) + particle" phrase (e.g. "fill me in", "talk her out of it", "walk him through"), the object pronoun is PART of the idiom and belongs inside the blank — do NOT also place that same pronoun as fixed text right after the blank in the sentence. And every distractor must be able to physically slot into the exact same blank position without creating a leftover duplicate word. BAD (real failure case): sentence "Could you ______ me on whether this decision will impact our long-term goals?" with correct="fill me in" and distractors=["pick me up","turn me down","get me through"] — inserting ANY of these four options produces a doubled "me" ("...fill me in me on...", "...pick me up me on...") because the sentence already fixed "me" outside the blank while every option also independently contains its own "me". GOOD (fixed): sentence "Could you ______ on whether this decision will impact our long-term goals?" with correct="fill me in" and distractors chosen as other verbs that also naturally take "on" without an extra fixed pronoun, e.g. "brief me" / "update me" / "consult me" — reword the distractor list (not the sentence) so every option's own object pronoun (if any) is self-contained and none of them collide with fixed text outside the blank.
 
 Return ONLY valid JSON, no markdown, no extra text:
 {"sentence":"We need to ______ with the marketing team before making the final decision.","correct":"touch base","distractors":["hit the floor","catch up","sit tight"],"zh":"快速聯絡確認","distractor_zh":["準備就緒","敘敘舊、跟上進度","按兵不動"],"explain_zh":"白話解釋：touch base 就是「快速聯絡確認一下」的意思。當你想和某人短暫溝通、確認進度或想法時就用這個。說 let me touch base with you 比 let me contact you 更自然道地。","example":"Let me touch base with the client before we finalize the proposal."}
@@ -1566,8 +1567,8 @@ Rules:
       const raw = await callGroq(prompt, 400, 'You output ONLY valid JSON. All Chinese fields (zh, explain_zh) must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).', true);
       return s2tDeep(safeParseJson(raw));
     };
-    const _hasDupParticle = (sentence, correct) => {
-      const last = (correct||'').trim().split(/\s+/).pop().toLowerCase();
+    const _hasDupParticle = (sentence, answer) => {
+      const last = (answer||'').trim().split(/\s+/).pop().toLowerCase();
       const particles = new Set(['about','in','on','at','for','of','to','with','by','up','out','off','into','over','after','before','through','around','down','from','under']);
       if (!particles.has(last)) return false;
       const blankParts = sentence.split(/_{4,}/);
@@ -1575,9 +1576,27 @@ Rules:
       const after = blankParts[1].trimStart().toLowerCase();
       return after.startsWith(last + ' ') || after.startsWith(last + ',') || after.startsWith(last + '.');
     };
+    // 08-12：使用者實測發現「fill me in / pick me up / turn me down / get me through」這種
+    // 「動詞+受格代名詞+介副詞」型態的選項，若句子空格後緊接著固定的「me on...」，四個選項
+    // 代入後全部都會變成「me」重複（例如fill me in me on...）。_hasDupParticle只檢查correct
+    // 答案「最後一個字」是否為介係詞重複，抓不到「受格代名詞出現在句中任何位置」這種情況，
+    // 也完全沒檢查distractors——干擾選項一樣要能實際代入空格，不能只檢查正解
+    const _hasDupPronoun = (sentence, answer) => {
+      const words = (answer||'').trim().toLowerCase().split(/\s+/);
+      const pronouns = new Set(['me','you','us','him','her','them','it']);
+      if (!words.some(w => pronouns.has(w))) return false;
+      const blankParts = sentence.split(/_{4,}/);
+      if (blankParts.length !== 2) return false;
+      const after = blankParts[1].trimStart().toLowerCase();
+      return [...pronouns].some(p => after.startsWith(p + ' ') || after.startsWith(p + ',') || after.startsWith(p + '.'));
+    };
+    const _hasBlankIssue = (cand) => {
+      const opts = [cand.correct, ...(cand.distractors||[]).slice(0,3)];
+      return opts.some(o => _hasDupParticle(cand.sentence, o) || _hasDupPronoun(cand.sentence, o));
+    };
     let candidate = await _fetchCandidate();
-    // retry up to 2 more times if duplicate particle detected
-    for(let r=0; r<2 && _hasDupParticle(candidate.sentence, candidate.correct); r++){
+    // retry up to 2 more times if any of the 4 options (correct or distractor) can't cleanly slot into the blank
+    for(let r=0; r<2 && _hasBlankIssue(candidate); r++){
       candidate = await _fetchCandidate();
     }
     curQ = candidate;
