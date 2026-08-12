@@ -6,6 +6,13 @@
       "date": "2026-08-12",
       "project": "SAS Hub",
       "file": "index.html",
+      "summary": "因子導向雷達圖：hover改用拉線到旁邊顯示的外部tooltip，避免擠在點群中央：使用者反映相關係數大多偏弱，點天生集中在圖形中心，hover原生tooltip疊在擠成一團的點上很難讀，要求拉連接線到旁邊顯示。改成Chart.js的external tooltip模式自己接管渲染，算出hover點在卡片座標系位置，把自訂tooltip box放到空白處（自動判斷左右翻轉+邊界clamp），用SVG虛線連回原點。過程中抓到真正bug：SVG沒有viewBox時內部座標系預設300x150，只用CSS百分比座標會被縮放跑掉線幾乎看不到，修法是每次明確設width/height屬性成卡片實際px尺寸。Playwright用Chart.js API精準算點像素座標模擬hover，確認tooltip顯示、內容可讀、連接線可見、移開滑鼠正確隱藏，零JS錯誤。已commit（788cc21）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-12",
+      "project": "SAS Hub",
+      "file": "index.html",
       "summary": "因子導向雷達圖：新增卡片下方常駐方向摘要，修正hover提示被截斷的問題：使用者要求正向/負向判斷內容常駐顯示在卡片下方不用每次hover/點擊才看得到，並截圖回報hover提示框內容被截斷看不完整。查根因是fmtRadarImpact()組成一整條長字串塞給Chart.js tooltip不會自動換行。修法：拆成_frImpactParts()回傳陣列，tooltip callback改用陣列讓Chart.js逐行畫出不再裁切；新增renderFactorRadarSummary()在卡片下方常駐列出所有算得出方向的軸（色點+標籤+方向+強度+r值）。Playwright注入合成資料驗證摘要區內容、tooltip陣列型態、既有點擊展開detail regression check皆正常，截圖確認視覺排版正常，零JS錯誤。已commit（4d3a616）push。",
       "reason": "user_request"
     },
