@@ -1,7 +1,35 @@
 {
-  "generated_through": "2026-08-11",
+  "generated_through": "2026-08-12",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-12",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "修正「注意方向」insight欄位被禁句過濾清空後信件仍顯示空白區塊的問題：使用者截圖回報本週記錄注意方向方塊完全不顯示、信件卻顯示空的標籤，要求兩邊內容必須一致且都要有內容。查根因是insight只有1句（LLM prompt規定），刪除命中禁句的那一句就讓整欄變空字串。前端有判斷insight是否有內容才顯示整塊，信件模板跟Notion同步都沒有同樣判斷，才會兩邊不一致。修法：insight刪句後若變空則保留原句（寧可套話也不要真空），信件與Notion補上跟前端一致的「有內容才顯示」判斷。手動補回今日Amkor卡片已被清空的insight內容。py_compile、JSON驗證皆通過，已commit push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "Ziwei Digest",
+      "file": "public/ziwei-digest.html",
+      "summary": "分類微調區原文改成可編輯：使用者反映跨留言整合抓進來的原文有雜訊，且原文/摘要都會存進知識庫，要求增加原文修整功能。把唯讀的原文div改成textarea，存入知識庫時一併送出使用者修整過的版本，後端save-to-vault路由改用送出的text而非固定用item.text。實測確認正確存入修整後版本。過程中意外發現：先前為了驗證這個功能寫的E2E測試腳本用「抓第一個按鈕」的不精準選擇器，疑似誤按到使用者自己還沒確認的真實卡片並存入知識庫，已向使用者坦承並記取教訓（測試腳本不可對有真實資料的正式環境用非精準選擇器點擊會寫入資料的按鈕）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "Ziwei Digest",
+      "file": "scripts/scrape_threads.js",
+      "summary": "修正置頂貼文誤觸發停止捲動、導致範圍內貼文抓不到的問題：使用者實測回報10小時前的貼文沒抓到、只抓到5小時前的。實測抓取發現老師頁面最上方是4則2月的置頂貼文（自我接龍留言），比24小時cutoff舊很多，原邏輯「遇到一則舊貼文就停止捲動」被這些置頂貼文誤觸發，導致還沒捲到的、真正落在24小時內的貼文永遠沒機會載入。修法：cutoff判斷改成要先看過至少一則落在範圍內的貼文才生效，跳過置頂貼文但不誤判到底。用實際抓到的真實DOM順序驗證判斷邏輯正確；因Threads登入牆間歇性擋住抓取，未能完整跑通即時驗證，已誠實告知使用者並建議降低測試頻率。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-11",
+      "project": "Ziwei Digest",
+      "file": "server.js",
+      "summary": "修正Inbox捨棄按鈕連續操作失效、帳號分頁匯入範圍失控兩個問題：使用者回報捨棄一張卡片後其他張都按不動、選了單一老師做匯入結果全部老師都抓進來。查出前者根因是貼文id用url的base64前16碼截斷產生，同帳號所有貼文url前綴過長導致id全部撞在一起，改用md5雜湊全url解決，並修正既有queue資料裡已撞號的16筆id。後者根因是帳號分頁選擇只是前端顯示過濾器，從未傳給後端，Daily Query/Backfill永遠抓全部帳號，改成後端接受username參數、scrape_threads.js過濾指定帳號，Backfill視窗也會顯示目前抓取範圍。Playwright連續捨棄測試、CLI帳號過濾測試皆驗證通過。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-11",
       "project": "Ziwei Digest",
