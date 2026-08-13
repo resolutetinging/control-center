@@ -6,6 +6,13 @@
       "date": "2026-08-13",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html / data/nv_status.json",
+      "summary": "NVIDIA產品應用鏈區塊層級重整、圖表放大對齊、卡片emoji項目上移：使用者截圖回報六點微調——📌來源說明移到整個區塊最下方；sec-title拿掉「（金字塔）」；結構重整成「產品應用鏈」底下「官方技術堆疊」「四階段關係圖」「四階段相對定位」三個同級nv-sub-title子區塊；兩張圖viewBox統一320x420讓渲染高度自動相等（約為原關係圖高度1.5倍）；下方說明框給固定min-height對齊，governance_stages的desc從10幾字短語擴充成80-100字完整說明句；所有卡片的emoji列點項目（含狀態）統一移到標題正下方、desc正文改放其後。Playwright實測兩張svg高度完全相等、tip框對齊、hover文字正確更新、zero JS error，截圖複核卡片順序。已commit（ee4c797）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-13",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / data/nv_status.json",
       "summary": "NVIDIA生態系圖表歸類進金字塔分區、修hover無反應、卡片補齊狀態：使用者截圖回報四點——關係圖歸類進金字塔的「產品應用鏈」分類、移到分隔線上；hover節點/箭頭沒說明文字（原用SVG原生<title>不同瀏覽器行為不一致，改用data-note屬性+JS事件委派手動控制說明框，連線加透明粗線熱區）；關係圖與散佈圖改左右並排（原本上下堆疊）；治理卡片沒狀態的兩張補上「已導入／持續執行」類文字，回答使用者這代表「持續推行中無特定時間點」。另外中途追加圖的底色比照金字塔拿掉。本機直接用Playwright實測：bounding box確認並排、getComputedStyle確認透明背景、依序hover確認tip文字真的切換（非只驗證元素存在）、zero JS error並截圖複核。已commit（69dccb7）push。",
       "reason": "bug_fix"
     },
