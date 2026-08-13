@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-08-12",
+  "generated_through": "2026-08-13",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-13",
+      "project": "K-Musical Hub",
+      "file": "static/kmusical.html",
+      "summary": "月曆新增「有底色但未記錄演員名字」視覺標示：使用者人工核對時發現7場舊資料已標記命中關注演員卻沒記具體是誰（早期版本核對流程留下的），要求在月曆上直接標出來。新增.entry-chip.needs-name白色虛線外框樣式，跟命中演員的實色底、待核對的紅色實框區分開，chip上加「❓ 補選演員」小字提示。node --check通過。本機專案不進git。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-13",
+      "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py",
+      "summary": "NVIDIA週查證新增獨立email通知：使用者要求週查證也能推送信件，但只送GitHub Secret設定的NOTIFY_EMAIL、不碰daily新聞的飛鴿公開名單，且不與daily AI產業動態信合併、另開獨立信件，Notion暫不處理。新增send_email()，依三種情境（有候選異動逐項列出/本週無異動顯示no_change_summary/本週未蒐集到新聞說明未查證）分流發送，皆不會靜默不寄。weekly-nvidia-update.yml補上對應secrets。py_compile通過，本機分別測試無credentials（安全跳過）與假credentials（HTML組裝完整、smtp登入被拒但例外被正確處理不中斷）兩種路徑皆驗證通過。已commit（6f8e93c）push。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-12",
       "project": "SAS Hub",
