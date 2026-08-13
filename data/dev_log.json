@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-13",
+      "project": "AI Tracker",
+      "file": ".github/workflows/weekly-nvidia-update.yml",
+      "summary": "NVIDIA週查證cron改成UTC週日，讓台北時間真的落在週一：使用者追問排程細節，發現原本cron寫UTC週一換算台北時間其實是週二00:00（+8小時跨午夜），是寫cron時沒注意時區換算的星期錯位，非刻意設計。確認這支用GitHub Actions原生schedule cron（不依賴外部cron-job.org），只需改workflow檔案本身即可。cron改成'0 16 * * 0'（UTC週日16:00=台北週一00:00），時間點仍沿用daily-update既有的16:00 UTC。yaml.safe_load()驗證語法合法且值正確。已commit（e571947）push。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-13",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "Small Talk開場白自動播音改成勾選設定，預設關閉：使用者要求genOpener()產生新開場白後不要預設自動播音，改成使用者自行勾選才播放。新增「🔊 自動播音」checkbox放在「選擇情境」標題列右側，狀態存localStorage（es_auto_speak，預設不存在=關閉）。genOpener()原本無條件呼叫的speakOpener()改成if(isAutoSpeakOn())才呼叫，pickSit()與regenOpener()（換一句）都共用同一個guard；手動「🔊 再聽一次」按鈕不受影響。Playwright實測用window.speak monkey-patch驗證guard邏輯：關閉時speak呼叫0次、勾選後localStorage存1且speak呼叫1次、取消勾選後存0，zero JS error並截圖確認排版。已commit（223e848）push。",
