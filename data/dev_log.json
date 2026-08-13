@@ -6,6 +6,13 @@
       "date": "2026-08-13",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html / data/nv_status.json",
+      "summary": "NVIDIA生態系圖表歸類進金字塔分區、修hover無反應、卡片補齊狀態：使用者截圖回報四點——關係圖歸類進金字塔的「產品應用鏈」分類、移到分隔線上；hover節點/箭頭沒說明文字（原用SVG原生<title>不同瀏覽器行為不一致，改用data-note屬性+JS事件委派手動控制說明框，連線加透明粗線熱區）；關係圖與散佈圖改左右並排（原本上下堆疊）；治理卡片沒狀態的兩張補上「已導入／持續執行」類文字，回答使用者這代表「持續推行中無特定時間點」。另外中途追加圖的底色比照金字塔拿掉。本機直接用Playwright實測：bounding box確認並排、getComputedStyle確認透明背景、依序hover確認tip文字真的切換（非只驗證元素存在）、zero JS error並截圖複核。已commit（69dccb7）push。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-13",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / data/nv_status.json",
       "summary": "NVIDIA生態系權力布局改用關係圖＋散佈圖，卡片補角色/佈局重點標籤：使用者反饋原本的方框直向清單看不出「相關影響性及前後關係」，經AskUserQuestion確認後改成純SVG繪製的關係圖（4節點正方形排列成天然封閉迴路，箭頭粗細代表影響強度，hover看具體機制）＋散佈圖（影響力×成熟度雙軸，氣泡大小代表布局規模），皆標註為相對強弱示意評估非精確查證數據。governance卡片也補上🧩角色/佈局類型與🎯佈局重點標籤。過程中發現第一版散佈圖數值太集中標籤重疊，截圖確認後拉開數值間距重新驗證。本機直接用Playwright實測zero JS error並截圖確認排版可讀性。已commit（98cb313）push。",
       "reason": "user_request"
     },
