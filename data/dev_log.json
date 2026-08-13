@@ -5,6 +5,13 @@
     {
       "date": "2026-08-13",
       "project": "AI Tracker",
+      "file": "scripts/update_data.py / data/history.json",
+      "summary": "修正大陸用語「合同」混入新聞內容，補進繁中用詞清單：使用者截圖回報今日Palantir新聞卡片用了「合同」（應為「合約」），質疑違反語言規範。查call_groq()與fix_protagonist_as_competitor()兩處sys_msg的繁中用詞清單漏了這組對照，已補上「合約（非合同）」。同時直接修正data/history.json既有資料，共10行13處全部確認語意皆為contract、無誤判風險，純字串取代不動其餘格式。py_compile與json.load驗證通過。已commit（8814d4f）push。已發布的今日email/Notion內容維持原樣無法追溯修正，只有之後新生成內容起套用新規則。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-13",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html / scripts/update_nvidia.py / data/nv_status.json",
       "summary": "NVIDIA專區新增「生態系權力布局／合規治理」維度＋產業鏈閉環視覺：使用者提供一段NVIDIA生態系策略分析，希望長期追蹤這個維度，經AskUserQuestion確認後新增第6個資料分類governance（5筆，只採用可查證來源，OSAA/HPE因無對應連結未寫入）。CATEGORY_LABELS/Groq prompt/DDG查詢同步納入這個維度，週查證機制自動涵蓋。使用者接著要求把它做成產業鏈圖像化擺在金字塔旁邊，沿用頁面既有.tw-chain視覺語言做四階段閉環圖（技術標準鎖定→資本綁定→平台化→治理主導），跟金字塔並排、窄螢幕自動堆疊。兩輪Playwright實測座標驗證排版正確。已commit（347f909）push。",
       "reason": "user_request"
