@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-13",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Small Talk開場白自動播音改成勾選設定，預設關閉：使用者要求genOpener()產生新開場白後不要預設自動播音，改成使用者自行勾選才播放。新增「🔊 自動播音」checkbox放在「選擇情境」標題列右側，狀態存localStorage（es_auto_speak，預設不存在=關閉）。genOpener()原本無條件呼叫的speakOpener()改成if(isAutoSpeakOn())才呼叫，pickSit()與regenOpener()（換一句）都共用同一個guard；手動「🔊 再聽一次」按鈕不受影響。Playwright實測用window.speak monkey-patch驗證guard邏輯：關閉時speak呼叫0次、勾選後localStorage存1且speak呼叫1次、取消勾選後存0，zero JS error並截圖確認排版。已commit（223e848）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-13",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "NVIDIA金字塔與兩張圖表統一高度300px、關係圖／散佈圖改靠左對齊：使用者追問金字塔與兩張圖實際高度各是多少，實測回報金字塔230px、兩圖420px後，使用者要求三者統一調整為300px並改靠左對齊。金字塔nv-pyr-band從46px改60px（5層×60=300整除）；兩張圖svg style從width:100%+max-width+height:auto+margin:0 auto改成固定height:300px+width:auto+margin:0，viewBox維持320x420不變靠瀏覽器等比例縮放。Playwright實測三者bounding box height皆為300px、兩張svg相對欄位x偏移皆為0確認靠左，zero JS error並截圖複核。已commit（79ce461）push。",
