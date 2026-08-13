@@ -300,7 +300,10 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
   <!-- Situation selector -->
   <div class="panel">
-    <div class="panel-lbl">選擇情境 — Pick your scene</div>
+    <div class="panel-lbl">
+      <span>選擇情境 — Pick your scene</span>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:400;color:var(--sub);cursor:pointer;"><input type="checkbox" id="auto-speak-toggle" style="margin:0;" onchange="localStorage.setItem(AUTO_SPEAK_KEY, this.checked?'1':'0')"/> 🔊 自動播音</label>
+    </div>
     <div class="sit-row" id="sit-row" style="flex-wrap:wrap;gap:6px;">
       <button class="sit-btn" id="sit-coffee"  onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
       <button class="sit-btn" id="sit-meeting" onclick="pickSit('meeting')">⏰ 會議前三分鐘</button>
@@ -585,6 +588,8 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 // ── Constants ──
 const SAVED_KEY = 'es_saved_phrases';
 const GRAMMAR_KEY = 'es_grammar_lib';
+const AUTO_SPEAK_KEY = 'es_auto_speak'; // 預設不自動撥音，使用者自行勾選才開啟
+function isAutoSpeakOn(){ return localStorage.getItem(AUTO_SPEAK_KEY)==='1'; }
 const GR_CATS = ['拼字','斷句','時態','結構','冠詞','單複數','介系詞'];
 let curGrCat = 'all';
 const SITS = {
@@ -716,7 +721,7 @@ Rules:
     usedOpeners.push(curOpener);
     if(usedOpeners.length > 24) usedOpeners.shift();
     $hide('loading-opener'); $show('opener-card');
-    speakOpener();
+    if(isAutoSpeakOn()) speakOpener();
     setTimeout(()=>{ $show('input-section'); initTimer(); startTimer(); }, 1400);
   }catch(e){
     $hide('loading-opener');
@@ -2051,6 +2056,7 @@ checkKey();
 renderSaved();
 renderGrammarNavCount();
 renderLib();
+document.getElementById('auto-speak-toggle').checked = isAutoSpeakOn();
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
 <script src="cc_zht.js"></script>
