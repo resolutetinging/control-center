@@ -185,6 +185,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .ball-verdict.v-partial{background:rgba(160,130,50,.12);color:#7a6020}
 .ball-verdict.v-missed{background:rgba(176,96,50,.1);color:#8a4020}
 .gr-cat-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;background:rgba(160,130,50,.15);color:#9a7a3a;letter-spacing:.02em}
+.gr-cat-select{display:inline-block;font-size:10px;font-weight:700;padding:2px 20px 2px 8px;border-radius:6px;margin-left:6px;background:rgba(160,130,50,.15) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a7a3a'/%3E%3C/svg%3E") no-repeat right 6px center/8px;background-size:8px;color:#9a7a3a;letter-spacing:.02em;border:none;cursor:pointer;appearance:none;-webkit-appearance:none;font-family:inherit;}
 
 /* ── IDIOM ARCADE ── */
 .opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
@@ -590,7 +591,7 @@ const SAVED_KEY = 'es_saved_phrases';
 const GRAMMAR_KEY = 'es_grammar_lib';
 const AUTO_SPEAK_KEY = 'es_auto_speak'; // 預設不自動撥音，使用者自行勾選才開啟
 function isAutoSpeakOn(){ return localStorage.getItem(AUTO_SPEAK_KEY)==='1'; }
-const GR_CATS = ['拼字','斷句','時態','結構','冠詞','單複數','介系詞'];
+const GR_CATS = ['拼字','斷句','時態','結構','冠詞','單複數','介系詞','詞性'];
 let curGrCat = 'all';
 const SITS = {
   coffee:   { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
@@ -938,19 +939,19 @@ Learner's written reply: "${userResp}"
 
 Your ONLY job: check grammar, verb tense, subject-verb agreement, article usage, word order, and sentence structure. Do NOT evaluate tone, vocabulary sophistication, idiomaticity, or whether this is a good conversational response — those are judged elsewhere and are out of scope here.
 
-If gr_ok is false, classify the primary error into EXACTLY ONE of these categories (use the Traditional Chinese label exactly as written): "拼字"(spelling/typo) / "斷句"(missing conjunction, run-on sentence, punctuation) / "時態"(verb tense) / "結構"(word order, sentence structure) / "冠詞"(a/an/the) / "單複數"(plural, subject-verb agreement) / "介系詞"(preposition). Pick the single most significant category even if multiple issues exist.
+If gr_ok is false, classify the primary error into EXACTLY ONE of these categories (use the Traditional Chinese label exactly as written): "拼字"(spelling/typo) / "斷句"(missing conjunction, run-on sentence, punctuation) / "時態"(verb tense) / "結構"(word order, sentence structure) / "冠詞"(a/an/the) / "單複數"(plural, subject-verb agreement) / "介系詞"(preposition) / "詞性"(wrong part of speech — e.g. using a noun where an adjective is needed, verb vs. adjective form confusion, or participial adjective mix-ups like "frustrated" vs "frustrating"; use this instead of "單複數" whenever the error is about which word FORM/CLASS to use, not about count or number agreement). Pick the single most significant category even if multiple issues exist.
 
 Output ONLY valid JSON:
 {
   "gr_ok": true|false — true only if there are zero grammar/structure errors,
   "gr_note": "繁體中文（≤50字）具體指出文法或語句結構問題在哪裡、為什麼要這樣改；若完全沒有問題，說「文法與句構正確」",
   "gr_fixed": "ENGLISH ONLY — the grammatically corrected version of the learner's exact sentence, keeping their original meaning and word choice as much as possible. If gr_ok is true, repeat the original sentence unchanged.",
-  "gr_cat": "拼字|斷句|時態|結構|冠詞|單複數|介系詞 — ONLY if gr_ok is false, otherwise empty string"
+  "gr_cat": "拼字|斷句|時態|結構|冠詞|單複數|介系詞|詞性 — ONLY if gr_ok is false, otherwise empty string"
 }`;
 
     const sysA = 'You output ONLY valid JSON. All fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.';
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
-    const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the seven given Traditional Chinese labels (or empty string), never invent a new category name.';
+    const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the eight given Traditional Chinese labels (or empty string), never invent a new category name.';
 
     const callsArr = [callGroq(promptA, 400, sysA, true), callGroq(promptB, 300, sysB, true)];
     if(inp) callsArr.push(callGroq(promptC, 250, sysC, true));
@@ -1316,7 +1317,12 @@ function renderGrammarLib(){
         const origIdx=lib.indexOf(item);
         return`
       <div class="combo-card">
-        <div class="fb-block-lbl">🎾 我的接球${item.cat?` <span class="gr-cat-badge">${esc(item.cat)}</span>`:''}</div>
+        <div class="fb-block-lbl">🎾 我的接球
+          <select class="gr-cat-select" onchange="editGrCat(${origIdx}, this.value)">
+            <option value=""${item.cat?'':' selected'}>未分類</option>
+            ${GR_CATS.map(c=>`<option value="${esc(c)}"${item.cat===c?' selected':''}>${esc(c)}</option>`).join('')}
+          </select>
+        </div>
         <div class="combo-txt">"${esc(item.orig)}"</div>
         <div class="fb-block-lbl" style="margin-top:8px;">✍️ 文法待修正</div>
         <div class="combo-txt-zh">${esc(item.note)}</div>
@@ -1333,6 +1339,15 @@ function renderGrammarLib(){
 function delGrammarItem(i){
   const lib=JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
   lib.splice(i,1);
+  localStorage.setItem(GRAMMAR_KEY,JSON.stringify(lib));
+  renderGrammarLib();
+}
+// LLM自動分類偶爾判斷錯誤（例如把「frustrated/frustrating」這種詞性/分詞形容詞問題
+// 誤判成單複數），開放使用者手動修正分類，不用整筆刪除重存
+function editGrCat(i, cat){
+  const lib=JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  if(!lib[i]) return;
+  lib[i].cat = cat;
   localStorage.setItem(GRAMMAR_KEY,JSON.stringify(lib));
   renderGrammarLib();
 }
