@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-13",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "文法收藏分類開放手動編輯，新增「詞性」分類：使用者截圖回報LLM把「That's frustrated」誤用（該用frustrating）判成「單複數」問題，實際上是詞性/分詞形容詞混淆，GR_CATS原本7類沒有能歸類這種錯誤的選項，且分類生成後無法修正。GR_CATS新增第8類「詞性」，promptC的gr_cat enum與sysC說明同步更新並舉frustrated/frustrating例子區分「詞性」與「單複數」的判斷界線。renderGrammarLib()卡片的分類徽章從純顯示span改成<select>下拉選單，onchange呼叫新增的editGrCat()直接更新localStorage並重繪。Playwright seed對應截圖情境的假資料驗證select初始值、選擇新分類後localStorage寫入與篩選tab正確更新，zero JS error並截圖複核。已commit（16e33be）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-13",
       "project": "AI Tracker",
       "file": ".github/workflows/weekly-nvidia-update.yml",
       "summary": "NVIDIA週查證cron改成UTC週日，讓台北時間真的落在週一：使用者追問排程細節，發現原本cron寫UTC週一換算台北時間其實是週二00:00（+8小時跨午夜），是寫cron時沒注意時區換算的星期錯位，非刻意設計。確認這支用GitHub Actions原生schedule cron（不依賴外部cron-job.org），只需改workflow檔案本身即可。cron改成'0 16 * * 0'（UTC週日16:00=台北週一00:00），時間點仍沿用daily-update既有的16:00 UTC。yaml.safe_load()驗證語法合法且值正確。已commit（e571947）push。",
