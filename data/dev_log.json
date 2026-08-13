@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-13",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / scripts/update_nvidia.py / data/nv_status.json",
+      "summary": "NVIDIA專區新增「生態系權力布局／合規治理」維度＋產業鏈閉環視覺：使用者提供一段NVIDIA生態系策略分析，希望長期追蹤這個維度，經AskUserQuestion確認後新增第6個資料分類governance（5筆，只採用可查證來源，OSAA/HPE因無對應連結未寫入）。CATEGORY_LABELS/Groq prompt/DDG查詢同步納入這個維度，週查證機制自動涵蓋。使用者接著要求把它做成產業鏈圖像化擺在金字塔旁邊，沿用頁面既有.tw-chain視覺語言做四階段閉環圖（技術標準鎖定→資本綁定→平台化→治理主導），跟金字塔並排、窄螢幕自動堆疊。兩輪Playwright實測座標驗證排版正確。已commit（347f909）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-13",
       "project": "K-Musical Hub",
       "file": "static/kmusical.html",
       "summary": "月曆新增「有底色但未記錄演員名字」視覺標示：使用者人工核對時發現7場舊資料已標記命中關注演員卻沒記具體是誰（早期版本核對流程留下的），要求在月曆上直接標出來。新增.entry-chip.needs-name白色虛線外框樣式，跟命中演員的實色底、待核對的紅色實框區分開，chip上加「❓ 補選演員」小字提示。node --check通過。本機專案不進git。",
