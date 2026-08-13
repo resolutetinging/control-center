@@ -5,6 +5,13 @@
     {
       "date": "2026-08-13",
       "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / data/nv_status.json",
+      "summary": "NVIDIA生態系權力布局改用關係圖＋散佈圖，卡片補角色/佈局重點標籤：使用者反饋原本的方框直向清單看不出「相關影響性及前後關係」，經AskUserQuestion確認後改成純SVG繪製的關係圖（4節點正方形排列成天然封閉迴路，箭頭粗細代表影響強度，hover看具體機制）＋散佈圖（影響力×成熟度雙軸，氣泡大小代表布局規模），皆標註為相對強弱示意評估非精確查證數據。governance卡片也補上🧩角色/佈局類型與🎯佈局重點標籤。過程中發現第一版散佈圖數值太集中標籤重疊，截圖確認後拉開數值間距重新驗證。本機直接用Playwright實測zero JS error並截圖確認排版可讀性。已commit（98cb313）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-13",
+      "project": "AI Tracker",
       "file": "scripts/update_data.py / data/history.json",
       "summary": "修正大陸用語「合同」混入新聞內容，補進繁中用詞清單：使用者截圖回報今日Palantir新聞卡片用了「合同」（應為「合約」），質疑違反語言規範。查call_groq()與fix_protagonist_as_competitor()兩處sys_msg的繁中用詞清單漏了這組對照，已補上「合約（非合同）」。同時直接修正data/history.json既有資料，共10行13處全部確認語意皆為contract、無誤判風險，純字串取代不動其餘格式。py_compile與json.load驗證通過。已commit（8814d4f）push。已發布的今日email/Notion內容維持原樣無法追溯修正，只有之後新生成內容起套用新規則。",
       "reason": "bug_fix"
