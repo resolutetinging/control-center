@@ -1,7 +1,35 @@
 {
-  "generated_through": "2026-08-13",
+  "generated_through": "2026-08-14",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-14",
+      "project": "K-Musical Hub",
+      "file": "server.py / static/kmusical.html",
+      "summary": "新增作品基本資訊維護（演出期間／劇場／劇長）：以音樂劇角度新增show層級的metadata，跟entries場次資料分開存。server.py新增PATCH /api/shows/<show_id>/info輕量路由；kmusical.html選擇作品tab時顯示資訊摘要行＋獨立編輯modal。過程中發現剛做好的功能存不了，查出是本機Flask server還跑舊程式碼（開發伺服器不會自動reload），重啟後Playwright走完整UI流程驗證修復。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-14",
+      "project": "K-Musical Hub",
+      "file": "scripts/ocr_parse.py",
+      "summary": "Frozen場次OCR辨識率問題深度除錯（多輪迭代）：修正英文DATE/TIME表頭未涵蓋、carry-forward誤用導致日期堆疊、日期分隔符掉字、雜訊列產生不可能時間、月份大幅倒退誤判五個實際根因，每處都用needs_review誠實標記不確定的猜測而非默默對錯。使用者放大解析度重新上傳後發現真正瓶頸是顏色標記列（紅字/青綠字）在深藍底圖上OCR天生辨識率差，測試HSV明度通道前處理雖救回演員姓名但skipped列數暴增（更隱形的資料遺失換更少待核對），判斷更危險已撤回。過程中確認其他兩部戲資料全程未被寫入動到。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-14",
+      "project": "K-Musical Hub",
+      "file": "static/kmusical.html",
+      "summary": "新增拖曳上傳＋一次多檔功能：上傳區改成虛線dropzone支援拖曳，卡司月曆圖input加multiple屬性可一次拖多張，uploadShow()改成迴圈依序呼叫既有單檔上傳API並沿用同一show_id自動合併進同一部作品。Playwright模擬拖曳多檔驗證input.files正確收到、hint文字更新，zero JS error。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-14",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "NVIDIA金字塔改回280px高度、關係圖/散佈圖改寬度自適應：使用者反映金字塔高度調整回280px、兩張圖寬度不足導致資訊擠在一起。nv-pyr-band改56px（5×56=280）；兩張圖svg style改回width:100%+max-width:480px+height:auto跟著欄寬縮放，不再跟金字塔高度綁死。Playwright實測金字塔280px、svg寬度從228px放大到480px、hover功能正常，zero JS error並截圖複核排版改善。已commit（667068b）push。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-13",
       "project": "English Sandbox",
