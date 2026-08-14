@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-14",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "NVIDIA關係圖/散佈圖改回300px寬度，文字大小回歸正常量級：使用者截圖回報前一版max-width:480px改動後圖表「也變太大了吧」，要求文字大小對齊nv-gov-tip提示文字（11px）的規格。查根因是max-width:480px讓viewBox（320寬）整個等比例放大約1.5倍，文字也跟著放大到遠超提示文字份量。改成max-width:300px貼近viewBox原始寬度（scale≈0.94），文字自然落在接近11px同一量級，不用調整字級數值。Playwright實測svg寬度300px、hover功能正常，zero JS error並截圖複核比例恢復正常。已commit（bad19c0）push。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-14",
       "project": "K-Musical Hub",
       "file": "server.py / static/kmusical.html",
       "summary": "新增作品基本資訊維護（演出期間／劇場／劇長）：以音樂劇角度新增show層級的metadata，跟entries場次資料分開存。server.py新增PATCH /api/shows/<show_id>/info輕量路由；kmusical.html選擇作品tab時顯示資訊摘要行＋獨立編輯modal。過程中發現剛做好的功能存不了，查出是本機Flask server還跑舊程式碼（開發伺服器不會自動reload），重啟後Playwright走完整UI流程驗證修復。",
