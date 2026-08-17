@@ -13,6 +13,13 @@
       "date": "2026-08-17",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "加reasoning_format:hidden，解決openai/gpt-oss-120b推理token截斷JSON答案：同一bug鏈第三階段，使用者回報新錯誤「Unexpected end of JSON input」，代表JSON字串被截斷。查證Groq官方文件確認gpt-oss-120b是reasoning model，回答前先輸出隱藏推理過程，原本max_tokens:900被推理過程吃掉大半，真正JSON答案生成到一半被截斷。官方文件也指出JSON模式底下reasoning_format只能是parsed或hidden，回頭印證前一階段的json_validate_failed其實是同一個reasoning token根因。修法：加reasoning_format:'hidden'完全關閉推理輸出，max_tokens拉高到1500做安全邊際。Playwright模擬帶推理前綴文字的回應確認request body正確、成功解析出2個pipe、未退回示範資料。已commit（d818f64）push，已請使用者重新實測回報。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "修正model棄用後，generate()失敗時顯示實際錯誤訊息：使用者換完Groq替代模型後重新生成仍出現API未回應退回示範資料，代表還有其他問題，但catch區塊原本把錯誤完全吞掉連console都沒印。renderPipeSandbox()新增errMsg參數，mock-notice附上實際錯誤訊息；catch區塊傳入e.message並補console.error()；Groq回傳格式異常分支也補說明區分連線失敗與格式異常。Playwright模擬401 Invalid API Key與route.abort()網路中斷兩種情境確認錯誤訊息正確顯示。已commit（f52b45b）push，待使用者重新生成回報實際錯誤訊息才能確定根因。",
       "reason": "bug_fix"
     },
