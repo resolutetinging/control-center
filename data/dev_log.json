@@ -6,6 +6,13 @@
       "date": "2026-08-17",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "拿掉不穩定的response_format，改自動重試處理偶發JSON語法錯誤：使用者實測第四階段修法（response_format:json_object配reasoning_format:hidden），結果json_validate_failed原樣重現，推翻「reasoning_format設對就能讓response_format安全並用」的假設，證實是model本身跟response_format:json_object組合不穩定（跟社群回報一致）。改回不用response_format，靠reasoning_format:hidden關掉推理干擾；語法小錯視為隨機性問題，加自動重試最多2次取代死磕單次結果的brace-extraction救援。Playwright驗證兩種情境：第一次壞JSON第二次成功時正確重試渲染真實資料；連續2次都失敗時正確退回示範資料並顯示錯誤訊息、不會無限重試。已commit（12a704f）push，這是同一bug鏈第五次修正。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "加回response_format:json_object，配reasoning_format:hidden解決陣列語法錯誤：本機版套reasoning_format修法後實測到第三種錯誤「Expected ',' or ']' after array element in JSON」，拿掉response_format後model輸出偶爾陣列元素間漏逗號，brace-extraction救不了語法錯誤本身。查證官方文件確認reasoning_format設hidden時能跟JSON模式並用（跟raw並用才400），回頭看第一階段json_validate_failed很可能是reasoning token汙染schema驗證，不是response_format本身不相容。加回response_format:json_object靠Groq端constrained decoding保證合法JSON語法，brace-extraction備援保留。Playwright驗證request body同時含兩個參數、成功渲染2個pipe。已commit（ae6c0ed）push，這是同一bug鏈第四次修正。另外排查發現GitHub本身當下major outage（Actions/Pages/API Requests），daily-optimizer Pages部署卡住非程式問題，已啟動背景輪詢待恢復後重觸發部署；使用者改用本機檔案應急時發現戰力值與任務庫因localStorage跨origin不同步（file://與線上版分開儲存），透過Console手動搬移sas_combat_weekday/weighted、tina_tasks_v3等key解決。",
       "reason": "bug_fix"
     },
