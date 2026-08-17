@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-17",
+      "project": "Control Center",
+      "file": "index.html / english-sandbox.html / cc_astro_brief.js / astro.html / oasis.html / worship.html / refueler.html",
+      "summary": "修復Groq棄用模型ID：Groq已於2026-08-16正式關閉llama-3.3-70b-versatile與llama-3.1-8b-instant兩個模型（官方console.groq.com/docs/deprecations確認），導致所有還在呼叫的功能全部失敗。官方建議替代皆為Production Models不需額外申請權限：llama-3.3-70b-versatile→openai/gpt-oss-120b、llama-3.1-8b-instant→openai/gpt-oss-20b。派subagent用grep精確定位受影響檔案並逐一Edit替換引號內字串值，dev_log.json裡的歷史文字敘述明確排除不動。實際受影響7個檔案共8處呼叫：index.html:962、english-sandbox.html:633、cc_astro_brief.js:22、astro.html:291、oasis.html:484與686、worship.html:277、refueler.html:1226（worship.html的VIS_MDL視覺模型llama-4-scout不在棄用清單內保留未動）。驗證：grep確認舊字串零殘留、node --check全部通過、git diff --stat確認只有這7檔變動且dev_log.json未被觸及。已commit push（20e9fb6，control-center repo）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
       "project": "AI Tracker",
       "file": "scripts/update_nvidia.py",
       "summary": "NVIDIA信件bullet圖示改文字前綴，修正email client不支援position:absolute：使用者截圖回報bullet圓點跟標題掉成兩行。查根因是前一版用position:absolute排版，Playwright/Chromium瀏覽器驗證正常但很多email client（尤其行動版）不支援position屬性會直接忽略，讓span退回inline flow被後面block級div換行擠開——這是只用瀏覽器截圖驗證信件排版的盲點。改成bullet當文字前綴寫進同一行，不依賴定位屬性。py_compile通過，結構性檢查確認無position殘留、bullet與標題在同一div內，Playwright截圖複核正常。已commit（fd0cbe7）push，並把email HTML相容性教訓存進feedback記憶檔（適用本環境所有寄信腳本）。",
