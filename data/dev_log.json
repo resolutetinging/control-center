@@ -6,6 +6,13 @@
       "date": "2026-08-17",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "拿掉generate()強制JSON模式，解決openai/gpt-oss-120b的json_validate_failed：使用者依前一版新增的錯誤訊息回報實際錯誤是Groq的json_validate_failed。查證Groq社群論壇確認這是官方推薦替代model openai/gpt-oss-120b已知的不穩定問題，疑似跟該model偶爾把reasoning token混進輸出有關，導致Groq伺服器端強制response_format:json_object的schema驗證直接擋掉整個請求。拿掉強制JSON模式改靠prompt指示，解析端加寬容備援（JSON.parse失敗時抓第一個{到最後一個}之間內容再試）。Playwright模擬reasoning token前後綴文字混入的情境確認寬容解析成功救回JSON、不再退回示範資料。已commit（f2a36ab）push。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "修正model棄用後，generate()失敗時顯示實際錯誤訊息：使用者換完Groq替代模型後重新生成仍出現API未回應退回示範資料，代表還有其他問題，但catch區塊原本把錯誤完全吞掉連console都沒印。renderPipeSandbox()新增errMsg參數，mock-notice附上實際錯誤訊息；catch區塊傳入e.message並補console.error()；Groq回傳格式異常分支也補說明區分連線失敗與格式異常。Playwright模擬401 Invalid API Key與route.abort()網路中斷兩種情境確認錯誤訊息正確顯示。已commit（f52b45b）push，待使用者重新生成回報實際錯誤訊息才能確定根因。",
       "reason": "bug_fix"
     },
