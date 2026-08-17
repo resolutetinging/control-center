@@ -481,7 +481,7 @@ function buildSettings(){
           value="${esc(S.groqKey)}" placeholder="gsk_…" oninput="S.groqKey=this.value">
         <button class="eye-btn" id="eye-btn" onclick="toggleKeyVis()">👁</button>
       </div>
-      <div class="setting-hint">llama-3.3-70b-versatile</div>
+      <div class="setting-hint">openai/gpt-oss-120b</div>
     </div>
 
     <div class="setting-group">
@@ -683,7 +683,7 @@ source_type 填寫規則：實體出版書籍填 "book"；詩集填 "poetry"；�
       method:'POST',
       headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
+        model:'openai/gpt-oss-120b',
         messages:msgs,
         temperature:0.75,max_tokens:2000
       })

@@ -630,7 +630,7 @@ async function callGroq(prompt, max=600, sys='', jsonMode=false){
   const msgs = sys
     ? [{role:'system',content:sys},{role:'user',content:prompt}]
     : [{role:'user',content:prompt}];
-  const body = {model:'llama-3.3-70b-versatile',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85};
+  const body = {model:'openai/gpt-oss-120b',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85};
   if(jsonMode) body.response_format = {type:'json_object'};
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
