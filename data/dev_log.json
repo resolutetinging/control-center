@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-17",
+      "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py",
+      "summary": "NVIDIA信件bullet圖示改文字前綴，修正email client不支援position:absolute：使用者截圖回報bullet圓點跟標題掉成兩行。查根因是前一版用position:absolute排版，Playwright/Chromium瀏覽器驗證正常但很多email client（尤其行動版）不支援position屬性會直接忽略，讓span退回inline flow被後面block級div換行擠開——這是只用瀏覽器截圖驗證信件排版的盲點。改成bullet當文字前綴寫進同一行，不依賴定位屬性。py_compile通過，結構性檢查確認無position殘留、bullet與標題在同一div內，Playwright截圖複核正常。已commit（fd0cbe7）push，並把email HTML相容性教訓存進feedback記憶檔（適用本環境所有寄信腳本）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "修正零長度Calendar行程產生空白卡片的bug：使用者截圖回報排程出現「09:00-09:00 移動」等起訖同一時刻、長度0分鐘的卡片。查根因是parseCalEvents()（解析Google Calendar複製貼上的行程文字）沒有驗證起訖是否構成有效區間，貼上的「移動時間」來源本身就是同一時刻起訖，被原樣解析後透過強制注入機制塞進pipes。修法兩層：parseCalEvents()解析後過濾start===end的列；sanitizePipes()一開始也對result.pipes做同樣過濾，不管零長度水管來源是AI還是Calendar注入都擋掉。node --check通過，隔離測試確認零長度輸入正確過濾、有效事件保留。已commit（5d319b0）push。",
