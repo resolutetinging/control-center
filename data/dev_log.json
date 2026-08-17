@@ -6,6 +6,13 @@
       "date": "2026-08-17",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "加回response_format:json_object，配reasoning_format:hidden解決陣列語法錯誤：本機版套reasoning_format修法後實測到第三種錯誤「Expected ',' or ']' after array element in JSON」，拿掉response_format後model輸出偶爾陣列元素間漏逗號，brace-extraction救不了語法錯誤本身。查證官方文件確認reasoning_format設hidden時能跟JSON模式並用（跟raw並用才400），回頭看第一階段json_validate_failed很可能是reasoning token汙染schema驗證，不是response_format本身不相容。加回response_format:json_object靠Groq端constrained decoding保證合法JSON語法，brace-extraction備援保留。Playwright驗證request body同時含兩個參數、成功渲染2個pipe。已commit（ae6c0ed）push，這是同一bug鏈第四次修正。另外排查發現GitHub本身當下major outage（Actions/Pages/API Requests），daily-optimizer Pages部署卡住非程式問題，已啟動背景輪詢待恢復後重觸發部署；使用者改用本機檔案應急時發現戰力值與任務庫因localStorage跨origin不同步（file://與線上版分開儲存），透過Console手動搬移sas_combat_weekday/weighted、tina_tasks_v3等key解決。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "拿掉generate()強制JSON模式，解決openai/gpt-oss-120b的json_validate_failed：使用者依前一版新增的錯誤訊息回報實際錯誤是Groq的json_validate_failed。查證Groq社群論壇確認這是官方推薦替代model openai/gpt-oss-120b已知的不穩定問題，疑似跟該model偶爾把reasoning token混進輸出有關，導致Groq伺服器端強制response_format:json_object的schema驗證直接擋掉整個請求。拿掉強制JSON模式改靠prompt指示，解析端加寬容備援（JSON.parse失敗時抓第一個{到最後一個}之間內容再試）。Playwright模擬reasoning token前後綴文字混入的情境確認寬容解析成功救回JSON、不再退回示範資料。已commit（f2a36ab）push。",
       "reason": "bug_fix"
     },
