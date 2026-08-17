@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-17",
+      "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py / data/nv_status.json",
+      "summary": "NVIDIA週查證第一次實跑，人工複核候選異動並修正信件方向（兩輪）：手動觸發後跑出2項候選異動，先用AskUserQuestion把措辭取捨丟給使用者選，使用者反饋不確定要判斷什麼、mail需求是快速跟上概況不是決策入口。改為自行複核：Vera Rubin保留原謹慎措辭補新報導、Feynman合併保留時程資訊，直接更新nv_status.json並清空pending。使用者接著澄清信件真正定位是「一週總結」不管有無變動都要看到各block現況，週間大量重複是預期行為。改成每週信件固定包含完整6個block現況（逐項附desc/status），候選異動改放最上面補充區塊不取代總結。已commit（f7d4d15、6d544ea）push，兩點都存進feedback記憶檔。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-17",
       "project": "Sleep Dashboard",
       "file": "json_cache/sleep_2026-08-15.txt",
       "summary": "修正8/15睡眠資料0值異常：json_cache裡8/15檔案deep/rem/core/awake全0，符合已知的iCloud未同步完成陷阱（非空檔案不會被run_update.sh自動覆蓋）。使用者提供正確數值（awake20分/rem2h1m/core5h45m/deep13分）換算小時制手動改寫。查證alarm機制：.zero_data_alerted.json確認2026-08-15當天09:46已觸發過本機通知，現場補發測試通知使用者也確認有看到，證實alarm機制正常、當天是使用者自己錯過通知非系統故障。改完跑update_dashboard.py確認RAW資料四項數字完全對上，已commit push（ae186c7）。提醒使用者需自行手動開一次sleep_dashboard_v2.html讓SAS Hub主頁的localStorage同步到新資料。",
