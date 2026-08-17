@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-17",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "修正model棄用後，generate()失敗時顯示實際錯誤訊息：使用者換完Groq替代模型後重新生成仍出現API未回應退回示範資料，代表還有其他問題，但catch區塊原本把錯誤完全吞掉連console都沒印。renderPipeSandbox()新增errMsg參數，mock-notice附上實際錯誤訊息；catch區塊傳入e.message並補console.error()；Groq回傳格式異常分支也補說明區分連線失敗與格式異常。Playwright模擬401 Invalid API Key與route.abort()網路中斷兩種情境確認錯誤訊息正確顯示。已commit（f52b45b）push，待使用者重新生成回報實際錯誤訊息才能確定根因。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-17",
       "project": "生態系全面",
       "file": "5個repo（Daily Optimizer/Control Center/AI Tracker/Sleep Dashboard/WordVault）",
       "summary": "生態系全面事件：Groq模型棄用（llama-3.3-70b-versatile / llama-3.1-8b-instant）跨5個repo同步修復。起因：Daily Optimizer「AI生成行程」完全沒參考人工輸入且顆粒度太大，畫面顯示API未回應退回示範資料，但錯誤被靜默吞掉看不到原因。查證官方console.groq.com/docs/deprecations確認兩個模型已於2026-08-16正式關閉，官方建議替代皆為Production Models：llama-3.3-70b-versatile→openai/gpt-oss-120b、llama-3.1-8b-instant→openai/gpt-oss-20b（不採用Preview等級的qwen/qwen3.6-27b）。跨repo查證發現這兩個model ID被5個獨立repo共用，派5個subagent平行修復：Daily Optimizer（6a79507）、AI Tracker（00e08a4，含後續清殘留註解02f0344）、Sleep Dashboard（571b278）、WordVault（f1b7d15）、Control Center（20e9fb6）。全部驗證node --check/py_compile通過，跨repo複查確認整個生態系已無任何殘留舊model字串。",
