@@ -5,6 +5,13 @@
     {
       "date": "2026-08-17",
       "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py",
+      "summary": "NVIDIA信件內文改bullet+縮排排版，並回答圖表能否嵌入mail的問題：使用者截圖回報信件文字全部擠在一起，並詢問圖表能否放進mail content。圖表部分說明email client對SVG/CSS clip-path支援極差，可行做法是伺服器端Playwright轉PNG但會讓workflow變慢+多依賴，使用者決定放棄不實作。排版部分重寫item_lines()：每項用絕對定位圓點當bullet，標題獨立一行加粗，detail另起一行往內縮14px字級縮小顏色轉淡，靠留白階層拉開視覺區隔。py_compile通過，monkey-patch smtplib+Playwright截圖複核排版正確呈現。已commit（e5f1809）push。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-17",
+      "project": "AI Tracker",
       "file": "scripts/update_nvidia.py / data/nv_status.json",
       "summary": "NVIDIA週查證第一次實跑，人工複核候選異動並修正信件方向（兩輪）：手動觸發後跑出2項候選異動，先用AskUserQuestion把措辭取捨丟給使用者選，使用者反饋不確定要判斷什麼、mail需求是快速跟上概況不是決策入口。改為自行複核：Vera Rubin保留原謹慎措辭補新報導、Feynman合併保留時程資訊，直接更新nv_status.json並清空pending。使用者接著澄清信件真正定位是「一週總結」不管有無變動都要看到各block現況，週間大量重複是預期行為。改成每週信件固定包含完整6個block現況（逐項附desc/status），候選異動改放最上面補充區塊不取代總結。已commit（f7d4d15、6d544ea）push，兩點都存進feedback記憶檔。",
       "reason": "user_request"
