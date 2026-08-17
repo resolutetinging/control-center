@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-17",
+  "generated_through": "2026-08-18",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-18",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "max_tokens拉高到4000，解決真實較長Calendar內容時的截斷：延續8/17晚間reasoning_format+自動重試修法後，使用者用真實較長Calendar內容實測（4筆行程），出現「Unterminated string in JSON at position 33」，content很前面就被截斷。真實prompt較長時推理過程吃掉的token比先前簡短測試情境更多，max_tokens:1500系統性不足，兩次重試都會截斷，重試機制救不了系統性長度不足的問題。查證model最大輸出65536 tokens，拉高到4000留足安全邊際。Playwright用使用者實際貼的Calendar內容模擬完整流程，確認正常渲染4個pipe未退回示範資料。已commit（57c0f01）push，這是同一bug鏈第六次修正。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-17",
       "project": "Daily Optimizer",
