@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "修時段憑空消失bug，補漏reasoning_effort:low：使用者截圖回報生成的每日行程兩個時段間偶爾憑空消失一段時間，要求明天生成再驗證。查出daily-optimizer其實是稍早那輪reasoning_effort:low掃描唯一漏掉的repo（明明是這條bug鏈起點）先補上，但這次症狀性質不同，真正根因是sanitizePipes()的段間緩衝邏輯遇到gap>0（時段間本有間隔）直接continue跳過不處理，程式碼分不出「AI漏排」跟「AI刻意留白」，導致那段時間沒有pipe覆蓋、畫面直接消失。改成gap>0時插入type:'rest'label:'彈性時間'的pipe蓋住空檔。寫獨立node測試腳本重現截圖情境（16:00-17:00→17:30-18:00→18:05-18:55）驗證兩個空隙都補上且既有午休/Calendar邏輯未受影響，fresh-context subagent逐條複核通過。git push（70afe2f）。尚未端到端驗證，需等明天真實生成確認。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-18",
       "project": "生態系全面",
       "file": "sleep-dashboard/index.html＋sleep_dashboard_v2.html／control-center 6檔／WordVault 3檔",
       "summary": "reasoning_effort:low全生態系收尾補完（使用者主動要求重新巡查有無漏掉的影響）：English Sandbox發現reasoning_format:hidden不足以穩定截斷問題後，回頭確認上午那輪reasoning_format修復全都還沒補這個關鍵參數。sleep-dashboard（index.html的aiCall()、sleep_dashboard_v2.html的runWeightedAI()，後者原本max_tokens僅200一併調高到500）由主對話直接處理並push（445962d）；control-center剩餘6檔（cc_astro_brief.js/index.html/refueler.html/oasis.html/worship.html/astro.html，astro.html的vision呼叫確認未被誤動）、WordVault 3檔7處、AI Tracker前端3處+後端5處（Python SDK先查證reasoning_effort為原生支援參數才動手改排程腳本）分派3個平行subagent處理。過程中順手抓到並防禦性調高幾個明顯偏小的舊max_tokens（refueler.html/worship.html 200~300→600、WordVault.html 120→600、wordvault-kids_v2.html 300→600），這些屬防禦性下限非逐一實測校準，日後若仍偶發截斷需回頭個別驗證。git push：control-center（88107d0）、WordVault（65037a7）、AI Tracker（含自行同步dev log，48f0ea3）。",
