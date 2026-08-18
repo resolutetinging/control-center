@@ -959,8 +959,8 @@ Output ONLY valid JSON:
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
     const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the eight given Traditional Chinese labels (or empty string), never invent a new category name.';
 
-    const callsArr = [callGroq(promptA, 400, sysA, true), callGroq(promptB, 300, sysB, true)];
-    if(inp) callsArr.push(callGroq(promptC, 250, sysC, true));
+    const callsArr = [callGroq(promptA, 1200, sysA, true), callGroq(promptB, 900, sysB, true)];
+    if(inp) callsArr.push(callGroq(promptC, 900, sysC, true));
     const [rawA, rawB, rawC] = await Promise.all(callsArr);
     results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB), ...(rawC?safeParseJson(rawC):{})});
 
@@ -969,7 +969,7 @@ Output ONLY valid JSON:
     const _hasCJK = s => /[一-鿿]/.test(s||'');
     if(['safe','pro','ball'].some(t=>_hasCJK(results[t]))){
       try{
-        const rawB2 = await callGroq(promptB, 300, sysB, true);
+        const rawB2 = await callGroq(promptB, 900, sysB, true);
         const r2 = s2tDeep(safeParseJson(rawB2));
         ['safe','pro','ball'].forEach(t=>{
           if(_hasCJK(results[t]) && r2[t] && !_hasCJK(r2[t])) results[t]=r2[t];
@@ -1120,7 +1120,7 @@ Answer ONLY this specific question — do not re-explain the whole correction fr
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤120字.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
-    const raw = await callGroq(prompt, 220, sys, false);
+    const raw = await callGroq(prompt, 700, sys, false);
     appendGrChat('ai', _sanitizePlainText(s2t((raw||'').trim())));
   }catch(e){
     appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。');
@@ -1151,7 +1151,7 @@ Answer ONLY this specific question — do not re-explain the whole thing from sc
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤120字.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
-    const raw = await callGroq(prompt, 220, sys, false);
+    const raw = await callGroq(prompt, 700, sys, false);
     appendGrChat('ai', _sanitizePlainText(s2t((raw||'').trim())), 'idiom-chat-log');
   }catch(e){
     appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。', 'idiom-chat-log');
@@ -1403,7 +1403,7 @@ Write a concise performance report in Traditional Chinese (繁體中文). Struct
 2. （具體建議）
 3. （具體建議）`;
   try{
-    const r = await callGroq(prompt, 600, 'You are an English conversation coach. Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).');
+    const r = await callGroq(prompt, 1500, 'You are an English conversation coach. Output in Traditional Chinese (Taiwan standard, 繁體中文) only. Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).');
     body.textContent = s2t(r);
   }catch(e){
     body.textContent = '分析失敗：'+e.message;
@@ -1590,7 +1590,7 @@ Rules:
 - example: a different natural sentence using the same correct idiom`;
 
     const _fetchCandidate = async () => {
-      const raw = await callGroq(prompt, 400, 'You output ONLY valid JSON. All Chinese fields (zh, explain_zh) must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).', true);
+      const raw = await callGroq(prompt, 1200, 'You output ONLY valid JSON. All Chinese fields (zh, explain_zh) must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).', true);
       return s2tDeep(safeParseJson(raw));
     };
     const _hasDupParticle = (sentence, answer) => {
