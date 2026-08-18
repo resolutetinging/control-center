@@ -6,6 +6,13 @@
       "date": "2026-08-18",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "補齊AI反饋/週報/任務時長分配的reasoning_format設定：使用者回報「AI反饋跑不出來」，查出genReviewFeedback()用openai/gpt-oss-120b卻沒設reasoning_format，跟8/17晚間generate()踩過同一個坑，隱藏推理吃掉max_tokens:450的預算。差別是這裡輸出純文字非JSON不會拋parse錯誤，後果是靜默輸出空字串或截斷內容，症狀比generate()當時更隱晦（沒有明確錯誤訊息）。順手排查同一輪model遷移影響的其他Groq call site，找到另外兩處同樣缺口：生成週報（600→1500 tokens）、任務時長分配loadTaskDurations（用gpt-oss-20b同屬reasoning model系列，280→600 tokens），都加reasoning_format:'hidden'。Playwright驗證genReviewFeedback() request body正確、輸出文字正確渲染非空。已commit（cb0e265）push。教訓：修model相容性問題應一次grep全檔案所有fetch(GROQ)呼叫點逐一比對，不要修一個算一個。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "新增「補生成過去日期」功能：使用者詢問8/17 optimizer可以如何處理，確認是想要能補生成過去日期排程的功能（8/17當晚因Groq bug鏈+GitHub中斷雙重卡關沒能順利生成，跨過午夜後app的「今天」概念已無法回頭）。既有歷史面板本來就有displayKey切換機制可瀏覽/編輯過去已存記錄，但無法對過去日期呼叫generate()，且generate()寫死用new Date()算星期幾/閉館時間/prompt「今天」欄位，切到過去displayKey生成也會誤用當下實際日期。新增歷史面板日期選擇器backfillDate()可跳到任一過去日期；generate()改一律從displayKey反推日期；戰力值優先讀該天既有存檔的combatPower；同步全域pwr=p避免存檔時把正確歷史戰力值被目前即時pwr覆蓋（Playwright測試中抓到這個副作用bug並修正）；生成按鈕文字依displayKey動態切換降低誤判。另外背景輪詢過夜於8/18 08:48偵測到GitHub Pages中斷恢復，自動推重試commit（8534292）確認daily-optimizer線上版已載入前一晚的max_tokens:4000修法。已commit（6c4b54c）push。",
       "reason": "feature"
     },
