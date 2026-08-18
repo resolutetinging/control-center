@@ -210,8 +210,8 @@ const S={
   set saved(v){localStorage.setItem('oasis_saved',JSON.stringify(v));saveStatus();},
   get authors(){try{return JSON.parse(localStorage.getItem('oasis_authors')||'[]');}catch{return[];}},
   set authors(v){localStorage.setItem('oasis_authors',JSON.stringify(v));saveStatus();},
-  get groqKey(){return localStorage.getItem('oasis_groq_key')||'';},
-  set groqKey(v){localStorage.setItem('oasis_groq_key',v);},
+  get groqKey(){return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||'';},
+  set groqKey(v){localStorage.setItem('groq_key',v);},
   get cache(){try{return JSON.parse(localStorage.getItem('oasis_cache')||'{}');}catch{return{};}},
   set cache(v){localStorage.setItem('oasis_cache',JSON.stringify(v));saveStatus();},
 };

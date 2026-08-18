@@ -1199,7 +1199,7 @@ function renderAIStats(){
 
 // ── RUN AI ──
 async function runAI(){
-  const key=localStorage.getItem(GROQ_KEY)||'';
+  const key=localStorage.getItem(GROQ_KEY)||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||'';
   const btn=document.getElementById('ai-run-btn');
   const spinner=document.getElementById('ai-spinner');
   const txt=document.getElementById('ai-btn-txt');

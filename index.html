@@ -680,7 +680,7 @@ function renderTab(tab){
       </div>
     `;
   } else if(tab==='api'){
-    const k=localStorage.getItem(GROQ_KEY)||'';
+    const k=localStorage.getItem(GROQ_KEY)||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||'';
     const pat=localStorage.getItem('gh_pat')||'';
     const gid=localStorage.getItem('gist_id')||'';
     const nexusKey=localStorage.getItem('nexus_access')||'';
@@ -928,7 +928,7 @@ function openSASAnalysis(){
 }
 function closeSAS(){document.getElementById('sas-ov').style.display='none';}
 async function runSAS(){
-  const key=localStorage.getItem(GROQ_KEY)||'';
+  const key=localStorage.getItem(GROQ_KEY)||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||'';
   const el=document.getElementById('sas-res');
   if(!key){el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.35);text-align:center;padding:16px;">請先在 ⚙️ API設定 填入 Groq API Key</div>';return;}
   el.innerHTML='<div style="text-align:center;padding:24px;"><div style="font-size:28px;animation:pulse-s 1.5s infinite;">✨</div><div style="font-size:13px;color:rgba(255,255,255,.35);margin-top:8px;">分析中…</div></div>';

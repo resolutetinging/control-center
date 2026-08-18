@@ -348,7 +348,7 @@ function readPhoto(file){
 }
 // ── Groq ──
 async function groqCall(messages,model,maxTokens){
-  var key=localStorage.getItem(GROQ_STORE)||'';
+  var key=localStorage.getItem('groq_key')||localStorage.getItem(GROQ_STORE)||localStorage.getItem('oasis_groq_key')||'';
   if(!key)throw new Error('找不到 Groq API Key（localStorage: tina_groq）');
   var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
@@ -362,7 +362,7 @@ async function groqCall(messages,model,maxTokens){
 }
 
 async function groqVisionCall(temple,imageDataUrl){
-  var key=localStorage.getItem(GROQ_STORE)||'';
+  var key=localStorage.getItem('groq_key')||localStorage.getItem(GROQ_STORE)||localStorage.getItem('oasis_groq_key')||'';
   if(!key)throw new Error('找不到 Groq API Key（localStorage: tina_groq）');
   var body={
     model:VIS_MDL,
