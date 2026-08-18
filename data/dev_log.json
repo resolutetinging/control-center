@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Small Talk接球分析完整修復，API 400到JSON解析失敗到穩定：使用者回報送出接球跳API 400。查出promptA/B/C用response_format:json_object，跟gpt-oss-120b組合不穩定（同daily-optimizer bug鏈結論），拿掉改靠prompt指示+寬容解析。用claude-in-chrome開真實瀏覽器monkey-patch callGroq()攔截原始回應逐步排查，發現opener生成max_tokens只給60（全檔最小）先調到300，promptA/B/C與文法追問聊天/綜合分析/字庫生成等呼叫點實測後全部證實預算不足（狀態200但content空白或攔腰截斷，比400更隱蔽），依實測調到700~1500。拉高後仍偶發截斷（同prompt推理token在11~600+顆間波動），改加reasoning_effort:'low'參數後跑5次穩定在11-12顆，才是真正解決波動的根本修法。實際點擊完整流程驗證三階潤飾/語氣契合度/接球判定全部正常渲染。git push（92abf88/b889795/c922f71/c88798c）。教訓：這次跨5 repo的reasoning_format修復都還沒補reasoning_effort:low，之後該回頭統一補上。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "Control Center",
+      "file": "index.html／cc_styles.css",
+      "summary": "每月安全回顧提醒視覺調整：改成圓圈底色變紅+閃爍取代疊加emoji。第一版用opacity動畫複用guard-dot的pulse-r，用claude-in-chrome直接開瀏覽器檢查發現跟頁面暖色背景混色不夠鮮明，改用純色切換的keyframe，zoom截圖確認清楚紅色圓圈後才push。git push（cc55263/13d00d3）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-18",
       "project": "生態系全面",
       "file": "WordVault.html／wordvault-kids.html／wordvault-kids_v2.html",
       "summary": "WordVault補齊7處Groq reasoning_format缺口：跟SAS Hub同一輪生態系排查，wordvault-kids.html、WordVault.html（3處：chunk翻譯/retry/逐字補翻譯）、wordvault-kids_v2.html（3處：AI字典/貼紙池生成/親職建議）共7處呼叫openai/gpt-oss-120b皆原本無reasoning_format，全部補上'hidden'，maxTokens數值未動。node --check全數通過。已commit（283d99d）push。",
