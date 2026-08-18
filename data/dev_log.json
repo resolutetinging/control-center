@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "補完成8/17晚間中斷的詞彙庫response_format修法：8/17晚間排查daily-optimizer bug鏈時發現詞彙庫功能（AI補完/重新生成）也用openai/gpt-oss-120b+response_format:json_object同樣風險，當下已在本機改好但被接續的daily-optimizer新錯誤打斷未commit，今天盤點才發現這個半成品。拿掉response_format、加reasoning_format:'hidden'、max_tokens 600→1000。Playwright驗證request body正確、生成成功。已commit（4da289e）push，推送時撞到遠端自動更新commit，用git pull --rebase解決。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-18",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "補齊AI反饋/週報/任務時長分配的reasoning_format設定：使用者回報「AI反饋跑不出來」，查出genReviewFeedback()用openai/gpt-oss-120b卻沒設reasoning_format，跟8/17晚間generate()踩過同一個坑，隱藏推理吃掉max_tokens:450的預算。差別是這裡輸出純文字非JSON不會拋parse錯誤，後果是靜默輸出空字串或截斷內容，症狀比generate()當時更隱晦（沒有明確錯誤訊息）。順手排查同一輪model遷移影響的其他Groq call site，找到另外兩處同樣缺口：生成週報（600→1500 tokens）、任務時長分配loadTaskDurations（用gpt-oss-20b同屬reasoning model系列，280→600 tokens），都加reasoning_format:'hidden'。Playwright驗證genReviewFeedback() request body正確、輸出文字正確渲染非空。已commit（cb0e265）push。教訓：修model相容性問題應一次grep全檔案所有fetch(GROQ)呼叫點逐一比對，不要修一個算一個。",
