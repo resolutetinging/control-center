@@ -959,8 +959,8 @@ Output ONLY valid JSON:
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
     const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the eight given Traditional Chinese labels (or empty string), never invent a new category name.';
 
-    const callsArr = [callGroq(promptA, 1200, sysA, true), callGroq(promptB, 900, sysB, true)];
-    if(inp) callsArr.push(callGroq(promptC, 900, sysC, true));
+    const callsArr = [callGroq(promptA, 1200, sysA, true), callGroq(promptB, 1200, sysB, true)];
+    if(inp) callsArr.push(callGroq(promptC, 1200, sysC, true));
     const [rawA, rawB, rawC] = await Promise.all(callsArr);
     results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB), ...(rawC?safeParseJson(rawC):{})});
 
@@ -969,7 +969,7 @@ Output ONLY valid JSON:
     const _hasCJK = s => /[一-鿿]/.test(s||'');
     if(['safe','pro','ball'].some(t=>_hasCJK(results[t]))){
       try{
-        const rawB2 = await callGroq(promptB, 900, sysB, true);
+        const rawB2 = await callGroq(promptB, 1200, sysB, true);
         const r2 = s2tDeep(safeParseJson(rawB2));
         ['safe','pro','ball'].forEach(t=>{
           if(_hasCJK(results[t]) && r2[t] && !_hasCJK(r2[t])) results[t]=r2[t];
