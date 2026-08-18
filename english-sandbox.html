@@ -630,14 +630,20 @@ async function callGroq(prompt, max=600, sys='', jsonMode=false){
   const msgs = sys
     ? [{role:'system',content:sys},{role:'user',content:prompt}]
     : [{role:'user',content:prompt}];
+  // response_format:json_object 拿掉：跟openai/gpt-oss-120b這個model組合不穩定
+  // （已在daily-optimizer bug鏈證實，社群回報一致），改靠prompt明講「Output ONLY
+  // valid JSON」+safeParseJson()寬容解析頂住，jsonMode僅保留用來調整temperature
   const body = {model:'openai/gpt-oss-120b',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85,reasoning_format:'hidden'};
-  if(jsonMode) body.response_format = {type:'json_object'};
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
     body:JSON.stringify(body)
   });
-  if(!r.ok) throw new Error('API '+r.status);
+  if(!r.ok){
+    let detail='';
+    try{ const ej=await r.json(); detail=ej?.error?.message||''; }catch(_e){}
+    throw new Error('API '+r.status+(detail?'：'+detail:''));
+  }
   const j = await r.json();
   return j.choices?.[0]?.message?.content||'';
 }
