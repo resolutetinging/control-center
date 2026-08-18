@@ -97,8 +97,9 @@ body{position:relative;}
   transition:background .2s;
 }
 #dev-btn:hover{background:rgba(255,255,255,.9);}
-#dev-btn.due-alert{background:var(--danger);border-color:var(--danger);animation:pulse-r 1s infinite;}
+#dev-btn.due-alert{background:var(--danger);border-color:var(--danger);animation:devBtnBlink 1s infinite;}
 #dev-btn.due-alert:hover{background:var(--danger);}
+@keyframes devBtnBlink{0%,100%{background:var(--danger);}50%{background:#8a291f;}}
 /* ── Storage Btn（Dev Dashboard 圓圈正下方，同大小同風格）── */
 #storage-btn{
   position:fixed;top:68px;left:68px;z-index:50;
