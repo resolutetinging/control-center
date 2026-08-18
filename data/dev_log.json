@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html／scripts/update_data.py／scripts/update_nvidia.py",
+      "summary": "Groq reasoning_format補漏：前端分析趨勢功能與後端5處排程呼叫（chain修正/impact驗證/主生成/body聲明驗證/NVIDIA週查證）先前漏設reasoning_format:hidden。改動前先查證本機groq SDK 1.0.0的create()簽名確認此為原生具名參數才動手改排程腳本。node --check與py_compile皆通過，fresh-context subagent核對8個呼叫點全數補齊。已commit（b02c16c）push。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-08-18",
       "project": "生態系全面",
       "file": "index.html／cc_autosync.js",
       "summary": "Dev Dashboard新增每月安全回顧提醒：should-fix #4（5 repo git歷史殘留已刪除內部檔）裁定先不清理但要定期review。原規劃用雲端routine排程，因control-center GitHub寫入權限驗證失敗改站內方案。到期時#dev-btn顯示🔴，開Dev Dashboard看到回顧卡片，按「已回顧」寫入cc_review_git_history_ack（已入SAFE_STATIC_KEYS跨裝置同步，故意不用review_開頭避免撞Daily Optimizer的review_YYYY-MM-DD前綴）。按鈕改用既有.btn-pr（--deep token），發現原本想用的--accent在cc_styles.css根本不存在。node --check通過，fresh-context haiku subagent逐條驗證函式邏輯/初始化/白名單收錄全數通過。已commit（b15b570）push。",
