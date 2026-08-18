@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "sleep-dashboard/index.html＋sleep_dashboard_v2.html／control-center 6檔／WordVault 3檔",
+      "summary": "reasoning_effort:low全生態系收尾補完（使用者主動要求重新巡查有無漏掉的影響）：English Sandbox發現reasoning_format:hidden不足以穩定截斷問題後，回頭確認上午那輪reasoning_format修復全都還沒補這個關鍵參數。sleep-dashboard（index.html的aiCall()、sleep_dashboard_v2.html的runWeightedAI()，後者原本max_tokens僅200一併調高到500）由主對話直接處理並push（445962d）；control-center剩餘6檔（cc_astro_brief.js/index.html/refueler.html/oasis.html/worship.html/astro.html，astro.html的vision呼叫確認未被誤動）、WordVault 3檔7處、AI Tracker前端3處+後端5處（Python SDK先查證reasoning_effort為原生支援參數才動手改排程腳本）分派3個平行subagent處理。過程中順手抓到並防禦性調高幾個明顯偏小的舊max_tokens（refueler.html/worship.html 200~300→600、WordVault.html 120→600、wordvault-kids_v2.html 300→600），這些屬防禦性下限非逐一實測校準，日後若仍偶發截斷需回頭個別驗證。git push：control-center（88107d0）、WordVault（65037a7）、AI Tracker（含自行同步dev log，48f0ea3）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-18",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "Small Talk接球分析完整修復，API 400到JSON解析失敗到穩定：使用者回報送出接球跳API 400。查出promptA/B/C用response_format:json_object，跟gpt-oss-120b組合不穩定（同daily-optimizer bug鏈結論），拿掉改靠prompt指示+寬容解析。用claude-in-chrome開真實瀏覽器monkey-patch callGroq()攔截原始回應逐步排查，發現opener生成max_tokens只給60（全檔最小）先調到300，promptA/B/C與文法追問聊天/綜合分析/字庫生成等呼叫點實測後全部證實預算不足（狀態200但content空白或攔腰截斷，比400更隱蔽），依實測調到700~1500。拉高後仍偶發截斷（同prompt推理token在11~600+顆間波動），改加reasoning_effort:'low'參數後跑5次穩定在11-12顆，才是真正解決波動的根本修法。實際點擊完整流程驗證三階潤飾/語氣契合度/接球判定全部正常渲染。git push（92abf88/b889795/c922f71/c88798c）。教訓：這次跨5 repo的reasoning_format修復都還沒補reasoning_effort:low，之後該回頭統一補上。",
