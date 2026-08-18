@@ -6,6 +6,13 @@
       "date": "2026-08-18",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "新增「補生成過去日期」功能：使用者詢問8/17 optimizer可以如何處理，確認是想要能補生成過去日期排程的功能（8/17當晚因Groq bug鏈+GitHub中斷雙重卡關沒能順利生成，跨過午夜後app的「今天」概念已無法回頭）。既有歷史面板本來就有displayKey切換機制可瀏覽/編輯過去已存記錄，但無法對過去日期呼叫generate()，且generate()寫死用new Date()算星期幾/閉館時間/prompt「今天」欄位，切到過去displayKey生成也會誤用當下實際日期。新增歷史面板日期選擇器backfillDate()可跳到任一過去日期；generate()改一律從displayKey反推日期；戰力值優先讀該天既有存檔的combatPower；同步全域pwr=p避免存檔時把正確歷史戰力值被目前即時pwr覆蓋（Playwright測試中抓到這個副作用bug並修正）；生成按鈕文字依displayKey動態切換降低誤判。另外背景輪詢過夜於8/18 08:48偵測到GitHub Pages中斷恢復，自動推重試commit（8534292）確認daily-optimizer線上版已載入前一晚的max_tokens:4000修法。已commit（6c4b54c）push。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "max_tokens拉高到4000，解決真實較長Calendar內容時的截斷：延續8/17晚間reasoning_format+自動重試修法後，使用者用真實較長Calendar內容實測（4筆行程），出現「Unterminated string in JSON at position 33」，content很前面就被截斷。真實prompt較長時推理過程吃掉的token比先前簡短測試情境更多，max_tokens:1500系統性不足，兩次重試都會截斷，重試機制救不了系統性長度不足的問題。查證model最大輸出65536 tokens，拉高到4000留足安全邊際。Playwright用使用者實際貼的Calendar內容模擬完整流程，確認正常渲染4個pipe未退回示範資料。已commit（57c0f01）push，這是同一bug鏈第六次修正。",
       "reason": "bug_fix"
     },
