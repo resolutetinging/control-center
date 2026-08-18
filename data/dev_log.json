@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "index.html／cc_autosync.js",
+      "summary": "Dev Dashboard新增每月安全回顧提醒：should-fix #4（5 repo git歷史殘留已刪除內部檔）裁定先不清理但要定期review。原規劃用雲端routine排程，因control-center GitHub寫入權限驗證失敗改站內方案。到期時#dev-btn顯示🔴，開Dev Dashboard看到回顧卡片，按「已回顧」寫入cc_review_git_history_ack（已入SAFE_STATIC_KEYS跨裝置同步，故意不用review_開頭避免撞Daily Optimizer的review_YYYY-MM-DD前綴）。按鈕改用既有.btn-pr（--deep token），發現原本想用的--accent在cc_styles.css根本不存在。node --check通過，fresh-context haiku subagent逐條驗證函式邏輯/初始化/白名單收錄全數通過。已commit（b15b570）push。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "跨6 repo should-fix修復",
+      "summary": "CC家族8項should-fix批次處置：3項需使用者取捨先問——git歷史殘留檔案裁定先不清理（代價與風險不成比例）、NexusPortal密語閘門只修Referer外流不做伺服器端真隱藏（需Cloudflare Functions架構改動）、aitracker email_config.json裁定維持公開尊重原設計。直接修復5項：syncDownload還原邏輯加白名單檢查、4 repo補.gitignore涵蓋dev log、cc_autosync.js白名單移除純UI狀態key（md_card_st/md_last_view）、English Sandbox與life_tracker_v1補載cc_autosync.js、daily-update.yml的github.event.inputs改經env中介消除script injection、NexusPortal密語改用#access= hash fragment取代query string。評估後跳過SRI版本鎖定，因cc_autosync.js改動頻繁維護成本不划算。6 repo皆node --check/yaml驗證通過並push。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-08-18",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "clearGroqKey()收尾，同步清除tina_groq/oasis_groq_key：Groq key統一修改後發現AI Tracker的clearGroqKey()只清groq_key。比照daily-optimizer的做法補上另外兩個舊key名同步清除，避免fallback讀到殘留舊值導致清除功能失效。已commit（c6485f8）push。",
