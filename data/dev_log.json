@@ -1947,6 +1947,13 @@
       "file": "index.html",
       "summary": "lto-btn 圖示與連結更新",
       "reason": "maintain"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html／scripts/update_data.py／scripts/update_nvidia.py",
+      "summary": "跨repo reasoning_effort:low補完最後一塊：延續稍早English Sandbox等repo的reasoning_format修復，這次補齊AI Tracker前端詞彙庫AI補完／重新生成／彙整分析3處、後端排程腳本update_data.py 4處與update_nvidia.py 1處，共8處補上reasoning_effort:'low'。動後端前先查證groq Python SDK 1.0.0原生支援reasoning_effort具名參數（Literal['none','default','low','medium','high']），確認支援才動手，避免賭錯。node --check與py_compile皆通過，git diff --stat只含預期3檔案。已commit（f5b0ebb）push。",
+      "reason": "bug_fix"
     }
   ],
   "hotspots": [
