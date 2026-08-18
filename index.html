@@ -1173,6 +1173,7 @@ applyNexusLinks();
 loadWP();
 tick();setInterval(tick,1000);
 checkGuard();setInterval(checkGuard,30000);
+checkGitHistoryReview();
 updateUnsetFlags();
 initLiveData();
 updateSyncTime();
@@ -1281,6 +1282,21 @@ function openDevDashboard(){
   renderDevDashboard();
 }
 function closeDevDashboard(){document.getElementById('dev-overlay').style.display='none';}
+// ── 每月安全回顧提醒（should-fix #4：5 repo git 歷史殘留內部檔案，2026-08-18 裁定先觀察不清理）──
+function _isGitHistoryReviewDue(){
+  const last=localStorage.getItem('cc_review_git_history_ack')||'';
+  return last.slice(0,7)!==TODAY.slice(0,7);
+}
+function checkGitHistoryReview(){
+  const btn=document.getElementById('dev-btn');
+  if(btn)btn.textContent=_isGitHistoryReviewDue()?'🛠️🔴':'🛠️';
+}
+function ackGitHistoryReview(){
+  localStorage.setItem('cc_review_git_history_ack',TODAY);
+  checkGitHistoryReview();
+  const el=document.getElementById('dev-review-banner');
+  if(el)el.remove();
+}
 function renderDevDashboard(){
   const subEl=document.getElementById('dev-panel-sub');
   const bodyEl=document.getElementById('dev-panel-body');
@@ -1372,7 +1388,14 @@ function renderDevDashboard(){
         }).join('')+'</div>'
         :'<div id="dev-empty">尚無使用紀錄，開啟各 App 停留即開始累積</div>';
 
+      const reviewHtml=_isGitHistoryReviewDue()?`
+        <div class="dev-section" id="dev-review-banner" style="background:var(--bg2);border:1px solid var(--warn);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:6px;">🔒 每月安全回顧：should-fix #4</div>
+          <div style="font-size:13px;line-height:1.7;color:var(--faint);">2026-08-18 稽核發現 nexus-portal／aitracker／daily-optimizer／sleep-dashboard／control-center 這 5 個 repo 的 git 歷史裡還留著已刪除的內部檔（舊資料匯出／腳本／dev log），當時判斷非憑證、風險低，決定先不改寫歷史＋force push。每月檢查一次風險有沒有變高（殘留內容變敏感、repo 曝光度提高等），沒變化就繼續維持現狀。</div>
+          <button class="btn-pr" onclick="ackGitHistoryReview()" style="width:auto;display:inline-block;margin-top:8px;padding:6px 14px;font-size:13px;">已回顧，下月再提醒</button>
+        </div>`:'';
       bodyEl.innerHTML=`
+        ${reviewHtml}
         <div class="dev-section">
           <div class="dev-col-title">開發履歷時間軸</div>
           ${tlHtml}

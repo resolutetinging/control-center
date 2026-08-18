@@ -60,6 +60,8 @@
     'custom_cats', 'gloss_cat', 'gloss_user_terms', 'gloss_hidden', 'gloss_hist_overrides',
     // NexusPortal
     'nexus_pb', 'nexus_ptm',
+    // 每月安全回顧提醒（Dev Dashboard，08-18新增）
+    'cc_review_git_history_ack',
   ]);
 
   // 動態 key 前綴白名單（每日覆盤 / AI Tracker 筆記 / Guard 靜默）
