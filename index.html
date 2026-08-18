@@ -1289,7 +1289,7 @@ function _isGitHistoryReviewDue(){
 }
 function checkGitHistoryReview(){
   const btn=document.getElementById('dev-btn');
-  if(btn)btn.textContent=_isGitHistoryReviewDue()?'🛠️🔴':'🛠️';
+  if(btn)btn.classList.toggle('due-alert',_isGitHistoryReviewDue());
 }
 function ackGitHistoryReview(){
   localStorage.setItem('cc_review_git_history_ack',TODAY);
