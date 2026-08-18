@@ -6,6 +6,34 @@
       "date": "2026-08-18",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "clearGroqKey()收尾，同步清除tina_groq/oasis_groq_key：Groq key統一修改後發現AI Tracker的clearGroqKey()只清groq_key。比照daily-optimizer的做法補上另外兩個舊key名同步清除，避免fallback讀到殘留舊值導致清除功能失效。已commit（c6485f8）push。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "9個檔案／5 repo",
+      "summary": "統一Groq key讀寫規格，跨5 repo九個檔案：目標讓所有app讀取改三段fallback groq_key→tina_groq→oasis_groq_key，寫入統一只寫groq_key。改動control-center（worship/oasis/index/refueler，2eb0011）、sleep-dashboard（SAS Hub/v2，777b358）、wellness-tracker（7931727）、aitracker（205a8a9）、daily-optimizer（2332e81）共9檔。主動修正daily_optimizer.html的clearKey()同步清三個key，避免寫入點改groq_key後清除功能失效。WordVault系列刻意保持獨立命名不在範圍內。派fresh-context haiku subagent獨立驗證全數讀取/寫入點與commit內容通過。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "AI Tracker",
+      "file": "架構決策",
+      "summary": "AI Tracker Gist暴露問題，使用者裁定維持現狀：must-fix攤開架構後發現是刻意設計，GitHub Actions每日快照靠不帶憑證讀取公開gist id運作。真修需二選一：加gist權限PAT進repo secrets讓Actions認證讀取，或只輪替gist id治標。使用者判斷筆記內容不算敏感，兩次確認（含一次誤觸重問）裁定先擱置不修。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "跨7 repo稽核",
+      "summary": "Control Center家族跨7 repo資安＋key架構稽核：使用者要求review全家族資安與data key運用衝突，派opus subagent實測稽核。must-fix發現兩項：AI Tracker私密Gist的gist id寫死進公開repo，不需憑證即可讀到私人筆記內容；Groq key三個名字（groq_key/tina_groq/oasis_groq_key）同義卻各app各讀各的，同源共用storage下規格不一致。should-fix六項待後續處理，已確認無虞項目包含硬編碼機密掃描0命中、共用JS檔無第三方網路呼叫。完整證據與追蹤已存入記憶檔project_cc_family_security_audit.md。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "補完成8/17晚間中斷的詞彙庫response_format修法：8/17晚間排查daily-optimizer bug鏈時發現詞彙庫功能（AI補完/重新生成）也用openai/gpt-oss-120b+response_format:json_object同樣風險，當下已在本機改好但被接續的daily-optimizer新錯誤打斷未commit，今天盤點才發現這個半成品。拿掉response_format、加reasoning_format:'hidden'、max_tokens 600→1000。Playwright驗證request body正確、生成成功。已commit（4da289e）push，推送時撞到遠端自動更新commit，用git pull --rebase解決。",
       "reason": "bug_fix"
     },
