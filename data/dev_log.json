@@ -4,6 +4,27 @@
   "timeline": [
     {
       "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "WordVault.html／wordvault-kids.html／wordvault-kids_v2.html",
+      "summary": "WordVault補齊7處Groq reasoning_format缺口：跟SAS Hub同一輪生態系排查，wordvault-kids.html、WordVault.html（3處：chunk翻譯/retry/逐字補翻譯）、wordvault-kids_v2.html（3處：AI字典/貼紙池生成/親職建議）共7處呼叫openai/gpt-oss-120b皆原本無reasoning_format，全部補上'hidden'，maxTokens數值未動。node --check全數通過。已commit（283d99d）push。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "cc_astro_brief.js／index.html／english-sandbox.html／refueler.html／oasis.html／worship.html／astro.html",
+      "summary": "Control-center補齊7檔Groq reasoning_format缺口：cc_astro_brief.js/index.html/english-sandbox.html/refueler.html/oasis.html皆原本無，直接補上。worship.html的groqCall()共用函式3個呼叫點皆傳reasoning model，直接補。astro.html的callGroq()同時服務文字與視覺模型（llama-4-scout非reasoning model），改成條件式，useVision為真時不加避免誤傷vision呼叫。node --check全數通過。已commit（c5f40ab）push。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-08-18",
+      "project": "生態系全面",
+      "file": "sleep-dashboard/index.html／sleep_dashboard_v2.html",
+      "summary": "SAS Hub上週狀態回顧輸出截斷修復，觸發全生態系Groq排查：使用者截圖回報Overview的跨維度模式洞察區塊被截斷。查出共用函式aiCall()（openai/gpt-oss-20b）沒設reasoning_format，跟daily-optimizer/AI Tracker同一個坑，在aiCall()統一修一次覆蓋3個呼叫點，上週回顧maxTokens 2000→3000。node --check通過，fresh-context haiku subagent驗證3處呼叫點皆正確。git push（542a7e9）。同repo另一檔sleep_dashboard_v2.html的runWeightedAI()也有1處同樣缺口，已補上（未觸及const RAW資料區塊），git push（ef60097）。依08-17教訓派4個背景subagent平行掃描全生態系剩餘repo，避免使用者在其他功能一個個踩雷。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-18",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html／scripts/update_data.py／scripts/update_nvidia.py",
       "summary": "Groq reasoning_format補漏：前端分析趨勢功能與後端5處排程呼叫（chain修正/impact驗證/主生成/body聲明驗證/NVIDIA週查證）先前漏設reasoning_format:hidden。改動前先查證本機groq SDK 1.0.0的create()簽名確認此為原生具名參數才動手改排程腳本。node --check與py_compile皆通過，fresh-context subagent核對8個呼叫點全數補齊。已commit（b02c16c）push。",
