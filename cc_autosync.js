@@ -43,7 +43,7 @@
     // 否則第二台裝置只開CC不開SAS Hub時，Guard永遠看不到長期負荷提示
     'sas_week_flags', 'sas_pace_flags',
     // Mental Dashboard
-    'wellness_v5', 'md_card_st', 'md_last_view', 'mental_custom_emotions',
+    'wellness_v5', 'mental_custom_emotions',
     // Astro Bot
     'astro_settings', 'astro_vedic_images', 'astro_myself', 'astro_forecast',
     'astro_chat', 'astro_cc_brief',

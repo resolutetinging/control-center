@@ -1082,6 +1082,8 @@ async function syncDownload(){
     for(const[k,v] of Object.entries(snap)){
       // cc_wp_v1（桌布）刻意排除還原：各裝置桌布各自獨立，不隨同步覆蓋（2026-07-21起）
       if(v==null||k===MANIFEST_KEY||k==='cc_wp_v1')continue;
+      // 白名單防護：Gist 內容若混入非白名單 key（例如憑證類），還原時不寫回 localStorage
+      if(typeof isSafeKey==='function'&&!isSafeKey(k))continue;
       const ok=await restoreOne(k,v);
       if(!ok)skipped.push(k);
     }
