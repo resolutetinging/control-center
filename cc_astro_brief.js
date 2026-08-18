@@ -19,7 +19,7 @@ async function genAstroBrief(){
   const monthD=`${now.getFullYear()}年${now.getMonth()+1}月`;
   const prompt=`你是精通現代西方占星學的占星師，深刻理解行星過境（Transits）與二次推運（Progressions）。\n\n以下是 ${name} 的西洋星盤資料：\n${as.western}\n\n針對今日 ${todayD} 和 ${monthD}，各給出 3-4 條簡短建議。以純 JSON 輸出，不加任何說明：\n{"today":["面向 | 建議（8-14字）",...],"month":["面向 | 建議（8-14字）",...]}`;
   try{
-    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7})});
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7,reasoning_format:'hidden'})});
     if(!resp.ok)return;
     const result=await resp.json();
     const text=result.choices?.[0]?.message?.content||'';

@@ -685,7 +685,8 @@ source_type 填寫規則：實體出版書籍填 "book"；詩集填 "poetry"；�
       body:JSON.stringify({
         model:'openai/gpt-oss-120b',
         messages:msgs,
-        temperature:0.75,max_tokens:2000
+        temperature:0.75,max_tokens:2000,
+        reasoning_format:'hidden'
       })
     });
     if(!res.ok){const e=await res.text();alert('Groq 錯誤 '+res.status+': '+e.slice(0,200));fetching.delete(kw);render();return;}
