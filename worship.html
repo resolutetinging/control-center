@@ -353,7 +353,7 @@ async function groqCall(messages,model,maxTokens){
   var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:model,messages:messages,max_tokens:maxTokens,temperature:0.5,reasoning_format:'hidden'})
+    body:JSON.stringify({model:model,messages:messages,max_tokens:maxTokens,temperature:0.5,reasoning_format:'hidden',reasoning_effort:'low'})
   });
   var txt=await res.text();var d;
   try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
@@ -408,7 +408,7 @@ async function fetchSlipByNumber(){
     var r=await groqCall([
       {role:'system',content:'你是台灣廟宇籤詩資料庫。回應格式：\n【籤詩】\n（四句，每句一行）'},
       {role:'user',content:'廟宇：'+temple+'，籤號：第'+num+'籤。請提供籤詩原文（⚠️ 若非確定內容請直接說明，不要捏造）。'}
-    ],TEXT_MDL,300);
+    ],TEXT_MDL,600);
     var pm=r.match(/【籤詩】\s*([\s\S]+?)(?=$)/);
     curSlip={number:num,poem:pm?pm[1].trim():r.trim(),basicMeaning:''};
     showPoem(temple,num,curSlip.poem,'',true,false);
@@ -453,7 +453,7 @@ async function genMeaning(){
     var r=await groqCall([
       {role:'system',content:'你是台灣廟宇籤詩專家，精通傳統籤詩解讀，全程繁體中文。'},
       {role:'user',content:'廟宇：'+temple+'，籤號：第'+num+'籤\n\n籤詩原文：\n'+poem+'\n\n請提供2-3句白話意涵，說明整體吉凶走向與神明指引重點，不要重複籤詩原文。'}
-    ],TEXT_MDL,200);
+    ],TEXT_MDL,600);
     $('poem-meaning').value=r.trim();
   }catch(e){alert('生成失敗：'+e.message);}
   btn.disabled=false;sp.style.display='none';
