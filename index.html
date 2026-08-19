@@ -959,7 +959,7 @@ async function runSAS(){
 3. 🎯 三個今日具體行動建議（含時間點）
 4. 💬 今天一句話`;
   try{
-    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7,reasoning_format:'hidden',reasoning_effort:'low'})});
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:700,temperature:.7,reasoning_effort:'low'})});
     if(!resp.ok)throw new Error('API '+resp.status);
     const result=await resp.json();
     el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${esc(result.choices?.[0]?.message?.content||'（無回應）')}</div></div>`;

@@ -635,7 +635,7 @@ async function callGroq(prompt, max=600, sys='', jsonMode=false){
   // valid JSON」+safeParseJson()寬容解析頂住，jsonMode僅保留用來調整temperature
   // reasoning_effort:'low' 實測大幅降低隱藏推理消耗的token數（同prompt從600+顆降到87顆），
   // 比單靠拉高max_tokens更根本：後者只是賭預算夠不夠，前者直接讓模型少想
-  const body = {model:'openai/gpt-oss-120b',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85,reasoning_format:'hidden',reasoning_effort:'low'};
+  const body = {model:'openai/gpt-oss-120b',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85,reasoning_effort:'low'};
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
