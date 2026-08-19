@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-19",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "修Idiom拆彈遊戲題目沒空格的bug：使用者截圖回報題目直接把答案完整寫進句子，沒有任何空格。查出_hasBlankIssue()的重試觸發條件只檢查介係詞/代名詞重複這種次要問題，兩個子檢查在blank根本不存在時都直接放行，從未檢查AI是否忘記放______這個最基本要求。新增_hasMissingBlank()檢查並加入重試條件，另加前端保底：重試後仍無blank但句子含正解原文就直接前端替換成______。node腳本精準重現使用者截圖情境驗證新邏輯正確，claude-in-chrome實際生成一題確認畫面正確渲染。連續測試撞到Groq TPM rate limit（今天測試量太大）及時停手，現有證據已足夠。git push（3ba0812，control-center repo）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-19",
       "project": "sleep-dashboard",
       "file": "git歷史改寫（archive/sleep_dashboard.html）",
       "summary": "改寫git歷史徹底清除v1個資，#5完成：使用者澄清待辦優先序後確認方案並關切「刪v1會不會動到v2用的RAW資料」。動手前用git ls-tree證實v1/v2是零共用儲存的不同blob物件。pip3裝git-filter-repo（機器無Homebrew），完整備份整repo後在副本上dry-run。dry-run發現commit數448→447少了一筆跟archive/完全無關的舊commit，沒有輕易放過，另用完全不存在的路徑做控制組重跑，同一commit一樣消失，證實是工具清理原始history既有degenerate commit的正常行為、與過濾條件無關，確認範圍精準才對正式repo動手。執行後驗證v2 blob hash與逐位元組內容不變、v1完全查無、GitHub API該路徑commit搜尋清空、Pages仍200。filter-repo移除了origin remote與branch tracking，已補回（git remote add+set-upstream-to）；確認update_dashboard.py的push邏輯用明確push_url不依賴這個設定，自動排程不受影響。本機完整備份保留未刪，作為後悔藥。記憶檔project_cc_family_security_audit.md同步更正08-18「syncDownload已修復」實為假修復的記錄。",
