@@ -1393,7 +1393,7 @@ function renderDevDashboard(){
       const reviewHtml=_isGitHistoryReviewDue()?`
         <div class="dev-section" id="dev-review-banner" style="background:var(--bg2);border:1px solid var(--warn);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
           <div style="font-weight:600;margin-bottom:6px;">🔒 每月安全回顧：should-fix #4</div>
-          <div style="font-size:13px;line-height:1.7;color:var(--faint);">2026-08-18 稽核發現 nexus-portal／aitracker／daily-optimizer／sleep-dashboard／control-center 這 5 個 repo 的 git 歷史裡還留著已刪除的內部檔（舊資料匯出／腳本／dev log），當時判斷非憑證、風險低，決定先不改寫歷史＋force push。每月檢查一次風險有沒有變高（殘留內容變敏感、repo 曝光度提高等），沒變化就繼續維持現狀。</div>
+          <div style="font-size:13px;line-height:1.7;color:var(--faint);">2026-08-18 稽核發現 nexus-portal／aitracker／daily-optimizer／sleep-dashboard／control-center 這 5 個 repo 的 git 歷史裡還留著已刪除的內部檔（舊資料匯出／腳本／dev log），當時判斷非憑證、風險低，決定先不改寫歷史＋force push。每月檢查一次風險有沒有變高（殘留內容變敏感、repo 曝光度提高等），沒變化就繼續維持現狀。<br><br>2026-08-19 追加：sleep-dashboard 的 archive/sleep_dashboard.html（v1 舊版，內含完整 RAW 睡眠資料且曾公開可下載）已從當前狀態移除，但 git 歷史仍留有記錄。待辦：找時間在不影響 sleep_dashboard_v2.html 正常運作的前提下，評估是否要連這筆歷史一起改寫清除。</div>
           <button class="btn-pr" onclick="ackGitHistoryReview()" style="width:auto;display:inline-block;margin-top:8px;padding:6px 14px;font-size:13px;">已回顧，下月再提醒</button>
         </div>`:'';
       bodyEl.innerHTML=`
