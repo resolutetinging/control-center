@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-18",
+  "generated_through": "2026-08-19",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-19",
+      "project": "生態系全面",
+      "file": "5 repo清理：control-center 7檔／sleep-dashboard 2檔／WordVault 3檔／aitracker 前後端／daily-optimizer",
+      "summary": "重新review 8/18 bug fix必要性，發現reasoning_format誤診並清理：使用者主動要求重新review昨天的修法是否必要，派opus subagent獨立審查後查出關鍵疑點，自行WebFetch查證Groq官方文件console.groq.com/docs/reasoning逐字確認：reasoning_format參數對gpt-oss-20b/120b完全不支援（只有Qwen/MiniMax系列吃），Groq靜默忽略不報錯，8/18那整輪跨5 repo補這個參數的commit全部無效；真正有效、文件證實支援的是reasoning_effort（low/medium/high，控制推理耗用深度），跟實測推理token從600+降到11-12顆完全吻合。English Sandbox那組修法（拿掉response_format/拉高max_tokens/加reasoning_effort）有實測前後對照佐證，不受影響。教訓已記入lessons.md與judgment-rubrics.md（更正參數例子，方法論本身成立）、project_daily_optimizer_sandbox.md記憶檔已直接改正。清理：把無效的reasoning_format:'hidden'從5個repo全部呼叫點清掉，保留reasoning_effort:'low'，daily_optimizer.html裡的誤導性因果註解也加註更正。node --check/py_compile全數通過，git diff --stat逐一核對只含預期檔案。git push：sleep-dashboard(1d03f33)、daily-optimizer(928ba00)、control-center(c99739e)、WordVault(cf6869e)、aitracker(d2e7aed)。核心教訓：同時改多個參數、症狀消失，不能把成功歸因給全部參數，要逐一查證或拿掉重測獨立確認。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-18",
       "project": "Daily Optimizer",
