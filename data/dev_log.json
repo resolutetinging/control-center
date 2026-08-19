@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-19",
+      "project": "sleep-dashboard",
+      "file": "git歷史改寫（archive/sleep_dashboard.html）",
+      "summary": "改寫git歷史徹底清除v1個資，#5完成：使用者澄清待辦優先序後確認方案並關切「刪v1會不會動到v2用的RAW資料」。動手前用git ls-tree證實v1/v2是零共用儲存的不同blob物件。pip3裝git-filter-repo（機器無Homebrew），完整備份整repo後在副本上dry-run。dry-run發現commit數448→447少了一筆跟archive/完全無關的舊commit，沒有輕易放過，另用完全不存在的路徑做控制組重跑，同一commit一樣消失，證實是工具清理原始history既有degenerate commit的正常行為、與過濾條件無關，確認範圍精準才對正式repo動手。執行後驗證v2 blob hash與逐位元組內容不變、v1完全查無、GitHub API該路徑commit搜尋清空、Pages仍200。filter-repo移除了origin remote與branch tracking，已補回（git remote add+set-upstream-to）；確認update_dashboard.py的push邏輯用明確push_url不依賴這個設定，自動排程不受影響。本機完整備份保留未刪，作為後悔藥。記憶檔project_cc_family_security_audit.md同步更正08-18「syncDownload已修復」實為假修復的記錄。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-19",
       "project": "生態系全面",
       "file": "control-center／WordVault／daily-optimizer 三項待辦收尾",
       "summary": "清完待辦佇列前三項，git歷史改寫解除前置條件：#2 CC設定頁清不掉Groq key——saveAPI()的pat/gid都有「清空欄位=真的刪除」寫法，唯獨groq_key那行漏了else分支且不碰tina_groq/oasis_groq_key，fallback chain會把舊值復活，比照既有寫法補上並用node測試clear/set兩種情境（commit f2aaec0）。#3 WordVault批次翻譯自動重試max_tokens不足——600 tokens約僅夠12字，改成跟主要批次翻譯迴圈同量級的2000；順便用claude-in-chrome實測5次response_format:json_object配reasoning_effort:low皆穩定成功，推翻08-17判定「此參數跟model組合不穩定」的診斷（很可能同樣是推理耗用不穩定的誤診），維持response_format不動只調max_tokens，教訓記入lessons.md（commit b3830f9，wordvault repo）。#4 sanitizePipes()補最小gap門檻——小於10分鐘的縫隙視為排程精度誤差不補卡，node單元測試驗證30分缺口仍補卡、2分缺口正確跳過（commit 018fc19，daily-optimizer repo）。#5（sleep-dashboard git歷史改寫清除v1個資）前置條件解除，因屬改寫歷史+force push的破壞性操作，執行前會先出方案給使用者確認。",
