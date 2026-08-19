@@ -757,7 +757,11 @@ function saveAPI(){
   const k=(document.getElementById('gs-k')?.value||'').trim();
   const pat=(document.getElementById('gs-pat')?.value||'').trim();
   const gid=(document.getElementById('gs-gid')?.value||'').trim();
-  if(k)localStorage.setItem(GROQ_KEY,k);
+  // 08-19修正：原本清空欄位不會真的刪除groq_key，且完全不碰tina_groq/oasis_groq_key，
+  // 導致fallback chain把舊值復活，使用者實際上撤不掉key。比照pat/gid同函式內既有寫法，
+  // 清空欄位=真的刪除三個key名
+  if(k){localStorage.setItem(GROQ_KEY,k);}
+  else{localStorage.removeItem(GROQ_KEY);localStorage.removeItem('tina_groq');localStorage.removeItem('oasis_groq_key');}
   if(pat)localStorage.setItem('gh_pat',pat);else localStorage.removeItem('gh_pat');
   if(gid)localStorage.setItem('gist_id',gid);else localStorage.removeItem('gist_id');
   /* NexusPortal 密語：僅存本機（勿加入 cc_autosync SAFE_STATIC_KEYS，避免進 Gist 備份） */
