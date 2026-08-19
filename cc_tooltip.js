@@ -181,43 +181,6 @@ function buildTT(id){
       if(!wl)return h('⛩️ Worship')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無參拜紀錄，點擊新增</div>`;
       return h('⛩️ Worship')+row('最近參拜',esc(wl.temple))+row('日期',esc(wl.date)+(wl.time?' '+esc(wl.time):''),'g');
     }
-    case 'astro':{
-      // 命盤圖片本體已搬到 IndexedDB（cc_store.js），這裡只讀 astro.html 順手維護的輕量計數索引
-      // astro_vedic_images_count，不需要整包讀圖片內容（hover 卡片不需要同步跨 IndexedDB）
-      let as=null;try{as=JSON.parse(localStorage.getItem('astro_settings')||'null');}catch{}
-      const hasW=!!(as&&as.western);
-      const vCount=parseInt(localStorage.getItem('astro_vedic_images_count')||'0',10)||0;
-      const hasV=vCount>0;
-      if(!as||(!hasW&&!hasV))return h('⭐ Astro Bot')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定星盤資料，點擊進入</div>`;
-      // Try today's brief
-      let brief=null;
-      try{
-        const b=JSON.parse(localStorage.getItem('astro_cc_brief')||'null');
-        if(b){
-          const _t=new Date();
-          const ds=`${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
-          if(b.date===ds)brief=b;
-        }
-      }catch{}
-      if(!brief){
-        return h('⭐ Astro Bot')+
-          row('西洋星盤',hasW?'已設定':'未設定',hasW?'g':'')+
-          row('印度星盤',hasV?`${vCount} 張`:'未設定',hasV?'g':'')+
-          (as.name?row('對象',esc(as.name)):'')+
-          hr()+
-          `<div style="font-size:11px;color:var(--faint);padding:2px 0;">前往 Astro Bot 生成今日建議</div>`;
-      }
-      const _n=new Date();
-      const dateLbl=`${_n.getMonth()+1}/${_n.getDate()}`;
-      const monthLbl=`${_n.getMonth()+1}月`;
-      let out=h(`⭐ Astro  ${monthLbl} & ${dateLbl}`);
-      out+=sub('本月');
-      (brief.thisMonth||[]).forEach(l=>{const p=l.split('|');out+=advRow(esc((p[0]||l).trim()),esc((p[1]||'').trim()));});
-      out+=hr();
-      out+=sub(dateLbl);
-      (brief.today||[]).forEach(l=>{const p=l.split('|');const k=esc((p[0]||l).trim().replace(/^本日\s*/,dateLbl+' '));out+=advRow(k,esc((p[1]||'').trim()));});
-      return out;
-    }
     case 'scratch':{
       // Scratchpad inbox：分 /To Do、/Notes 兩區塊顯示（cc_scratch_v1，零 history 設計故不顯示已轉入項）
       let sc=null;try{sc=JSON.parse(localStorage.getItem('cc_scratch_v1')||'null');}catch{}

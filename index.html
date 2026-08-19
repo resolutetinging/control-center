@@ -402,7 +402,6 @@ const DEFAULT_LINKS={
   'podcast':   'notion://www.notion.so',
   'oasis':     './oasis.html',
   'worship':   './worship.html',
-  'astro':     './astro.html',
   'english':   './english-sandbox.html',
   'scratch':   './scratchpad.html',
 };
@@ -614,7 +613,6 @@ function renderTab(tab){
       {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
       {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
       {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
-      {id:'astro',lbl:'⭐ Astro Bot',ph:'./astro.html'},
       {id:'english',lbl:'🎯 English Sandbox',ph:'./english-sandbox.html'},
       {id:'scratch',lbl:'🗂 Scratchpad',ph:'./scratchpad.html'},
     ];
@@ -722,7 +720,7 @@ function onWPFile(inp){
   r.readAsDataURL(f);
 }
 function saveAllLinks(){
-  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast','astro','english'];
+  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast','english'];
   const l={};
   ids.forEach(id=>{const el=document.getElementById('lnk-'+id);if(el)l[id]=(el.value||'').trim();});
   saveLinks(l);updateUnsetFlags();closeSettings();
@@ -1127,7 +1125,7 @@ async function syncDownload(){
   }
 }
 
-// ── ASTRO BRIEF 邏輯位於 cc_astro_brief.js；2026-07-07 軟下架後 index.html 未載入此檔，Brief 不再自動觸發（還原見 </body> 前註解）──
+// ── Astro Bot 功能已於2026-08-19移除，相關程式碼與localStorage資料未清（使用者歷史資料保留），如需查證見git history ──
 
 // ── NEXUS PORTAL LENS PANEL ──
 function toggleLtoPanel(e){
@@ -1417,7 +1415,7 @@ function renderDevDashboard(){
 }
 </script>
 <script src="cc_tooltip.js"></script>
-<!-- Astro 軟下架（2026-07-07，使用頻率低）：停用首頁自動 Brief 生成，省 Groq 呼叫。astro.html 與資料未刪，需要時從「連結管理」開啟或還原此行即可 -->
+<!-- Astro Bot功能已於2026-08-19移除，相關程式碼與localStorage資料未清（使用者歷史資料保留），如需查證見git history -->
 <script src="cc_autosync.js"></script>
 <script src="cc_track.js" data-cc-key="cc-home" data-cc-label="Control Center"></script>
 </body>

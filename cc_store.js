@@ -137,7 +137,7 @@
   }
 
   // 全 CC 家族目前已遷移到 IndexedDB 的圖片類 key（cc_autosync.js / cc_track.js 共用）
-  var CC_IDB_IMAGE_KEYS = ['cc_wp_v1', 'astro_vedic_images'];
+  var CC_IDB_IMAGE_KEYS = ['cc_wp_v1'];
 
   global.ccStore = { get: get, put: put, del: del, keys: keys, peek: peek, migrate: migrate, DB_NAME: DB_NAME, STORE_NAME: STORE_NAME };
   global.CC_IDB_IMAGE_KEYS = CC_IDB_IMAGE_KEYS;

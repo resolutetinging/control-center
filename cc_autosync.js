@@ -44,9 +44,6 @@
     'sas_week_flags', 'sas_pace_flags',
     // Mental Dashboard
     'wellness_v5', 'mental_custom_emotions',
-    // Astro Bot
-    'astro_settings', 'astro_vedic_images', 'astro_myself', 'astro_forecast',
-    'astro_chat', 'astro_cc_brief',
     // English Sandbox
     'es_idiom_lib', 'es_saved_phrases',
     // Scratchpad（雜記收件匣）
