@@ -1618,7 +1618,12 @@ Rules:
       const after = blankParts[1].trimStart().toLowerCase();
       return [...pronouns].some(p => after.startsWith(p + ' ') || after.startsWith(p + ',') || after.startsWith(p + '.'));
     };
+    // 08-19：使用者截圖回報題目直接把答案完整寫進句子裡，完全沒有空格——查出_hasBlankIssue
+    // 只檢查「介係詞/代名詞重複」這種次要問題，兩個子檢查都預設blank已經存在（split不出2段
+    // 就直接return false，等於放行），從沒檢查AI是不是根本忘記放"______"這個最基本要求
+    const _hasMissingBlank = (cand) => cand.sentence.split(/_{4,}/).length !== 2;
     const _hasBlankIssue = (cand) => {
+      if (_hasMissingBlank(cand)) return true;
       const opts = [cand.correct, ...(cand.distractors||[]).slice(0,3)];
       return opts.some(o => _hasDupParticle(cand.sentence, o) || _hasDupPronoun(cand.sentence, o));
     };
@@ -1626,6 +1631,11 @@ Rules:
     // retry up to 2 more times if any of the 4 options (correct or distractor) can't cleanly slot into the blank
     for(let r=0; r<2 && _hasBlankIssue(candidate); r++){
       candidate = await _fetchCandidate();
+    }
+    // 保底：重試2次後仍然沒有空格符，但句子裡找得到正解原文的話，前端直接補上空格，
+    // 不讓「答案整個曝光在題目裡」這種畫面出現在使用者面前
+    if (_hasMissingBlank(candidate) && candidate.correct && candidate.sentence.includes(candidate.correct)) {
+      candidate = {...candidate, sentence: candidate.sentence.replace(candidate.correct, '______')};
     }
     curQ = candidate;
 
