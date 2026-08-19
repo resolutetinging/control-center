@@ -1081,7 +1081,9 @@ async function syncDownload(){
       // cc_wp_v1（桌布）刻意排除還原：各裝置桌布各自獨立，不隨同步覆蓋（2026-07-21起）
       if(v==null||k===MANIFEST_KEY||k==='cc_wp_v1')continue;
       // 白名單防護：Gist 內容若混入非白名單 key（例如憑證類），還原時不寫回 localStorage
-      if(typeof isSafeKey==='function'&&!isSafeKey(k))continue;
+      // 08-19修正：isSafeKey之前沒從cc_autosync.js的window.ccSyncCore export出來，
+      // 直接引用undeclared identifier，typeof恆為'undefined'，這個檢查形同虛設從未生效過
+      if(typeof window.ccSyncCore?.isSafeKey==='function'&&!window.ccSyncCore.isSafeKey(k))continue;
       const ok=await restoreOne(k,v);
       if(!ok)skipped.push(k);
     }
@@ -1090,6 +1092,8 @@ async function syncDownload(){
     let manifest={};
     try{manifest=JSON.parse(snap[MANIFEST_KEY]||'{}');}catch(e){manifest={};}
     for(const[bk,info] of Object.entries(manifest)){
+      // 08-19修正：這條大型key分塊還原路徑原本完全沒有白名單檢查，比小型key那條漏得更徹底
+      if(typeof window.ccSyncCore?.isSafeKey==='function'&&!window.ccSyncCore.isSafeKey(bk))continue;
       if(!info||!Array.isArray(info.names)){incomplete.push(bk);continue;}
       showSyncMsg('還原大型資料 '+bk+' 中…');
       let val='',ok=true;

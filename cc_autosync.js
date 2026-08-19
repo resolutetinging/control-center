@@ -286,5 +286,5 @@
   setTimeout(maybeAutoFull, 8000);
 
   // 供 CC 首頁手動同步按鈕共用同一套核心（強制上傳、無節流）
-  window.ccSyncCore = { buildSnapshot: buildSnapshot, uploadFull: uploadFull, MANIFEST_KEY: MANIFEST_KEY };
+  window.ccSyncCore = { buildSnapshot: buildSnapshot, uploadFull: uploadFull, MANIFEST_KEY: MANIFEST_KEY, isSafeKey: isSafeKey };
 })();
