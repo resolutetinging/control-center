@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-08-19",
+  "generated_through": "2026-08-20",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-20",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "修大樹圖示連到NexusPortal public而非edit mode的bug：使用者反映想進edit mode卻打回public視角。查出08-18「NexusPortal密語改用#access hash fragment防Referer外流」的修法只改了NexusPortal自己讀密語的邏輯，負責組連結的另一端——control-center的applyNexusLinks()——沒跟著改，還在組舊版?access=query string，NexusPortal現在只認hash判定為訪客。修法：改組?lens=X#access=Y，照抄NexusPortal自己內部switchLens()的同一套pattern。用claude-in-chrome實際點擊驗證href格式正確，導覽過去截圖確認顯示完整編輯視角非public。同一次意外印證了「距上次備份42天」跟前一則iCloud清查查到的07-09備份日期完全吻合。反饋：這是同一類「改了介面一端沒核對呼叫端」問題第二次出現，之後跨repo改動要主動核對雙邊。git push（5722349）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-20",
+      "project": "生態系全面",
+      "file": "iCloud HealthExport/AutoSync 清理",
+      "summary": "移除未使用的HealthAutoExport AutoSync匯出，釋放約138MB：使用者要求檢視iCloud裡過去建立、現在沒需求的資料夾。查出AutoSync/Workouts、HealthMetrics（138MB/10,329檔）、Routes三個資料夾整個開發環境程式碼完全沒有引用，且3個多月沒再累積。動手刪除前再次查證update_dashboard.py的ICLOUD_FOLDER與run_update.sh的SRC都精確指向同層兄弟資料夾Daily Sleep Update，路徑零重疊，刪除後確認8月睡眠資料完整無缺。順帶查到NexusPortal Backups/nexus_data_2026-07-09.json，原以為是過期的事故急救備份，深查後更正為NexusPortal_private本機工作資料夾（無git版控）目前仍在用的最新資料、也是唯一異地備份，建議保留並指出該資料夾缺乏系統性備份機制。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-19",
       "project": "English Sandbox",
