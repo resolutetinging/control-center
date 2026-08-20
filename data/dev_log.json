@@ -5,6 +5,13 @@
     {
       "date": "2026-08-20",
       "project": "Control Center",
+      "file": "english-sandbox.html",
+      "summary": "修Small Talk開場白偶爾拗口的問題：使用者反映08-18救急修復後句子變饒口。查git log抓到根因：08-18當天先把opener的max_tokens從60拉到300救急（reasoning model連隱藏推理都吃預算，60顆常截斷），同一天稍晚才加上reasoning_effort:low這個真正的根本解（隱藏推理token實測從600+降到87顆），但300這個救急預算沒有跟著收回，模型多出的空間偶爾被拿去寫成em-dash疊加的雙子句，字數雖在18字內結構仍拗口。實測3句抓到1句疊句現象，證實是機率性問題。修法：max_tokens收回到120，並在prompt明講禁止em-dash/guess-hedge疊加第二子句。使用者同時補充面試情境接球方＝被面試人，查code發現這條規則本來就已經寫在共用規則裡不用額外修改，重建獨立prompt測試確認生成結果符合面試官視角與新的單子句規則。git push（3a8f06c）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-20",
+      "project": "Control Center",
       "file": "index.html",
       "summary": "修大樹圖示連到NexusPortal public而非edit mode的bug：使用者反映想進edit mode卻打回public視角。查出08-18「NexusPortal密語改用#access hash fragment防Referer外流」的修法只改了NexusPortal自己讀密語的邏輯，負責組連結的另一端——control-center的applyNexusLinks()——沒跟著改，還在組舊版?access=query string，NexusPortal現在只認hash判定為訪客。修法：改組?lens=X#access=Y，照抄NexusPortal自己內部switchLens()的同一套pattern。用claude-in-chrome實際點擊驗證href格式正確，導覽過去截圖確認顯示完整編輯視角非public。同一次意外印證了「距上次備份42天」跟前一則iCloud清查查到的07-09備份日期完全吻合。反饋：這是同一類「改了介面一端沒核對呼叫端」問題第二次出現，之後跨repo改動要主動核對雙邊。git push（5722349）。",
       "reason": "bug_fix"
