@@ -1160,18 +1160,21 @@ document.addEventListener('click',function(e){
   p.classList.remove('open');
 });
 /* Mac（非觸控）且本機已存密語時，才在 lens 連結補 access key。
-   密語存 localStorage nexus_access（設定頁填寫），不寫死在源碼——CC repo 公開，明碼即洩漏（2026-07-09 資安修正） */
+   密語存 localStorage nexus_access（設定頁填寫），不寫死在源碼——CC repo 公開，明碼即洩漏（2026-07-09 資安修正）
+   08-20修正：08-18把NexusPortal自己那邊的密語改成走#access= hash fragment（防Referer外流），
+   但這裡（CC這端負責組連結的地方）沒有跟著改，還在組?access=舊格式，導致NexusPortal收到密語
+   放在query string、它現在只認hash，判定為訪客一路打回public——這是同一次修法漏了一半沒改到 */
 function applyNexusLinks(){
   var NP_BASE='https://nexus-portal-epq.pages.dev/';
   var isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
   var key=(localStorage.getItem('nexus_access')||'').trim();
-  var qs=(!isTouch&&key)?('?access='+encodeURIComponent(key)+'&lens='):'?lens=';
+  var hashPart=(!isTouch&&key)?('#access='+encodeURIComponent(key)):'';
   document.querySelectorAll('#lto-panel .lto-lens').forEach(function(a){
     var lens=a.getAttribute('data-lens');
-    if(lens)a.href=NP_BASE+qs+lens;
+    if(lens)a.href=NP_BASE+'?lens='+lens+hashPart;
   });
   var editRow=document.getElementById('lto-edit-row');
-  if(editRow)editRow.href=key?(NP_BASE+'?access='+encodeURIComponent(key)+'&lens=myself'):NP_BASE;
+  if(editRow)editRow.href=key?(NP_BASE+'?lens=myself'+'#access='+encodeURIComponent(key)):NP_BASE;
 }
 applyNexusLinks();
 
