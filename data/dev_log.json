@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-08-20",
+  "generated_through": "2026-08-24",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-24",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "查8/22沒掛「冷」標籤的原因：coreCount剛好=2卡在門檻（<2才掛冷）邊緣。起初查出impact被validate_impact()清空後沒回頭重評rating的第一層缺口，使用者進一步指出更根本的兩點：OpenAI那筆其實是8/21已報導過的舊聞換角度改寫（標題bigram重疊率僅18%，遠低於50%門檻，既有跨日去重完全漏放），阿里雲那筆是財報電話會議引用既有數據的背景陳述（body品質檢核只查有沒有具體數字/具名實體，抓不到是否為新決策）。修法：新增dedup_and_freshness_check()，用單一次LLM呼叫同時做語意層跨日去重（比對title+body而非只比標題字面）與新鮮度判斷（背景陳述降評為opp），掛在validate_impact之後。本機無GROQ_API_KEY無法端到端測試分類效果，改用mock Groq client驗證資料結構處理邏輯（移除/降評/補佔位卡）正確；實際判斷品質待下次正式排程驗證。git push（f6bca16，aitracker repo）。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-20",
       "project": "Control Center",
