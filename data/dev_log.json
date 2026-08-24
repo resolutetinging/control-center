@@ -5,6 +5,13 @@
     {
       "date": "2026-08-24",
       "project": "Control Center",
+      "file": "多repo：english-sandbox.html/sleep-dashboard/control-center/wordvault/daily-optimizer/wellness-tracker",
+      "summary": "CC家族第二輪：補齊429退避重試+同家族model備援。使用者追問過往Groq修法為何沒堵住這次的洞，查daily-optimizer 08-18 commit確認過去只修「參數層」（reasoning_format/max_tokens），從未做「回應驗證層」。使用者接著問還有沒有其他潛在洞，盤點出model層級故障無備援（daily-optimizer有真實棄用前科commit 6a79507）與429完全沒處理兩類風險，確認都要修。先在english-sandbox.html建參考實作（callGroq()三層獨立防護：429退避、model故障換同家族size、原有截斷重試），8組mock測試+headless Chrome驗證通過，git push 227cd87。依同一套設計派5個subagent分repo疊加，sleep-dashboard/control-center/wordvault/mental-dashboard皆完成；daily-optimizer的subagent途中撞到session額度上限中斷，但已在中斷前完成commit只是沒push，親自逐行複查generate()最複雜的整合邏輯（429下放到單次fetch、model備援只在最外層切一次、worst case約12次request封頂不會無限迴圈）確認正確後補push（4f08695）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "Control Center",
       "file": "多repo：sleep-dashboard/control-center/wordvault/daily-optimizer/wellness-tracker",
       "summary": "CC家族全面補齊「Groq reasoning model截斷回空白無提示」缺口。今天在English Sandbox抓到並修好後，派subagent掃整個生態系，發現同款缺口分布在6 repo、13個呼叫點（sleep-dashboard 2處、Control Center的index.html/refueler.html/worship.html共4處、WordVault 4處、daily_optimizer.html 4處、mental-dashboard.html 1處；NexusPortal無此類呼叫）。使用者確認全部修好後，派5個subagent依repo分組平行修復，統一套用「content空+finish_reason===length時自動放大1.8倍max_tokens重試一次」的修法，每個呼叫點修改前先確認是否為reasoning model，非reasoning model（如worship.html的groqVisionCall()用vision model）明確排除。過程中claude-in-chrome extension連線中斷，各subagent改用node mock fetch測試或系統內建Chrome headless模式當替代驗證；主對話事後補驗Control Center三檔案DOM正常渲染，並手動讀過daily_optimizer.html最複雜的合併重試迴圈確認不會無限迴圈。5個repo全部commit+push成功。",
       "reason": "bug_fix"
