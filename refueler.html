@@ -1223,11 +1223,17 @@ async function runAI(){
   }).join('\n');
   const prompt=`以下是用戶近期咖啡與水分記錄（最多60筆）：\n\n${summary}\n\n請用繁體中文，每點一句話，直接說重點，不要廢話：\n☕ 咖啡：時機/頻率有無問題\n💧 水分：有無達標\n🌿 最需要改的一件事`;
   try{
-    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:600,temperature:.6,reasoning_effort:'low'})});
-    if(!resp.ok)throw new Error('API '+resp.status);
-    const result=await resp.json();
+    const _once=async(maxT)=>{
+      const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:maxT,temperature:.6,reasoning_effort:'low'})});
+      if(!resp.ok)throw new Error('API '+resp.status);
+      const result=await resp.json();
+      const choice=result.choices?.[0];
+      return{content:choice?.message?.content||'',finishReason:choice?.finish_reason};
+    };
+    let r=await _once(600);
+    if(!r.content.trim()&&r.finishReason==='length')r=await _once(1080); // 隱藏推理吃光預算：放大1.8倍重試一次
     res.style.display='block';res.className='ai-result';
-    res.textContent=result.choices?.[0]?.message?.content||'（無回應）';
+    res.textContent=r.content||'（無回應）';
   }catch(e){
     res.style.display='block';
     res.innerHTML=`<span style="color:var(--danger);">⚠️ ${e.message}</span>`;

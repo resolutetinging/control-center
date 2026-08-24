@@ -350,15 +350,20 @@ function readPhoto(file){
 async function groqCall(messages,model,maxTokens){
   var key=localStorage.getItem('groq_key')||localStorage.getItem(GROQ_STORE)||localStorage.getItem('oasis_groq_key')||'';
   if(!key)throw new Error('找不到 Groq API Key（localStorage: tina_groq）');
-  var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model:model,messages:messages,max_tokens:maxTokens,temperature:0.5,reasoning_effort:'low'})
-  });
-  var txt=await res.text();var d;
-  try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
-  if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
+  var _once=async function(maxT){
+    var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:model,messages:messages,max_tokens:maxT,temperature:0.5,reasoning_effort:'low'})
+    });
+    var txt=await res.text();var d;
+    try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
+    if(d.choices&&d.choices[0])return{content:d.choices[0].message.content||'',finishReason:d.choices[0].finish_reason};
+    throw new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
+  };
+  var r=await _once(maxTokens);
+  if(!r.content.trim()&&r.finishReason==='length')r=await _once(Math.round(maxTokens*1.8)); // 隱藏推理吃光預算：放大1.8倍重試一次
+  return r.content;
 }
 
 async function groqVisionCall(temple,imageDataUrl){
