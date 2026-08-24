@@ -5,6 +5,27 @@
     {
       "date": "2026-08-24",
       "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "修NVIDIA生態系權力布局關係圖文字跟箭頭疊在一起：四階段正方形排列，node標籤固定放在正下方離對角連線太近，使用者截圖回報。修法不改標籤位置（放射外推會超出viewBox），改在文字後墊一塊跟頁面背景同色的圓角矩形，蓋掉穿過附近的線條。本機起http server用claude-in-chrome實際點開NVIDIA分頁zoom截圖確認四個標籤都不再重疊。git push（da3e5d8）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py",
+      "summary": "查NVIDIA週查證信件週一沒收到的原因：GitHub Actions顯示成功但nv_status.json的last_checked卡在08-17。根因是main()裡Groq呼叫失敗時只print就return，不寄信也不更新狀態，job仍exit 0。第一輪修法：失敗照樣寄信+補fallback model(120b→20b)+finish_reason檢查。使用者手動觸發補跑後真的收到失敗信，內容揭露gpt-oss-20b的TPM上限僅8000（比120b更小），第一輪fallback方向其實錯了——內容太大時換小TPM的model只會更早爆掉。第二輪修法：current_status改compact JSON省約17%字元、413時改為news_snippets數量對半縮減重試最多5輪（news是輔助佐證非核心結構化資料）。mock測試驗證縮減邏輯正確。教訓：先當下推論寫死修法方向、沒等真實錯誤內容驗證假設就當作修好，之後遇外部API限制錯誤優先想辦法先看到真實錯誤內容。git push（96a39ee、16bf8c8）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py, ai_tracker_v6.html",
+      "summary": "NVIDIA週信「現況總結」排版＋分頁新異動提示。使用者截圖回報Roadmap/聯盟分類status長句直接接在標題後同一行擠壓，要求標題→狀態→內文三層縮排＋左方引用線，格式參考daily信。修法：item_lines()比照daily信card寫法加border-left色條分層（email client普遍支援，不用position:absolute）。本機render真實資料截圖確認排版正確，git push（c315430）。使用者接著要求分頁本身要看得出本週有新異動：renderNvidia()既有的nv_pending_review.json fetch順手toggle #btn-nv的.tab-alert class，CSS用box-shadow ring做外框脈動，初版keyframe寫反(spread最大時alpha=0不可見)，實測後修正為標準ripple pattern。暫塞假pending item測試、測完git還原，git push（c7a71fa）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "AI Tracker",
       "file": "scripts/update_data.py",
       "summary": "查8/22沒掛「冷」標籤的原因：coreCount剛好=2卡在門檻（<2才掛冷）邊緣。起初查出impact被validate_impact()清空後沒回頭重評rating的第一層缺口，使用者進一步指出更根本的兩點：OpenAI那筆其實是8/21已報導過的舊聞換角度改寫（標題bigram重疊率僅18%，遠低於50%門檻，既有跨日去重完全漏放），阿里雲那筆是財報電話會議引用既有數據的背景陳述（body品質檢核只查有沒有具體數字/具名實體，抓不到是否為新決策）。修法：新增dedup_and_freshness_check()，用單一次LLM呼叫同時做語意層跨日去重（比對title+body而非只比標題字面）與新鮮度判斷（背景陳述降評為opp），掛在validate_impact之後。本機無GROQ_API_KEY無法端到端測試分類效果，改用mock Groq client驗證資料結構處理邏輯（移除/降評/補佔位卡）正確；實際判斷品質待下次正式排程驗證。git push（f6bca16，aitracker repo）。",
       "reason": "bug_fix"
