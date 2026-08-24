@@ -635,19 +635,31 @@ async function callGroq(prompt, max=600, sys='', jsonMode=false){
   // valid JSON」+safeParseJson()寬容解析頂住，jsonMode僅保留用來調整temperature
   // reasoning_effort:'low' 實測大幅降低隱藏推理消耗的token數（同prompt從600+顆降到87顆），
   // 比單靠拉高max_tokens更根本：後者只是賭預算夠不夠，前者直接讓模型少想
-  const body = {model:'openai/gpt-oss-120b',messages:msgs,max_tokens:max,temperature: jsonMode ? 0.4 : .85,reasoning_effort:'low'};
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
-    body:JSON.stringify(body)
-  });
-  if(!r.ok){
-    let detail='';
-    try{ const ej=await r.json(); detail=ej?.error?.message||''; }catch(_e){}
-    throw new Error('API '+r.status+(detail?'：'+detail:''));
+  async function _once(m){
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
+      body:JSON.stringify({model:'openai/gpt-oss-120b',messages:msgs,max_tokens:m,temperature: jsonMode ? 0.4 : .85,reasoning_effort:'low'})
+    });
+    if(!r.ok){
+      let detail='';
+      try{ const ej=await r.json(); detail=ej?.error?.message||''; }catch(_e){}
+      throw new Error('API '+r.status+(detail?'：'+detail:''));
+    }
+    const j = await r.json();
+    const choice = j.choices?.[0];
+    return {content: choice?.message?.content||'', finishReason: choice?.finish_reason};
   }
-  const j = await r.json();
-  return j.choices?.[0]?.message?.content||'';
+  let res = await _once(max);
+  // 08-24：reasoning_effort:low把隱藏推理平均消耗壓得很低，但仍是機率性的——少數
+  // 情況推理仍會吃光max_tokens，content回傳空字串、finish_reason=length，過去
+  // 呼叫端（如genOpener）沒查空字串就直接顯示，使用者看到的是完全空白的卡片、
+  // 沒有任何錯誤提示（使用者截圖回報「他們這樣說」區塊整段空白）。在共用函式
+  // 內部自動重試一次、拉高預算，把這個機率性失誤吸收掉，不用每個呼叫點各自補查。
+  if(!res.content.trim() && res.finishReason === 'length'){
+    res = await _once(Math.round(max * 1.8));
+  }
+  return res.content;
 }
 function safeParseJson(raw){
   const cleaned = raw.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g,' ');
@@ -726,6 +738,9 @@ Rules:
 - Output ONLY the single sentence, no quotes or explanations${avoidClause}`;
     const raw = await callGroq(prompt, 120);
     curOpener = raw.replace(/^["'`]|["'`]$/g,'').trim();
+    // 08-24：callGroq()內部已自動重試一次空回應，這裡再補一道保底——萬一兩次都
+    // 空（極端情況），拋錯讓下方catch顯示alert，不要讓空白卡片悄悄顯示出來
+    if(!curOpener) throw new Error('AI 回應為空，請點「換一句」重試');
     document.getElementById('opener-text').textContent = curOpener;
     document.getElementById('opener-sit-tag').textContent = sit.label;
     usedOpeners.push(curOpener);
