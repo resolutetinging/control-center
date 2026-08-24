@@ -624,6 +624,46 @@ let idiomContext = null; // 拆彈題目追問用：{sentence,options,correct,ch
 
 // ── API ──
 function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
+// 08-24第二版：使用者問「family還有沒有其他潛在洞」，順勢盤點發現這個函式本身
+// 也沒有(a)429 rate limit處理(b)model層級故障（5xx/模型棄用）的備援——過去
+// 08-17~08-19那幾輪Groq修法全部在調參數（reasoning_format→reasoning_effort、
+// max_tokens數字），從來沒人做「回應失敗時怎麼辦」這一層，且daily-optimizer
+// repo有真實model棄用前科（llama-3.3/3.1被Groq下架，commit 6a79507）。
+// 補齊三層獨立防護，各自負責一件事：
+//  1. _once()內部：429就照Retry-After（沒有就固定3秒）退避重試，最多3次嘗試
+//  2. callGroq()外層：primary model遇到5xx或錯誤訊息像「model不可用/已棄用」，
+//     換成同家族另一個size（120b↔20b）重試一次——只在明確判斷model有問題時
+//     才切換，不是隨便failover，且只切一次不會兩個都失敗還無限找下一個
+//  3. 沿用原本就有的：空內容+finish_reason=length時放大1.8倍max_tokens重試
+const GROQ_PRIMARY_MODEL = 'openai/gpt-oss-120b';
+const GROQ_BACKUP_MODEL = 'openai/gpt-oss-20b';
+async function _groqOnce(model, m, msgs, jsonMode, k){
+  for(let attempt=0; attempt<3; attempt++){
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
+      body:JSON.stringify({model,messages:msgs,max_tokens:m,temperature: jsonMode ? 0.4 : .85,reasoning_effort:'low'})
+    });
+    if(r.status === 429 && attempt < 2){
+      const retryAfter = Number(r.headers.get('retry-after'));
+      await new Promise(res=>setTimeout(res, (retryAfter>0?retryAfter:3)*1000));
+      continue;
+    }
+    if(!r.ok){
+      let detail='';
+      try{ const ej=await r.json(); detail=ej?.error?.message||''; }catch(_e){}
+      const err = new Error('API '+r.status+(detail?'：'+detail:''));
+      err.status = r.status; err.detail = detail;
+      throw err;
+    }
+    const j = await r.json();
+    const choice = j.choices?.[0];
+    return {content: choice?.message?.content||'', finishReason: choice?.finish_reason};
+  }
+}
+function _groqModelLooksDown(e){
+  return e.status >= 500 || /decommission|not[ _-]?found|does not exist|invalid model|model_not_active/i.test(e.detail||'');
+}
 async function callGroq(prompt, max=600, sys='', jsonMode=false){
   const k = getKey();
   if(!k){ checkKey(); throw new Error('No API key'); }
@@ -635,29 +675,21 @@ async function callGroq(prompt, max=600, sys='', jsonMode=false){
   // valid JSON」+safeParseJson()寬容解析頂住，jsonMode僅保留用來調整temperature
   // reasoning_effort:'low' 實測大幅降低隱藏推理消耗的token數（同prompt從600+顆降到87顆），
   // 比單靠拉高max_tokens更根本：後者只是賭預算夠不夠，前者直接讓模型少想
-  async function _once(m){
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
-      body:JSON.stringify({model:'openai/gpt-oss-120b',messages:msgs,max_tokens:m,temperature: jsonMode ? 0.4 : .85,reasoning_effort:'low'})
-    });
-    if(!r.ok){
-      let detail='';
-      try{ const ej=await r.json(); detail=ej?.error?.message||''; }catch(_e){}
-      throw new Error('API '+r.status+(detail?'：'+detail:''));
-    }
-    const j = await r.json();
-    const choice = j.choices?.[0];
-    return {content: choice?.message?.content||'', finishReason: choice?.finish_reason};
+  let model = GROQ_PRIMARY_MODEL, res;
+  try{
+    res = await _groqOnce(model, max, msgs, jsonMode, k);
+  }catch(e){
+    if(!_groqModelLooksDown(e)) throw e;
+    model = GROQ_BACKUP_MODEL;
+    res = await _groqOnce(model, max, msgs, jsonMode, k);
   }
-  let res = await _once(max);
   // 08-24：reasoning_effort:low把隱藏推理平均消耗壓得很低，但仍是機率性的——少數
   // 情況推理仍會吃光max_tokens，content回傳空字串、finish_reason=length，過去
   // 呼叫端（如genOpener）沒查空字串就直接顯示，使用者看到的是完全空白的卡片、
   // 沒有任何錯誤提示（使用者截圖回報「他們這樣說」區塊整段空白）。在共用函式
   // 內部自動重試一次、拉高預算，把這個機率性失誤吸收掉，不用每個呼叫點各自補查。
   if(!res.content.trim() && res.finishReason === 'length'){
-    res = await _once(Math.round(max * 1.8));
+    res = await _groqOnce(model, Math.round(max * 1.8), msgs, jsonMode, k);
   }
   return res.content;
 }
