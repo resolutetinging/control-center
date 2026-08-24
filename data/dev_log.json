@@ -5,6 +5,13 @@
     {
       "date": "2026-08-24",
       "project": "Control Center",
+      "file": "多repo：sleep-dashboard/control-center/wordvault/daily-optimizer/wellness-tracker",
+      "summary": "CC家族全面補齊「Groq reasoning model截斷回空白無提示」缺口。今天在English Sandbox抓到並修好後，派subagent掃整個生態系，發現同款缺口分布在6 repo、13個呼叫點（sleep-dashboard 2處、Control Center的index.html/refueler.html/worship.html共4處、WordVault 4處、daily_optimizer.html 4處、mental-dashboard.html 1處；NexusPortal無此類呼叫）。使用者確認全部修好後，派5個subagent依repo分組平行修復，統一套用「content空+finish_reason===length時自動放大1.8倍max_tokens重試一次」的修法，每個呼叫點修改前先確認是否為reasoning model，非reasoning model（如worship.html的groqVisionCall()用vision model）明確排除。過程中claude-in-chrome extension連線中斷，各subagent改用node mock fetch測試或系統內建Chrome headless模式當替代驗證；主對話事後補驗Control Center三檔案DOM正常渲染，並手動讀過daily_optimizer.html最複雜的合併重試迴圈確認不會無限迴圈。5個repo全部commit+push成功。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "Control Center",
       "file": "english-sandbox.html",
       "summary": "修Small Talk開場白偶爾整段空白：使用者截圖回報「他們這樣說」區塊完全空白無錯誤提示。根因是reasoning_effort:low雖把隱藏推理平均消耗壓低，仍有機率吃光max_tokens(genOpener用120)，content回傳空字串、finish_reason=length，但callGroq()原本不查這個就直接回傳空字串，genOpener也沒guard，導致空白卡片悄悄顯示——跟同日AI Tracker查到的Groq截斷不查finish_reason同一類坑。修法：callGroq()內部偵測空內容+length時自動重試一次(max_tokens放大1.8倍，非length空回應不重試)；genOpener補保底guard兩次都空時拋錯顯示alert。node mock測試4種情境全通過。呼應08-18教訓查整個生態系，派背景subagent掃CC家族其他repo有無同款缺口。git push（1ffd358）。",
       "reason": "bug_fix"
