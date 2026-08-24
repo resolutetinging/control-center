@@ -6,6 +6,20 @@
       "date": "2026-08-24",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "NVIDIA兩張圖再調整：使用者要求視覺份量平衡＋關係圖文字真正拉到圓外側（取代上一版background rect遮蓋線條的治標修法）。改用diamond中心→節點方向向量算outward，水平為主節點(capital/governance)標籤推到圓左右外側，垂直為主節點(standard/platform)推到圓上下外側，通用判斷式非四角各寫特例；viewBox拓寬到400x420。使用者接著截圖回報兩圖下方提示框沒對齊了，指出這是原本就有的spec不該被推翻——根因是viewBox寬高比跟散佈圖(320x420)不同，套同一個max-width(340)算出的渲染高度不一樣(357px vs 446px)。修法：關係圖max-width改按比例換算成425px讓兩圖渲染高度一致，JS讀兩個提示框位置確認完全等值(1024.41px)才提交。教訓：改視覺尺寸換算關係時，要分清楚下游依賴的是「數字相同」還是「效果相同」。git push（006f99c、b4632d4）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "AI Tracker",
+      "file": "scripts/update_nvidia.py",
+      "summary": "NVIDIA週信item_lines()拿掉巢狀引用線：使用者截圖回報標題/狀態/內文三層各自加border-left太多層，要求只保留卡片外層綠色那條。改成狀態、內文改純padding-left縮排不再各自加border-left，靠顏色(amber/灰)跟縮排區分階層即可。本機render真實資料截圖確認效果。git push（c707531）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-24",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "修NVIDIA生態系權力布局關係圖文字跟箭頭疊在一起：四階段正方形排列，node標籤固定放在正下方離對角連線太近，使用者截圖回報。修法不改標籤位置（放射外推會超出viewBox），改在文字後墊一塊跟頁面背景同色的圓角矩形，蓋掉穿過附近的線條。本機起http server用claude-in-chrome實際點開NVIDIA分頁zoom截圖確認四個標籤都不再重疊。git push（da3e5d8）。",
       "reason": "bug_fix"
     },
