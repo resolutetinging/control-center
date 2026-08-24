@@ -961,15 +961,30 @@ async function runSAS(){
 3. 🎯 三個今日具體行動建議（含時間點）
 4. 💬 今天一句話`;
   try{
-    const _once=async(maxT)=>{
-      const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:prompt}],max_tokens:maxT,temperature:.7,reasoning_effort:'low'})});
-      if(!resp.ok)throw new Error('API '+resp.status);
-      const result=await resp.json();
-      const choice=result.choices?.[0];
-      return{content:choice?.message?.content||'',finishReason:choice?.finish_reason};
+    const _once=async(model,maxT)=>{
+      for(let attempt=0;attempt<3;attempt++){
+        const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model,messages:[{role:'user',content:prompt}],max_tokens:maxT,temperature:.7,reasoning_effort:'low'})});
+        if(resp.status===429&&attempt<2){
+          const ra=Number(resp.headers.get('retry-after'));
+          await new Promise(res=>setTimeout(res,(ra>0?ra:3)*1000));
+          continue;
+        }
+        if(!resp.ok){
+          let detail='';try{const ej=await resp.json();detail=ej?.error?.message||'';}catch(_e){}
+          const err=new Error('API '+resp.status+(detail?'：'+detail:''));
+          err.status=resp.status;err.detail=detail;
+          throw err;
+        }
+        const result=await resp.json();
+        const choice=result.choices?.[0];
+        return{content:choice?.message?.content||'',finishReason:choice?.finish_reason};
+      }
     };
-    let r=await _once(700);
-    if(!r.content.trim()&&r.finishReason==='length')r=await _once(1260); // 隱藏推理吃光預算：放大1.8倍重試一次
+    const _looksDown=e=>e.status>=500||/decommission|not[ _-]?found|does not exist|invalid model|model_not_active/i.test(e.detail||'');
+    let model='openai/gpt-oss-120b',r;
+    try{r=await _once(model,700);}
+    catch(e){if(!_looksDown(e))throw e;model='openai/gpt-oss-20b';r=await _once(model,700);}
+    if(!r.content.trim()&&r.finishReason==='length')r=await _once(model,1260); // 隱藏推理吃光預算：放大1.8倍重試一次
     el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${esc(r.content||'（無回應）')}</div></div>`;
   }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${esc(e.message)}</div>`;}
 }

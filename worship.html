@@ -350,19 +350,32 @@ function readPhoto(file){
 async function groqCall(messages,model,maxTokens){
   var key=localStorage.getItem('groq_key')||localStorage.getItem(GROQ_STORE)||localStorage.getItem('oasis_groq_key')||'';
   if(!key)throw new Error('找不到 Groq API Key（localStorage: tina_groq）');
-  var _once=async function(maxT){
-    var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model:model,messages:messages,max_tokens:maxT,temperature:0.5,reasoning_effort:'low'})
-    });
-    var txt=await res.text();var d;
-    try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
-    if(d.choices&&d.choices[0])return{content:d.choices[0].message.content||'',finishReason:d.choices[0].finish_reason};
-    throw new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
+  var _once=async function(mdl,maxT){
+    for(var attempt=0;attempt<3;attempt++){
+      var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({model:mdl,messages:messages,max_tokens:maxT,temperature:0.5,reasoning_effort:'low'})
+      });
+      if(res.status===429&&attempt<2){
+        var ra=Number(res.headers.get('retry-after'));
+        await new Promise(function(rs){setTimeout(rs,(ra>0?ra:3)*1000);});
+        continue;
+      }
+      var txt=await res.text();var d;
+      try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
+      if(d.choices&&d.choices[0])return{content:d.choices[0].message.content||'',finishReason:d.choices[0].finish_reason};
+      var err=new Error('Groq '+res.status+': '+(d.error&&d.error.message||txt.slice(0,120)));
+      err.status=res.status;err.detail=(d.error&&d.error.message)||'';
+      throw err;
+    }
   };
-  var r=await _once(maxTokens);
-  if(!r.content.trim()&&r.finishReason==='length')r=await _once(Math.round(maxTokens*1.8)); // 隱藏推理吃光預算：放大1.8倍重試一次
+  var _looksDown=function(e){return e.status>=500||/decommission|not[ _-]?found|does not exist|invalid model|model_not_active/i.test(e.detail||'');};
+  var _backup=function(m){return /120b/.test(m)?'openai/gpt-oss-20b':(/20b/.test(m)?'openai/gpt-oss-120b':m);};
+  var mdl=model,r;
+  try{r=await _once(mdl,maxTokens);}
+  catch(e){if(!_looksDown(e))throw e;mdl=_backup(model);r=await _once(mdl,maxTokens);}
+  if(!r.content.trim()&&r.finishReason==='length')r=await _once(mdl,Math.round(maxTokens*1.8)); // 隱藏推理吃光預算：放大1.8倍重試一次
   return r.content;
 }
 
@@ -380,11 +393,20 @@ async function groqVisionCall(temple,imageDataUrl){
     top_p:1,
     stream:false
   };
-  var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify(body)
-  });
+  var res;
+  for(var attempt=0;attempt<3;attempt++){
+    res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify(body)
+    });
+    if(res.status===429&&attempt<2){
+      var ra=Number(res.headers.get('retry-after'));
+      await new Promise(function(rs){setTimeout(rs,(ra>0?ra:3)*1000);});
+      continue;
+    }
+    break;
+  }
   var txt=await res.text();var d;
   try{d=JSON.parse(txt);}catch(e){throw new Error('Groq 非 JSON（'+res.status+'）: '+txt.slice(0,120));}
   if(d.choices&&d.choices[0])return d.choices[0].message.content;
