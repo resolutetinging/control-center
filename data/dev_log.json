@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-08-24",
+  "generated_through": "2026-08-25",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-25",
+      "project": "AI Tracker",
+      "file": "（查詢，無程式碼改動）",
+      "summary": "查8/25 coreCount=2沒掛冷的原因：確認今天兩則新聞（AI廠商轉向自訂晶片、OpenAI ChatGPT Work）都有具體事件與實質impact分析，非勉強卡門檻，跟8/22空洞案例不同。順便向使用者白話說明冷判定機制：coreCount只看三分區加總的core評級數量（<2才掛冷），但能否算core要先過品質關卡（具體數字/impact非換句話說/非近三日重炒/非背景陳述）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-25",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html, scripts/update_data.py",
+      "summary": "HTML補上core/opp/noise評級燈號徽章，並修email裡分類標籤跟燈號黏在一起的間距。使用者截圖回報email的分類標籤跟CORE燈號沒有空隔、html儀表板完全沒有評級燈號。修法：newsCard()新增RATING_BADGE_CFG讓三種評級都顯示燈號（原本只有noise才顯示）；email的間距原本靠flex gap:8px（email client支援不穩定），改成margin-right:8px。本機截圖驗證兩處都正確。git push（201465a）。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-24",
       "project": "Control Center",
