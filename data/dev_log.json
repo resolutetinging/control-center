@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-25",
+      "project": "Control Center",
+      "file": "english-sandbox.html",
+      "summary": "Small Talk新增練習題數設定＋達標自動跳綜合分析。使用者情境：決定今天要練習幾題→選情境→練習→練到設定數字自動跳出綜合分析，過程中即時顯示3/10進度。動手前確認關鍵範圍界定：換情境會重新計數（進度歸零，目標設定本身保留），符合現有「換情境=開新一輪、清空sessionLog」的設計。實作：選擇情境panel新增🎯練習題數下拉選單(不限/5/10/15/20)+即時計數徽章，roundTarget存localStorage跨session記住；submitResp()送出後檢查達標自動呼叫runOverallAnalysis()。console模擬測試進度更新與觸發條件正確；過程中意外讓genOpener()跳出原生alert卡住測試分頁，關閉分頁排除，未動真實資料。git push（ff89d38）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-25",
       "project": "AI Tracker",
       "file": "（查詢，無程式碼改動）",
       "summary": "查8/25 coreCount=2沒掛冷的原因：確認今天兩則新聞（AI廠商轉向自訂晶片、OpenAI ChatGPT Work）都有具體事件與實質impact分析，非勉強卡門檻，跟8/22空洞案例不同。順便向使用者白話說明冷判定機制：coreCount只看三分區加總的core評級數量（<2才掛冷），但能否算core要先過品質關卡（具體數字/impact非換句話說/非近三日重炒/非背景陳述）。",
