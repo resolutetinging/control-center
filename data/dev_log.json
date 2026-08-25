@@ -6,6 +6,13 @@
       "date": "2026-08-25",
       "project": "Control Center",
       "file": "english-sandbox.html",
+      "summary": "綜合分析區塊間距微調：使用者截圖回報本次練習綜合分析box跟上方按鈕列貼太近，要求距離對齊按鈕列跟上方分隔線之間的間距。查.result-action-bar本身padding-top:14px，.overall-section補上同一個14px margin-top值，不是憑感覺抓新數字。getBoundingClientRect()量測實際渲染間距=13.99px，跟定義值幾乎完全一致。git push（da15d54）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-25",
+      "project": "Control Center",
+      "file": "english-sandbox.html",
       "summary": "Small Talk新增練習題數設定＋達標自動跳綜合分析。使用者情境：決定今天要練習幾題→選情境→練習→練到設定數字自動跳出綜合分析，過程中即時顯示3/10進度。動手前確認關鍵範圍界定：換情境會重新計數（進度歸零，目標設定本身保留），符合現有「換情境=開新一輪、清空sessionLog」的設計。實作：選擇情境panel新增🎯練習題數下拉選單(不限/5/10/15/20)+即時計數徽章，roundTarget存localStorage跨session記住；submitResp()送出後檢查達標自動呼叫runOverallAnalysis()。console模擬測試進度更新與觸發條件正確；過程中意外讓genOpener()跳出原生alert卡住測試分頁，關閉分頁排除，未動真實資料。git push（ff89d38）。",
       "reason": "user_request"
     },
