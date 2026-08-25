@@ -303,7 +303,19 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <div class="panel">
     <div class="panel-lbl">
       <span>選擇情境 — Pick your scene</span>
-      <label style="display:flex;align-items:center;gap:4px;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:400;color:var(--sub);cursor:pointer;"><input type="checkbox" id="auto-speak-toggle" style="margin:0;" onchange="localStorage.setItem(AUTO_SPEAK_KEY, this.checked?'1':'0')"/> 🔊 自動播音</label>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="round-counter" style="display:none;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:700;color:var(--sub);"></span>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:400;color:var(--sub);cursor:pointer;">🎯 練習題數
+          <select id="round-target-select" style="font-size:11px;border:1px solid var(--border);border-radius:5px;padding:2px 4px;background:var(--card);color:var(--sub);cursor:pointer;" onchange="setRoundTarget(this.value)">
+            <option value="0">不限</option>
+            <option value="5">5 題</option>
+            <option value="10">10 題</option>
+            <option value="15">15 題</option>
+            <option value="20">20 題</option>
+          </select>
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:400;color:var(--sub);cursor:pointer;"><input type="checkbox" id="auto-speak-toggle" style="margin:0;" onchange="localStorage.setItem(AUTO_SPEAK_KEY, this.checked?'1':'0')"/> 🔊 自動播音</label>
+      </div>
     </div>
     <div class="sit-row" id="sit-row" style="flex-wrap:wrap;gap:6px;">
       <button class="sit-btn" id="sit-coffee"  onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
@@ -619,6 +631,28 @@ let timerMode = 30;
 let results = {};
 let usedOpeners = []; // 追蹤已出現的 opener，避免重複
 let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
+// 08-25：使用者要求可設定「今天要練習幾題」，練到設定數字自動跳出綜合分析，
+// 過程中即時顯示「3/10」進度。目標題數本身用localStorage記住（跨session維持
+// 使用者慣用的題數，不用每次重設），但進度（sessionLog.length）沿用既有
+// 「換情境=開新一輪、清空sessionLog」的設計，換情境會歸零重新累計——使用者
+// 確認過這個範圍界定，不是跨情境累計
+const ROUND_TARGET_KEY = 'es_round_target';
+let roundTarget = Number(localStorage.getItem(ROUND_TARGET_KEY)) || 0; // 0=不限
+function setRoundTarget(v){
+  roundTarget = Number(v) || 0;
+  localStorage.setItem(ROUND_TARGET_KEY, String(roundTarget));
+  updateRoundCounter();
+}
+function updateRoundCounter(){
+  const el = document.getElementById('round-counter');
+  if(!el) return;
+  if(roundTarget > 0){
+    el.textContent = `📊 ${sessionLog.length}/${roundTarget}`;
+    el.style.display = 'inline';
+  } else {
+    el.style.display = 'none';
+  }
+}
 let grContext = null; // 文法審核追問用：{orig,note,fixed}，換下一句時重置
 let idiomContext = null; // 拆彈題目追問用：{sentence,options,correct,chosen,explain_zh}，換下一題時重置
 
@@ -724,6 +758,7 @@ function pickSit(key){
   sessionLog = [];
   $hide('overall-section'); $('overall-body').textContent='';
   $('overall-btn').style.display='none';
+  updateRoundCounter();
   document.querySelectorAll('.sit-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('sit-'+key).classList.add('active');
   genOpener();
@@ -1119,9 +1154,15 @@ Output ONLY valid JSON:
         fbTone: results.fb_tone||'', fbAdd: results.fb_add||''
       });
       if(sessionLog.length>=2) $('overall-btn').style.display='inline-flex';
+      updateRoundCounter();
     }
     $hide('loading-result'); $show('result-section');
     window.scrollTo({top:document.getElementById('result-section').offsetTop-80,behavior:'smooth'});
+    // 08-25：練到使用者設定的題數，自動跳出綜合分析，不用再手動點按鈕；
+    // 延遲一點觸發讓上面result-section先捲動顯示完，體驗上不會兩個畫面搶著跳轉
+    if(roundTarget > 0 && sessionLog.length >= roundTarget){
+      setTimeout(()=>runOverallAnalysis(), 600);
+    }
   }catch(e){
     $hide('loading-result');
     $('user-input').disabled=false; $('submit-btn').disabled=false;
@@ -2138,6 +2179,8 @@ renderSaved();
 renderGrammarNavCount();
 renderLib();
 document.getElementById('auto-speak-toggle').checked = isAutoSpeakOn();
+document.getElementById('round-target-select').value = String(roundTarget);
+updateRoundCounter();
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
 <script src="cc_zht.js"></script>
