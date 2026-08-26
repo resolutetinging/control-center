@@ -722,7 +722,12 @@ async function callGroq(prompt, max=600, sys='', jsonMode=false){
   // 呼叫端（如genOpener）沒查空字串就直接顯示，使用者看到的是完全空白的卡片、
   // 沒有任何錯誤提示（使用者截圖回報「他們這樣說」區塊整段空白）。在共用函式
   // 內部自動重試一次、拉高預算，把這個機率性失誤吸收掉，不用每個呼叫點各自補查。
-  if(!res.content.trim() && res.finishReason === 'length'){
+  // 08-26修正：原本判斷式多了`!res.content.trim()`（要求內容完全空白）才重試，
+  // 但截斷不一定產生「完全空白」——推理只吃掉大部分（非全部）預算時，content
+  // 會是「有寫但寫到一半」的殘句（使用者截圖抓到opener顯示"I just arrived
+  // after"沒寫完），這種情況finish_reason一樣是length，只查空字串會漏放。
+  // 拿掉空字串條件，只要finish_reason==='length'就代表輸出不完整，一律重試。
+  if(res.finishReason === 'length'){
     res = await _groqOnce(model, Math.round(max * 1.8), msgs, jsonMode, k);
   }
   return res.content;
