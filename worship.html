@@ -375,7 +375,7 @@ async function groqCall(messages,model,maxTokens){
   var mdl=model,r;
   try{r=await _once(mdl,maxTokens);}
   catch(e){if(!_looksDown(e))throw e;mdl=_backup(model);r=await _once(mdl,maxTokens);}
-  if(!r.content.trim()&&r.finishReason==='length')r=await _once(mdl,Math.round(maxTokens*1.8)); // 隱藏推理吃光預算：放大1.8倍重試一次
+  if(r.finishReason==='length')r=await _once(mdl,Math.round(maxTokens*1.8)); // 08-26：不再要求content空白，殘句同樣算截斷
   return r.content;
 }
 

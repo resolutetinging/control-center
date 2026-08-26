@@ -1246,7 +1246,7 @@ async function runAI(){
     let model='openai/gpt-oss-120b',r;
     try{r=await _once(model,600);}
     catch(e){if(!_looksDown(e))throw e;model='openai/gpt-oss-20b';r=await _once(model,600);}
-    if(!r.content.trim()&&r.finishReason==='length')r=await _once(model,1080); // 隱藏推理吃光預算：放大1.8倍重試一次
+    if(r.finishReason==='length')r=await _once(model,1080); // 08-26：不再要求content空白，殘句同樣算截斷
     res.style.display='block';res.className='ai-result';
     res.textContent=r.content||'（無回應）';
   }catch(e){

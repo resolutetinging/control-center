@@ -984,7 +984,7 @@ async function runSAS(){
     let model='openai/gpt-oss-120b',r;
     try{r=await _once(model,700);}
     catch(e){if(!_looksDown(e))throw e;model='openai/gpt-oss-20b';r=await _once(model,700);}
-    if(!r.content.trim()&&r.finishReason==='length')r=await _once(model,1260); // 隱藏推理吃光預算：放大1.8倍重試一次
+    if(r.finishReason==='length')r=await _once(model,1260); // 08-26：不再要求content空白，殘句同樣算截斷
     el.innerHTML=`<div class="glass-sm"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px;">✨ 分析結果</div><div style="font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--sub);">${esc(r.content||'（無回應）')}</div></div>`;
   }catch(e){el.innerHTML=`<div style="font-size:13px;color:#ff8888;">⚠️ ${esc(e.message)}</div>`;}
 }
