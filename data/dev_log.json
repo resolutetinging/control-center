@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-08-25",
+  "generated_through": "2026-08-26",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-26",
+      "project": "Control Center",
+      "file": "english-sandbox.html",
+      "summary": "修Small Talk開場白殘句沒寫完的問題：使用者截圖回報開場白顯示'I just arrived after'句子沒寫完就斷了。查08-24加的截斷重試判斷式多帶了!content.trim()條件，要求content完全空白才重試，但隱藏推理只吃掉部分（非全部）預算時content會是殘句不是空字串，這種case完全沒被攔到。修法：拿掉空字串條件，只要finish_reason==='length'就代表輸出不完整一律重試。node mock測試3種情境全過。git push（1a5955f）。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-08-26",
+      "project": "Control Center",
+      "file": "多repo：sleep-dashboard/control-center/wordvault/daily-optimizer/wellness-tracker",
+      "summary": "CC家族全面回頭補同款殘句漏放問題，一次查完不留尾巴（呼應08-18教訓「查整個生態系不只同檔案」）。抓到English Sandbox的坑後回頭查發現08-24那輪批次修復把同一套窄判斷式複製到整個家族，完整盤點出6 repo共11個檔案15處呼叫點都是同款問題。因為是已驗證過的一行條件簡化、風險低高度重複，主對話直接動手改（grep定位逐一Edit），不再派5個subagent各跑一輪，更省成本。daily_optimizer.html的generate()額外處理：原本殘句要落到JSON.parse失敗才靠parse-error分支重試（不會放大curMax，大機率再截斷一次），改成提早攔截finish_reason===length就放大curMax。node mock測試runGenerateAttempt()核心邏輯3種情境全過。6個repo逐一node --check+git push（sleep-dashboard c618a06、control-center b8a5ad7、wordvault e7215c3、daily-optimizer da944c2、wellness-tracker 30eceab）。教訓：設計防護邏輯時只堵住觀察到的具體症狀（完全空白），沒推廣到症狀背後根本成因（推理吃掉部分預算）涵蓋的完整案例空間，是容易復發的修法盲點。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-08-25",
       "project": "Control Center",
