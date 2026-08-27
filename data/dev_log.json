@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-27",
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html, data/renewable_status.json",
+      "summary": "Renewable Tracker v1大幅擴充：使用者一次提出七項調整（title改英文、新增歷年趨勢折線圖、卡片排名措辭改占比TopN、各能源別國家占比、能源類別圖示說明、趨勢原因說明、再生能源全球/台灣拆分、新增核能專區、新增碳排放區塊），並追加「台灣真的缺電嗎」議題區塊。AskUserQuestion確認碳排放範圍（全球總量+主要國家排名）與核能電廠範圍（前幾名國家代表性電廠）。派research subagent查證，使用者明確要求「就讓它查完 完整和正確性比較重要」，該研究耗時約26分鐘仍讓它跑完不催。研究過程主動發現並修正v1原始資料年份誤植：水力/核能/風力/太陽能實為Ember 2024年數字，只有煤炭/天然氣是真正2025年數字，已在cross_ref_note透明註記，不用推算值替換。台灣缺電議題採「並陳各方說法、不下結論」設計，三個事實卡+三方說法卡皆附來源URL。前端新增SVG手繪歷年趨勢折線圖與多個新區塊，過程中自行抓到並修正核能/碳排放卡片誤用強制顯示%的共用函式的渲染bug。javascript_tool逐一驗證全部新區塊DOM子元素數量與內容文字符合JSON資料，console無錯誤；screenshot工具本身出現擷取空白的環境怪癖，改以getBoundingClientRect與內容文字驗證取代。git diff --stat確認只動兩檔，commit（2e65447）並push origin main完成。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-27",
       "project": "Control Center",
       "file": "index.html",
       "summary": "Dock加入Renewable Tracker連結：新建的renewable-tracker加進dock，放在World Group（AI Tracker旁邊），🌱圖示。三處同步：dock icon HTML、DEFAULT_LINKS URL對應、連結管理設定modal的linkRows清單。claude-in-chrome實際開頁確認icon正確顯示、getLinks()正確解析出GitHub Pages網址。GitHub Pages尚未開通，提醒使用者手動設定Settings→Pages→main branch，開通前連結會404。git push（51e41eb）。",
