@@ -6,6 +6,13 @@
       "date": "2026-08-27",
       "project": "Renewable Tracker",
       "file": "renewable_tracker.html, data/renewable_status.json",
+      "summary": "Renewable Tracker第二輪修正＋新增AI能源影響專區：使用者提出六項問題——頁面上洩漏「v1原標示2025年有誤，已更正」這類開發過程備註要求移除、國別占比卡片TWh前要加%值、折線圖hover仍沒反應且座標軸字體太大、碳排放summarize卡片要bullet化、碳排放卡片要加主要來源原因與對應政策、新增AI發展對能源用量影響專區。移除as_of欄位的開發版本敘事改純資料事實描述。兩個研究subagent首次派出撞上帳號session額度上限，重試後額度恢復正常派出完成查證。抓到折線圖hover沒反應的真正根因：SVG預設pointer-events是visiblePainted，fill=transparent的hit-circle不算已上色根本收不到事件，這是同一bug第二次被回報，第一輪驗證只查DOM有沒有title元素沒有真的hover測試，驗證方法本身有漏洞已記取。碳排放政策查證中research subagent主動發現美國氣候政策現況已生變（2025年1月川普政府重啟退出巴黎協定程序、暫停IRA資金撥付），已標註新舊政策時序落差避免誤植。新增AI能源影響專區：六國（美/中/歐盟/日/南韓/台）AI發展狀況+可用能源狀況雙欄檔案卡，查到PJM電網容量拍賣價格暴漲、愛爾蘭資料中心凍結併網四年、南韓半導體叢聚26.6GW新增需求等具體案例。這次特別要求驗證subagent做真實滑鼠hover互動測試，確認滑鼠真的命中正確SVG元素，但瀏覽器原生tooltip屬UI層渲染不在screenshot擷取範圍內無法視覺確認，其餘8/9項驗收條件全數通過。git diff --stat確認只動兩檔，commit（b8153db）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-27",
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html, data/renewable_status.json",
       "summary": "Renewable Tracker版面重構＋資料補完：使用者截圖回報九項問題——卡片高度不一致、部分卡片缺趨勢原因、折線圖無hover顯示%、國別占比排版混亂、卡片結構需固定順序、核能台灣現況卡「0%異常放大換行」bug、核能電廠資訊需擴充四維度、內容需bullet化、台灣缺電區塊要加風險燈號。拆兩軌並行：research subagent查證水力/核能趨勢原因與六國核能營運狀況/計畫/占比/政策（165分鐘完整查證），同時自行處理CSS/bug修正。抓到0%異常放大的根因：.total-banner誤用display:flex排版，混合文字與大字體span時被拆成不同flex item各自換行，改回一般文字流即修復，同一修法連帶修好其他total-banner的潛在同款隱患。卡片高度統一改用flex column+margin-top:auto讓趨勢原因分隔線貼齊列底部。新增bulletize()通用函式套用全站15處。折線圖用SVG原生title元素做hover tooltip，不寫額外JS事件。核能專區改造為六國營運檔案卡（營運狀況/營運計畫/核能政策），取代原本簡略電廠列表。台灣缺電風險燈號綜合公開數據評為「中」風險，並在頁面上明確揭露判斷依據，只評操作面風險不對政策爭議本身表態，維持並陳各方說法的中立設計。派fresh-context subagent逐條核對11項驗收條件全數通過；過程中截圖工具在頁面深捲動位置出現空白擷取的環境怪癖，改用DOM/accessibility tree交叉驗證排除是頁面本身bug。git diff --stat確認只動兩檔，commit（9872df0）並push origin main。",
       "reason": "user_request"
     },
