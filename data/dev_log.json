@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-27",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "Dock加入Renewable Tracker連結：新建的renewable-tracker加進dock，放在World Group（AI Tracker旁邊），🌱圖示。三處同步：dock icon HTML、DEFAULT_LINKS URL對應、連結管理設定modal的linkRows清單。claude-in-chrome實際開頁確認icon正確顯示、getLinks()正確解析出GitHub Pages網址。GitHub Pages尚未開通，提醒使用者手動設定Settings→Pages→main branch，開通前連結會404。git push（51e41eb）。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-27",
       "project": "Renewable Tracker",
       "file": "renewable_tracker.html, data/renewable_status.json（新repo）",
       "summary": "新專案：再生能源追蹤器v1建置。使用者要求依AI Tracker現有架構建一個追蹤全球能源使用狀況/再生能源發展/電力智慧化管理趨勢的新網站。分析AI Tracker其實有兩套架構（每日新聞LLM分類 vs 靜態參考資料+定期驗證），判斷三個目標區塊本質是統計數字非每日新聞，套用靜態參考資料模式避免LLM編數字。確認關鍵設計：獨立新repo、國際=全球匯總數字、v1先純靜態不接Groq自動化（避開同日修的Groq驗證bug同款脆弱點）。派research subagent查證真實統計（Ember GER2026 2025年資料，抓到再生能源33.8%首度超越煤炭33.0%里程碑，並主動抓到排除一筆內部矛盾的錯誤數字），電力管理現況納入國際4則+台灣3則案例（含當日AI Tracker出現的NVIDIA×Lancium DSX合作新聞）。claude-in-chrome驗證DOM渲染正確、console無錯誤。本機git commit（fecaed3）並推送到使用者建立的resolutetinging/renewable-tracker。",
