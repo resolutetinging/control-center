@@ -6,6 +6,13 @@
       "date": "2026-08-27",
       "project": "Renewable Tracker",
       "file": "renewable_tracker.html, data/renewable_status.json",
+      "summary": "Renewable Tracker版面重構＋資料補完：使用者截圖回報九項問題——卡片高度不一致、部分卡片缺趨勢原因、折線圖無hover顯示%、國別占比排版混亂、卡片結構需固定順序、核能台灣現況卡「0%異常放大換行」bug、核能電廠資訊需擴充四維度、內容需bullet化、台灣缺電區塊要加風險燈號。拆兩軌並行：research subagent查證水力/核能趨勢原因與六國核能營運狀況/計畫/占比/政策（165分鐘完整查證），同時自行處理CSS/bug修正。抓到0%異常放大的根因：.total-banner誤用display:flex排版，混合文字與大字體span時被拆成不同flex item各自換行，改回一般文字流即修復，同一修法連帶修好其他total-banner的潛在同款隱患。卡片高度統一改用flex column+margin-top:auto讓趨勢原因分隔線貼齊列底部。新增bulletize()通用函式套用全站15處。折線圖用SVG原生title元素做hover tooltip，不寫額外JS事件。核能專區改造為六國營運檔案卡（營運狀況/營運計畫/核能政策），取代原本簡略電廠列表。台灣缺電風險燈號綜合公開數據評為「中」風險，並在頁面上明確揭露判斷依據，只評操作面風險不對政策爭議本身表態，維持並陳各方說法的中立設計。派fresh-context subagent逐條核對11項驗收條件全數通過；過程中截圖工具在頁面深捲動位置出現空白擷取的環境怪癖，改用DOM/accessibility tree交叉驗證排除是頁面本身bug。git diff --stat確認只動兩檔，commit（9872df0）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-27",
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html, data/renewable_status.json",
       "summary": "Renewable Tracker v1大幅擴充：使用者一次提出七項調整（title改英文、新增歷年趨勢折線圖、卡片排名措辭改占比TopN、各能源別國家占比、能源類別圖示說明、趨勢原因說明、再生能源全球/台灣拆分、新增核能專區、新增碳排放區塊），並追加「台灣真的缺電嗎」議題區塊。AskUserQuestion確認碳排放範圍（全球總量+主要國家排名）與核能電廠範圍（前幾名國家代表性電廠）。派research subagent查證，使用者明確要求「就讓它查完 完整和正確性比較重要」，該研究耗時約26分鐘仍讓它跑完不催。研究過程主動發現並修正v1原始資料年份誤植：水力/核能/風力/太陽能實為Ember 2024年數字，只有煤炭/天然氣是真正2025年數字，已在cross_ref_note透明註記，不用推算值替換。台灣缺電議題採「並陳各方說法、不下結論」設計，三個事實卡+三方說法卡皆附來源URL。前端新增SVG手繪歷年趨勢折線圖與多個新區塊，過程中自行抓到並修正核能/碳排放卡片誤用強制顯示%的共用函式的渲染bug。javascript_tool逐一驗證全部新區塊DOM子元素數量與內容文字符合JSON資料，console無錯誤；screenshot工具本身出現擷取空白的環境怪癖，改以getBoundingClientRect與內容文字驗證取代。git diff --stat確認只動兩檔，commit（2e65447）並push origin main完成。",
       "reason": "user_request"
     },
