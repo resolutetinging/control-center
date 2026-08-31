@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-08-27",
+  "generated_through": "2026-08-31",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-08-31",
+      "project": "Sleep Dashboard",
+      "file": "json_cache/sleep_2026-08-30.txt, sleep_2026-08-31.txt, iCloud來源同步",
+      "summary": "8/30缺檔手動補建＋8/31資料兩輪修正：手機端Shortcut 8/30沒同步任何檔案到iCloud，確認8/28/8/29/8/31來源都正常只有8/30缺，屬手機端問題無法從本機修。用使用者提供的數字手動建立sleep_2026-08-30.txt，先獨立驗證解析結果才跑run_update.sh推送，並額外開一次sleep_dashboard_v2.html讓資料寫進localStorage（SAS Hub不讀RAW需這步）。8/31原始匯出的deep/core數字有誤，修正過程中一度誤把使用者提供的入睡時間套錯位置，被截圖糾正後改回正確版本，最後連iCloud來源檔案也一併同步修正。教訓：修正多筆數字時要驗證「時間窗口」與「stage總和」是否互相吻合，不吻合要指出矛盾請使用者確認，不能自己選一邊套用。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-31",
+      "project": "AI Tracker",
+      "file": "data/nv_status.json",
+      "summary": "NVIDIA週查證診斷＋人工複核補上TSMC 30%晶圓訂單：使用者回報daily news提到NVIDIA財報說明會宣言但專區沒更新。第一輪診斷踩了自己記憶檔教訓——沒git pull就直接讀本機資料，誤判週查證失敗，實際上使用者收到的信與GitHub Actions都顯示排程正常執行成功，是本機clone落後5個commit的診斷疏漏。使用者澄清真正想問的是內容上是否有被自動查證放過的資訊，逐項比對daily news與nv_status.json後發現：「全棧AI基礎設施」策略宣示已被既有governance條目涵蓋不用改，但「追加訂購30%先進製程晶圓」是具體有數字有來源的新承諾，TSMC聯盟條目完全沒提到，研判是DDG當週沒搜到這篇文章或system prompt過度保守跳過。使用者確認後人工補上，last_checked不動仍誠實反映本週自動查證確實跑過。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-08-27",
       "project": "Renewable Tracker",
