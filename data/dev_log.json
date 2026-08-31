@@ -5,6 +5,13 @@
     {
       "date": "2026-08-31",
       "project": "Renewable Tracker",
+      "file": "renewable_tracker.html, data/renewable_status.json",
+      "summary": "Renewable Tracker tooltip修正＋四大新區塊（LCOE/儲能/原物料/目標對照）：使用者截圖回報tooltip被裁切、內文不需年份、直條圖字體太大、更新日期問題，同時問還可以做哪些分析切入點，主動提出LCOE成本趨勢/儲能發展/關鍵原物料供應鏈/各國氣候目標對照四個候選經使用者確認全部納入。tooltip改定位游標正上方置中、內文只留類別+%。第一輪驗證抓到殘留bug：最右側資料點tooltip被右邊界裁切，修法為量測實際渲染寬度後動態夾回可視範圍，二次驗證確認修復有效。四個新區塊全數平行research：LCOE發現IRENA全球實際成本與EIA美國推算成本不可混用比較的方法論陷阱，改用IRENA趨勢圖+Lazard同年度快照組合避開；儲能查到中美合計占全球74.6%、台灣2030目標上修至5,500MW；關鍵原物料查證自行抓出PDF文字擷取陷阱並修正，發現開採端集中國家各異但精煉端幾乎全數匯聚中國的一致模式；各國目標對照發現美國淨零承諾已被撤回、南韓目標數字兩來源有落差等重要細節。fresh-context subagent最終驗證7項條件全數通過，含重點的tooltip邊界防護真人hover測試。git diff --stat確認只動兩檔，commit（b1057f0）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-31",
+      "project": "Renewable Tracker",
       "file": "renewable_tracker.html, data/renewable_status.json, scripts/update_renewable.py, .github/workflows/weekly-renewable-update.yml",
       "summary": "Renewable Tracker大批新功能＋週查證自動化正式上線：使用者一次提出七項需求——折線圖hover仍沒反應、國別占比卡片標題移除冗餘後綴、新增台灣能源使用狀況、大標題放大加粗、核能專區台灣現況加未來重啟gating point、核能全球卡片新增核廢處理/國民意見、碳排放新增歷年折線圖+國家占比直條圖、同NVIDIA專區納入週自動查證。hover bug是同症狀第三次回報，判斷原生SVG title tooltip不可靠，換路改寫成自製浮動tooltip，這次派驗證subagent用真人滑鼠hover+screenshot視覺確認真的有效，教訓已記入lessons.md：驗證互動行為必須用真實滑鼠動作、DOM存在不等於事件會觸發。「同NVIDIA專區」動工前用AskUserQuestion確認監控範圍，使用者選擇只查案例/政策類欄位排除年度統計數字，比照update_nvidia.py設計了update_renewable.py＋weekly workflow，本機測試f-string插值無例外才push，提醒使用者GitHub Secrets需自行設定。拆三個research subagent平行查證台灣整體能源組成（六類加總完全100%）、六國核廢處理/國民意見+台灣重啟checkpoint（政治敏感議題全程不下結論不選邊站）、全球碳排歷年趨勢+國家占比（發現既有4國數字年份標註錯誤一併修正）。fresh-context subagent驗證10項條件9項一次通過，抓到1個真實bug（新標題誤用CSS class字體過小）已修正。git diff --stat確認範圍符合預期，commit（e4cff76）並push origin main。",
       "reason": "user_request"
