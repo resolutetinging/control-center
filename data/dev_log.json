@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-08-31",
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html, data/renewable_status.json, scripts/update_renewable.py, .github/workflows/weekly-renewable-update.yml",
+      "summary": "Renewable Tracker大批新功能＋週查證自動化正式上線：使用者一次提出七項需求——折線圖hover仍沒反應、國別占比卡片標題移除冗餘後綴、新增台灣能源使用狀況、大標題放大加粗、核能專區台灣現況加未來重啟gating point、核能全球卡片新增核廢處理/國民意見、碳排放新增歷年折線圖+國家占比直條圖、同NVIDIA專區納入週自動查證。hover bug是同症狀第三次回報，判斷原生SVG title tooltip不可靠，換路改寫成自製浮動tooltip，這次派驗證subagent用真人滑鼠hover+screenshot視覺確認真的有效，教訓已記入lessons.md：驗證互動行為必須用真實滑鼠動作、DOM存在不等於事件會觸發。「同NVIDIA專區」動工前用AskUserQuestion確認監控範圍，使用者選擇只查案例/政策類欄位排除年度統計數字，比照update_nvidia.py設計了update_renewable.py＋weekly workflow，本機測試f-string插值無例外才push，提醒使用者GitHub Secrets需自行設定。拆三個research subagent平行查證台灣整體能源組成（六類加總完全100%）、六國核廢處理/國民意見+台灣重啟checkpoint（政治敏感議題全程不下結論不選邊站）、全球碳排歷年趨勢+國家占比（發現既有4國數字年份標註錯誤一併修正）。fresh-context subagent驗證10項條件9項一次通過，抓到1個真實bug（新標題誤用CSS class字體過小）已修正。git diff --stat確認範圍符合預期，commit（e4cff76）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-08-31",
       "project": "Sleep Dashboard",
       "file": "json_cache/sleep_2026-08-30.txt, sleep_2026-08-31.txt, iCloud來源同步",
       "summary": "8/30缺檔手動補建＋8/31資料兩輪修正：手機端Shortcut 8/30沒同步任何檔案到iCloud，確認8/28/8/29/8/31來源都正常只有8/30缺，屬手機端問題無法從本機修。用使用者提供的數字手動建立sleep_2026-08-30.txt，先獨立驗證解析結果才跑run_update.sh推送，並額外開一次sleep_dashboard_v2.html讓資料寫進localStorage（SAS Hub不讀RAW需這步）。8/31原始匯出的deep/core數字有誤，修正過程中一度誤把使用者提供的入睡時間套錯位置，被截圖糾正後改回正確版本，最後連iCloud來源檔案也一併同步修正。教訓：修正多筆數字時要驗證「時間窗口」與「stage總和」是否互相吻合，不吻合要指出矛盾請使用者確認，不能自己選一邊套用。",
