@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-09-01",
+      "project": "Refueler",
+      "file": "refueler.html",
+      "summary": "使用者要求「月消費分析加趨勢線並做一些資料分析」。查code發現現有月度長條圖其實已經有一條連接各月實際總額的細灰折線只是視覺不明顯，先用AskUserQuestion釐清使用者要的其實是另外疊加統計趨勢線，選了移動平均（不用線性迴歸，資料點少時迴歸容易失真）；資料分析要月增減率/同比環比+異常月份標註。交辦sonnet實作前先自己確認色板/helper函式/既有HTML結構，給精確規格：3個月移動平均往前抓最多3個月、虛線無圓點區分於現有實線折線；MoM要往前找最近一個有資料月份而非無條件抓上一個月；YoY要沿用主圖表相同的價格邏輯查去年同月；異常月份用母體標準差、門檻mean+stdDev只標偏高，附當月最大宗店家當線索。fresh-context subagent驗證這次特別要求自己手算公式跟程式碼比對而非只看有沒有顯示文字，逐一比對程式碼邏輯完全吻合，瀏覽器實測寫入假資料驗證三段文字數字跟手算結果一致，12項全數通過。git diff --stat只動一檔，commit（cec2e70）並push origin main完成。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-09-01",
+      "project": "Control Center",
+      "file": "index.html (Dev Dashboard)",
+      "summary": "使用者截圖丟出Dev Dashboard的每月安全回顧提醒卡片，查GitHub公開API確認4個仍在觀察範圍內的repo現況：nexus-portal本身是private repo，git歷史殘留完全零公開曝露；aitracker/daily-optimizer/control-center維持public、無異常。結論風險沒有變化，維持現狀。用claude-in-chrome開實際線上頁面，呼叫openDevDashboard()+ackGitHistoryReview()完成點擊，確認localStorage的cc_review_git_history_ack寫入今天日期、提醒banner消失。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-09-01",
       "project": "Renewable Tracker",
       "file": "scripts/update_renewable.py, data/renewable_status.json",
       "summary": "使用者用workflow_dispatch實測剛修好的週查證，寄出的信截圖回報三個問題：有兩個bullet內容只有一個分號看不懂在表達什麼、4個分類各自的沒變句子拼成一長串bullet很多餘；bullet換行文字沒有縮排對齊、南韓段落文字在句子中間被硬切斷；台電董事長引言「有一點緊澀」問是不是中國用語。逐一查code根因：no_change_summary用分號join多個分類各自的句子，跟句子本身的句號疊在一起被bulletize_email()拆出空白bullet，改成固定一句話，各分類原始句子改存進pending.json供人工複核不進email；bulletize_email()補上懸掛縮排CSS；新增smart_truncate()優先在字數上限內找句號斷開取代硬字元數截斷。派research subagent查證，中央社2024-08-08報導確認台電董事長曾文生原話是「是有一點點緊」，「緊澀」是轉引錯誤，原本標的來源網址也查無此句，JSON三處引言與來源一併修正。三個code修復都寫mock測試驗證，額外派fresh-context haiku驗證10項條件全數通過。git push時撞到遠端GitHub Actions排程自動commit的weekly_check時間戳，確認改動位置不重疊，pull --rebase後重推成功，commit（1d11b81）並push origin main。",
