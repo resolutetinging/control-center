@@ -5,6 +5,27 @@
     {
       "date": "2026-09-01",
       "project": "Renewable Tracker",
+      "file": "scripts/update_renewable.py",
+      "summary": "使用者陸續問了GROQ_API_KEY能否跟AI Tracker共用、GMAIL_APP_PASSWORD是否為Google登入密碼、NOTIFY_EMAIL要填什麼、AI Tracker的6個secrets哪些是renewable-tracker必要的，查程式碼os.environ引用逐一給出精確答案。使用者手動觸發workflow_dispatch測試收到失敗信：連續5輪仍超出Groq TPM限制。診斷根因：build_monitored_snapshot()把4大監控類別全部塞進同一個Groq請求，序列化後13,489字元約10K+ tokens，現有413重試邏輯只縮減新聞片段完全不縮減這個JSON本身，即使新聞縮到0則單獨送出還是超標。查證Groq官方文件確認openai/gpt-oss-120b/20b在Developer/免費tier均為8,000 TPM／30RPM，TPM才是真正瓶頸。決定架構：改成call_groq_diff_one()4大類各自獨立查證，新聞片段依類別過濾縮小prompt，呼叫間sleep(65)讓TPM滾動視窗重置，單一類別失敗不連坐。同一次完成使用者另一個請求：email內文長句改bullet格式，但遵守feedback_email_html_compat.md教訓禁用<ul>/<li>，改用文字前綴+div。fresh-context subagent審查抓到真實邏輯bug：部分類別失敗+其餘類別有候選異動時，失敗訊息被send_email()的items空判斷吞掉，跟程式碼自己的註解承諾不符，改成category_failures獨立參數+獨立HTML區塊修復，寫本機mock測試驗證確認修復生效。git diff --stat只動一檔，commit（19433c8）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-09-01",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "使用者要求把daily mail subject從「AI 動態」改成「AI Tracker」，並移除後面core/opp計數字尾。單點小改直接動手，順手發現core_count/opp_count兩個變數改完後變成死變數，連帶all_items一併清掉不留殘留程式碼。fresh-context haiku驗證全數通過。git push撞到遠端有新commit（同日稍早auto-update排程跑過），pull --rebase後重推成功，commit（398bf2d）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-09-01",
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html, data/renewable_status.json",
+      "summary": "使用者截圖回報圖表軸字體還是太大，並指定用cb-hd（12px）當對照字級，也回報AI能源/關鍵原物料兩區塊標題下方文字沒有變成bullet，順便問weekly update是否已go live。用claude-in-chrome實測抓到真正根因：SVG圖表width:100%但沒設max-width，桌面寬螢幕下viewBox 640被撐到1143px（縮放1.787倍），字體因此爆大。修法是svg加max-width:680px，字體數值從9.5調到11.3，實測對齊cb-hd 12px參考字級誤差小於0.01px。bulletize()沒生效的原因是兩處intro_note原文整句用逗號連接完全沒有句號/分號，改成3句話斷句後畫面正確變條列。順便補之前欠的真人點擊索引導覽測試，這次extension連得上，確認跳轉正常。weekly update查GitHub Actions公開API確認workflow已啟用但08-31才新增還沒遇到週日，執行次數0屬正常。git diff --stat只動兩檔，commit（45a7c9e）並push origin main。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-09-01",
+      "project": "Renewable Tracker",
       "file": "renewable_tracker.html, data/renewable_status.json",
       "summary": "延續前次未完成的使用者請求，補齊LCOE水力成本趨勢/6項技術成本驅動因素說明/台灣再生能源延後原因三項，並確認先前已完成的頁面索引導覽。開場先盤點進度，發現5項需求裡只有索引導覽（uncommitted diff）跟大部分bullet point整理已完成，其餘3項確認完全沒開始。使用者要求全做完並自行排序，派3個research subagent平行查證：水力LCOE找到IRENA同方法論資料可直接併入現有折線圖，核能查無同方法論可比資料故不硬塞；6項技術成本高低原因交叉參照NREL/IEA/World Nuclear Association查到具體結構性驅動因素；台灣目標延後原因查到官方（用電量分母變大、疫情延誤）與業界分析（光電用地飽和、環評三法加嚴、陸域風電地方反對、原物料上漲）兩種說法並陳不下結論。研究內容確定後由我自己完成三項精確定稿文字，交給sonnet實作subagent精準套用不讓其自行改寫。fresh-context subagent獨立驗證JSON結構/渲染內容/node --check全數通過，claude-in-chrome extension這次連不上（同08-24環境問題），改用headless Chrome dump-dom驗證，誠實標註索引導覽點擊跳轉只做結構驗證未做真實點擊，風險評估後接受此驗證強度先行推送。git diff --stat確認只動兩檔，commit（fc5f264）並push origin main完成。",
       "reason": "user_request"
