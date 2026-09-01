@@ -201,6 +201,7 @@ body{
 .cost-insight-anomaly{background:rgba(230,126,34,.09);margin-bottom:4px;}
 .cost-insight-anomaly:last-child{margin-bottom:0;}
 .cost-insight-meta{color:var(--faint);font-size:11px;margin-left:2px;}
+.cost-insight-sub{margin-top:4px;padding-left:13px;text-indent:-13px;color:var(--faint);font-size:11.5px;}
 .cost-insight-subtitle{font-size:11.5px;font-weight:700;color:var(--sub);margin-bottom:4px;}
 
 /* ── AI Analysis Card ── */
@@ -1231,11 +1232,14 @@ function renderCostInsights(){
           }else{
             diffNote='，本月為該店首次消費，無其他月份可比較';
           }
-          anomalies.push(`${m}月消費異常偏高（${fmtM(val)}，高於平均${fmtM(mean)}約${pctAboveMean}%），主因是「${_x(topShop)}」單月消費${fmtM(topVal)}，占當月${pctOfMonth}%${diffNote}`);
+          anomalies.push({
+            header:`${m}月消費異常偏高（${fmtM(val)}，高於平均${fmtM(mean)}約${pctAboveMean}%）`,
+            detail:`主因是「${_x(topShop)}」單月消費${fmtM(topVal)}，占當月${pctOfMonth}%${diffNote}`
+          });
         }
       }
       anomalyHTML=anomalies.length
-        ?anomalies.map(a=>`<div class="cost-insight-item cost-insight-anomaly">⚠️ ${a}</div>`).join('')
+        ?anomalies.map(a=>`<div class="cost-insight-item cost-insight-anomaly">⚠️ ${a.header}<div class="cost-insight-sub">• ${a.detail}</div></div>`).join('')
         :`<div class="cost-insight-item">本年度消費金額沒有明顯異常波動的月份</div>`;
     }
   }
