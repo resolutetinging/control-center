@@ -187,9 +187,20 @@ body{
 .cost-chart-legend{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:7px;}
 .cost-chart-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
 .cost-chart-leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.cost-chart-leg-line{width:14px;height:0;flex-shrink:0;}
 .cost-chart-tabs{display:flex;gap:4px;margin-bottom:7px;}
 .cost-chart-tab{font-size:10px;padding:3px 10px;border-radius:10px;border:.5px solid var(--border);background:var(--bg2);color:var(--sub);cursor:pointer;font-family:inherit;transition:background .15s,color .15s;}
 .cost-chart-tab.active{background:var(--coffee-tint2);color:var(--coffee);border-color:var(--coffee-l);font-weight:700;}
+
+/* ── Cost Insights (趨勢分析) ── */
+.cost-insights{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rsm);padding:9px 11px;margin-top:10px;}
+.cost-insights .cost-bd-title{margin-bottom:6px;}
+.cost-insight-block{margin-bottom:6px;}
+.cost-insight-block:last-child{margin-bottom:0;}
+.cost-insight-item{font-size:12.5px;color:var(--sub);line-height:1.5;background:var(--bg2);border-radius:6px;padding:6px 9px;}
+.cost-insight-anomaly{background:rgba(230,126,34,.09);margin-bottom:4px;}
+.cost-insight-anomaly:last-child{margin-bottom:0;}
+.cost-insight-meta{color:var(--faint);font-size:11px;margin-left:2px;}
 
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
@@ -1013,9 +1024,139 @@ function renderCoffeeChart(){
     svgLine+=`<polyline points="${linePts.map(p=>p.cx+','+p.ty).join(' ')}" fill="none" stroke="rgba(40,38,32,.32)" stroke-width="1.5" stroke-linejoin="round"/>`;
     linePts.forEach(p=>{svgLine+=`<circle cx="${p.cx}" cy="${p.ty}" r="2.8" fill="#4a4540" stroke="#f0ede8" stroke-width="1.5"/>`;});
   }
-  wrap.innerHTML=`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}${svgLine}</svg>`;
+  // 移動平均趨勢線（3個月移動平均，涵蓋 spanMonths 內所有月份，含0元月）
+  let svgMaLine='';
+  if(spanMonths>=2){
+    const maWindow=3;
+    const movingAvg=monthTotals.map((_,i)=>{
+      const start=Math.max(0,i-maWindow+1);
+      const slice=monthTotals.slice(start,i+1);
+      return slice.reduce((s,v)=>s+v,0)/slice.length;
+    });
+    const maPts=[];
+    for(let i=0;i<spanMonths;i++){
+      const cx=Math.round(padL+(i+0.5)*gap);
+      const ty=H-padB-Math.round(movingAvg[i]/yMax*chartH);
+      maPts.push(cx+','+ty);
+    }
+    svgMaLine=`<polyline points="${maPts.join(' ')}" fill="none" stroke="#4a7fa5" stroke-width="1.8" stroke-dasharray="5,4" stroke-linejoin="round"/>`;
+  }
+  wrap.innerHTML=`<svg width="${W}" height="${H}" style="display:block;overflow:visible"><line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="rgba(40,38,32,.15)" stroke-width="1"/>${svgGrid}${svgBars}${svgLine}${svgMaLine}</svg>`;
   const lg=document.getElementById('cost-chart-legend');
-  if(lg)lg.innerHTML=allShops.length?allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join(''):'';
+  if(lg){
+    let lineLegend='';
+    if(linePts.length>=2)lineLegend+=`<div class="cost-chart-leg-item"><div class="cost-chart-leg-line" style="border-top:2px solid rgba(40,38,32,.32);"></div><span>月度實際總額</span></div>`;
+    if(svgMaLine)lineLegend+=`<div class="cost-chart-leg-item"><div class="cost-chart-leg-line" style="border-top:2px dashed #4a7fa5;"></div><span>3個月移動平均</span></div>`;
+    lg.innerHTML=lineLegend+(allShops.length?allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join(''):'');
+  }
+  renderCostInsights();
+}
+
+// ── COST INSIGHTS（月增減率／同比／異常月份）──
+function momBadge(pct){
+  if(pct>0)return `<span style="color:var(--danger);font-weight:700;">▲${pct}%</span>`;
+  if(pct<0)return `<span style="color:var(--ok);font-weight:700;">▼${Math.abs(pct)}%</span>`;
+  return `<span style="color:var(--faint);font-weight:700;">±0%</span>`;
+}
+function renderCostInsights(){
+  const el=document.getElementById('cost-insights');
+  if(!el)return;
+  const d=loadRF();const all=d.entries||[];
+  const coffeeAll=all.filter(e=>e.type==='coffee');
+  const curYear=new Date().getFullYear();
+  const maxMonth=selChartYear===curYear?new Date().getMonth()+1:12;
+  const priceOf=e=>selChartMode==='coffee'
+    ?(e.coffeePrice??e.price??0)
+    :selChartMode==='dessert'
+      ?(e.dessertPrice??0)
+      :(e.coffeePrice??e.price??0)+(e.dessertPrice??0);
+  function buildMonthStats(year,maxM){
+    const mData={};for(let m=1;m<=maxM;m++)mData[m]={};
+    coffeeAll.filter(e=>new Date(e.timestamp).getFullYear()===year).forEach(e=>{
+      const m=new Date(e.timestamp).getMonth()+1;
+      if(m<1||m>maxM)return;
+      const shop=e.cafe||'（未填店名）';
+      mData[m][shop]=(mData[m][shop]||0)+priceOf(e);
+    });
+    const totals={};for(let m=1;m<=maxM;m++)totals[m]=Object.values(mData[m]).reduce((s,v)=>s+v,0);
+    return {mData,totals};
+  }
+  const cur=buildMonthStats(selChartYear,maxMonth);
+  const prev=buildMonthStats(selChartYear-1,12);
+  const monthsWithData=Object.keys(cur.totals).map(Number).filter(m=>cur.totals[m]>0).sort((a,b)=>a-b);
+
+  // 1. 月增減率 MoM
+  let momHTML;
+  if(monthsWithData.length===0){
+    momHTML=`<div class="cost-insight-item">尚無資料可分析月增減率</div>`;
+  }else{
+    const latestM=monthsWithData[monthsWithData.length-1];
+    const priorMs=monthsWithData.filter(m=>m<latestM);
+    if(priorMs.length===0){
+      momHTML=`<div class="cost-insight-item">資料不足，無法計算月增減率</div>`;
+    }else{
+      const priorM=priorMs[priorMs.length-1];
+      const pct=Math.round((cur.totals[latestM]-cur.totals[priorM])/cur.totals[priorM]*100);
+      momHTML=`<div class="cost-insight-item">較上月 ${momBadge(pct)} <span class="cost-insight-meta">（${priorM}月 ${fmtM(cur.totals[priorM])} → ${latestM}月 ${fmtM(cur.totals[latestM])}）</span></div>`;
+    }
+  }
+
+  // 2. 同比 YoY
+  let yoyHTML;
+  if(monthsWithData.length===0){
+    yoyHTML=`<div class="cost-insight-item">無去年同期資料可比</div>`;
+  }else{
+    const latestM=monthsWithData[monthsWithData.length-1];
+    const prevVal=prev.totals[latestM]||0;
+    const curVal=cur.totals[latestM];
+    if(prevVal<=0){
+      yoyHTML=`<div class="cost-insight-item">無去年同期資料可比</div>`;
+    }else{
+      const pct=Math.round((curVal-prevVal)/prevVal*100);
+      yoyHTML=`<div class="cost-insight-item">較去年同期 ${momBadge(pct)} <span class="cost-insight-meta">（${selChartYear-1}年${latestM}月 ${fmtM(prevVal)} → ${selChartYear}年${latestM}月 ${fmtM(curVal)}）</span></div>`;
+    }
+  }
+
+  // 3. 異常月份標註
+  let anomalyHTML;
+  let minMonth=1;
+  for(let m=1;m<=maxMonth;m++){if(Object.keys(cur.mData[m]).length>0){minMonth=m;break;}}
+  const spanMonths=maxMonth-minMonth+1;
+  if(spanMonths<3){
+    anomalyHTML=`<div class="cost-insight-item">資料月份太少，暫不提供異常月份分析</div>`;
+  }else{
+    const monthTotals=Array.from({length:spanMonths},(_,i)=>cur.totals[minMonth+i]||0);
+    const nonZero=monthTotals.filter(v=>v>0);
+    if(nonZero.length===0){
+      anomalyHTML=`<div class="cost-insight-item">本年度消費金額沒有明顯異常波動的月份</div>`;
+    }else{
+      const mean=nonZero.reduce((s,v)=>s+v,0)/nonZero.length;
+      const stdDev=Math.sqrt(nonZero.reduce((s,v)=>s+(v-mean)**2,0)/nonZero.length);
+      const threshold=mean+stdDev;
+      const anomalies=[];
+      for(let i=0;i<spanMonths;i++){
+        const m=minMonth+i;
+        const val=monthTotals[i];
+        if(val>threshold){
+          let topShop='',topVal=0;
+          Object.entries(cur.mData[m]||{}).forEach(([s,v])=>{if(v>topVal){topVal=v;topShop=s;}});
+          const pctOfMonth=val>0?Math.round(topVal/val*100):0;
+          const pctAboveMean=mean>0?Math.round((val-mean)/mean*100):0;
+          anomalies.push(`${m}月消費異常偏高（${fmtM(val)}，高於平均${fmtM(mean)}約${pctAboveMean}%），主因是「${_x(topShop)}」單月消費${fmtM(topVal)}，占當月${pctOfMonth}%`);
+        }
+      }
+      anomalyHTML=anomalies.length
+        ?anomalies.map(a=>`<div class="cost-insight-item cost-insight-anomaly">⚠️ ${a}</div>`).join('')
+        :`<div class="cost-insight-item">本年度消費金額沒有明顯異常波動的月份</div>`;
+    }
+  }
+
+  el.innerHTML=`
+    <div class="cost-bd-title">📈 資料分析</div>
+    <div class="cost-insight-block">${momHTML}</div>
+    <div class="cost-insight-block">${yoyHTML}</div>
+    <div class="cost-insight-block">${anomalyHTML}</div>
+  `;
 }
 
 // ── COST ANALYSIS ──
@@ -1139,6 +1280,7 @@ function renderCostAnalysis(){
         </div>
         <div id="cost-chart-wrap" style="min-height:60px;"></div>
         <div class="cost-chart-legend" id="cost-chart-legend"></div>
+        <div class="cost-insights" id="cost-insights"></div>
       </div>
       ${renderTree('☕ 咖啡', buildTree(monthEntries, e=>e.cafe, e=>e.item, e=>e.coffeePrice??e.price??0))}
       ${renderTree('🍰 甜點/餐食', buildTree(monthEntries.filter(e=>e.dessert), e=>e.cafe, e=>e.dessert, e=>e.dessertPrice??0))}
