@@ -6,6 +6,13 @@
       "date": "2026-09-01",
       "project": "Refueler",
       "file": "refueler.html",
+      "summary": "使用者問差異金額裡的平常是指上上個月還是均線，回答是這家店在其他有消費月份的平均，不是上上個月也不是3個月均線（均線是整月總額趨勢不是單一店家）。同時要求主因那行換行+bullet顯示，跟月份標題分開。anomalies.push()改成push{header,detail}物件取代單一字串，detail包進新的.cost-insight-sub（懸掛縮排padding-left+負text-indent，換行文字對齊bullet內容）。改動範圍小直接動手改，派fresh-context haiku驗證6項全過，確認未影響MoM/YoY/本月即時動態/移動平均折線等其他已驗證過的功能。git diff --stat只動一檔，commit（5216be9）並push origin main完成。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-09-01",
+      "project": "Refueler",
+      "file": "refueler.html",
       "summary": "使用者針對異常月份文字主因是某店單月消費$X占當月Y%，要求除了金額/占比外再加差異金額。設計邏輯：拿主因店家在其他月份（排除當前異常月自己）的平均消費當基準，只算有消費的月份避免0元月稀釋平均值，跟本月比較差多少；若該店只有這個異常月有消費，顯示首次消費無其他月份可比較而非除以0出錯；diff可能是正（多花）負（少花）零（差不多）都有對應文案。這次改動範圍小，自己直接動手改，先寫node腳本自測公式，再派fresh-context haiku驗證8項全數通過。git diff --stat只動一檔（20行），commit（1d06dbc）並push origin main完成。",
       "reason": "user_request"
     },
