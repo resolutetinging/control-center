@@ -201,6 +201,7 @@ body{
 .cost-insight-anomaly{background:rgba(230,126,34,.09);margin-bottom:4px;}
 .cost-insight-anomaly:last-child{margin-bottom:0;}
 .cost-insight-meta{color:var(--faint);font-size:11px;margin-left:2px;}
+.cost-insight-subtitle{font-size:11.5px;font-weight:700;color:var(--sub);margin-bottom:4px;}
 
 /* ── AI Analysis Card ── */
 .ai-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:15px 20px 13px;}
@@ -1063,8 +1064,11 @@ function renderCostInsights(){
   if(!el)return;
   const d=loadRF();const all=d.entries||[];
   const coffeeAll=all.filter(e=>e.type==='coffee');
-  const curYear=new Date().getFullYear();
-  const maxMonth=selChartYear===curYear?new Date().getMonth()+1:12;
+  const now=new Date();
+  const curYear=now.getFullYear();
+  const curMonthNum=now.getMonth()+1;
+  const isCurrentYearView=selChartYear===curYear;
+  const maxCompleteMonth=isCurrentYearView?curMonthNum-1:12; // 排除當月，只留完整月份
   const priceOf=e=>selChartMode==='coffee'
     ?(e.coffeePrice??e.price??0)
     :selChartMode==='dessert'
@@ -1081,13 +1085,37 @@ function renderCostInsights(){
     const totals={};for(let m=1;m<=maxM;m++)totals[m]=Object.values(mData[m]).reduce((s,v)=>s+v,0);
     return {mData,totals};
   }
-  const cur=buildMonthStats(selChartYear,maxMonth);
+  const cur=buildMonthStats(selChartYear,Math.max(maxCompleteMonth,0));
   const prev=buildMonthStats(selChartYear-1,12);
   const monthsWithData=Object.keys(cur.totals).map(Number).filter(m=>cur.totals[m]>0).sort((a,b)=>a-b);
+  function totalForYM(year,month){
+    if(month<1){year-=1;month+=12;}
+    if(month>12){year+=1;month-=12;}
+    if(year===selChartYear)return cur.totals[month]||0;
+    if(year===selChartYear-1)return prev.totals[month]||0;
+    return buildMonthStats(year,12).totals[month]||0;
+  }
+
+  let lastM_month,lastM_year,priorM_month,priorM_year;
+  if(isCurrentYearView){
+    lastM_month=curMonthNum-1;lastM_year=curYear;
+    if(lastM_month<1){lastM_month+=12;lastM_year-=1;}
+    priorM_month=lastM_month-1;priorM_year=lastM_year;
+    if(priorM_month<1){priorM_month+=12;priorM_year-=1;}
+  }
 
   // 1. 月增減率 MoM
   let momHTML;
-  if(monthsWithData.length===0){
+  if(isCurrentYearView){
+    const lastTotal=totalForYM(lastM_year,lastM_month);
+    const priorTotal=totalForYM(priorM_year,priorM_month);
+    if(priorTotal<=0){
+      momHTML=`<div class="cost-insight-item">上上個月無消費資料，無法計算月增減率</div>`;
+    }else{
+      const pct=Math.round((lastTotal-priorTotal)/priorTotal*100);
+      momHTML=`<div class="cost-insight-item">較上月 ${momBadge(pct)} <span class="cost-insight-meta">（${priorM_year}年${priorM_month}月 ${fmtM(priorTotal)} → ${lastM_year}年${lastM_month}月 ${fmtM(lastTotal)}）</span></div>`;
+    }
+  }else if(monthsWithData.length===0){
     momHTML=`<div class="cost-insight-item">尚無資料可分析月增減率</div>`;
   }else{
     const latestM=monthsWithData[monthsWithData.length-1];
@@ -1103,7 +1131,17 @@ function renderCostInsights(){
 
   // 2. 同比 YoY
   let yoyHTML;
-  if(monthsWithData.length===0){
+  if(isCurrentYearView){
+    const lastTotal=totalForYM(lastM_year,lastM_month);
+    const yoyPrevTotal=totalForYM(lastM_year-1,lastM_month);
+    const yoyCurTotal=lastTotal;
+    if(yoyPrevTotal<=0){
+      yoyHTML=`<div class="cost-insight-item">無去年同期資料可比</div>`;
+    }else{
+      const pct=Math.round((yoyCurTotal-yoyPrevTotal)/yoyPrevTotal*100);
+      yoyHTML=`<div class="cost-insight-item">較去年同期 ${momBadge(pct)} <span class="cost-insight-meta">（${lastM_year-1}年${lastM_month}月 ${fmtM(yoyPrevTotal)} → ${lastM_year}年${lastM_month}月 ${fmtM(yoyCurTotal)}）</span></div>`;
+    }
+  }else if(monthsWithData.length===0){
     yoyHTML=`<div class="cost-insight-item">無去年同期資料可比</div>`;
   }else{
     const latestM=monthsWithData[monthsWithData.length-1];
@@ -1117,11 +1155,44 @@ function renderCostInsights(){
     }
   }
 
+  // 0. 本月即時動態（僅當前年度視圖顯示）
+  let realtimeHTML='';
+  if(isCurrentYearView){
+    const todayDate=now.getDate();
+    const daysInCurMonth=new Date(curYear,curMonthNum,0).getDate();
+    const monthProgressPct=Math.round(todayDate/daysInCurMonth*100);
+    const curMonthSpend=coffeeAll.filter(e=>{
+      const dt=new Date(e.timestamp);
+      return dt.getFullYear()===curYear&&dt.getMonth()+1===curMonthNum;
+    }).reduce((s,e)=>s+priceOf(e),0);
+    const lastMonthTotalForRT=totalForYM(lastM_year,lastM_month);
+    if(curMonthSpend<=0){
+      realtimeHTML=`<div class="cost-insight-item">本月尚無消費紀錄</div>`;
+    }else if(lastMonthTotalForRT<=0){
+      realtimeHTML=`<div class="cost-insight-item">累計消費${fmtM(curMonthSpend)}，但上個月無資料可比</div>`;
+    }else{
+      const pctOfLastMonth=Math.round(curMonthSpend/lastMonthTotalForRT*100);
+      const diff=pctOfLastMonth-monthProgressPct;
+      let paceNote;
+      if(diff>15)paceNote=`<span style="color:var(--danger);font-weight:700;">⚠️ 消費步調超前上月同期，本月總消費可能偏高</span>`;
+      else if(diff<-15)paceNote=`<span style="color:var(--ok);font-weight:700;">消費步調落後上月同期，本月總消費可能偏低</span>`;
+      else paceNote=`<span style="color:var(--faint);">消費步調與上月同期相近</span>`;
+      let projectionNote;
+      if(monthProgressPct>=10){
+        const projected=Math.round(curMonthSpend/monthProgressPct*100);
+        projectionNote=`<div class="cost-insight-meta">若維持目前消費速度，預估本月總額約${fmtM(projected)}</div>`;
+      }else{
+        projectionNote=`<div class="cost-insight-meta">月初資料尚少，暫不提供本月總額預估</div>`;
+      }
+      realtimeHTML=`<div class="cost-insight-item">${curMonthNum}月第${todayDate}天（月進度${monthProgressPct}%），累計消費${fmtM(curMonthSpend)}，已達上月總額（${fmtM(lastMonthTotalForRT)}）的${pctOfLastMonth}%。${paceNote}</div>${projectionNote}`;
+    }
+  }
+
   // 3. 異常月份標註
   let anomalyHTML;
   let minMonth=1;
-  for(let m=1;m<=maxMonth;m++){if(Object.keys(cur.mData[m]).length>0){minMonth=m;break;}}
-  const spanMonths=maxMonth-minMonth+1;
+  for(let m=1;m<=maxCompleteMonth;m++){if(Object.keys(cur.mData[m]).length>0){minMonth=m;break;}}
+  const spanMonths=maxCompleteMonth-minMonth+1;
   if(spanMonths<3){
     anomalyHTML=`<div class="cost-insight-item">資料月份太少，暫不提供異常月份分析</div>`;
   }else{
@@ -1153,6 +1224,7 @@ function renderCostInsights(){
 
   el.innerHTML=`
     <div class="cost-bd-title">📈 資料分析</div>
+    ${isCurrentYearView?`<div class="cost-insight-block"><div class="cost-insight-subtitle">⏱ 本月即時動態</div>${realtimeHTML}</div>`:''}
     <div class="cost-insight-block">${momHTML}</div>
     <div class="cost-insight-block">${yoyHTML}</div>
     <div class="cost-insight-block">${anomalyHTML}</div>
