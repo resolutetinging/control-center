@@ -1213,7 +1213,25 @@ function renderCostInsights(){
           Object.entries(cur.mData[m]||{}).forEach(([s,v])=>{if(v>topVal){topVal=v;topShop=s;}});
           const pctOfMonth=val>0?Math.round(topVal/val*100):0;
           const pctAboveMean=mean>0?Math.round((val-mean)/mean*100):0;
-          anomalies.push(`${m}月消費異常偏高（${fmtM(val)}，高於平均${fmtM(mean)}約${pctAboveMean}%），主因是「${_x(topShop)}」單月消費${fmtM(topVal)}，占當月${pctOfMonth}%`);
+          // 差異金額：這家店在「其他月份」（排除本異常月）的平均消費，只算有消費的月份，
+          // 藉此看出這家店本月是不是本來就比平常花得多，還是單純占比高但金額其實跟平常差不多。
+          const otherMonthSpends=[];
+          for(let j=0;j<spanMonths;j++){
+            if(j===i)continue;
+            const v=cur.mData[minMonth+j]?.[topShop]||0;
+            if(v>0)otherMonthSpends.push(v);
+          }
+          let diffNote='';
+          if(otherMonthSpends.length>0){
+            const shopAvg=otherMonthSpends.reduce((s,v)=>s+v,0)/otherMonthSpends.length;
+            const diff=Math.round(topVal-shopAvg);
+            diffNote=diff>0?`，較平常（${fmtM(shopAvg)}）多花${fmtM(diff)}`
+              :diff<0?`，較平常（${fmtM(shopAvg)}）少花${fmtM(Math.abs(diff))}`
+              :'，跟平常消費金額差不多';
+          }else{
+            diffNote='，本月為該店首次消費，無其他月份可比較';
+          }
+          anomalies.push(`${m}月消費異常偏高（${fmtM(val)}，高於平均${fmtM(mean)}約${pctAboveMean}%），主因是「${_x(topShop)}」單月消費${fmtM(topVal)}，占當月${pctOfMonth}%${diffNote}`);
         }
       }
       anomalyHTML=anomalies.length
