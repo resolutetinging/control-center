@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-01",
+  "generated_through": "2026-09-02",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-02",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3.html / update_dashboard_v3.py",
+      "summary": "延續09-01未完成的Sleep Export v2遷移，查明startDate==endDate的根因。是Shortcuts的Sleep Export 2捷徑當初建立時漏抓Duration屬性，不是資料來源本身如此。也不是多來源污染，該假設已用09-01夜官方真值數學證偽。解開原始Sleep Export捷徑的.wflow二進位檔查證，原始捷徑月餘來都是靠抓Duration算，Sleep Export 2漏了這步。使用者補上Duration欄位後，拿Aug24~Sep2共10張Health App官方截圖比對。Aug26~Sep2共8晚32項數值，平均絕對誤差僅1.31分鐘，確認修法整週穩定有效。使用者拍板雙軌並行架構：舊軌（Sleep Export+既有v2管線）維持不動，繼續是Control Center全家族唯一資料來源。新軌獨立建置sleep v3（新python腳本+全新html頁面），純資料驗證用，不接入任何Control family頁面。派subagent實作後自己抓到並修掉兩個影響持續觀察的bug，一次性佔位符無法重複注入、原始檔路徑寫死日期。並驗證v2/v3檔名前綴不同（sleep_ vs sleep_raw_）在iCloud同資料夾下不會互相干擾。git diff確認v2四個既有檔案完全未異動。commit（7e00e95、6057ba8）並push origin main完成。上線於resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v3.html。",
+      "reason": "debug"
+    },
     {
       "date": "2026-09-01",
       "project": "Refueler",
