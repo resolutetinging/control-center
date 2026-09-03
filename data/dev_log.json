@@ -5,6 +5,13 @@
     {
       "date": "2026-09-03",
       "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py",
+      "summary": "使用者追問iCloud舊資料保留必要性跟容量影響性。實測給真實數字：sleep_raw_*.txt單檔約37KB，永遠不刪一年約13MB，對任何iCloud方案都可忽略。但指出history.json目前只存算出結果不存原始樣本，等於還是依賴iCloud端保留舊檔，一旦視窗滾過去又發現算法有bug，就沒有原始證據可回頭重算。使用者確認要做，新增serialize_session()，raw_samples欄位改成每晚第一次出現時就永久存入原始樣本，不依賴iCloud端保留舊檔。同時處理舊資料銜接：功能上線前已存的8晚趁原始檔還在視窗內順手補回。自己測試首次執行成功回填8晚331筆原始樣本，重跑確認冪等。commit（bc1bdfe、862052d）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "Sleep Dashboard",
       "file": "update_dashboard_v3.py / sleep_v3_history.json",
       "summary": "使用者問push時有沒有做跨次執行的資料一致性確認、跟差異資料才新增。誠實回報原設計兩者都沒做，每次都整批重算整份覆蓋，資料只跟著Shortcut過去1週滾動視窗走，超出視窗的舊資料會直接消失。使用者確認要做進去，並問後續v3若取代v2，Shortcut該不該改存daily data。評估後建議維持滾動視窗（能自我修復漏跑），永久保存的責任改放在Python端而非Shortcut端。新增sleep_v3_history.json持久化歷史，每次比對新舊數字。差距在3分鐘容許誤差內視為無異動保留舊值，超出才覆蓋並記進changelog。畫圖改讀累計全部歷史，不再受Shortcut視窗限制。自己測試新增/無異動/異動偵測三種情境皆正確，commit（5620246、141208f）並push origin main完成。",
       "reason": "spec_change"
