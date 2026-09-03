@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-03",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py / sleep_v3_history.json",
+      "summary": "使用者問push時有沒有做跨次執行的資料一致性確認、跟差異資料才新增。誠實回報原設計兩者都沒做，每次都整批重算整份覆蓋，資料只跟著Shortcut過去1週滾動視窗走，超出視窗的舊資料會直接消失。使用者確認要做進去，並問後續v3若取代v2，Shortcut該不該改存daily data。評估後建議維持滾動視窗（能自我修復漏跑），永久保存的責任改放在Python端而非Shortcut端。新增sleep_v3_history.json持久化歷史，每次比對新舊數字。差距在3分鐘容許誤差內視為無異動保留舊值，超出才覆蓋並記進changelog。畫圖改讀累計全部歷史，不再受Shortcut視窗限制。自己測試新增/無異動/異動偵測三種情境皆正確，commit（5620246、141208f）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "使用者截圖詢問傍晚連續休息/彈性時間排程是否合理。查sanitizePipes()拆解出四種區塊：Calendar鎖定行程、prompt規則強制的傍晚蓄能、程式碼補的段間緩衝、AI骨架沒延伸到的彈性時間。第一輪誤用aiScheduled欄位判斷任務庫使用狀況，得出「15項任務閒置」的錯誤結論。使用者糾正應對照覆盤區items欄位（實際勾選狀態），重查後那15項多數是ondemand頻率，根本不在今天排程池裡。進一步查prompt組裝程式碼證實，AI生成骨架當下就拿到當天完整任務清單，一次性生成不隨進度重新評估，任務排完後傍晚自然留白是機制的直接結果，非AI偷懶。純分析交流，未修改任何程式碼。",
