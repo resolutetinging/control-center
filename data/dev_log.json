@@ -6,6 +6,13 @@
       "date": "2026-09-03",
       "project": "AI Tracker",
       "file": "data/industry_adoption.json",
+      "summary": "使用者確認依序執行先前提議的5個候選產業，從金融業開始。官方機構範圍定義為IMF/BIS/FSB/Basel Committee/各國央行與監理機構/學術期刊/SEC filing，排除顧問公司報告。研究subagent誠實排除JPMorgan演算法交易案例，數字只查到部落格轉述查無官方出處，沒有為了湊案例數硬留。7個cases_live、4個cases_poc、3個region、5個roadmap逐字填入JSON。第三次驗證多產業架構：git diff只動JSON一個檔案，html zero修改。實際開瀏覽器截圖確認3個產業按鈕正確生成、內容渲染正常無undefined。commit（e0b7bc7）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "AI Tracker",
+      "file": "data/industry_adoption.json",
       "summary": "使用者要求擴增供應鏈的部分，先用AskUserQuestion確認範圍避免猜錯方向。供應鏈沒有FDA這種單一監管機構。重新定義官方機構範圍為WTO/World Bank/OECD/UNCTAD/政府機構/學術期刊/公司揭露，明確排除顧問公司報告。派研究subagent查證6個cases_live、4個cases_poc、3個region、3個roadmap。研究誠實標記2個查無原始出處的數字，自己彙整時保留數字但明確標註不予採信。驗證多產業架構真的資料驅動：只在industries陣列新增第二筆物件，html完全不用改一行，nav按鈕與渲染邏輯全部通用。視覺驗證時一度誤判有bug，查到computed style證實內容正常，才確認是截圖擷取時機問題非真壞掉。commit（a6fa7b3）並push origin main完成。",
       "reason": "spec_change"
     },
