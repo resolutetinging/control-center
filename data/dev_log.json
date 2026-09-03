@@ -5,6 +5,13 @@
     {
       "date": "2026-09-03",
       "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / data/industry_adoption.json",
+      "summary": "使用者要求產業導入分頁加AI運用情境說明，最好用流程圖呈現。自己先照9個案例已查證過的desc/scope文字拆解成輸入→AI處理→輸出→人類角色四步驟，不加入新的技術細節。派subagent建置flow欄位跟indFlowChart()橫向步驟串接渲染函式，沿用既有.ind-色系，未修改共用的nvCaseCard本體。這次沒有只信node字串層級驗證，實際起本機server開瀏覽器截圖確認，桌面與模擬375px窄螢幕皆正常換行無破版。比照09-02 v3遷移計畫方框那次的教訓，主動補了視覺驗證。commit（3308353）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html / update_industry_adoption.py",
       "summary": "使用者提出新想法：針對各領域AI導入占比新增分頁，先擬架構討論再做。查現有NVIDIA週查證的資料結構跟安全設計後提案。使用者確認四項規格：比照NVIDIA自動抓變動人工複核模式、先做醫療一個範本、月查證非週查證、只用官方機構報告。派研究subagent查證醫療AI導入真實資料，只引用WHO/OECD/FDA/學術期刊。派實作subagent仿update_nvidia.py同等級安全設計建置新分頁與月查證腳本。派獨立驗證subagent逐一實際fetch每張卡片的src連結核對數字，抓到2張卡片數字跟連結內容對不上，根因是交辦時把兩個來源濃縮成一個src欄位。自己重新fetch原始論文查證並修正，教訓記進lessons.md。使用者追問這個專區更接近Renewable Tracker不需要推送email。確認並拿掉send_email相關死程式碼。進一步確認GROQ_API_KEY共用repo既有設定，功能完全零設定上線。commit（e04d516）並push origin main完成。",
       "reason": "spec_change"
