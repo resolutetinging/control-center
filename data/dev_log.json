@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-03",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / update_industry_adoption.py",
+      "summary": "使用者提出新想法：針對各領域AI導入占比新增分頁，先擬架構討論再做。查現有NVIDIA週查證的資料結構跟安全設計後提案。使用者確認四項規格：比照NVIDIA自動抓變動人工複核模式、先做醫療一個範本、月查證非週查證、只用官方機構報告。派研究subagent查證醫療AI導入真實資料，只引用WHO/OECD/FDA/學術期刊。派實作subagent仿update_nvidia.py同等級安全設計建置新分頁與月查證腳本。派獨立驗證subagent逐一實際fetch每張卡片的src連結核對數字，抓到2張卡片數字跟連結內容對不上，根因是交辦時把兩個來源濃縮成一個src欄位。自己重新fetch原始論文查證並修正，教訓記進lessons.md。使用者追問這個專區更接近Renewable Tracker不需要推送email。確認並拿掉send_email相關死程式碼。進一步確認GROQ_API_KEY共用repo既有設定，功能完全零設定上線。commit（e04d516）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v3.html",
       "summary": "使用者要求自己評估v2到v3改變的效益跟風險。誠實列出效益與6項風險，並提出四階段遷移建議。使用者回饋：同日碰撞風險跟時區驗證兩項備註在html頁面上當觀察項目，自動化留到之後評估取代v2時再做。在v3頁面header加watch-note區塊記錄這兩項待觀察項目。commit（96dfb69）並push origin main完成。",
