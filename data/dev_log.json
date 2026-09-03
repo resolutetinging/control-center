@@ -5,6 +5,27 @@
     {
       "date": "2026-09-03",
       "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3.html",
+      "summary": "使用者要求自己評估v2到v3改變的效益跟風險。誠實列出效益與6項風險，並提出四階段遷移建議。使用者回饋：同日碰撞風險跟時區驗證兩項備註在html頁面上當觀察項目，自動化留到之後評估取代v2時再做。在v3頁面header加watch-note區塊記錄這兩項待觀察項目。commit（96dfb69）並push origin main完成。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "Sleep Dashboard",
+      "file": "run_update.sh",
+      "summary": "使用者回報v2過了9:30自動排程時間但沒更新9/3資料。查update.log發現9:30那次LaunchAgent確實有跑。但當時sleep_2026-09-03.txt在iCloud端還是stub尚未下載，複製步驟沒抓到且無重試機制，之後也沒再補跑。確認iCloud端此時已完整下載，手動重跑run_update.sh補上。sleep_dashboard_v2.html最新數據更新為2026-09-03，commit（dd19cc8）並push origin main完成。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py",
+      "summary": "使用者問v2/v3交叉比對能否自動做。查v2的sleep_dashboard_v2.html欄位名稱跟v3完全相容。新增load_v2_records()（唯讀，絕不寫入v2檔案）跟compare_v2_v3()。每次執行自動比對重疊日期，差距超過4分鐘記進v2_v3_divergence。第一次實跑就抓到真實分歧：2026-08-29這晚v2算出core260，v3算出core421。對照已驗證過的官方截圖確認v3才是對的，v2的Shortcut端session合併邏輯沒把延伸到白天的睡眠算進去。git diff確認v2四個既有檔案完全唯讀未異動，commit（d3553fe）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "Sleep Dashboard",
       "file": "update_dashboard_v3.py",
       "summary": "使用者追問iCloud舊資料保留必要性跟容量影響性。實測給真實數字：sleep_raw_*.txt單檔約37KB，永遠不刪一年約13MB，對任何iCloud方案都可忽略。但指出history.json目前只存算出結果不存原始樣本，等於還是依賴iCloud端保留舊檔，一旦視窗滾過去又發現算法有bug，就沒有原始證據可回頭重算。使用者確認要做，新增serialize_session()，raw_samples欄位改成每晚第一次出現時就永久存入原始樣本，不依賴iCloud端保留舊檔。同時處理舊資料銜接：功能上線前已存的8晚趁原始檔還在視窗內順手補回。自己測試首次執行成功回填8晚331筆原始樣本，重跑確認冪等。commit（bc1bdfe、862052d）並push origin main完成。",
       "reason": "spec_change"
