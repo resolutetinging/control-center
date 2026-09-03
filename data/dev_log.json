@@ -5,6 +5,13 @@
     {
       "date": "2026-09-03",
       "project": "AI Tracker",
+      "file": "data/industry_adoption.json",
+      "summary": "使用者要求擴增供應鏈的部分，先用AskUserQuestion確認範圍避免猜錯方向。供應鏈沒有FDA這種單一監管機構。重新定義官方機構範圍為WTO/World Bank/OECD/UNCTAD/政府機構/學術期刊/公司揭露，明確排除顧問公司報告。派研究subagent查證6個cases_live、4個cases_poc、3個region、3個roadmap。研究誠實標記2個查無原始出處的數字，自己彙整時保留數字但明確標註不予採信。驗證多產業架構真的資料驅動：只在industries陣列新增第二筆物件，html完全不用改一行，nav按鈕與渲染邏輯全部通用。視覺驗證時一度誤判有bug，查到computed style證實內容正常，才確認是截圖擷取時機問題非真壞掉。commit（a6fa7b3）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
       "summary": "使用者截圖回報案例說明卡跟流程圖是同一件事，應該併同一張卡。因應流程圖版面改兩欄。版面改動不需查證，直接動手新增indCaseCard()合併兩者成一張卡。沿用.nv-case-card樣式，中間用分隔線區隔。新增.ind-case-grid兩欄版面只套用在有流程圖的兩區塊，roadmap維持既有3欄不受影響。實際開瀏覽器桌面與窄螢幕視覺驗證後推送（commit c98f9cd）。",
       "reason": "spec_change"
