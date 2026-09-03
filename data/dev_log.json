@@ -5,6 +5,20 @@
     {
       "date": "2026-09-03",
       "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "使用者截圖回報案例說明卡跟流程圖是同一件事，應該併同一張卡。因應流程圖版面改兩欄。版面改動不需查證，直接動手新增indCaseCard()合併兩者成一張卡。沿用.nv-case-card樣式，中間用分隔線區隔。新增.ind-case-grid兩欄版面只套用在有流程圖的兩區塊，roadmap維持既有3欄不受影響。實際開瀏覽器桌面與窄螢幕視覺驗證後推送（commit c98f9cd）。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html / data/industry_adoption.json",
+      "summary": "使用者要求內文擴增成效/目標/事件/風險/未來發展5個維度。派研究subagent查9個案例，優先重讀已知來源，查不到才另外搜尋。查證抓到重要發現：NHS-Galleri的主要終點其實未達統計顯著差異，跟既有卡片上的正面次要數字放一起看會有誤導風險。自己把研究結果濃縮成精簡文字，NHS-Galleri的警示句放在成效欄位最前面。派實作subagent填進JSON並新增indDetailBlock()渲染邏輯，風險標籤用既有警示色區隔。自己核對JSON內容跟既有欄位未被誤動，實際開瀏覽器截圖確認9張卡都完整渲染、警示句清楚顯示。commit（f2060c7）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "AI Tracker",
       "file": "ai_tracker_v6.html / data/industry_adoption.json",
       "summary": "使用者要求產業導入分頁加AI運用情境說明，最好用流程圖呈現。自己先照9個案例已查證過的desc/scope文字拆解成輸入→AI處理→輸出→人類角色四步驟，不加入新的技術細節。派subagent建置flow欄位跟indFlowChart()橫向步驟串接渲染函式，沿用既有.ind-色系，未修改共用的nvCaseCard本體。這次沒有只信node字串層級驗證，實際起本機server開瀏覽器截圖確認，桌面與模擬375px窄螢幕皆正常換行無破版。比照09-02 v3遷移計畫方框那次的教訓，主動補了視覺驗證。commit（3308353）並push origin main完成。",
       "reason": "spec_change"
