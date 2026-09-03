@@ -6,6 +6,13 @@
       "date": "2026-09-03",
       "project": "AI Tracker",
       "file": "data/industry_adoption.json",
+      "summary": "新增第四個產業政府/公共治理，官方來源特別豐富。核心資料來源為OECD 2025官方報告，涵蓋200個政府AI真實案例。特別查證有官方調查佐證的爭議案例。查到荷蘭育兒津貼詐欺醜聞（SyRI系統，2.6萬個家庭被錯誤指控，內閣總辭）。也查到澳洲Robodebt（47萬筆錯誤債務通知，皇家調查委員會報告）。研究誠實標註Robodebt技術上並非AI，這個但書完整保留進desc欄位。這次跨國比較資料最豐富：UN調查找到撒哈拉以南非洲15%國家有AI策略vs歐洲近80%的跨區落差。8個cases_live、5個cases_poc、4個region、5個roadmap逐字填入JSON。第四次驗證多產業架構：git diff只動JSON，html zero修改。commit（d0cbd40）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "AI Tracker",
+      "file": "data/industry_adoption.json",
       "summary": "使用者確認依序執行先前提議的5個候選產業，從金融業開始。官方機構範圍定義為IMF/BIS/FSB/Basel Committee/各國央行與監理機構/學術期刊/SEC filing，排除顧問公司報告。研究subagent誠實排除JPMorgan演算法交易案例，數字只查到部落格轉述查無官方出處，沒有為了湊案例數硬留。7個cases_live、4個cases_poc、3個region、5個roadmap逐字填入JSON。第三次驗證多產業架構：git diff只動JSON一個檔案，html zero修改。實際開瀏覽器截圖確認3個產業按鈕正確生成、內容渲染正常無undefined。commit（e0b7bc7）並push origin main完成。",
       "reason": "spec_change"
     },
