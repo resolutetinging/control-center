@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-09-02",
+  "generated_through": "2026-09-03",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-03",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "使用者截圖詢問傍晚連續休息/彈性時間排程是否合理。查sanitizePipes()拆解出四種區塊：Calendar鎖定行程、prompt規則強制的傍晚蓄能、程式碼補的段間緩衝、AI骨架沒延伸到的彈性時間。第一輪誤用aiScheduled欄位判斷任務庫使用狀況，得出「15項任務閒置」的錯誤結論。使用者糾正應對照覆盤區items欄位（實際勾選狀態），重查後那15項多數是ondemand頻率，根本不在今天排程池裡。進一步查prompt組裝程式碼證實，AI生成骨架當下就拿到當天完整任務清單，一次性生成不隨進度重新評估，任務排完後傍晚自然留白是機制的直接結果，非AI偷懶。純分析交流，未修改任何程式碼。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-03",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3.html / update_dashboard_v3.py",
+      "summary": "使用者於iPhone跑完Sleep Export 2捷徑後，手動請求更新v3頁面。執行update_dashboard_v3.py：08-26因超出過去1週窗口自然淘汰。新增09-03這夜（deep40/rem67/core323/awake35，total465min）。git diff只動sleep_dashboard_v3.html一檔。commit（741a706）並push origin main完成，v3頁面資料更新為最新8夜。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-02",
       "project": "Sleep Dashboard",
