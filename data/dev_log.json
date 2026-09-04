@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-04",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "使用者回報人工行程把午餐提前，pipeline的午休強制校正還是寫死13:00-14:00。查sanitizePipes()找到根因：判斷是否已有午餐只精確比對13:00-14:00。人工行程若把午餐排更早（如12:00-12:30）會被誤判成沒吃午餐，硬插第二段午休。用AskUserQuestion確認判斷邏輯，使用者選擇擴大時間窗方案。判斷已有午餐的偵測窗放寬到11:00-15:00，真正插入位置仍固定13:00-14:00不變。用node模擬4種情境驗證：人工午餐提前、完全無安排、AI自排提前午休、Calendar會議佔用，行為皆符合預期，也連帶修好AI自排早午休的既有相關bug。git diff只動午餐校正這一段，commit（41932e9）並push origin main完成。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-04",
       "project": "AI Tracker",
       "file": "data/industry_adoption.json",
       "summary": "完成5個候選產業中的最後一個：交通運輸，依序執行任務全部完成。與supply_chain明確切割，排除貨運自駕卡車/無人機配送/倉儲機器人，聚焦公共運輸維護、航空管制、城市號誌、載客自駕四個角度。研究誠實標記中國暫停robotaxi許可僅見於Bloomberg媒體報導，查無官方原始公告，採信等級較低。新加坡GLIDE號誌系統屬規則式演算法非機器學習，已標註避免誤植。7個cases_live、4個cases_poc、4個region、5個roadmap逐字填入JSON。沿用文字splice插入方式，diff維持212行純新增、0刪除。第七次驗證多產業架構：node --check通過，開瀏覽器確認7個產業按鈕全部正確生成、渲染正常無undefined。commit（706bb08）並push origin main完成。AI Tracker產業導入分頁至此共7個產業，五個候選產業任務全部完成。",
