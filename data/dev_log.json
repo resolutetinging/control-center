@@ -1,7 +1,28 @@
 {
-  "generated_through": "2026-09-03",
+  "generated_through": "2026-09-04",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-04",
+      "project": "AI Tracker",
+      "file": "data/industry_adoption.json",
+      "summary": "延續使用者依序執行5個候選產業的指示，完成第3個：能源/電網。研究誠實排除中國國家電網山東案例，唯一佐證數字99.7%查無官方出處。使用者要求的AI資料中心用電量vs電網負擔張力主題，摺入PJM/Tapestry與DCFlex案例風險欄。另立路線圖項目引用2024年7月NERC維吉尼亞電壓擾動事件。5個cases_live、4個cases_poc、3個region、3個roadmap逐字填入JSON，Enel案例90%/15%爭議統計維持不予採信標註。第五次驗證多產業架構：git diff只動JSON一個檔案，html zero修改，實際開瀏覽器逐區塊截圖確認渲染正常無undefined。commit（9142fc5）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-04",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3.html",
+      "summary": "使用者要求手動更新v3，新增09-04這夜資料，commit並push完成。使用者提供iPhone官方數據並要求納入v2比較，做官方/v2/v3三方完整比對。Deep/REM/Awake三方誤差皆在1.5分鐘內，但Core分項v2系統性偏低。官方325分鐘、v2僅306分鐘（少19分鐘）、v3為321.5分鐘（僅少3.5分鐘）。這是繼08-29後第二晚出現同一模式，兩晚都指向v2的Shortcut端算法本身有系統性問題，非偶發。已記錄進project_sleep_export_v2_migration.md記憶檔，列為待觀察模式、暫不列入主動修復任務。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-04",
+      "project": "AI Tracker",
+      "file": "history.json",
+      "summary": "使用者回報html本週記錄漏了9/4資料，先誤判9/3也遺漏（自己用d[-5:]切片方向搞反，主動向使用者更正誤判）。查GitHub Actions確認是系統自動管理的pages-build-deployment工作流程deploy步驟失敗。根因是GITHUB_TOKEN缺id-token: write權限。此設定無法透過repo內任何檔案修改，由使用者親自到repo Settings改為Read and write permissions解決。用git commit --allow-empty推空commit觸發重新部署，curl線上history.json確認9/4資料已正確出現，問題解決。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-09-03",
       "project": "AI Tracker",
