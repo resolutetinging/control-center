@@ -6,6 +6,13 @@
       "date": "2026-09-04",
       "project": "AI Tracker",
       "file": "data/industry_adoption.json",
+      "summary": "延續使用者依序執行5個候選產業的指示，完成第4個：農業。研究誠實排除盧安達20%增產數字，查無官方原始出處。誠實保留印度YES-TECH理賠爭議與PlantVillage Nuru單葉辨識準確率偏低（CBSD僅21%）等限制，不包裝成官方立場。7個cases_live、4個cases_poc、4個region、5個roadmap逐字填入JSON。改寫入方式時發現json.dump整檔重寫會意外展開既有flow陣列格式，污染diff到580行新增。改用文字splice方式插入，diff變回212行純新增、0刪除，教訓已記入lessons.md。第六次驗證多產業架構：node --check通過，實際開瀏覽器截圖確認cases_live/cases_poc渲染正常無undefined。commit（0e9d213）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-04",
+      "project": "AI Tracker",
+      "file": "data/industry_adoption.json",
       "summary": "延續使用者依序執行5個候選產業的指示，完成第3個：能源/電網。研究誠實排除中國國家電網山東案例，唯一佐證數字99.7%查無官方出處。使用者要求的AI資料中心用電量vs電網負擔張力主題，摺入PJM/Tapestry與DCFlex案例風險欄。另立路線圖項目引用2024年7月NERC維吉尼亞電壓擾動事件。5個cases_live、4個cases_poc、3個region、3個roadmap逐字填入JSON，Enel案例90%/15%爭議統計維持不予採信標註。第五次驗證多產業架構：git diff只動JSON一個檔案，html zero修改，實際開瀏覽器逐區塊截圖確認渲染正常無undefined。commit（9142fc5）並push origin main完成。",
       "reason": "spec_change"
     },
