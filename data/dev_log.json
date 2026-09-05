@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-04",
+  "generated_through": "2026-09-05",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-05",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html／sleep_dashboard_v3.html",
+      "summary": "使用者要求09-05資料v2/v3都推送。v2執行run_update.sh，234筆有效夜晚數據，commit並push origin main完成。v3執行update_dashboard_v3.py，新增1夜，交叉比對顯示09-05本身無新異動。使用者提供iPhone官方09-05數據做三方比對，deep/rem/core/awake四項誤差全部在2分鐘內。官方core276分鐘、v2 274分鐘、v3 274.0分鐘，v2與v3皆準確。這晚未重現08-29/09-04的core系統性偏低模式，顯示該模式非每晚固定發生。已記錄進project_sleep_export_v2_migration.md，機率性質待更多樣本確認。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-09-04",
       "project": "Daily Optimizer",
