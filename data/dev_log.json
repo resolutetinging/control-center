@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-05",
+  "generated_through": "2026-09-06",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-06",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v2.html／sleep_dashboard_v3.html",
+      "summary": "使用者要求09-06資料v2/v3都推送。v2執行run_update.sh，235筆有效夜晚數據，commit並push origin main完成。v3執行update_dashboard_v3.py，新增1夜，交叉比對顯示09-06本身無新異動。使用者提供iPhone官方09-06數據做三方比對，deep/rem/core/awake四項誤差全部在4.5分鐘內。官方core304分鐘、v2 300分鐘、v3 299.5分鐘，這次v2/v3彼此一致（差距僅0.5分鐘），都略低於官方但非v2單獨系統性偏低的模式。已記錄進project_sleep_export_v2_migration.md，仍需更多樣本確認觸發條件。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-09-05",
       "project": "Sleep Dashboard",
