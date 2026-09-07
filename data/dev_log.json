@@ -5,6 +5,13 @@
     {
       "date": "2026-09-07",
       "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3.html",
+      "summary": "使用者確認理解：Sleep Export 2匯出機制本身沒問題，是過去7天查詢時間窗每天隨執行時間推移，導致窗口邊緣跨日session前段被排除。實測三天raw檔窗口跨度穩定在7.28-7.36天驗證此推論，修正記憶檔用詞。使用者問觀測期是否該拉長，建議累積到20晚以上交叉比對數據（目前12晚）、且等到能驗證同日碰撞或跨時區待觀察項目的機會，再重新評估v2→v3遷移計畫後續步驟。使用者要求把檢核點備忘寫進v3頁面plan-note區塊，開瀏覽器截圖確認排版正常。commit（b0fd34b）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-07",
+      "project": "Sleep Dashboard",
       "file": "update_dashboard_v3.py",
       "summary": "使用者要求09-07資料v2/v3都推送，v2執行run_update.sh正常完成。v3執行時發現08-31被異常重算成明顯偏短版本，超過容許誤差被自動覆蓋。查證根因：iCloud滾動視窗把該晚較早原始樣本淘汰，這次raw檔起點變晚，用不完整資料重算出的更短結果被merge邏輯誤判成真實變動。修法：merge_records()新增涵蓋範圍防護，新樣本時間跨度比舊樣本窄就判定為滾動視窗截斷的假性差異，保留舊資料不覆蓋。用git歷史取回08-31回歸前的完整記錄手動還原，重跑腳本驗證防護生效。此為新bug類別已記入lessons.md，可比照套用到其他滾動視窗來源的pipeline。commit（1e5ebc2）並push origin main完成。使用者提供iPhone官方09-07數據三方比對，四項誤差全部≤1分鐘，v2/v3皆準確。",
       "reason": "bug_fix"
