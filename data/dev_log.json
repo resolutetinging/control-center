@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-06",
+  "generated_through": "2026-09-07",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-07",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py",
+      "summary": "使用者要求09-07資料v2/v3都推送，v2執行run_update.sh正常完成。v3執行時發現08-31被異常重算成明顯偏短版本，超過容許誤差被自動覆蓋。查證根因：iCloud滾動視窗把該晚較早原始樣本淘汰，這次raw檔起點變晚，用不完整資料重算出的更短結果被merge邏輯誤判成真實變動。修法：merge_records()新增涵蓋範圍防護，新樣本時間跨度比舊樣本窄就判定為滾動視窗截斷的假性差異，保留舊資料不覆蓋。用git歷史取回08-31回歸前的完整記錄手動還原，重跑腳本驗證防護生效。此為新bug類別已記入lessons.md，可比照套用到其他滾動視窗來源的pipeline。commit（1e5ebc2）並push origin main完成。使用者提供iPhone官方09-07數據三方比對，四項誤差全部≤1分鐘，v2/v3皆準確。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-09-06",
       "project": "Sleep Dashboard",
