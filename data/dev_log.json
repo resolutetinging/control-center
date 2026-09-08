@@ -6,6 +6,13 @@
       "date": "2026-09-08",
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
+      "summary": "使用者回報段落索引「路線圖」跟實際section標題「進行中／規劃項」用詞不一致，改成對齊section標題。commit（b4e4d48）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-08",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
       "summary": "使用者反映NVIDIA專區頁面太長，要求近期事件改成可點擊小tag、同一事件延續更新整理成時間軸、頁面最上面加段落索引。分類tag用事件既有category欄位篩選，點擊只重繪事件區塊不重跑整個渲染避免SVG圖表被無謂重繪。親自判讀10個事件內容關聯，識別出2條連續故事線（美超微輝達晶片走私網絡查緝4則更新、月之暗面GB300爭議2則更新）。加thread欄位渲染成時間軸卡片，篩選邏輯確保完整故事線不被攔腰截斷。頁面最上方加6個連結的段落索引，點擊scrollIntoView跳轉。資料改動用取代陣列文字區塊方式更新，只新增6行thread欄位。開瀏覽器實測分類篩選與時間軸卡片皆正確，深捲動截圖遇到已知環境flaky問題，改用DOM文字比對驗證6個區塊皆存在無undefined。commit（ddc65ee）並push origin main完成。",
       "reason": "spec_change"
     },
