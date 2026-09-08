@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-08",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "使用者反映NVIDIA專區頁面太長，要求近期事件改成可點擊小tag、同一事件延續更新整理成時間軸、頁面最上面加段落索引。分類tag用事件既有category欄位篩選，點擊只重繪事件區塊不重跑整個渲染避免SVG圖表被無謂重繪。親自判讀10個事件內容關聯，識別出2條連續故事線（美超微輝達晶片走私網絡查緝4則更新、月之暗面GB300爭議2則更新）。加thread欄位渲染成時間軸卡片，篩選邏輯確保完整故事線不被攔腰截斷。頁面最上方加6個連結的段落索引，點擊scrollIntoView跳轉。資料改動用取代陣列文字區塊方式更新，只新增6行thread欄位。開瀏覽器實測分類篩選與時間軸卡片皆正確，深捲動截圖遇到已知環境flaky問題，改用DOM文字比對驗證6個區塊皆存在無undefined。commit（ddc65ee）並push origin main完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-08",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v3.html",
       "summary": "使用者要求sleep v3更新（v2已由LaunchAgent自動排程更新過09-08資料，這次只需補v3）。執行update_dashboard_v3.py新增1夜，v2/v3交叉比對顯示09-08本身無新異動，僅維持08-29與09-04兩筆既有歷史差異。使用者提供iPhone官方數據做三方比對，四項誤差全部在3分鐘內。官方core313分鐘、v2 310分鐘、v3 310.5分鐘，v2與v3這晚都準確、彼此一致。累計13晚交叉比對數據，已更新進project_sleep_export_v2_migration.md。commit（afc2d8c）並push origin main完成。",
