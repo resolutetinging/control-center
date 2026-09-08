@@ -5,6 +5,13 @@
     {
       "date": "2026-09-08",
       "project": "K-Musical Hub",
+      "file": "static/kmusical.html",
+      "summary": "使用者要求確定行程外框線改成莫蘭迪暖色系、排除粉/紅/紫色系。把--trip從青色改成暖棕金色（#a8875c），跟today的藍框/fav橘/danger紅都能明顯區隔。node --check通過，開瀏覽器重新測試9/15-9/20截圖確認新色正確顯示，測試完清除。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-08",
+      "project": "K-Musical Hub",
       "file": "static/kmusical.html／server.py",
       "summary": "使用者要求新增確定行程欄位，並在月曆對應日期區間畫不同顏色粗框。確認同時只會有一趟確定行程，設定介面放在月曆卡片上方。修復/api/config原本整份覆蓋musical_config.json的隱患。改成依body實際出現的欄位個別合併更新，避免之後存關注演員時悄悄清空行程設定。前端加確定行程設定列，renderCalendar()對範圍內日期加confirmed-trip class。CSS用新增的--trip青色畫粗框，跟today的藍框/fav橘/danger紅都不同。測試前先備份musical_config.json，重啟server套用新程式碼，實測儲存/清除皆正常，diff確認favorite_actors完全未受影響。此工具無git不需commit push。",
       "reason": "spec_change"
