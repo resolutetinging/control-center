@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-08",
+      "project": "AI Tracker",
+      "file": "data/nv_status.json",
+      "summary": "使用者要求NVIDIA專區新增近期事件子區塊，範例為美國指控月之暗面繞道取得GB300晶片、台灣起訴九人涉B300違規出口。用AskUserQuestion確認範圍擴大到所有NVIDIA重大新聞事件，查證門檻比照產業導入分頁，官方來源為主、媒體報導為輔並標註查證等級。研究找到10個事件（2026年3-8月），3個有官方原文佐證，其餘7個媒體報導誠實標註查無官方原文。新增nvEventCard()渲染函式，跟既有nvCaseCard的案例性質區隔開來。資料用文字splice方式插入避免json.dump污染diff。開瀏覽器截圖確認10張卡片正確渲染、兩個指定事件皆在列、既有區塊未受影響。push時撞到daily-update.yml自動提交，rebase後重推成功（commit 67021dd）。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-08",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "使用者反映AI反饋還是太饒口，很多時候無法好好閱讀，要求改為可視化指標並簡單說明建議方向。原本三段式長文字改為JSON結構化輸出：一般模式含status/overload/align三組判斷各配badge，休假模式含charge/trend兩組判斷。新增renderFeedbackCard()渲染成badge指標卡，色彩重用既有.stat-pill色系（綠/藍灰/琥珀，不用紅紫）。JSON解析比照generate()既有穩健作法，finish_reason處理與brace提取重試一次。特別處理向下相容，09-08前的舊格式純文字字串仍原樣顯示不會壞掉。開瀏覽器實測3種情境皆正確渲染。commit（617bd07）並push origin main完成。",
