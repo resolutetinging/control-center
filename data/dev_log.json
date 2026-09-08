@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-08",
+      "project": "K-Musical Hub",
+      "file": "static/kmusical.html／server.py",
+      "summary": "使用者要求新增確定行程欄位，並在月曆對應日期區間畫不同顏色粗框。確認同時只會有一趟確定行程，設定介面放在月曆卡片上方。修復/api/config原本整份覆蓋musical_config.json的隱患。改成依body實際出現的欄位個別合併更新，避免之後存關注演員時悄悄清空行程設定。前端加確定行程設定列，renderCalendar()對範圍內日期加confirmed-trip class。CSS用新增的--trip青色畫粗框，跟today的藍框/fav橘/danger紅都不同。測試前先備份musical_config.json，重啟server套用新程式碼，實測儲存/清除皆正常，diff確認favorite_actors完全未受影響。此工具無git不需commit push。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-08",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "使用者問面試前暖場情境AI以什麼身分出題，查程式碼確認AI扮演面試官、使用者扮演應徵者，純解說未改程式碼。使用者要求文法追蹤頁能對儲存項的部分文字畫螢光筆標註，實作選字後浮出標記按鈕、點擊套用，已標記文字點擊可移除。標註不改動原始字串，另存item.hl字元區間，渲染時才包mark標籤，字元偏移用Range.toString().length量測不受esc跳脫或巢狀標籤影響。重疊或越界異常區間安全略過不會讓頁面壞掉，顏色用暖黃色螢光筆符合禁紫紅色配色規範。node模擬6種情境皆正確，開瀏覽器實測完整流程（選字/套用/移除/重新整理後persist）皆正確運作，過程中確認兩次點擊座標估算失誤純屬座標問題非邏輯bug。commit（2746a2a）並push origin main完成。",
