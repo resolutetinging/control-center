@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-07",
+  "generated_through": "2026-09-08",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-08",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "使用者反映AI反饋還是太饒口，很多時候無法好好閱讀，要求改為可視化指標並簡單說明建議方向。原本三段式長文字改為JSON結構化輸出：一般模式含status/overload/align三組判斷各配badge，休假模式含charge/trend兩組判斷。新增renderFeedbackCard()渲染成badge指標卡，色彩重用既有.stat-pill色系（綠/藍灰/琥珀，不用紅紫）。JSON解析比照generate()既有穩健作法，finish_reason處理與brace提取重試一次。特別處理向下相容，09-08前的舊格式純文字字串仍原樣顯示不會壞掉。開瀏覽器實測3種情境皆正確渲染。commit（617bd07）並push origin main完成。",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-09-07",
       "project": "Sleep Dashboard",
