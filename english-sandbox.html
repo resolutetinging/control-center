@@ -262,6 +262,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .combo-a .combo-txt{color:var(--ink)}
 .combo-b .combo-txt{color:var(--sub)}
 .combo-txt-zh{font-size:11px;color:var(--faint);line-height:1.45;margin-top:2px}
+/* 09-08新增：文法追蹤選字畫螢光筆 */
+.gr-hl{background:rgba(255,208,80,.55);border-radius:2px;padding:0 1px;cursor:pointer;}
+.gr-hl-float-btn{position:fixed;z-index:999;background:var(--ink);color:#fff;border:none;border-radius:14px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);}
 .combo-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:.5px solid var(--border)}
 .combo-foot-meta{font-size:10px;color:var(--faint)}
 .combo-del-btn{background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;padding:0;line-height:1}
@@ -1398,6 +1401,81 @@ function renderGrammarNavCount(){
   if(nb){ nb.textContent=lib.length||''; nb.style.display=lib.length?'inline':'none'; }
 }
 function setGrCat(cat){ curGrCat=cat; renderGrammarLib(); }
+// 09-08新增：文法追蹤頁支援對儲存項的部分文字畫螢光筆標註。標註不改動原始
+// 字串本身，另存item.hl={orig:[[s,e],...],note:[...],fixed:[...]}字元區間，
+// 渲染時才依區間包<mark>；區間永遠依plain text算，跟esc()跳脫或既有<mark>
+// 巢狀標籤都無關（_rangeOffsetWithin用Range.toString()量測，天生只算文字）。
+function renderGrHl(text, ranges, idx, field){
+  text = text || '';
+  if(!ranges || !ranges.length) return esc(text);
+  const sorted = [...ranges].sort((a,b)=>a[0]-b[0]);
+  let out = '', pos = 0;
+  sorted.forEach(([s,e])=>{
+    if(s < pos || e <= s || e > text.length) return; // 防重疊/區間錯亂的舊資料，略過不炸頁面
+    out += esc(text.slice(pos, s));
+    out += `<mark class="gr-hl" onclick="removeGrHighlight(${idx},'${field}',${s},${e})" title="點擊移除標記">${esc(text.slice(s, e))}</mark>`;
+    pos = e;
+  });
+  out += esc(text.slice(pos));
+  return out;
+}
+function applyGrHighlight(idx, field, s, e){
+  const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  const item = lib[idx];
+  if(!item) return;
+  if(!item.hl) item.hl = {};
+  if(!item.hl[field]) item.hl[field] = [];
+  // 新區間跟既有區間重疊就先移除重疊的舊區間，避免<mark>巢狀壞掉
+  item.hl[field] = item.hl[field].filter(([os,oe]) => e<=os || s>=oe);
+  item.hl[field].push([s,e]);
+  localStorage.setItem(GRAMMAR_KEY, JSON.stringify(lib));
+  renderGrammarLib();
+}
+function removeGrHighlight(idx, field, s, e){
+  const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+  const item = lib[idx];
+  if(!item || !item.hl || !item.hl[field]) return;
+  item.hl[field] = item.hl[field].filter(([os,oe]) => !(os===s && oe===e));
+  localStorage.setItem(GRAMMAR_KEY, JSON.stringify(lib));
+  renderGrammarLib();
+}
+// 選字畫螢光筆：mouseup時若選取範圍落在文法追蹤卡片的[data-field]文字塊內，
+// 就在選取範圍旁浮一顆「🖍 標記」按鈕；點擊才真正寫入，單純點擊空白處或
+// 切換分頁都會在下一次mouseup時被覆蓋掉（按鈕本身不常駐，每次都重新判斷）。
+function _rangeOffsetWithin(container, node, offset){
+  const r = document.createRange();
+  r.selectNodeContents(container);
+  r.setEnd(node, offset);
+  return r.toString().length;
+}
+function _dismissGrHlBtn(){
+  const old = document.getElementById('gr-hl-float-btn');
+  if(old) old.remove();
+}
+document.addEventListener('mouseup', (ev)=>{
+  if(ev.target && ev.target.id==='gr-hl-float-btn') return; // 自己點自己的按鈕不要在這裡被提前拆掉
+  _dismissGrHlBtn();
+  const sel = window.getSelection();
+  if(!sel || sel.isCollapsed || sel.rangeCount===0) return;
+  const range = sel.getRangeAt(0);
+  let el = range.commonAncestorContainer;
+  el = el.nodeType===3 ? el.parentElement : el;
+  while(el && !(el.dataset && el.dataset.field)) el = el.parentElement;
+  if(!el) return; // 選取範圍不在文法追蹤的標註目標內，忽略
+  const idx = el.dataset.idx, field = el.dataset.field;
+  const s = _rangeOffsetWithin(el, range.startContainer, range.startOffset);
+  const e = _rangeOffsetWithin(el, range.endContainer, range.endOffset);
+  if(e<=s) return;
+  const rect = range.getBoundingClientRect();
+  const btn = document.createElement('button');
+  btn.id = 'gr-hl-float-btn';
+  btn.className = 'gr-hl-float-btn';
+  btn.textContent = '🖍 標記';
+  btn.style.left = Math.max(4, rect.left) + 'px';
+  btn.style.top = (rect.top - 30 + window.scrollY) + 'px';
+  btn.onclick = ()=>{ applyGrHighlight(idx, field, s, e); _dismissGrHlBtn(); };
+  document.body.appendChild(btn);
+});
 function renderGrammarLib(){
   const lib=JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
   const body=$('grammar-list');
@@ -1425,11 +1503,11 @@ function renderGrammarLib(){
             ${GR_CATS.map(c=>`<option value="${esc(c)}"${item.cat===c?' selected':''}>${esc(c)}</option>`).join('')}
           </select>
         </div>
-        <div class="combo-txt">"${esc(item.orig)}"</div>
+        <div class="combo-txt" data-idx="${origIdx}" data-field="orig">"${renderGrHl(item.orig, item.hl && item.hl.orig, origIdx, 'orig')}"</div>
         <div class="fb-block-lbl" style="margin-top:8px;">✍️ 文法待修正</div>
-        <div class="combo-txt-zh">${esc(item.note)}</div>
+        <div class="combo-txt-zh" data-idx="${origIdx}" data-field="note">${renderGrHl(item.note, item.hl && item.hl.note, origIdx, 'note')}</div>
         <div class="fb-block-lbl" style="margin-top:8px;">✅ 修正後</div>
-        <div class="combo-txt">"${esc(item.fixed)}"</div>
+        <div class="combo-txt" data-idx="${origIdx}" data-field="fixed">"${renderGrHl(item.fixed, item.hl && item.hl.fixed, origIdx, 'fixed')}"</div>
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
           <button class="combo-del-btn" onclick="delGrammarItem(${origIdx})">✕</button>
