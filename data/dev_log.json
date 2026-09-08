@@ -6,6 +6,13 @@
       "date": "2026-09-08",
       "project": "K-Musical Hub",
       "file": "static/kmusical.html",
+      "summary": "使用者回報確定行程外框暖棕金色太深，改成莫蘭迪暖黃色（--trip改為#d4b64a），比前一版更淺、更清楚辨識為黃色。node --check通過，開瀏覽器重新測試9/15-9/20截圖確認，測試完清除。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-08",
+      "project": "K-Musical Hub",
+      "file": "static/kmusical.html",
       "summary": "使用者要求確定行程外框線改成莫蘭迪暖色系、排除粉/紅/紫色系。把--trip從青色改成暖棕金色（#a8875c），跟today的藍框/fav橘/danger紅都能明顯區隔。node --check通過，開瀏覽器重新測試9/15-9/20截圖確認新色正確顯示，測試完清除。",
       "reason": "spec_change"
     },
