@@ -6,6 +6,13 @@
       "date": "2026-09-09",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "使用者反映在某個時段只做了一個任務的部分內容，但pipeline警示卻以一整個任務去計算。查出computeOverloadInfo()的doneCount把部分完成跟完全完成同等計分。導致過載時段的allDone誤判成true，AI反饋因此誤報撐住了而非誠實反映還有任務沒做完。修法：doneCount改成只有status嚴格等於done才計入，part不算數。此為genReviewFeedback()與logOverloadDay()共用的單一事實來源。順手排查發現昨天新增的week_plan有同一種誤差，改用既有的加權算法（part算0.5分）維持全app一致。node模擬與開瀏覽器實測皆確認修復正確。commit（6e2ff27）並push origin main完成。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-09",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "使用者叫出09-08歷史記錄重新生成AI反饋，回報結果像是在分析今天的覆盤，時間軸對不起來。查出兩個疊加的bug：dateStr抓#hdate這個DOM欄位，切到歷史編輯完全沒跟著更新。昨天新增的week_plan用getWeekData()內部寫死new Date()當錨點，重開歷史時會把還沒發生的今天也算進本週脈絡。修法：dateStr改直接從displayKey反推。拆出getWeekDataEndingAt(anchor)通用函式。Weekly Recap仍看真實現在，genReviewFeedback()改用displayKey錨點版本。過程中發現並修正第三個問題：錨點用T00:00:00在UTC+8時區經toISOString()轉UTC會多跳一天，改用T12:00:00安全寫法。node模擬與開瀏覽器實測皆確認修復正確，即使瀏覽器實際今天是09-09也不會混入09-08的分析。commit（3449da8）並push origin main完成。",
       "reason": "bug_fix"
     },
