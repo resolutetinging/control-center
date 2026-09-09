@@ -6,6 +6,13 @@
       "date": "2026-09-09",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
+      "summary": "使用者叫出09-08歷史記錄重新生成AI反饋，回報結果像是在分析今天的覆盤，時間軸對不起來。查出兩個疊加的bug：dateStr抓#hdate這個DOM欄位，切到歷史編輯完全沒跟著更新。昨天新增的week_plan用getWeekData()內部寫死new Date()當錨點，重開歷史時會把還沒發生的今天也算進本週脈絡。修法：dateStr改直接從displayKey反推。拆出getWeekDataEndingAt(anchor)通用函式。Weekly Recap仍看真實現在，genReviewFeedback()改用displayKey錨點版本。過程中發現並修正第三個問題：錨點用T00:00:00在UTC+8時區經toISOString()轉UTC會多跳一天，改用T12:00:00安全寫法。node模擬與開瀏覽器實測皆確認修復正確，即使瀏覽器實際今天是09-09也不會混入09-08的分析。commit（3449da8）並push origin main完成。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-09",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
       "summary": "使用者反映昨天把AI反饋改成可視化指標卡後，內容只剩重述現象的summarize，缺分析見解跟隔日/隔週的計畫建議。查證根因：diagnosis欄位字數上限壓到22字，逼LLM只能吐一句話重述現象，是昨天配合可視化改版把長段落壓縮過頭的副作用。修法：diagnosis改名insight並放寬成2-3句話，明確要求講因果或型態。新增week_plan本週配速建議，重用既有函式算出本週真實數字餵給prompt。禁止虛構超出範圍的內容。insight同時兼容舊diagnosis欄位名，只有本週有歷史記錄才會要求week_plan。node模擬3種情境驗證通過，開瀏覽器實測本週脈絡文字含真實數字非虛構，卡片視覺呈現明顯比之前豐富。commit（e9c8138）並push origin main完成。",
       "reason": "bug_fix"
     },
