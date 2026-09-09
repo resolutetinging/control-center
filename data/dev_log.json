@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-09",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "使用者反映昨天把AI反饋改成可視化指標卡後，內容只剩重述現象的summarize，缺分析見解跟隔日/隔週的計畫建議。查證根因：diagnosis欄位字數上限壓到22字，逼LLM只能吐一句話重述現象，是昨天配合可視化改版把長段落壓縮過頭的副作用。修法：diagnosis改名insight並放寬成2-3句話，明確要求講因果或型態。新增week_plan本週配速建議，重用既有函式算出本週真實數字餵給prompt。禁止虛構超出範圍的內容。insight同時兼容舊diagnosis欄位名，只有本週有歷史記錄才會要求week_plan。node模擬3種情境驗證通過，開瀏覽器實測本週脈絡文字含真實數字非虛構，卡片視覺呈現明顯比之前豐富。commit（e9c8138）並push origin main完成。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-09",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html／sleep_dashboard_v3.html",
       "summary": "使用者要求09-09資料v2/v3都推送，因未到9:30自動排程直接手動兩邊都推送。v3執行時，09-07新增的查詢時間窗推移防護再次生效，09-02這晚正確判定假性差異並保留舊值不覆蓋，確認修法持續有效。累計14晚交叉比對數據，v2/v3交叉比對維持既有兩筆歷史差異。v2執行run_update.sh正常完成。使用者提供iPhone官方數據做三方比對，四項誤差全部在3分鐘內，v2與v3這晚幾乎完全一致（差距僅0.5分鐘）。commit（8fc2e47）並push origin main完成。",
