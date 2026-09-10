@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-10",
+      "project": "Stock Tracker",
+      "file": "stock_watchlist.html / scripts/update_stocks.py",
+      "summary": "使用者想做一個新的台股觀察名單追蹤器收集可能投資標的，自述對金融沒概念，核心定位定期追蹤＋提醒。查證AI Tracker/Renewable Tracker現有排程與Groq/email架構（發現兩者各自獨立實作無共用函式），並確認TWSE官方OpenAPI免金鑰可用但查無官方個股重大訊息訂閱管道，MVP因此只做量化數字alert。Plan mode產出方案並經使用者核准後實作完成watchlist/stock_history/alerts_log三份JSON與update_stocks.py（deterministic規則判斷alert，有異常才呼叫Groq轉白話，明確禁止給買賣建議）與stock_watchlist.html前端。fresh-context subagent驗證抓到filter_new_alerts()布林運算優先權bug（and優先權高於or導致52w_low防呆失效會拋TypeError），已修正並清除死碼、補跨API日期防呆。開瀏覽器mock資料實測卡片渲染正常。目前待使用者手動建GitHub repo與設定secrets（本機無gh CLI/token）才能push上線。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-10",
       "project": "Sleep Dashboard",
       "file": "update_dashboard.py / update_dashboard_v3.py",
       "summary": "使用者要求v2/v3例行更新一起push。v2執行run_update.sh，239筆有效夜晚數據更新至2026-09-10，commit（64c87ed）；過程中8個sleep_raw原始檔解析失敗，屬v3專用格式、v2本來就會略過的已知現象。v3執行update_dashboard_v3.py，新增1夜（09-10），查詢時間窗推移防護判定0夜真實變動，v2/v3交叉比對15晚重疊維持既有08-29/09-04兩筆已知差異，commit（b80194e）。使用者提供iPhone官方09-10數據做三方比對：deep誤差0分鐘、rem誤差0.5-1分鐘、core誤差1-1.5分鐘、awake誤差0.5-1分鐘，v2/v3與官方數字皆高度吻合。",
