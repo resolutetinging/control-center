@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-10",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard.py / update_dashboard_v3.py",
+      "summary": "使用者要求v2/v3例行更新一起push。v2執行run_update.sh，239筆有效夜晚數據更新至2026-09-10，commit（64c87ed）；過程中8個sleep_raw原始檔解析失敗，屬v3專用格式、v2本來就會略過的已知現象。v3執行update_dashboard_v3.py，新增1夜（09-10），查詢時間窗推移防護判定0夜真實變動，v2/v3交叉比對15晚重疊維持既有08-29/09-04兩筆已知差異，commit（b80194e）。使用者提供iPhone官方09-10數據做三方比對：deep誤差0分鐘、rem誤差0.5-1分鐘、core誤差1-1.5分鐘、awake誤差0.5-1分鐘，v2/v3與官方數字皆高度吻合。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-10",
       "project": "Daily Optimizer",
       "file": "daily_optimizer.html",
       "summary": "使用者反映週配速AI反饋提到本週已連續兩天過載這類敘述時看不出是哪兩天，要求把確切日期用括號標在文字後面。genReviewFeedback()的week_plan欄位prompt原本只要求根據本週記錄列出的天數與數字，沒規定連續過載敘述要附上具體日期。修法：在week_plan的prompt schema加一條規則，要求提及連續過載或特定天數時必須把確切日期以括號附在文字後面，日期沿用本週記錄既有的MM-DD格式並給出範例。node --check通過。commit（8b000a4）並push origin main完成。",
