@@ -5,6 +5,13 @@
     {
       "date": "2026-09-10",
       "project": "Stock Tracker",
+      "file": "stock_watchlist.html / scripts/backfill_history.py",
+      "summary": "使用者提新需求：趨勢圖旁加時間區間tab（1個月/3個月/半年/一年）。用AskUserQuestion確認先回補資料到一年、tab位置採頁面上方全局一組（非13張卡片各自一組）。執行backfill_history.py --months 12，156組合全成功，13檔各補齊228個交易日。派subagent實作filterSeriesByRange()（以資料最新日期為錨點往回推算，不用瀏覽器真實今天）、renderCard()拆成fullSeries（顯示目前股價不受區間影響）與filteredSeries（趨勢圖與歷史位置分析共用同一計算基準）兩參數、histPositionBlock()文案動態隨currentRange顯示對應區間。自己用瀏覽器JS實測時第一次測試方法有誤（快取DOM節點在grid重繪後失效），改良測試方式後驗證四個區間的日期範圍、股價不變性、百分位數字皆正確，sector tab與時間區間tab可同時獨立使用，console無錯誤。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-10",
+      "project": "Stock Tracker",
       "file": "stock_watchlist.html",
       "summary": "使用者提四項需求：標題改Stock Tracker、趨勢線加X/Y軸、依sector做成tab、新增ETF。curl實測確認TWSE支援ETF股價查詢但無本益比資料（正常現象），AskUserQuestion選定4檔ETF並正規化watchlist的sector欄位。派subagent實作後開瀏覽器驗證，發現並修正一個agent沒抓到的bug：趨勢圖最低價文字被折線蓋住（SVG圖層順序問題），改為文字畫在折線之後並加白色描邊。用JS直接觸發驗證5個tab過濾數量正確。執行backfill補上ETF歷史股價。使用者接著要求AI預測股市，判斷牴觸工具核心原則（不做預測不給建議），主動說明風險並提供安全替代方案，使用者選擇本益比/殖利率相對過去半年位置的純數學百分位分析（不用LLM），派subagent實作並用真實資料驗證計算正確，ETF等null情境不顯示不出錯。",
       "reason": "spec_change"
