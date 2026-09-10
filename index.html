@@ -93,6 +93,10 @@
       <div class="d-box">🌱</div>
       <span class="d-lbl">Renewable</span>
     </div>
+    <div class="d-icon" data-id="stock" onclick="dClick(this,'stock')">
+      <div class="d-box">📈</div>
+      <span class="d-lbl">Stock Tracker</span>
+    </div>
     <div class="d-icon" data-id="linkedin" onclick="dClick(this,'linkedin')">
       <div class="d-box">💼</div>
       <span class="d-lbl">LinkedIn</span>
@@ -401,6 +405,7 @@ const DEFAULT_LINKS={
   'refueler':  './refueler.html',
   'aitracker': 'https://resolutetinging.github.io/aitracker/ai_tracker_v6.html',
   'renewable': 'https://resolutetinging.github.io/renewable-tracker/renewable_tracker.html',
+  'stock':     'https://resolutetinging.github.io/stock-tracker/stock_watchlist.html',
   'linkedin':  '',
   'wordvault': 'https://resolutetinging.github.io/wordvault/WordVault.html',
   'mentaltool':'notion://www.notion.so',
@@ -615,6 +620,7 @@ function renderTab(tab){
       {id:'refueler',lbl:'☕ Refueler',ph:'./refueler.html'},
       {id:'aitracker',lbl:'🤖 AI Tracker',ph:'../AI Tracker/ai_tracker_v6.html'},
       {id:'renewable',lbl:'🌱 Renewable Tracker',ph:'../Renewable Tracker/renewable_tracker.html'},
+      {id:'stock',lbl:'📈 Stock Tracker',ph:'../Stock Tracker/stock_watchlist.html'},
       {id:'linkedin',lbl:'💼 LinkedIn',ph:'https://www.linkedin.com/…',highlight:true},
       {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
       {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
