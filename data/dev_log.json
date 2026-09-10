@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-09",
+  "generated_through": "2026-09-10",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-10",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer.html",
+      "summary": "使用者反映週配速AI反饋提到本週已連續兩天過載這類敘述時看不出是哪兩天，要求把確切日期用括號標在文字後面。genReviewFeedback()的week_plan欄位prompt原本只要求根據本週記錄列出的天數與數字，沒規定連續過載敘述要附上具體日期。修法：在week_plan的prompt schema加一條規則，要求提及連續過載或特定天數時必須把確切日期以括號附在文字後面，日期沿用本週記錄既有的MM-DD格式並給出範例。node --check通過。commit（8b000a4）並push origin main完成。",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-09-09",
       "project": "Daily Optimizer",
