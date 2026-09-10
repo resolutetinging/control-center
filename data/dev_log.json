@@ -5,6 +5,13 @@
     {
       "date": "2026-09-10",
       "project": "Stock Tracker",
+      "file": "stock_watchlist.html",
+      "summary": "使用者問是否daily update，查API發現daily-stock-update當天15:30該觸發卻沒自動跑（intraday已恢復正常），判斷是新排程首次啟用不準時觸發的GitHub Actions已知行為，請使用者手動補跑。使用者要求header新增每日重點卡，舉例用了預測性語氣（股價未來走勢持續升高），主動說明牴觸工具核心原則並提供安全替代方案，使用者選擇今日漲跌幅排行榜+近5交易日趨勢分類（純描述已發生變化不預測），另要求名詞定義卡（本益比/殖利率/股價淨值比/歷史相對位置/盤中參考價/ETF）。派subagent實作並自帶地面真值驗證，自己複查diff時額外發現顏色邏輯bug（漲跌幅榜顏色寫死而非依實際正負號判斷，若某天全部上漲會誤導），已修正。開瀏覽器確認畫面正確，console無錯誤，commit push完成。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-10",
+      "project": "Stock Tracker",
       "file": "stock_watchlist.html / scripts/backfill_history.py",
       "summary": "使用者提新需求：趨勢圖旁加時間區間tab（1個月/3個月/半年/一年）。用AskUserQuestion確認先回補資料到一年、tab位置採頁面上方全局一組（非13張卡片各自一組）。執行backfill_history.py --months 12，156組合全成功，13檔各補齊228個交易日。派subagent實作filterSeriesByRange()（以資料最新日期為錨點往回推算，不用瀏覽器真實今天）、renderCard()拆成fullSeries（顯示目前股價不受區間影響）與filteredSeries（趨勢圖與歷史位置分析共用同一計算基準）兩參數、histPositionBlock()文案動態隨currentRange顯示對應區間。自己用瀏覽器JS實測時第一次測試方法有誤（快取DOM節點在grid重繪後失效），改良測試方式後驗證四個區間的日期範圍、股價不變性、百分位數字皆正確，sector tab與時間區間tab可同時獨立使用，console無錯誤。",
       "reason": "spec_change"
