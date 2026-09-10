@@ -5,6 +5,13 @@
     {
       "date": "2026-09-10",
       "project": "Stock Tracker",
+      "file": "scripts/backfill_history.py / data/watchlist.json",
+      "summary": "使用者反映看不懂如何操作、找不到輸入或資料呈現，診斷出盤後資料還沒抓到+MVP無新增股票表單UI兩個問題。改用對話當輸入介面，依AI供應鏈/半導體/記憶體三主題列出候選股票讓使用者選（非投資建議），選出10檔後意外發現8299群聯是上櫃股票，TWSE三支既有API皆為上市股票專屬完全拿不到資料，使用者選擇移除，定案9檔。使用者追問等收盤才有資料能否回溯過去資料，實測確認TWSE另有官方單股按月查詢歷史端點（與既有API不同源），派subagent查證並實作backfill_history.py，過程訂正一個假設錯誤（STOCK_DAY與BWIBBU兩支歷史端點日期格式其實不同，斜線vs中文年月日）。獨立subagent驗證通過後執行6個月回補，54組合全數成功，資料與盤中管線交叉驗證吻合。開瀏覽器確認9張卡片完整顯示股價/本益比/殖利率/淨值比/半年趨勢線，console無錯誤。另修正盤中排程首次啟用不會準時觸發的GitHub Actions已知行為疑惑，改標題為Stock Tracker。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-10",
+      "project": "Stock Tracker",
       "file": "scripts/update_intraday.py / stock_watchlist.html",
       "summary": "Repo上線（resolutetinging/stock-tracker，GitHub Pages），secrets先不設定。Control Center dock接入Stock Tracker入口（World Group）。使用者提出關鍵問題：等收盤才有資料無法做下單前準備，點出MVP只有盤後資料的限制。查證TWSE盤中內部端點mis.twse.com.tw可用但無CORS header、無法前端直接fetch，使用者選擇「GitHub Actions盤中定時拉」方案。新增獨立的update_intraday.py管線（查證欄位語意來源twstock開源專案+實測交叉核對），每15分鐘於台北09:00-13:30盤中批次查詢watchlist股票，best-effort容錯設計不影響既有盤後管線；前端補intradayBlock()含非官方資料但書文字與過期資料判斷。fresh-context subagent獨立驗證通過，commit push完成，正在等真實排程觸發驗證end-to-end。",
       "reason": "spec_change"
