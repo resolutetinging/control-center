@@ -5,6 +5,27 @@
     {
       "date": "2026-09-11",
       "project": "AI Tracker",
+      "file": "scripts/update_data.py / ai_tracker_v6.html",
+      "summary": "冷天診斷後使用者裁決：先做稽核紀錄(不改變篩選結果)，候選池要不要放寬先觀察再決定。dedup_and_freshness_check()的prompt改回傳{duplicates:[{title,matched_title,reason}],stale_background:[{title,reason}]}結構化格式，寫入RUN_STATS['dedup_audit']存進run_stats.json，前端「本週紀錄」分頁每日卡片新增稽核區塊顯示。本機mock測試3組(新schema/舊字串向下相容/空結果)確認移除降級行為與修改前完全一致。commit 87af614 push成功。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "使用者要求標題「AI 產業動態」改「AI Tracker」，跟Stock Tracker/Renewable Tracker英文命名一致。主對話直接改，順便清掉一處已無用的<em>斜體CSS死碼。commit 112b089 push成功。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "Stock Tracker",
+      "file": "stock_watchlist.html",
+      "summary": "使用者回報Stock Tracker header字體明顯偏大且無emoji前綴，要求跟AI Tracker/Renewable Tracker視覺語言統一，並對齊Renewable Tracker的版面結構分區設計。AskUserQuestion確認範圍：只對齊視覺語言(CSS token/區塊標題圖示/間距圓角)，不動sector tab篩選互動與卡片grid結構。導入Renewable Tracker同一套CSS token(--bg/--card/--border/--text/--muted等11個變數，數值完全一致)，中性色7組(共31+處)全數換成token，語意色(漲跌紅綠/警示琥珀/時間區間tab琥珀)逐一核對用途後刻意不動；header標題18px+📈 emoji+底部分隔線；badge從橢圓pill改6px方角+邊框比照.date-badge；「今日重點」「名詞定義小百科」加圖示前綴。獨立fresh-context subagent用瀏覽器實際截圖+逐股抽查驗證：漲跌顏色、警示badge、時間區間tab琥珀色全部確認未被誤改，sector tab切換互動正常，console無錯誤，無破版。commit 937314c push成功。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "AI Tracker",
       "file": "(診斷，未改程式碼)",
       "summary": "使用者回報AI Tracker連續好幾天顯示「冷」(coreCount<2)，要求查篩選機制。派subagent查證：排程本身完全正常(近15天每天觸發成功)，非cron-job.org問題。根因混合：09-09/08-30候選新聞本身就少(候選池結構性偏窄，max_fetch=12自07-09起未變)；09-10的2筆core被stale_background正確降級(內容確實是舊統計/持續性陳述，非誤判)；09-08有2筆被dedup_and_freshness_check整條刪除但內容已不可考(判斷理由只印GitHub Actions log未留存，查log又因權限403查不到，無法證實是否誤殺)。提出兩方向給使用者：①低風險先做——讓dedup函式把刪除理由寫回run_stats.json方便日後稽核(不改變篩選行為)②候選池要不要放寬——有Groq成本與雜訊增加的tradeoff，待使用者決定。",
       "reason": "debug"
@@ -2720,6 +2741,12 @@
       "top_reason": "debug"
     },
     {
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "count": 6,
+      "top_reason": "spec_change"
+    },
+    {
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
       "count": 5,
@@ -2728,12 +2755,6 @@
     {
       "project": "Control Center",
       "file": "scratchpad.html",
-      "count": 4,
-      "top_reason": "spec_change"
-    },
-    {
-      "project": "AI Tracker",
-      "file": "ai_tracker_v6.html",
       "count": 4,
       "top_reason": "spec_change"
     },
@@ -2758,7 +2779,7 @@
     {
       "project": "Stock Tracker",
       "file": "stock_watchlist.html",
-      "count": 2,
+      "count": 3,
       "top_reason": "spec_change"
     },
     {
