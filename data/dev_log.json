@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-11",
+      "project": "SAS Hub",
+      "file": "index.html / sleep_dashboard_v2.html",
+      "summary": "使用者當場對「每日自動更新」標籤提出質疑：sleep raw data才會自動更新，SAS Hub基於sleep data算出的衍生標準理論上要人工trigger。派subagent查證確認使用者理解正確：本機launchd排程只自動更新睡眠原始資料寫入sleep_dashboard_v2.html的RAW區塊，SAS Hub(index.html)的戰力/風險燈號/alignClass透支判斷全部是純前端JS，只有使用者開瀏覽器頁面時才會現場讀localStorage重算，跟launchd排程無關，原標籤位置名不符實。已修正：從index.html移除該標籤，改放到sleep_dashboard_v2.html header，文字改為「睡眠原始資料每日自動更新」，title屬性補充說明衍生分析需開頁才重算。commit 0bd179e push成功，教訓已記入project_sas_hub_arch.md。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-11",
       "project": "Control Center",
       "file": "(彙整/規劃)",
       "summary": "使用者要求彙整所有dashboard的資料更新頻率，供之後決定要不要在CC某位子放memo卡片。查證各專案現況：Sleep Dashboard/SAS Hub本機launchd每日4次(09:30/13:00/18:00/22:00)、AI Tracker三種排程(一般日更/NVIDIA週查證每週一/產業導入每月2號)、Renewable Tracker每週一、Stock Tracker盤中09:00-13:30每15分+盤後15:30；CC主頁與其餘子頁(Refueler/Oasis/Worship/Astro/English Sandbox/External Me/CC Scratchpad)、NexusPortal、WordVault、Daily Optimizer、Mental Dashboard、K-Musical Hub、Ziwei Digest皆無排程，開頁即時計算或手動輸入。過程中發現記憶檔與現況矛盾：project_stock_tracker.md記載repo尚未建立，實查repo已建立且排程workflow已在運作，已向使用者指出矛盾請其確認，不自行選邊。",
@@ -2662,13 +2669,13 @@
       "top_reason": "spec_change"
     },
     {
-      "project": "Control Center",
+      "project": "SAS Hub",
       "file": "index.html",
-      "count": 17,
+      "count": 18,
       "top_reason": "spec_change"
     },
     {
-      "project": "SAS Hub",
+      "project": "Control Center",
       "file": "index.html",
       "count": 17,
       "top_reason": "spec_change"
@@ -2694,7 +2701,7 @@
     {
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v2.html",
-      "count": 4,
+      "count": 5,
       "top_reason": "spec_change"
     },
     {
