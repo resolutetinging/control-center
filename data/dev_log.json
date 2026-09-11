@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-10",
+  "generated_through": "2026-09-11",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-11",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py / run_update.sh",
+      "summary": "使用者要求sleep v2/v3資料先手動push，執行v2/v3例行更新腳本，v2最新至2026-09-11（240筆有效夜晚數據），v3新增1夜累計16晚，09-07新增的查詢時間窗推移防護再次正確判定09-04為假性差異並保留舊值。使用者提供iPhone官方09-10晚（23:57~09-11 07:34）數據做三方比對：deep/rem完全吻合（誤差0），core誤差1分鐘，awake誤差0.5-1分鐘，四項全部≤1分鐘，是目前最準確的一次三方比對。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-10",
       "project": "Stock Tracker",
