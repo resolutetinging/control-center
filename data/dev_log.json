@@ -4,6 +4,41 @@
   "timeline": [
     {
       "date": "2026-09-11",
+      "project": "Control Center",
+      "file": "(彙整/規劃)",
+      "summary": "使用者要求彙整所有dashboard的資料更新頻率，供之後決定要不要在CC某位子放memo卡片。查證各專案現況：Sleep Dashboard/SAS Hub本機launchd每日4次(09:30/13:00/18:00/22:00)、AI Tracker三種排程(一般日更/NVIDIA週查證每週一/產業導入每月2號)、Renewable Tracker每週一、Stock Tracker盤中09:00-13:30每15分+盤後15:30；CC主頁與其餘子頁(Refueler/Oasis/Worship/Astro/English Sandbox/External Me/CC Scratchpad)、NexusPortal、WordVault、Daily Optimizer、Mental Dashboard、K-Musical Hub、Ziwei Digest皆無排程，開頁即時計算或手動輸入。過程中發現記憶檔與現況矛盾：project_stock_tracker.md記載repo尚未建立，實查repo已建立且排程workflow已在運作，已向使用者指出矛盾請其確認，不自行選邊。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "使用者要求為有排程的dashboard在header加「更新頻率」靜態小標籤(純顯示不可點擊，比照既有badge樣式)。SAS Hub加「🕐 每日自動更新(09:30/13:00/18:00/22:00)」，沿用既有pill樣式，加title屬性做hover提示。標籤僅出現在Overview分頁的.vh區塊(進站落地視圖)，切到Sleep/Mental/Optimizer/Refueler等其他分頁不會顯示，未放側欄(手機寬度會被隱藏)，此為待確認事項，已回報使用者是否需要補到其他分頁。commit 0d60c8e push成功。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "header加「🕐 每日更新」靜態小標籤，title屬性列出三種排程細節(一般資料每日/NVIDIA週查證每週一00:00/產業導入每月2號00:00)，新增.freq-badge沿用既有.date-badge視覺語言，無JS邏輯。commit 1dd1b7a，push時撞遠端先rebase再成功推送。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html",
+      "summary": "header加「🕐 每週一 00:00 自動更新」靜態小標籤，沿用既有.date-badge class。commit 296d7a4，push時撞遠端新提交先rebase確認diff不變後推送成功。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "Stock Tracker",
+      "file": "stock_watchlist.html / scripts/update_stocks.py",
+      "summary": "使用者明確表示暫無設定GROQ_API_KEY/GMAIL_*等secrets的計畫，只要求確保現況daily update正常運作即可，並先補上一直缺的spec檔案。查證update_stocks.py：call_groq_for_alerts()在缺GROQ_API_KEY時安全return None(:260-262)，send_email()在缺GMAIL_*/NOTIFY_EMAIL時印警告後直接return(:308-310)，main()無任何因缺secrets觸發exit的路徑，只有TWSE抓取本身出錯才會讓workflow失敗，現況已安全未改動程式碼。核對cron：daily-stock-update為平日UTC07:30=台北15:30，intraday涵蓋台北09:00-13:30每15分鐘，與記憶檔一致。header加「🕐 盤中09:00-13:30每15分鐘＋盤後15:30 自動更新(平日)」靜態標籤，沿用既有.sector pill樣式。新建Spec/stock-tracker-spec-v1.0.md補齊spec缺口，明載secrets決策(暫不設定，email提醒為選用功能，核心資料更新不依賴)。commit 2b6712f，push時撞遠端自動化workflow的commit先rebase後成功推送。Spec檔案不屬於任何git repo未commit。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-11",
       "project": "Sleep Dashboard",
       "file": "update_dashboard_v3.py / run_update.sh",
       "summary": "使用者要求sleep v2/v3資料先手動push，執行v2/v3例行更新腳本，v2最新至2026-09-11（240筆有效夜晚數據），v3新增1夜累計16晚，09-07新增的查詢時間窗推移防護再次正確判定09-04為假性差異並保留舊值。使用者提供iPhone官方09-10晚（23:57~09-11 07:34）數據做三方比對：deep/rem完全吻合（誤差0），core誤差1分鐘，awake誤差0.5-1分鐘，四項全部≤1分鐘，是目前最準確的一次三方比對。",
@@ -2633,16 +2668,16 @@
       "top_reason": "spec_change"
     },
     {
+      "project": "SAS Hub",
+      "file": "index.html",
+      "count": 17,
+      "top_reason": "spec_change"
+    },
+    {
       "project": "AI Tracker",
       "file": "update_data.py",
       "count": 16,
       "top_reason": "debug"
-    },
-    {
-      "project": "SAS Hub",
-      "file": "index.html",
-      "count": 16,
-      "top_reason": "spec_change"
     },
     {
       "project": "Mental Dashboard",
@@ -2689,7 +2724,7 @@
     {
       "project": "AI Tracker",
       "file": "ai_tracker_v6.html",
-      "count": 2,
+      "count": 3,
       "top_reason": "spec_change"
     },
     {
@@ -2709,6 +2744,18 @@
       "file": "check_dev_log.sh",
       "count": 1,
       "top_reason": "maintain"
+    },
+    {
+      "project": "Renewable Tracker",
+      "file": "renewable_tracker.html",
+      "count": 1,
+      "top_reason": "spec_change"
+    },
+    {
+      "project": "Stock Tracker",
+      "file": "stock_watchlist.html",
+      "count": 1,
+      "top_reason": "spec_change"
     }
   ],
   "reason_labels": {
