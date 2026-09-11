@@ -4,6 +4,27 @@
   "timeline": [
     {
       "date": "2026-09-11",
+      "project": "AI Tracker",
+      "file": "(診斷，未改程式碼)",
+      "summary": "使用者回報AI Tracker連續好幾天顯示「冷」(coreCount<2)，要求查篩選機制。派subagent查證：排程本身完全正常(近15天每天觸發成功)，非cron-job.org問題。根因混合：09-09/08-30候選新聞本身就少(候選池結構性偏窄，max_fetch=12自07-09起未變)；09-10的2筆core被stale_background正確降級(內容確實是舊統計/持續性陳述，非誤判)；09-08有2筆被dedup_and_freshness_check整條刪除但內容已不可考(判斷理由只印GitHub Actions log未留存，查log又因權限403查不到，無法證實是否誤殺)。提出兩方向給使用者：①低風險先做——讓dedup函式把刪除理由寫回run_stats.json方便日後稽核(不改變篩選行為)②候選池要不要放寬——有Groq成本與雜訊增加的tradeoff，待使用者決定。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "summary": "使用者截圖回報header兩處問題：移除標題「每日追蹤」字樣(順便修掉一處既有<em>斜體違規)；更新頻率標籤原本全域固定顯示「每日更新」不準確(NVIDIA專區實際是週更、產業導入是月更)，改成掛在sw()分頁切換函式內依當前分頁動態顯示對應頻率，開頁預設分頁與手動切換皆涵蓋。commit 95a8c20，已獨立驗證通過。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "Stock Tracker",
+      "file": "stock_watchlist.html",
+      "summary": "使用者截圖回報標籤位置不理想，要求參考Renewable Tracker的擺放方式。更新頻率標籤從獨立一行搬到header右上角(比照Renewable Tracker的flex排版：標題左、標籤組右)，新增「更新於」標籤動態顯示實際資料時間(優先用intraday.json的generated_at精確到分鐘，退回stock_history.json最新日期)，非寫死字串。commit 1ad7bea，已獨立驗證通過。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-11",
       "project": "SAS Hub",
       "file": "index.html / sleep_dashboard_v2.html",
       "summary": "使用者當場對「每日自動更新」標籤提出質疑：sleep raw data才會自動更新，SAS Hub基於sleep data算出的衍生標準理論上要人工trigger。派subagent查證確認使用者理解正確：本機launchd排程只自動更新睡眠原始資料寫入sleep_dashboard_v2.html的RAW區塊，SAS Hub(index.html)的戰力/風險燈號/alignClass透支判斷全部是純前端JS，只有使用者開瀏覽器頁面時才會現場讀localStorage重算，跟launchd排程無關，原標籤位置名不符實。已修正：從index.html移除該標籤，改放到sleep_dashboard_v2.html header，文字改為「睡眠原始資料每日自動更新」，title屬性補充說明衍生分析需開頁才重算。commit 0bd179e push成功，教訓已記入project_sas_hub_arch.md。",
@@ -2711,6 +2732,12 @@
       "top_reason": "spec_change"
     },
     {
+      "project": "AI Tracker",
+      "file": "ai_tracker_v6.html",
+      "count": 4,
+      "top_reason": "spec_change"
+    },
+    {
       "project": "Refueler",
       "file": "refueler.html",
       "count": 3,
@@ -2729,9 +2756,9 @@
       "top_reason": "maintain"
     },
     {
-      "project": "AI Tracker",
-      "file": "ai_tracker_v6.html",
-      "count": 3,
+      "project": "Stock Tracker",
+      "file": "stock_watchlist.html",
+      "count": 2,
       "top_reason": "spec_change"
     },
     {
@@ -2755,12 +2782,6 @@
     {
       "project": "Renewable Tracker",
       "file": "renewable_tracker.html",
-      "count": 1,
-      "top_reason": "spec_change"
-    },
-    {
-      "project": "Stock Tracker",
-      "file": "stock_watchlist.html",
       "count": 1,
       "top_reason": "spec_change"
     }
