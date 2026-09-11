@@ -4,6 +4,41 @@
   "timeline": [
     {
       "date": "2026-09-11",
+      "project": "Control Center",
+      "file": "~/.claude/CLAUDE.md（鐵律9）",
+      "summary": "使用者發現spec file完全沒有「架構/功能改動需同步更新」的規則，跟dev log的鐵律5形成對比。實查Spec目錄確認落差：ai-tracker-spec停7/3、sas-hub-spec停7/8、sleep-dashboard-spec停7/7、Renewable Tracker從未建過spec。AskUserQuestion確認後建立CLAUDE.md鐵律9（架構/功能級改動同一動作內同步更新對應spec，門檻比照dev log），細節記入新的feedback_spec_sync記憶檔。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "AI Tracker",
+      "file": "Spec/ai-tracker-spec-v1.0.md",
+      "summary": "使用者要求今天回補既有spec積壓。回補07-03~09-10缺口（240個commit範圍），派subagent以記憶檔為主要來源、git log交叉核對、實查程式碼確認現況，新增9行版本紀錄v3.0~v3.8，涵蓋語意去重(dedup_and_freshness_check建立)/NVIDIA專區/產業導入分頁等重大架構變化，第1/4/5/6/7節架構描述同步更新。獨立fresh-context subagent複查確認語意連貫、版號嚴格遞增、無簡體字/斜體/破表，通過驗證。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "SAS Hub",
+      "file": "Spec/sas-hub-spec-v1.0.md",
+      "summary": "回補07-07~09-10缺口（153個commit範圍，同repo涵蓋Sleep Dashboard），新增16行版本紀錄v2.7~v2.22，含09-07滾動視窗防護、v2/v3並行遷移現況等，今天已寫的標籤修正說明改編號但內容保留不變。獨立驗證確認Groq model ID為現行版本非已棄用型號，與Sleep Dashboard spec互相cross-reference核對一致，通過驗證。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "Sleep Dashboard",
+      "file": "Spec/sleep-dashboard-spec-v1.0.md",
+      "summary": "回補07-07~09-10缺口，新增14行版本紀錄v2.4~v2.17，新增獨立「v2/v3並行遷移現況」小節，今天已寫的標籤新增說明改編號但內容保留不變。獨立驗證通過，僅一處日期排序觀察性備註（非缺陷）。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-11",
+      "project": "Renewable Tracker",
+      "file": "Spec/renewable-tracker-spec-v1.0.md",
+      "summary": "Renewable Tracker從建立以來就沒有spec，今天從零讀程式碼+git log+記憶檔全新建立194行spec（11個版本節點），格式比照stock-tracker-spec慣例。誠實記載一處矛盾：交辦指示誤以為今天有兩次commit，實查只有一次（header標籤），CSS token視覺語言其實是被Stock Tracker借用而非Renewable自己的改動，已在文件第9節如實記載不自行選邊。獨立驗證通過。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-11",
       "project": "AI Tracker",
       "file": "scripts/update_data.py / ai_tracker_v6.html",
       "summary": "冷天診斷後使用者裁決：先做稽核紀錄(不改變篩選結果)，候選池要不要放寬先觀察再決定。dedup_and_freshness_check()的prompt改回傳{duplicates:[{title,matched_title,reason}],stale_background:[{title,reason}]}結構化格式，寫入RUN_STATS['dedup_audit']存進run_stats.json，前端「本週紀錄」分頁每日卡片新增稽核區塊顯示。本機mock測試3組(新schema/舊字串向下相容/空結果)確認移除降級行為與修改前完全一致。commit 87af614 push成功。",
