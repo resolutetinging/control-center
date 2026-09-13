@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-11",
+  "generated_through": "2026-09-13",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-13",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/json_cache、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者回報9/12漏處理、v2沒建立彙總txt。查證發現Shortcut當天沒跑彙總步驟但原始樣本還在9/13匯出視窗裡，重新算出9/12完整記錄補建json_cache讓v2管線讀取。另發現9/13晚間23:01~00:51有110分鐘無分期紀錄造成session誤切、加上疑似多來源污染，v2/v3算出的core都是455分鐘但比使用者iPhone App讀到的500分鐘少45分鐘，是「Core分期系統性偏低」模式第三次出現。詢問使用者後確認資料流：iPhone數據僅供三方比對不覆蓋管線正式紀錄。v2 push（430a217）、v3新增09-12/09-13兩夜push（53320fb）皆成功。",
+      "reason": "debug"
+    },
     {
       "date": "2026-09-11",
       "project": "Control Center",
