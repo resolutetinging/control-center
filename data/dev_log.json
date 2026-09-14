@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-13",
+  "generated_through": "2026-09-14",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-14",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "v2已由LaunchAgent自動更新，手動push v3：新增09-14一夜，累計19晚交叉比對（差1晚達20晚重新評估門檻）。使用者提供iPhone官方數據三方比對：deep/rem/core/awake四項誤差皆≤1分鐘，無Core偏低現象重現。另應使用者要求彙整08-29~09-14全部v2/v3準確度現況：v3整體比v2可靠，唯一確認v2單獨算錯的是08-29；08-31系統殘留分歧記錄確認為已修復bug的過時數據。commit（300b045）push成功。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-13",
       "project": "Sleep Dashboard",
