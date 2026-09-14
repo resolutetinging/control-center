@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-09-14",
+      "project": "Renewable Tracker",
+      "file": "renewable-tracker/data/renewable_status.json、renewable_pending_review.json",
+      "summary": "使用者截圖詢問「本週有1項候選異動待複核」不知去哪審核。查證pending-badge是純文字提示無連結，複核機制是看週信內容後告訴Claude套用與否（跟AI Tracker NVIDIA舊模式相同）。本機clone落後origin，pull後看到真實候選（菲律賓AI能源基建案），fetch原始來源逐句核對：投資/容量數字無誤，但energy_availability欄位LLM漏抓電力限制細節（原文明確提及15.2萬顆GPU、再生能源40%目標、核電選項），候選卻寫「無直接新聞佐證」。修正後套用進ai_energy_impact.country_profiles（新增第7筆），清空pending_review，commit（4fa75a9）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-14",
+      "project": "AI Tracker",
+      "file": "aitracker/scripts/update_nvidia.py",
+      "summary": "NVIDIA近期事件功能上線當天即regression：使用者截圖回報週信顯示「技術問題失敗（Groq TPM限制）」。查證發現新增的update_recent_events()呼叫緊接在既有call_groq_diff()之前無延遲，兩次Groq呼叫token同分鐘內加總超出免費額度6000TPM，導致原本正常的舊函式跟著失敗——不是current_status過大，是累積用量問題。比照daily pipeline既有65秒呼叫間隔慣例補上time.sleep(65)，獨立subagent驗證通過後commit（1a58966）push成功，教訓記入lessons.md：新增LLM呼叫點要查同次執行內其他呼叫點的間隔。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-14",
       "project": "AI Tracker",
       "file": "aitracker/scripts/update_nvidia.py、ai_tracker_v6.html、Spec/ai-tracker-spec-v1.0.md",
       "summary": "延續冷天診斷後，使用者要求把NVIDIA「近期事件」改為週更子功能：重用daily pipeline近7天已分類的hw/corp/app新聞（不另外查證），關鍵字篩NVIDIA相關後LLM分類成事件時間軸；使用者確認「不要再讓我記得問你」，高低信心皆直接寫入recent_events（低信心加needs_review標記前端顯示「待確認」），不走nv_pending_review人工複核排隊——刻意例外於既有6大類鐵律，因輸入源頭已是daily pipeline驗證過內容。前端改點選切換view呈現，比照產業導入子tab。派fork實作＋獨立subagent驗證（既有6大類程式碼零改動、mock寫入邏輯正確）皆通過，commit（79c5fd5）push成功，spec同步更新v3.10。殘留：本機無GROQ_API_KEY待週日排程真實驗證。",
