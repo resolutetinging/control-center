@@ -334,6 +334,20 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="sit-btn" id="sit-reception" onclick="pickSit('reception')">🛎 訪客接待</button>
       <button class="sit-btn" id="sit-airport"  onclick="pickSit('airport')">✈️ 出差候機</button>
       <button class="sit-btn" id="sit-printer"  onclick="pickSit('printer')">🖨️ 影印機前排隊</button>
+      <button class="sit-btn" id="sit-parking"  onclick="pickSit('parking')">🚗 停車場巧遇</button>
+      <button class="sit-btn" id="sit-latenight" onclick="pickSit('latenight')">🌙 加班到很晚</button>
+      <button class="sit-btn" id="sit-birthday" onclick="pickSit('birthday')">🎂 幫同事慶生</button>
+      <button class="sit-btn" id="sit-breakroom" onclick="pickSit('breakroom')">🍵 茶水間問候</button>
+      <button class="sit-btn" id="sit-checkin"  onclick="pickSit('checkin')">🙋 近況問候</button>
+      <button class="sit-btn" id="sit-mailroom" onclick="pickSit('mailroom')">📦 收發室拿包裹</button>
+      <button class="sit-btn" id="sit-grocery"  onclick="pickSit('grocery')">🛒 超市排隊結帳</button>
+      <button class="sit-btn" id="sit-neighbor" onclick="pickSit('neighbor')">🏙️ 社區巧遇鄰居</button>
+      <button class="sit-btn" id="sit-hobbyclass" onclick="pickSit('hobbyclass')">🧘 興趣班前閒聊</button>
+      <button class="sit-btn" id="sit-flight"   onclick="pickSit('flight')">✈️ 長途交通鄰座</button>
+      <button class="sit-btn" id="sit-park"     onclick="pickSit('park')">🚶 公園偶遇熟人</button>
+      <button class="sit-btn" id="sit-restaurant" onclick="pickSit('restaurant')">🍽️ 餐廳等位</button>
+      <button class="sit-btn" id="sit-dogwalk"  onclick="pickSit('dogwalk')">🐕 遛狗巧遇鄰居</button>
+      <button class="sit-btn" id="sit-coffeeshop" onclick="pickSit('coffeeshop')">☕ 咖啡廳排隊</button>
     </div>
   </div>
 
@@ -622,6 +636,20 @@ const SITS = {
   reception: { label: '🛎 訪客接待', en: 'in the office lobby, where the learner works at the company and is greeting a visiting client, chatting while they wait for someone else to arrive' },
   airport:  { label: '✈️ 出差候機', en: 'waiting at the airport gate on a business trip, chatting with a coworker or fellow traveler' },
   printer:  { label: '🖨️ 影印機前排隊', en: 'waiting in a short line at the office printer, a brief and low-stakes moment' },
+  parking:  { label: '🚗 停車場巧遇', en: 'running into a coworker in the office parking lot, both arriving or leaving around the same time' },
+  latenight: { label: '🌙 加班到很晚', en: 'working late in the office with a coworker, both still at their desks after most people have left' },
+  birthday: { label: '🎂 幫同事慶生', en: 'gathering around a coworker\'s desk for a small birthday celebration, chatting before the cake is cut' },
+  breakroom: { label: '🍵 茶水間問候', en: 'running into a coworker in the break room, a quick friendly greeting during a short break' },
+  checkin:  { label: '🙋 近況問候', en: 'running into a coworker you haven\'t talked to in a while, catching up briefly on how things have been going' },
+  mailroom: { label: '📦 收發室拿包裹', en: 'waiting at the office mailroom to pick up a package, chatting with a coworker doing the same' },
+  grocery:  { label: '🛒 超市排隊結帳', en: 'standing in a checkout line at the grocery store, chatting with the person next in line' },
+  neighbor: { label: '🏙️ 社區巧遇鄰居', en: 'sharing an elevator or building lobby with a neighbor in your apartment building, a brief friendly chat' },
+  hobbyclass: { label: '🧘 興趣班前閒聊', en: 'chatting with another student before a hobby class (like yoga or a workshop) starts' },
+  flight:   { label: '✈️ 長途交通鄰座', en: 'sitting next to a stranger on a long flight or train ride, making light conversation to pass the time' },
+  park:     { label: '🚶 公園偶遇熟人', en: 'running into an acquaintance while taking a walk in the park, stopping for a brief chat' },
+  restaurant: { label: '🍽️ 餐廳等位', en: 'waiting for a table at a busy restaurant, chatting with a stranger also waiting nearby' },
+  dogwalk:  { label: '🐕 遛狗巧遇鄰居', en: 'walking your dog and running into a neighbor also walking their dog, chatting while the dogs sniff around' },
+  coffeeshop: { label: '☕ 咖啡廳排隊', en: 'waiting in line at a coffee shop, making brief small talk with the stranger next in line' },
 };
 
 // ── State ──
