@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-14",
+  "generated_through": "2026-09-15",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-15",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者要求v2/v3都手動push：新增09-15一夜，v2/v3交叉比對達到先前設定的20晚重新評估門檻，主動提出後使用者決定「先不遷移」維持現狀並行。過程中滾動視窗保護機制正確攔截一次假性差異（09-08）。使用者提供iPhone官方數據三方比對：deep/rem/core/awake四項誤差皆≤2.5分鐘，rem完全吻合，無異常。commit（b04f6c1）push成功。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-14",
       "project": "Renewable Tracker",
