@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-15",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html、Spec/english-sandbox-spec-v1.0.md",
+      "summary": "使用者截圖詢問Small Talk「Failed to fetch」是否為API額度打滿，查code確認429有專門處理邏輯（訊息格式「API 429：...」），「Failed to fetch」是瀏覽器層級錯誤代表請求沒送達，多為網路/擴充功能問題非額度。接著應要求新增Small Talk情境，經多輪AskUserQuestion確認方向（混合職場+日常）與候選清單，定案新增14個（職場向6+日常向8），SITS物件與HTML按鈕同步新增，node --check通過、27組key與按鈕id交叉比對全數吻合，commit（cbffcf5）push成功，spec同步補v1.9版本紀錄。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-15",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
       "summary": "使用者要求v2/v3都手動push：新增09-15一夜，v2/v3交叉比對達到先前設定的20晚重新評估門檻，主動提出後使用者決定「先不遷移」維持現狀並行。過程中滾動視窗保護機制正確攔截一次假性差異（09-08）。使用者提供iPhone官方數據三方比對：deep/rem/core/awake四項誤差皆≤2.5分鐘，rem完全吻合，無異常。commit（b04f6c1）push成功。使用者另預告近日跨時區旅行（時差1小時），可驗證v3頁面watch-note一直沒機會測的跨時區疑慮，查code確認v3/v2時間解析數學上不受offset影響不用預先改code，記入project_sleep_export_v2_migration.md待旅行時觀察。",
