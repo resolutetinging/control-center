@@ -5,6 +5,13 @@
     {
       "date": "2026-09-15",
       "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "使用者截圖回報27個Small Talk情境單層平鋪版面雜亂，要求改兩層（先選職場/日常分類再顯示按鈕）。新增data-cat屬性+pickSitCat()函式切換顯示，分類tab復用既有.combo-sit-tab樣式，預設顯示職場。node --check通過後用claude-in-chrome實際點擊測試（本機起http server繞過file://限制），雙向切換確認正常運作，commit（efe46bd）push成功。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-15",
+      "project": "English Sandbox",
       "file": "english-sandbox.html、Spec/english-sandbox-spec-v1.0.md",
       "summary": "使用者截圖詢問Small Talk「Failed to fetch」是否為API額度打滿，查code確認429有專門處理邏輯（訊息格式「API 429：...」），「Failed to fetch」是瀏覽器層級錯誤代表請求沒送達，多為網路/擴充功能問題非額度。接著應要求新增Small Talk情境，經多輪AskUserQuestion確認方向（混合職場+日常）與候選清單，定案新增14個（職場向6+日常向8），SITS物件與HTML按鈕同步新增，node --check通過、27組key與按鈕id交叉比對全數吻合，commit（cbffcf5）push成功，spec同步補v1.9版本紀錄。",
       "reason": "spec_change"
