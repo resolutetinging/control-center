@@ -320,34 +320,38 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:400;color:var(--sub);cursor:pointer;"><input type="checkbox" id="auto-speak-toggle" style="margin:0;" onchange="localStorage.setItem(AUTO_SPEAK_KEY, this.checked?'1':'0')"/> 🔊 自動播音</label>
       </div>
     </div>
+    <div class="combo-sit-tabs" id="sit-cat-tabs">
+      <button class="combo-sit-tab active" id="sitcat-work" onclick="pickSitCat('work')">💼 職場</button>
+      <button class="combo-sit-tab" id="sitcat-life" onclick="pickSitCat('life')">🏡 日常</button>
+    </div>
     <div class="sit-row" id="sit-row" style="flex-wrap:wrap;gap:6px;">
-      <button class="sit-btn" id="sit-coffee"  onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
-      <button class="sit-btn" id="sit-meeting" onclick="pickSit('meeting')">⏰ 會議前三分鐘</button>
-      <button class="sit-btn" id="sit-lunch"   onclick="pickSit('lunch')">🍱 與客戶等外送</button>
-      <button class="sit-btn" id="sit-event"   onclick="pickSit('event')">🤝 業界活動場合</button>
-      <button class="sit-btn" id="sit-elevator" onclick="pickSit('elevator')">🛗 電梯巧遇</button>
-      <button class="sit-btn" id="sit-firstday" onclick="pickSit('firstday')">🆕 新人第一天</button>
-      <button class="sit-btn" id="sit-weekend"  onclick="pickSit('weekend')">🌤 週一回來後</button>
-      <button class="sit-btn" id="sit-remote"   onclick="pickSit('remote')">💻 視訊等待空檔</button>
-      <button class="sit-btn" id="sit-interview" onclick="pickSit('interview')">🎤 面試前暖場</button>
-      <button class="sit-btn" id="sit-party"    onclick="pickSit('party')">🎉 歡送歡迎會</button>
-      <button class="sit-btn" id="sit-reception" onclick="pickSit('reception')">🛎 訪客接待</button>
-      <button class="sit-btn" id="sit-airport"  onclick="pickSit('airport')">✈️ 出差候機</button>
-      <button class="sit-btn" id="sit-printer"  onclick="pickSit('printer')">🖨️ 影印機前排隊</button>
-      <button class="sit-btn" id="sit-parking"  onclick="pickSit('parking')">🚗 停車場巧遇</button>
-      <button class="sit-btn" id="sit-latenight" onclick="pickSit('latenight')">🌙 加班到很晚</button>
-      <button class="sit-btn" id="sit-birthday" onclick="pickSit('birthday')">🎂 幫同事慶生</button>
-      <button class="sit-btn" id="sit-breakroom" onclick="pickSit('breakroom')">🍵 茶水間問候</button>
-      <button class="sit-btn" id="sit-checkin"  onclick="pickSit('checkin')">🙋 近況問候</button>
-      <button class="sit-btn" id="sit-mailroom" onclick="pickSit('mailroom')">📦 收發室拿包裹</button>
-      <button class="sit-btn" id="sit-grocery"  onclick="pickSit('grocery')">🛒 超市排隊結帳</button>
-      <button class="sit-btn" id="sit-neighbor" onclick="pickSit('neighbor')">🏙️ 社區巧遇鄰居</button>
-      <button class="sit-btn" id="sit-hobbyclass" onclick="pickSit('hobbyclass')">🧘 興趣班前閒聊</button>
-      <button class="sit-btn" id="sit-flight"   onclick="pickSit('flight')">✈️ 長途交通鄰座</button>
-      <button class="sit-btn" id="sit-park"     onclick="pickSit('park')">🚶 公園偶遇熟人</button>
-      <button class="sit-btn" id="sit-restaurant" onclick="pickSit('restaurant')">🍽️ 餐廳等位</button>
-      <button class="sit-btn" id="sit-dogwalk"  onclick="pickSit('dogwalk')">🐕 遛狗巧遇鄰居</button>
-      <button class="sit-btn" id="sit-coffeeshop" onclick="pickSit('coffeeshop')">☕ 咖啡廳排隊</button>
+      <button class="sit-btn" id="sit-coffee"  data-cat="work" onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
+      <button class="sit-btn" id="sit-meeting" data-cat="work" onclick="pickSit('meeting')">⏰ 會議前三分鐘</button>
+      <button class="sit-btn" id="sit-lunch"   data-cat="work" onclick="pickSit('lunch')">🍱 與客戶等外送</button>
+      <button class="sit-btn" id="sit-event"   data-cat="work" onclick="pickSit('event')">🤝 業界活動場合</button>
+      <button class="sit-btn" id="sit-elevator" data-cat="work" onclick="pickSit('elevator')">🛗 電梯巧遇</button>
+      <button class="sit-btn" id="sit-firstday" data-cat="work" onclick="pickSit('firstday')">🆕 新人第一天</button>
+      <button class="sit-btn" id="sit-weekend"  data-cat="work" onclick="pickSit('weekend')">🌤 週一回來後</button>
+      <button class="sit-btn" id="sit-remote"   data-cat="work" onclick="pickSit('remote')">💻 視訊等待空檔</button>
+      <button class="sit-btn" id="sit-interview" data-cat="work" onclick="pickSit('interview')">🎤 面試前暖場</button>
+      <button class="sit-btn" id="sit-party"    data-cat="work" onclick="pickSit('party')">🎉 歡送歡迎會</button>
+      <button class="sit-btn" id="sit-reception" data-cat="work" onclick="pickSit('reception')">🛎 訪客接待</button>
+      <button class="sit-btn" id="sit-airport"  data-cat="work" onclick="pickSit('airport')">✈️ 出差候機</button>
+      <button class="sit-btn" id="sit-printer"  data-cat="work" onclick="pickSit('printer')">🖨️ 影印機前排隊</button>
+      <button class="sit-btn" id="sit-parking"  data-cat="work" onclick="pickSit('parking')">🚗 停車場巧遇</button>
+      <button class="sit-btn" id="sit-latenight" data-cat="work" onclick="pickSit('latenight')">🌙 加班到很晚</button>
+      <button class="sit-btn" id="sit-birthday" data-cat="work" onclick="pickSit('birthday')">🎂 幫同事慶生</button>
+      <button class="sit-btn" id="sit-breakroom" data-cat="work" onclick="pickSit('breakroom')">🍵 茶水間問候</button>
+      <button class="sit-btn" id="sit-checkin"  data-cat="work" onclick="pickSit('checkin')">🙋 近況問候</button>
+      <button class="sit-btn" id="sit-mailroom" data-cat="work" onclick="pickSit('mailroom')">📦 收發室拿包裹</button>
+      <button class="sit-btn" id="sit-grocery"  data-cat="life" style="display:none" onclick="pickSit('grocery')">🛒 超市排隊結帳</button>
+      <button class="sit-btn" id="sit-neighbor" data-cat="life" style="display:none" onclick="pickSit('neighbor')">🏙️ 社區巧遇鄰居</button>
+      <button class="sit-btn" id="sit-hobbyclass" data-cat="life" style="display:none" onclick="pickSit('hobbyclass')">🧘 興趣班前閒聊</button>
+      <button class="sit-btn" id="sit-flight"   data-cat="life" style="display:none" onclick="pickSit('flight')">✈️ 長途交通鄰座</button>
+      <button class="sit-btn" id="sit-park"     data-cat="life" style="display:none" onclick="pickSit('park')">🚶 公園偶遇熟人</button>
+      <button class="sit-btn" id="sit-restaurant" data-cat="life" style="display:none" onclick="pickSit('restaurant')">🍽️ 餐廳等位</button>
+      <button class="sit-btn" id="sit-dogwalk"  data-cat="life" style="display:none" onclick="pickSit('dogwalk')">🐕 遛狗巧遇鄰居</button>
+      <button class="sit-btn" id="sit-coffeeshop" data-cat="life" style="display:none" onclick="pickSit('coffeeshop')">☕ 咖啡廳排隊</button>
     </div>
   </div>
 
@@ -786,6 +790,15 @@ function saveInlineKey(){
 }
 
 // ── Situation ──
+// 09-15：情境擴充到27個後單層平鋪太雜亂，改兩層——先選職場/日常分類，
+// 才顯示該分類的情境按鈕；用button本身data-cat篩選，不維護另一份key清單
+function pickSitCat(cat){
+  document.getElementById('sitcat-work').classList.toggle('active', cat==='work');
+  document.getElementById('sitcat-life').classList.toggle('active', cat==='life');
+  document.querySelectorAll('#sit-row .sit-btn').forEach(b=>{
+    b.style.display = (b.dataset.cat===cat) ? '' : 'none';
+  });
+}
 function pickSit(key){
   if(curSit === key) return;
   curSit = key;
