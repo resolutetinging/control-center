@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-16",
+      "project": "Control Center",
+      "file": "aitracker/ai_tracker_v6.html、cc_autosync.js、renewable-tracker/.gitignore",
+      "summary": "應要求對全家族9個public repo+2個本機工具做第二輪資安健檢（上次08-18），派4個並行subagent分頭查證。修復must-fix：AI Tracker NVIDIA近期事件功能（09-14新增）儲存型XSS，LLM生成欄位未escape就進DOM，比照既有_arcEsc()補上並node測試驗證（commit 9787e17）。修復資料完整性問題：English Sandbox的es_grammar_lib漏排跨裝置同步白名單（commit 80c16ca）。修復should-fix：Renewable Tracker補.gitignore（commit 3cf5009）。08-18修復全數複驗仍有效。發現AI Tracker主要每日卡片渲染系統性缺escape，範圍更大，待使用者決定優先度再處理。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-16",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
       "summary": "9/16例行更新：v2 245筆有效夜晚數據push成功；v3新增09-16一夜，滾動視窗保護機制再次正確攔截一次假性差異（09-09），v2/v3交叉比對達21晚，維持既有歷史差異無新增分歧，commit（c239a83）push成功。使用者提供iPhone官方數據三方比對：deep/rem/core/awake四項誤差皆≤1分鐘，無異常。",
