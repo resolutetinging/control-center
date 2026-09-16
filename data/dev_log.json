@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-16",
+      "project": "AI Tracker",
+      "file": "aitracker/ai_tracker_v6.html",
+      "summary": "延續稽核發現的AI Tracker主要每日卡片渲染系統性缺escape問題，向使用者說明風險（同origin localStorage可能被讀取外流）與修法不影響資料庫/篩選邏輯後，使用者確認執行。修復newsCard/fmtBody/chainHtml/nvCaseCard/indRegionCard/indFlowSteps/indDetailBlock/indCaseCard/indRenderIndustry共9個渲染函式，全數補_arcEsc()。node測試惡意payload全數跳脫+真實history.json樣本零視覺差異，獨立subagent複驗通過並多抓到adoption_by_region_note一處漏網欄位一併補上，commit（d0dcaab）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-16",
       "project": "Control Center",
       "file": "aitracker/ai_tracker_v6.html、cc_autosync.js、renewable-tracker/.gitignore",
       "summary": "應要求對全家族9個public repo+2個本機工具做第二輪資安健檢（上次08-18），派4個並行subagent分頭查證。修復must-fix：AI Tracker NVIDIA近期事件功能（09-14新增）儲存型XSS，LLM生成欄位未escape就進DOM，比照既有_arcEsc()補上並node測試驗證（commit 9787e17）。修復資料完整性問題：English Sandbox的es_grammar_lib漏排跨裝置同步白名單（commit 80c16ca）。修復should-fix：Renewable Tracker補.gitignore（commit 3cf5009）。08-18修復全數複驗仍有效。發現AI Tracker主要每日卡片渲染系統性缺escape，範圍更大，待使用者決定優先度再處理。",
