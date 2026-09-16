@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-15",
+  "generated_through": "2026-09-16",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-16",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "9/16例行更新：v2 245筆有效夜晚數據push成功；v3新增09-16一夜，滾動視窗保護機制再次正確攔截一次假性差異（09-09），v2/v3交叉比對達21晚，維持既有歷史差異無新增分歧，commit（c239a83）push成功。使用者提供iPhone官方數據三方比對：deep/rem/core/awake四項誤差皆≤1分鐘，無異常。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-15",
       "project": "English Sandbox",
