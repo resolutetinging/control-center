@@ -46,6 +46,10 @@
     'wellness_v5', 'mental_custom_emotions',
     // English Sandbox
     'es_idiom_lib', 'es_saved_phrases',
+    // 09-16稽核發現：es_grammar_lib（09-08新增的文法追蹤收藏）漏排，換裝置/清storage會
+    // 靜默遺失，比照sas_overload_log的補法排入白名單。es_auto_speak/es_round_target是
+    // 單裝置偏好設定（自動播音開關/練習題數），比照cc_wp_v1桌布模式刻意不排入
+    'es_grammar_lib',
     // Scratchpad（雜記收件匣）
     'cc_scratch_v1',
     // External Me（life_tracker_v1）
