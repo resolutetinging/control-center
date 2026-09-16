@@ -5,6 +5,13 @@
     {
       "date": "2026-09-16",
       "project": "Stock Tracker",
+      "file": "stock-tracker/stock_watchlist.html",
+      "summary": "使用者要求「今日重點」卡保留近3天變化，AskUserQuestion確認採「近3個交易日各自列出獨立漲跌幅排行榜」而非累計排行。新增computeChangeRankingMultiDay()依日期分組計算，取代原本只看最新一天的computeChangeRanking()，標題改為「近期重點」反映範圍。用真實stock_history.json驗證邏輯（正確跳過09-10~09-14缺口，列出09-15/09-09/09-08）並用claude-in-chrome實測畫面正常、console零錯誤，commit（ebf6a7e）push成功。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-16",
+      "project": "Stock Tracker",
       "file": "stock-tracker/scripts/update_stocks.py、data/stock_history.json",
       "summary": "使用者截圖回報「今日重點」卡在9/9不動。查證發現main()要求TWSE最新交易日資料「必須完全等於台北時間今天」才寫入，但TWSE官方API公布時間比預期晚（下午4點多仍只回傳前一交易日資料），此嚴格比對從09-10起連續判定「非今天」而靜默跳過寫入，排程每天卻仍回報success看不出異常。改成跟history.json已存最新日期比較（新資料只要比已存的新就寫入）。/tmp複本測試後對正式資料執行（有備份），13檔補進09-15資料，09-10~09-14缺失交易日因TWSE API無歷史查詢永久補不回。過程中發現本機測試順帶觸發2項真實警示但因無email憑證未寄出，alerts_log.json卻寫入假的「已通知」紀錄，已用git checkout還原避免正式排程誤判漏發。獨立subagent複驗通過，commit（0984d3d）push成功。",
       "reason": "debug"
