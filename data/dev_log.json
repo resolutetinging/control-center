@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-16",
+      "project": "Stock Tracker",
+      "file": "stock-tracker/scripts/update_stocks.py、data/stock_history.json",
+      "summary": "使用者截圖回報「今日重點」卡在9/9不動。查證發現main()要求TWSE最新交易日資料「必須完全等於台北時間今天」才寫入，但TWSE官方API公布時間比預期晚（下午4點多仍只回傳前一交易日資料），此嚴格比對從09-10起連續判定「非今天」而靜默跳過寫入，排程每天卻仍回報success看不出異常。改成跟history.json已存最新日期比較（新資料只要比已存的新就寫入）。/tmp複本測試後對正式資料執行（有備份），13檔補進09-15資料，09-10~09-14缺失交易日因TWSE API無歷史查詢永久補不回。過程中發現本機測試順帶觸發2項真實警示但因無email憑證未寄出，alerts_log.json卻寫入假的「已通知」紀錄，已用git checkout還原避免正式排程誤判漏發。獨立subagent複驗通過，commit（0984d3d）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-16",
       "project": "AI Tracker",
       "file": "aitracker/ai_tracker_v6.html",
       "summary": "使用者要求「重新檢視今天的健檢對策」，自我批判複查發現前兩輪escape修復都只是「修看到的函式」非系統化掃描，改用全面regex掃描所有屬性插值揪出第三批漏網缺口：專有名詞分頁(term/full/def/why)、weekly_summary、NVIDIA金字塔圖例/聯盟概況、篩選稽核區塊、產業導入頁籤(i.key需JS字串單引號跳脫)。另發現nvSrcLink()只有HTML escape、沒有URL scheme白名單，javascript:網址可繞過變成點擊觸發型XSS，補上僅允許http(s)才做超連結。node測試+獨立subagent複驗+claude-in-chrome實際點擊測試(專有名詞/本週紀錄/NVIDIA/產業導入分頁)皆通過，console零錯誤，commit（91ed488）push成功。教訓記入lessons.md：處理系統性漏洞第一次就該全面掃描。",
