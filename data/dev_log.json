@@ -6,6 +6,13 @@
       "date": "2026-09-16",
       "project": "Stock Tracker",
       "file": "stock-tracker/stock_watchlist.html",
+      "summary": "使用者詢問排行榜09-10~09-14缺口原因（回答：bug發作期間TWSE官方API只提供最新單日快照無歷史查詢，永久補不回來），並要求名詞定義小百科直接展開不需點擊收合。移除details/summary互動元件改成純標題+內容區塊，順手清掉summary專屬CSS死碼。node --check通過、claude-in-chrome實測預設展開正常、console零錯誤，commit（2808295）push成功。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-16",
+      "project": "Stock Tracker",
+      "file": "stock-tracker/stock_watchlist.html",
       "summary": "使用者要求「今日重點」卡保留近3天變化，AskUserQuestion確認採「近3個交易日各自列出獨立漲跌幅排行榜」而非累計排行。新增computeChangeRankingMultiDay()依日期分組計算，取代原本只看最新一天的computeChangeRanking()，標題改為「近期重點」反映範圍。用真實stock_history.json驗證邏輯（正確跳過09-10~09-14缺口，列出09-15/09-09/09-08）並用claude-in-chrome實測畫面正常、console零錯誤，commit（ebf6a7e）push成功。",
       "reason": "maintain"
     },
