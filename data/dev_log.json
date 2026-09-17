@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-16",
+  "generated_through": "2026-09-17",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-17",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "9/17例行更新：v2解析246筆有效夜晚數據，最新至09-17，run_update.sh內建push成功（4780609）；v3新增09-17一夜，v2/v3交叉比對達22晚重疊，維持既有歷史差異無新增分歧，另外手動commit（0416133）push成功。使用者提供iPhone官方09-17數據三方比對：deep誤差0、rem誤差-0.5~-1分鐘、core誤差-2.5~-3分鐘、awake誤差+2分鐘，皆在既有正常波動範圍內，無異常。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-16",
       "project": "Stock Tracker",
