@@ -5,6 +5,13 @@
     {
       "date": "2026-09-17",
       "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v3.html",
+      "summary": "使用者截圖v3頁面「下次檢核點」段落，內容還停留在09-07記錄（12晚、待20晚門檻），要求同步更新。改寫為09-17版本：09-15已達20晚門檻並決定先不遷移，觀察期延長到9月底（2026-09-30）屆時再整體重新評估；補充目前累積分歧僅08-29、09-04兩晚且皆已確認是v2舊bug非v3問題。git diff核對只改動這一段文字，commit（e95f357）push成功。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-17",
+      "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
       "summary": "9/17例行更新：v2解析246筆有效夜晚數據，最新至09-17，run_update.sh內建push成功（4780609）；v3新增09-17一夜，v2/v3交叉比對達22晚重疊，維持既有歷史差異無新增分歧，另外手動commit（0416133）push成功。使用者提供iPhone官方09-17數據三方比對：deep誤差0、rem誤差-0.5~-1分鐘、core誤差-2.5~-3分鐘、awake誤差+2分鐘，皆在既有正常波動範圍內，無異常。",
       "reason": "maintain"
