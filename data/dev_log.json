@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-17",
+  "generated_through": "2026-09-18",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-18",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/json_cache/sleep_2026-09-18.txt、update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者提供9/18 iPhone分期數值（awake13/rem76/core225/deep28分鐘）並告知有1小時時差（9/17白天移動到韓國）。檢查iCloud端發現sleep_2026-09-18.txt/sleep_raw_2026-09-18.txt四項分期全為0，時間戳換算UTC後跟9/17晚已處理過的那筆完全相同，只是時區標籤從+08:00變成+09:00，代表自動匯出還沒同步到這一晚真實資料。確認實際入睡起床時間韓國02:18～08:00（台灣01:18～07:00）後，v2手動建立json_cache檔案跑update_dashboard.py，解析247筆有效夜晚，最新至09-18，內建push成功（7879d83）。v3因無原始raw樣本，改用既有函式手動注入該夜記錄（raw_samples留空，日後真實資料同步merge_records會自動比對覆蓋），新增1夜（累計23夜），交叉比對無新增分歧，另外手動commit（0f7f897）push成功。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-17",
       "project": "Sleep Dashboard",
