@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-18",
+  "generated_through": "2026-09-19",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-19",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/json_cache/sleep_2026-09-19.txt、update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者提供9/19 iPhone分期數值做三方比對（awake27/rem93/core275/deep17分鐘）。發現新的sleep_raw_2026-09-19.txt滾動視窗裡已有9/18晚真實逐段資料，用90分鐘門檻確認能正確切出9/18與9/19兩夜。v3跑update_dashboard_v3.py：9/18真實資料跟前一天手動估計值皆在3分鐘容許誤差內，保留原值但補回26筆真實raw_samples；新增9/19一夜（deep17.5/rem93/core271.5/awake29），跟使用者比對數字誤差正常，交叉比對無新增分歧，commit（500985b）push成功。發現iCloud端9/18 Shortcut扁平化格式有已知的session合併標籤舊bug：sleepStart誤標成前一晚時間，但四項分期數字本身正確算給9/19。改用v3切分出的真實bedtime/wake（01:19:45～08:14:15）取代誤標時間，手動建立json_cache/sleep_2026-09-19.txt後跑update_dashboard.py，解析248筆有效夜晚，最新至09-19，內建push成功（237911e）。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-18",
       "project": "Sleep Dashboard",
