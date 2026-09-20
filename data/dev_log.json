@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-19",
+  "generated_through": "2026-09-20",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-20",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/json_cache/sleep_2026-09-20.txt、update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者提供9/20 iPhone分期數值做三方比對（awake66/rem102/core252/deep50分鐘，合計470分鐘）。發現sleep_raw_2026-09-20.txt滾動視窗最新樣本仍停在9/19早上09:14，連續第3天延遲一整晚，v3確認「新增0夜」、v2自動流程也是空值，兩邊如實反映各自原始來源沒有資料。遵守09-19鐵律（v2/v3不可互相混用）：向使用者確認實際入睡/起床時間01:43～09:33後，v2與v3分別各自獨立用iPhone分期數值手動建檔，互不參照對方計算結果。v2跑update_dashboard.py解析249筆有效夜晚，最新至09-20，push成功（bc3e916）；v3獨立注入新增1夜（累計25夜），交叉比對維持既有08-29、09-04兩筆分歧無新增，commit（ba1ad6b）push成功。另commit（69b1dba）v3例行執行刷新的分歧時間戳（無資料異動）。使用者另要求彙整v2/v3/iPhone三方比對整體現況（08-27~09-19累計24夜），確認除08-29已知舊bug外無系統性問題。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-19",
       "project": "Sleep Dashboard",
