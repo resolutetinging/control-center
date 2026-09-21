@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-20",
+  "generated_through": "2026-09-21",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-21",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者要求用iCloud真實資料更新v2/v3（不是手動輸入），並提供iPhone分期數值做三方比對（awake4/rem99/core205/deep43分鐘）。v2跑run_update.sh（只吃原始iCloud匯出不手動修改），解析250筆有效夜晚，最新至09-21，push成功（e6bc570），deep42/rem98/core204/awake6跟iPhone誤差皆≤1-2分鐘。發現sleepStart仍有已知Shortcut端session標籤bug（顯示02:43，實際是前一晚時間延續），依09-19鐵律不手動修正照舊留著。v3跑update_dashboard_v3.py，raw資料今天恢復同步不再延遲，新增9/21一夜（deep42.5/rem97.5/core204/awake6，真實raw樣本26筆），跟v2及iPhone誤差正常，交叉比對維持既有08-29、09-04兩筆分歧無新增，commit（3ec08c4）push成功。全程v2/v3互不參照。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-20",
       "project": "Sleep Dashboard",
