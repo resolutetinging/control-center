@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-22",
+      "project": "AI Tracker",
+      "file": "aitracker/ai_tracker_v6.html、data/techwar_status.json、data/techwar_pending_review.json、scripts/update_techwar.py、.github/workflows/weekly-techwar-update.yml",
+      "summary": "新增「中美科技戰」分頁，位置在產業導入右邊，比照NVIDIA專區/產業導入模式組合（資料驅動、週更、無email）。查證角度刻意與NVIDIA專區「企業間商業動態」區隔，聚焦「國際規避出口管制資訊流」（第三地轉運/人頭公司/人員層級牽線）。派3個並行subagent：實作骨架（新tab/render函式含_arcEsc()escape+nvSrcLink()URL白名單/pending-badge/twFlowCard()資料驅動流程圖/週排程週六16:00UTC避開NVIDIA週日TPM疊加）、研究國際流向事件（12則+2組流程圖）、研究台積電為核心的關鍵企業（7家）+資金人才管制（6項），全數只採信官方/主流媒體來源。整合後派獨立subagent瀏覽器實測+XSS複查全數通過，commit（cb7077c）push成功，同步更新ai-tracker-spec-v1.0.md（v3.11）。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-22",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/sleep_dashboard_v3.html",
       "summary": "使用者要求依input data時區標籤增加註記，先提案三種呈現方式（tooltip加一行／X軸小圖示／圖表下方文字摘要），使用者選「圖表hover提示加一行」。確認只有v3的bedtime/wake欄位帶ISO offset有時區資訊，v2的Shortcut扁平化格式無此欄位無法比照。新增tzOffsetNote()，tooltip非台灣時區才多顯示「🌏記錄時區：UTC+9」，node --check通過，commit（1f50b1c）push成功，派獨立subagent用真實滑鼠hover驗證09-19/09-21顯示、09-17/09-22不顯示。使用者補充v3屆時要整合進v2，要求評估時區對v2其他卡片的影響：查出3處會受影響（updateRegularity入睡起床標準差與社交時差徽章、regularityTrendChart趨勢線、localStorage['sas_sleep_latest'].bedtime/.wake下游13+頁面共用），其餘卡片只用total_min與百分比不受影響，已記入project_sleep_export_v2_migration.md作為遷移②補齊缺口的具體化清單。",
