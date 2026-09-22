@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-21",
+  "generated_through": "2026-09-22",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-22",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者提供iPhone分期數值做三方比對（awake4/rem67/core284/deep43分鐘）。v2跑run_update.sh（原始iCloud匯出不手動修改），解析251筆有效夜晚，最新至09-22，push成功（14bac30），deep42/rem67/core285/awake4跟iPhone誤差皆≤1-2分鐘。v3跑update_dashboard_v3.py，連續第2天恢復正常同步，新增9/22一夜（deep41.5/rem67/core284.5/awake4，真實raw樣本24筆），bedtime時區標籤從+09:00變回+08:00（研判已從韓國返回台灣），跟v2及iPhone誤差皆正常，交叉比對維持既有08-29、09-04兩筆分歧無新增，commit（16b73ee）push成功。全程v2/v3互不參照。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-09-21",
       "project": "Sleep Dashboard",
