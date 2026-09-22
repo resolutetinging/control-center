@@ -5,6 +5,13 @@
     {
       "date": "2026-09-22",
       "project": "AI Tracker",
+      "file": "aitracker/scripts/update_nvidia.py、data/nv_status.json、data/techwar_status.json",
+      "summary": "使用者要求重新檢視AI Tracker各分頁並交叉比對現況。稽核抓到2個must-fix：①NVIDIA週查證6大類已連續2週（09-13、09-20）靜默失效，workflow顯示success但last_checked未更新，追查GitHub Actions log找到根因是current_status整份序列化後約6200token已逼近Groq免費tier 6000TPM上限，跟新聞多寡無關②NV專區與中美科技戰分頁的「美超微/輝達走私網絡」thread有3則事件本質重複，其中一則日期不一致（查證DOJ官方新聞稿確認03-19才對，已修正）。跨分頁重複比對實際內容後，中美科技戰分頁保留完整敘事、NV專區3則改精簡摘要+指引連結，並用NV版更精確數字回頭補強TW版08-24。TPM根因修復比照Renewable Tracker同款解法，call_groq_diff()拆成6大類獨立呼叫+65秒間隔，經獨立subagent重新讀diff+自寫mock測試驗證無must-fix，commit（8bed698/f971ead/28171c5）push成功。其餘稽核項目健康（待複核清單皆空、各管線新鮮度正常、新分頁內部一致性良好、舊坑未回歸）。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-22",
+      "project": "AI Tracker",
       "file": "aitracker/ai_tracker_v6.html、data/techwar_status.json、data/techwar_pending_review.json、scripts/update_techwar.py、.github/workflows/weekly-techwar-update.yml",
       "summary": "新增「中美科技戰」分頁，位置在產業導入右邊，比照NVIDIA專區/產業導入模式組合（資料驅動、週更、無email）。查證角度刻意與NVIDIA專區「企業間商業動態」區隔，聚焦「國際規避出口管制資訊流」（第三地轉運/人頭公司/人員層級牽線）。派3個並行subagent：實作骨架（新tab/render函式含_arcEsc()escape+nvSrcLink()URL白名單/pending-badge/twFlowCard()資料驅動流程圖/週排程週六16:00UTC避開NVIDIA週日TPM疊加）、研究國際流向事件（12則+2組流程圖）、研究台積電為核心的關鍵企業（7家）+資金人才管制（6項），全數只採信官方/主流媒體來源。整合後派獨立subagent瀏覽器實測+XSS複查全數通過，commit（cb7077c）push成功，同步更新ai-tracker-spec-v1.0.md（v3.11）。",
       "reason": "maintain"
