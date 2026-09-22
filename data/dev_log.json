@@ -5,6 +5,13 @@
     {
       "date": "2026-09-22",
       "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v3.html",
+      "summary": "使用者要求依input data時區標籤增加註記，先提案三種呈現方式（tooltip加一行／X軸小圖示／圖表下方文字摘要），使用者選「圖表hover提示加一行」。確認只有v3的bedtime/wake欄位帶ISO offset有時區資訊，v2的Shortcut扁平化格式無此欄位無法比照。新增tzOffsetNote()，tooltip非台灣時區才多顯示「🌏記錄時區：UTC+9」，node --check通過，commit（1f50b1c）push成功，派獨立subagent用真實滑鼠hover驗證09-19/09-21顯示、09-17/09-22不顯示。使用者補充v3屆時要整合進v2，要求評估時區對v2其他卡片的影響：查出3處會受影響（updateRegularity入睡起床標準差與社交時差徽章、regularityTrendChart趨勢線、localStorage['sas_sleep_latest'].bedtime/.wake下游13+頁面共用），其餘卡片只用total_min與百分比不受影響，已記入project_sleep_export_v2_migration.md作為遷移②補齊缺口的具體化清單。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-22",
+      "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
       "summary": "使用者提供iPhone分期數值做三方比對（awake4/rem67/core284/deep43分鐘）。v2跑run_update.sh（原始iCloud匯出不手動修改），解析251筆有效夜晚，最新至09-22，push成功（14bac30），deep42/rem67/core285/awake4跟iPhone誤差皆≤1-2分鐘。v3跑update_dashboard_v3.py，連續第2天恢復正常同步，新增9/22一夜（deep41.5/rem67/core284.5/awake4，真實raw樣本24筆），bedtime時區標籤從+09:00變回+08:00（研判已從韓國返回台灣），跟v2及iPhone誤差皆正常，交叉比對維持既有08-29、09-04兩筆分歧無新增，commit（16b73ee）push成功。全程v2/v3互不參照。",
       "reason": "maintain"
