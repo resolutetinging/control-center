@@ -5,6 +5,13 @@
     {
       "date": "2026-09-23",
       "project": "AI Tracker",
+      "file": "aitracker/ai_tracker_v6.html",
+      "summary": "中美科技戰分頁再調整：①國際供應鏈流向地圖箭頭線條加粗2倍（stroke-width 1.3→2.6，marker同步放大維持比例）②9個國家標記點新增hover顯示國家/主角色/玩家清單（整理自既有資料，非新查證）③使用者指出「採購/供應流向」卡片是具體個案非general供應鏈流向，應搬到近期動態分頁；地圖移到總覽最上方成為general流向代表，原流程圖卡搬進近期動態view新子區塊「跨國採購／供應流向案例」。派獨立subagent重新驗證區塊順序/搬移結果/CSS/hover內容/console/回歸測試，7項全數通過，commit（554a3cb）push成功。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-23",
+      "project": "AI Tracker",
       "file": "aitracker/ai_tracker_v6.html、data/techwar_status.json",
       "summary": "中美科技戰分頁三項擴充：①新增「AI產業供應鏈比較」美中兩欄卡片（研究誠實標註兩邊資料完整度不對等）②分頁重整為「總覽／近期動態」兩個view（twSwitchView比照NVIDIA專區nvSwitchView模式）③關鍵企業加country欄位+國家篩選導覽列，新增國際供應鏈流向地圖（世界地圖線稿簡化自Wikimedia公共領域海岸線素材164KB→48KB，濾除南極洲+降低點密度，CC BY-SA 4.0署名，疊加9國標記點+9條箭頭連線）。地圖素材先發布Artifact預覽給使用者確認品質才繼續。獨立驗證subagent抓到must-fix：nvEventFilter/twEventFilter/twCompanyFilter三處onclick組裝只跳脫單引號未處理雙引號，新增_arcEscJsAttr()一次修好三處同款寫法。commit（a1d3e19）push成功（中間rejected一次因遠端有daily pipeline自動commit，rebase後重推），同步更新ai-tracker-spec-v1.0.md（v3.12）。",
       "reason": "maintain"
