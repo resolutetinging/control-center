@@ -5,6 +5,13 @@
     {
       "date": "2026-09-23",
       "project": "AI Tracker",
+      "file": "aitracker/ai_tracker_v6.html",
+      "summary": "使用者回報上一輪修法（HTML疊加層＋原生title屬性）hover依然未生效。排查發現真正根因：.tw-map-pin容器本身沒設寬高，normal flow下可觸發hover的box只等於內部in-flow子元素.tw-map-pin-dot的11x11px大小，視覺上像一體的標籤文字（pointer-events:none）完全不算在內，滑鼠必須精準壓在極小圓點上才會觸發——解釋了為何先前兩輪（SVG內部title、HTML title屬性）都無效：問題不在提示顯示方式，是熱區太小點不中。修法：.tw-map-pin加width/height:26px+flex置中放大熱區（視覺圓點仍11px不變）；新增自訂深色浮層.tw-map-pin-tooltip用:hover即時顯示，取代有延遲的原生title；新增twToggleMapPin()點擊切換供無hover能力的觸控裝置使用。派獨立subagent用真實滑鼠hover（find工具取element ref）+截圖肉眼確認浮層真的視覺可見，點擊互斥切換邏輯驗證正確，新加坡/馬來西亞標籤補償後仍無重疊，既有功能回歸正常，commit（b66dda2）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-23",
+      "project": "AI Tracker",
       "file": "aitracker/ai_tracker_v6.html、data/techwar_status.json",
       "summary": "使用者截圖回報上一輪地圖修法在其實際螢幕上「字太大擠在一起」且「hover未生效（游標變可點擊樣式但點擊無反應）」，證明「放大viewBox user unit數字」的修法方向本身錯誤——固定viewBox單位只在特定螢幕寬度看起來對，寬度一變就跑掉。架構性修正：圓點與標籤移出SVG，改成絕對定位HTML疊加層，用真實CSS px尺寸（圓點11px、標籤字體12px），容器aspect-ratio鎖定跟viewBox比例一致，尺寸從此不受縮放比影響；SVG內部title改成HTML原生title屬性，並移除圓點誤導性的cursor:pointer（純hover不可點擊）。同時於supply_chain_comparison新增summary欄位（現況對比5則+未來動態觀察4則），前端新增全寬摘要卡置於美中game changer比較卡片正上方。派獨立subagent驗證（resize_window工具在此環境失效，改用縮小容器寬度前後量測px尺寸不變的等效驗證法），14項驗收全數通過，git diff --stat只改動預期2個檔案，commit（c262a3b）push成功。",
       "reason": "debug"
