@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-22",
+  "generated_through": "2026-09-23",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-23",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者提供9/23 iPhone分期數值做三方比對（awake9/rem60/core286/deep24分鐘）。v2跑run_update.sh，解析252筆有效夜晚，最新至09-23，push成功（7662543），deep24/rem60/core285/awake9跟iPhone誤差皆≤1分鐘。v3跑update_dashboard_v3.py新增9/23一夜，跟v2/iPhone誤差皆正常，交叉比對維持既有08-29、09-04兩筆分歧無新增，commit（b62dba9）push成功。另回溯校正09-20 bedtime/wake時區標籤錯誤：使用者回報v3時區hover註記沒看到，查證排除功能bug（是趨勢虛線鄰近點誤判造成的操作誤解），過程中發現09-20當晚原始來源延遲、曾用手動時間建檔+08:00，真實raw資料回補後只補raw_samples未同步更新bedtime/wake，導致時區標籤停留錯誤值；用真實raw樣本重算正確值（+09:00韓國時區）並修正，commit（85e57ff）push成功。過程中也記下溝通清晰度教訓：v2/v3同時延遲時應分開明確點名各自受影響檔案。",
+      "reason": "debug"
+    },
     {
       "date": "2026-09-22",
       "project": "AI Tracker",
