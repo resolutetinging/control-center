@@ -6,6 +6,13 @@
       "date": "2026-09-23",
       "project": "AI Tracker",
       "file": "aitracker/ai_tracker_v6.html、data/techwar_status.json",
+      "summary": "使用者截圖回報上一輪地圖修法在其實際螢幕上「字太大擠在一起」且「hover未生效（游標變可點擊樣式但點擊無反應）」，證明「放大viewBox user unit數字」的修法方向本身錯誤——固定viewBox單位只在特定螢幕寬度看起來對，寬度一變就跑掉。架構性修正：圓點與標籤移出SVG，改成絕對定位HTML疊加層，用真實CSS px尺寸（圓點11px、標籤字體12px），容器aspect-ratio鎖定跟viewBox比例一致，尺寸從此不受縮放比影響；SVG內部title改成HTML原生title屬性，並移除圓點誤導性的cursor:pointer（純hover不可點擊）。同時於supply_chain_comparison新增summary欄位（現況對比5則+未來動態觀察4則），前端新增全寬摘要卡置於美中game changer比較卡片正上方。派獨立subagent驗證（resize_window工具在此環境失效，改用縮小容器寬度前後量測px尺寸不變的等效驗證法），14項驗收全數通過，git diff --stat只改動預期2個檔案，commit（c262a3b）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-23",
+      "project": "AI Tracker",
+      "file": "aitracker/ai_tracker_v6.html、data/techwar_status.json",
       "summary": "修正地圖hover/尺寸bug：使用者回報看不到hover、字太小。實測發現viewBox 5760x2880實際渲染縮放比僅0.17-0.19，圓點/文字在螢幕上只剩約6px/2.5px幾乎不可見不可點，放大圓點r=16→54、文字font-size 9→80px（加白色描邊）、邊框加粗，文字標籤也加title雙重hover熱區，新加坡/馬來西亞標籤重疊問題用labelPos欄位讓馬來西亞改顯示下方解決。同時「AI產業供應鏈比較」改版：使用者澄清NVIDIA/阿里雲先前只是舉例非要求限定兩家，改列多位game changer橫向比較，美國5位（NVIDIA/OpenAI/Microsoft/Google DeepMind/Anthropic）、中國4位（阿里雲Qwen/DeepSeek/華為昇騰/字節跳動豆包），皆有具體影響力數字佐證，誠實標註中美資料完整度落差。經獨立subagent驗證僅1項nice-to-have（尺寸微調），已套用，commit（6d8c739）push成功。",
       "reason": "debug"
     },
