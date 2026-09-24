@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-23",
+  "generated_through": "2026-09-24",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-24",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v2.html、sleep_dashboard_v3.html、sleep_v3_history.json",
+      "summary": "使用者提供iPhone分期數值做三方比對：awake11、rem80、core309、deep16分鐘。發現09-24原始匯出檔在22:15才同步到iCloud，比當天22:02的LaunchAgent自動排程晚了13分鐘，自動跑的那次仍停在09-23，手動重跑兩條管線各自獨立更新。v2：跑run_update.sh，解析253筆有效夜晚，最新至09-24，deep16/rem79/core308/awake12分鐘，跟iPhone誤差皆≤1分鐘。v3：跑update_dashboard_v3.py，新增9/24一夜（deep16.0/rem79.0/core308.0/awake12.5分鐘，raw樣本21筆），三方比對誤差皆在正常範圍內，既有08-29/09-04歷史分歧無新增，commit（a82a673）push成功。全程v2/v3互不參照。",
+      "reason": "update"
+    },
     {
       "date": "2026-09-23",
       "project": "AI Tracker",
