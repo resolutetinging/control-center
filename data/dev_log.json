@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-24",
+  "generated_through": "2026-09-25",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-25",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard_v3.py、sleep_dashboard_v3.html、sleep_v3_history.json",
+      "summary": "使用者提供iPhone分期數值做三方比對：awake21、rem91、core334、deep21分鐘。v2跑run_update.sh，解析254筆有效夜晚，deep21/rem91/core332/awake22分鐘，跟iPhone誤差皆≤2分鐘，push成功。v3跑update_dashboard_v3.py後發現異常：09-25算出deep_min=0（應為21）。查證split_sessions()函式gap判斷漏加前一筆樣本自己的duration，09-25凌晨一筆8分鐘的Awake導致真實83.5分鐘的間隔被少算成91.5分鐘、誤判超過90分鐘門檻切成兩段，把含21分鐘Deep睡眠的前段整段丟失。修法：gap改用下一筆start減前一筆結束時間（start+duration）。重跑後deep_min 0→21、core_min 262.5→332，跟v2幾乎完全一致，compare_v2_v3()重新比對30晚僅剩既有兩筆已知歷史分歧（08-29/09-04，與此次v3 bug無關），無新增異常。此修法屬v3自己獨立python內的bug修正，不涉及v2/v3資料互相注入，git diff --stat只改動預期3個檔案，commit（c6296db）push成功。",
+      "reason": "debug"
+    },
     {
       "date": "2026-09-24",
       "project": "Sleep Dashboard",
