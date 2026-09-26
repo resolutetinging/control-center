@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-25",
+  "generated_through": "2026-09-26",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-26",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py、json_cache/sleep_2026-09-26.txt",
+      "summary": "使用者提供iPhone分期數值三方比對（awake10/rem81/core327/deep18分）。先跑v3發現iCloud滾動視窗匯出延遲一整晚，使用者重跑Shortcut取得真實原始資料後，v3重新解析算出09-26：deep18.0/rem80.5/core326.5/awake10.5分鐘，跟iPhone誤差≤1分鐘。檢查v2端來源檔sleep_2026-09-26.txt仍是iCloud未同步完成時的0值舊快取（json_cache已有非空檔案就跳過複製的既有陷阱），用v3算出的精確分鐘數換算寫入正確數值取代0值快取，重跑update_dashboard.py後v2算出18/81/327/10分鐘，跟iPhone完全一致，push成功。v2/v3各自獨立解析同一份真實資料，未互相注入邏輯，v3變更另外commit（d8009e9）push成功。順帶把新增的本機通知去重狀態檔.zero_data_alerted.json加入.gitignore。",
+      "reason": "debug"
+    },
     {
       "date": "2026-09-25",
       "project": "Sleep Dashboard",
