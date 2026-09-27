@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-26",
+  "generated_through": "2026-09-27",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-09-27",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py",
+      "summary": "使用者提供iPhone分期數值三方比對（awake28/rem136/core413/deep33分）。v3解析當晚真實raw資料算出deep34.0/rem134.5/core409.5/awake31.5分鐘，跟iPhone誤差皆≤3.5分鐘屬正常捨入範圍，commit（6425a33）push成功。v2跑update_dashboard.py，來源檔deep/rem/awake三項（34/135/32分鐘）跟v3幾乎一致，但core略低（405 vs 409.5，差4.5分鐘）；較明顯的是v2來源檔sleepStart/sleepEnd寫01:04~10:00，跟v3用原始樣本算出的23:55~10:04相差超過1小時，疑似Shortcut端該欄位記錄成多日視窗範圍而非單夜。依鐵律使用者資料流與現況矛盾時指出矛盾、不自行選邊，未比照v3數值手動覆蓋v2的bedtime，維持v2原始值push上線，已在回報中告知使用者這個落差待其決定是否修正。",
+      "reason": "debug"
+    },
     {
       "date": "2026-09-26",
       "project": "Sleep Dashboard",
