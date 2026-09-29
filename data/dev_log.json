@@ -6,6 +6,20 @@
       "date": "2026-09-29",
       "project": "English Sandbox",
       "file": "ControlCenter/english-sandbox.html",
+      "summary": "使用者持續回報看不到新增的Idiom情境，判斷單純解釋scenes是隱藏context不夠，直接把本題實際挑到的scene顯示在題目上方（#idiom-scene-tag，🎬+英文原文）。claude-in-chrome實測切換Idiom分頁生成題目，scene tag正確顯示，commit（96129cf）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-29",
+      "project": "English Sandbox",
+      "file": "ControlCenter/english-sandbox.html",
+      "summary": "使用者要求reload後記住上次停留分頁，不再固定跳回Small Talk。switchTab()原本沒有任何persistence，新增es_last_tab key記錄每次切換，載入時白名單(ES_TABS)比對後還原。claude-in-chrome實測切到Idiom分頁後reload整頁，正確停留在Idiom，commit（74d610d）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-29",
+      "project": "English Sandbox",
+      "file": "ControlCenter/english-sandbox.html",
       "summary": "使用者回報沒看到剛新增的Idiom情境，查證IDIOM_TOPICS.meeting.scenes.length確實是12（生效中），根因是scenes只當LLM背景context從未顯示在UI上，隨機挑選本來就不容易感知變化，非bug。使用者要求出題同步顯示句子中文意思輔助判斷答案，新增context_zh欄位：AI只翻譯句子已知的上下文，空格處維持____不翻譯、不洩漏正解意思，渲染在#idiom-context-zh（句子下方），跟英文空格同樣.idiom-blank樣式。node --check語法合法，claude-in-chrome實測真實Groq呼叫確認context_zh正確產生且空格未洩漏答案，commit（e4ec2d2）push成功。",
       "reason": "debug"
     },
