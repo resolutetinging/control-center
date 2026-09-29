@@ -204,6 +204,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .idiom-sentence{font-size:19px;font-weight:500;line-height:1.7;color:var(--ink);margin-bottom:8px}
 .idiom-blank{background:rgba(61,106,82,.1);border-bottom:2px solid var(--en);color:var(--en);padding:1px 7px;border-radius:4px;font-weight:600;letter-spacing:.03em}
 .idiom-context-zh{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:18px}
+.idiom-scene-tag{font-size:11.5px;color:var(--faint);margin-bottom:8px}
 .reveal-verdict{font-size:13.5px;font-weight:700;margin-bottom:12px;padding:10px 14px;border-radius:9px;display:flex;align-items:center;gap:7px}
 .reveal-verdict.v-correct{background:rgba(61,106,82,.1);color:var(--en)}
 .reveal-verdict.v-wrong{background:rgba(176,96,50,.08);color:#8a4020}
@@ -547,6 +548,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <span>拆彈題目 — Fill in the blank</span>
       <button class="regen-btn" id="skip-btn" onclick="genQuestion()">↻ 換一題</button>
     </div>
+    <div class="idiom-scene-tag" id="idiom-scene-tag" style="display:none"></div>
     <div class="idiom-sentence" id="idiom-sentence"></div>
     <div class="idiom-context-zh" id="idiom-context-zh" style="display:none"></div>
     <div class="opts-grid" id="opts-grid"></div>
@@ -1928,6 +1930,7 @@ Rules:
       candidate = {...candidate, sentence: candidate.sentence.replace(candidate.correct, '______')};
     }
     curQ = candidate;
+    curQ._scene = scene; // 09-29：使用者反映看不到新增的情境有沒有生效，這裡存下這題實際挑到哪個scene供UI顯示
 
     // 四選項中文對照表：正解用zh，干擾選項用distractor_zh（同順序），answer揭曉卡的「四個選項的意思」用這個查
     curQ._optZh = {};
@@ -1938,6 +1941,16 @@ Rules:
     const allOpts = [curQ.correct, ...(curQ.distractors||[]).slice(0,3)];
     for(let i=allOpts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [allOpts[i],allOpts[j]]=[allOpts[j],allOpts[i]]; }
     curQ._shuffled = allOpts;
+
+    // 09-29：使用者反覆回報「看不到新增的情境」——scene本來只是餵給AI的隱藏context，
+    // UI從未顯示過，隨機挑選也不容易感知。顯示出來讓使用者能實際看到scenes池確實在輪替
+    const sceneEl = $('idiom-scene-tag');
+    if(curQ._scene){
+      sceneEl.textContent = '🎬 ' + curQ._scene;
+      sceneEl.style.display = 'block';
+    } else {
+      sceneEl.style.display = 'none';
+    }
 
     // Render sentence with styled blank
     const parts = curQ.sentence.split(/_{4,}/);
