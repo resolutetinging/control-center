@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-29",
+      "project": "WordVault",
+      "file": "WordVault/WordVault.html",
+      "summary": "使用者匯入新批次後回報單字庫出現不該出現的內容（截圖顯示wagon/aspirational等單字中文欄位直接顯示一整段JSON字串）。查code定位根因：batchTranslate()主迴圈w.chinese = found.chinese || found，AI回應裡若某單字的value本身是JSON字串（雙重編碼）而非物件，found.chinese是undefined，退回把整段JSON字串塞進chinese欄位。修法：found為字串時先嘗試JSON.parse還原成物件再取欄位。用claude-in-chrome檢查使用者現有localStorage，掃出15筆受影響單字（不只截圖裡的2筆）：wagon/aspirational/justify/shotgun/neurotic/flick/embark/caravan/tailgate/novelty/collared/geological/unprecedented/poise/delirium，逐一解析修復並呼叫既有syncToGist()推送備份，commit（87dd745）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-29",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py",
       "summary": "使用者提供iPhone分期數值三方比對（awake22/rem100/core285/deep35分）。v3解析當晚真實raw資料算出deep35.5/rem99.0/core284.0/awake23.0分鐘，跟iPhone誤差皆≤1分鐘，commit（626a31c）push成功。v2跑update_dashboard.py，來源檔deep/rem/core/awake（36/99/284/23分鐘）同樣跟v3與iPhone一致；bedtime又出現與v3不同的落差（01:51 vs 00:48），比照09-27/09-28使用者已確認的原則，維持v2/v3各自獨立依自己檔案更新、不再詢問。",
