@@ -1658,11 +1658,15 @@ function resetAll(){
 }
 
 // ── Tab switch ──
+// 09-29：使用者反映reload頁面後永遠跳回Small Talk分頁，要求記住上次停留的分頁
+const ES_LAST_TAB_KEY = 'es_last_tab';
+const ES_TABS = ['talk','idiom','lib','combo','grammar'];
 function switchTab(tab){
-  ['talk','idiom','lib','combo','grammar'].forEach(t=>{
+  ES_TABS.forEach(t=>{
     document.getElementById('page-'+t).classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
   });
+  localStorage.setItem(ES_LAST_TAB_KEY, tab);
   if(tab==='lib') renderLib();
   if(tab==='combo'){ renderCombos(); backfillComboZh(); }
   if(tab==='grammar') renderGrammarLib();
@@ -2415,6 +2419,9 @@ updateRoundCounter();
 document.getElementById('idiom-round-target-select').value = String(idiomRoundTarget);
 updateIdiomRoundCounter();
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
+// 白名單防呆：儲存值萬一是舊分頁key或損毀資料，不讓switchTab找不到DOM而整頁掛掉
+const lastTab = localStorage.getItem(ES_LAST_TAB_KEY);
+if(lastTab && ES_TABS.includes(lastTab) && lastTab!=='talk') switchTab(lastTab);
 </script>
 <script src="cc_zht.js"></script>
 <script src="cc_store.js"></script>
