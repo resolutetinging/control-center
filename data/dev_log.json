@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-29",
+      "project": "Mental Dashboard",
+      "file": "wellness-tracker/mental-dashboard.html",
+      "summary": "使用者要求日期區間內完全沒有記錄的每一天一鍵填上指定心情分數，日期區間跟分數都要能自訂。確認分數使用者自訂、不需同時預設情緒標籤/因子、備填記錄標記isBackfilled:true方便清除。Settings頁新增「歷史空白日備填」卡片，判斷有無記錄沿用renderCalendar()既有本地時間比對，新增clearBackfilled()整批復原。驗證比照08-21 K-Musical Hub教訓：先backup真實localStorage，只在使用者最早記錄之前的安全日期測試，驗證首次新增/重疊不覆寫/精準清除/reload後逐位元組比對回原值四項全過，commit（095534e）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-29",
       "project": "English Sandbox",
       "file": "ControlCenter/english-sandbox.html",
       "summary": "使用者澄清原本要的比之前理解的簡單：不是把scenes改成兩層式選單，是直接仿Small Talk的具體情境命名風格（咖啡廳排隊/近況問候），在Pick a Topic多加幾個新主題按鈕，用法跟既有8個主題完全一樣。新增6個：咖啡廳排隊/近況問候/鄰居寒暄/餐廳候位/旅途鄰座/遛狗巧遇，各4個scenes，主題總數8→14。node直接eval驗證14個key跟14個按鈕id一一對應，claude-in-chrome實測點選近況問候正確生成情境相符的題目，commit（0ed5f9f）push成功。",
