@@ -209,7 +209,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .reveal-idiom{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:7px;letter-spacing:.01em}
 .reveal-explain{font-size:13px;color:var(--sub);line-height:1.72;margin-bottom:10px}
 .reveal-example{font-size:12.5px;color:var(--faint);background:rgba(40,38,32,.04);border-radius:8px;padding:9px 13px;border-left:2.5px solid var(--bstr);margin-bottom:14px;line-height:1.6}
-.reveal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.reveal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:18px}
 /* ── 四選項意思卡（08-10）── */
 .opt-meaning-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
 .opt-meaning-row:last-child{border-bottom:none}
@@ -507,7 +507,21 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 
   <!-- Topic selector -->
   <div class="panel">
-    <div class="panel-lbl">選擇主題 — Pick a topic</div>
+    <div class="panel-lbl">
+      <span>選擇主題 — Pick a topic</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="idiom-round-counter" style="display:none;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:700;color:var(--sub);"></span>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;text-transform:none;letter-spacing:normal;font-weight:400;color:var(--sub);cursor:pointer;">🎯 練習題數
+          <select id="idiom-round-target-select" style="font-size:11px;border:1px solid var(--border);border-radius:5px;padding:2px 4px;background:var(--card);color:var(--sub);cursor:pointer;" onchange="setIdiomRoundTarget(this.value)">
+            <option value="0">不限</option>
+            <option value="5">5 題</option>
+            <option value="10">10 題</option>
+            <option value="15">15 題</option>
+            <option value="20">20 題</option>
+          </select>
+        </label>
+      </div>
+    </div>
     <div class="sit-row" id="topic-row" style="flex-wrap:wrap;gap:6px;">
       <button class="sit-btn" id="topic-meeting" onclick="pickTopic('meeting')">📊 商務開會</button>
       <button class="sit-btn" id="topic-emotion" onclick="pickTopic('emotion')">💬 情緒表達</button>
@@ -1667,6 +1681,12 @@ const IDIOM_TOPICS = {
       'Someone joining a meeting late and catching up',
       'An all-hands call where leadership drops a surprise announcement',
       'A presenter defending their proposal against tough questions',
+      'A facilitator trying to steer a meeting back on track after it goes off topic',
+      'Someone pitching a bold idea to a skeptical room',
+      'A team debriefing right after a meeting that clearly did not go well',
+      'An executive fielding hard questions during a Q&A session',
+      'Two colleagues silently exchanging looks during an awkward moment in a meeting',
+      'Someone wrapping up a long meeting by summarizing the action items',
     ]},
   emotion: { label:'💬 情緒表達', en:'expressing emotions, reactions, and attitudes in professional or everyday settings',
     scenes:[
@@ -1676,6 +1696,12 @@ const IDIOM_TOPICS = {
       'Two friends discussing a frustrating situation over coffee',
       'Someone trying to stay composed under pressure in a meeting',
       'A team member expressing disappointment about a cancelled project',
+      'Someone trying not to show how nervous they are before a big presentation',
+      'A friend comforting someone who just got some bad news',
+      'Someone struggling to hide their excitement about a secret',
+      'A colleague apologizing sincerely after losing their temper',
+      'Someone processing mixed feelings about a promotion that came with more stress',
+      'Two coworkers commiserating about a chaotic week',
     ]},
   project: { label:'🚀 專案推進', en:'project management, deadlines, milestones, and team coordination',
     scenes:[
@@ -1685,6 +1711,12 @@ const IDIOM_TOPICS = {
       'A cross-functional team trying to align before a product launch',
       'A freelancer negotiating a deadline extension with a client',
       'A manager praising the team after hitting a major milestone',
+      'A team scrambling to fix a critical bug right before a launch',
+      'Someone proposing to cut a feature to save the timeline',
+      'A project lead reassigning tasks after a teammate suddenly quits',
+      'Two team members disagreeing on priorities during sprint planning',
+      'A stakeholder demanding a status update in the middle of a crisis',
+      'A team quietly celebrating after narrowly avoiding a disaster',
     ]},
   negotiate: { label:'🤝 談判協商', en:'negotiation, persuasion, compromise, and conflict resolution',
     scenes:[
@@ -1694,6 +1726,12 @@ const IDIOM_TOPICS = {
       'A vendor pushing back on contract terms',
       'Two friends trying to decide on a plan when they want different things',
       'A team lead mediating a conflict between two teammates',
+      'A tenant negotiating rent terms with a landlord',
+      'Two business partners hashing out how to split responsibilities',
+      'Someone trying to get a refund from a reluctant company rep',
+      'A manager negotiating a bigger budget with finance',
+      'Roommates negotiating how to split shared expenses',
+      'A freelancer pushing back on unreasonable client demands',
     ]},
   career: { label:'💪 職涯成長', en:'career development, performance reviews, feedback, and professional growth',
     scenes:[
@@ -1703,6 +1741,12 @@ const IDIOM_TOPICS = {
       'Someone reflecting on a failure and what they learned',
       'A new grad trying to impress in their first real job',
       'A professional deciding whether to take a risky new opportunity',
+      'Someone preparing to ask their boss for a raise',
+      'A person deciding whether to leave a stable job for a risky startup',
+      'Someone bouncing back after being passed over for a promotion',
+      'A professional networking awkwardly at an industry event',
+      'Someone weighing feedback from a performance review they disagree with',
+      'A person mentoring a struggling junior colleague',
     ]},
   service: { label:'🎧 客戶服務', en:'customer service, handling complaints, service recovery, and client support',
     scenes:[
@@ -1712,6 +1756,12 @@ const IDIOM_TOPICS = {
       'A customer success rep following up after resolving a complaint',
       'A rep de-escalating a customer who is threatening to cancel a subscription',
       'A team lead coaching a new rep on handling a difficult call',
+      'A rep handling a customer who will not stop interrupting',
+      'Someone explaining a confusing policy to a first-time customer',
+      'A support agent going above and beyond to fix a customer problem',
+      'A manager stepping in to personally handle an escalated complaint',
+      'Someone politely saying no to an unreasonable customer request',
+      'A rep thanking a loyal customer for their patience',
     ]},
   crossfunc: { label:'🔄 跨部門協作', en:'cross-department collaboration, competing priorities, and workplace communication across teams',
     scenes:[
@@ -1721,6 +1771,12 @@ const IDIOM_TOPICS = {
       'A colleague from a different department asking for an urgent favor',
       'A team explaining why a cross-team initiative is stalled',
       'Someone navigating office politics to get a decision unblocked',
+      'Two teams blaming each other for a missed handoff',
+      'Someone trying to build trust with a team they have never worked with',
+      'A person caught in the middle of two departments with conflicting goals',
+      'Someone diplomatically declining to take on another team\'s work',
+      'A team lead presenting a joint plan to skeptical peers',
+      'Someone smoothing over a miscommunication between departments',
     ]},
   social: { label:'🌐 日常社交', en:'casual conversation, small talk, social situations, and everyday English',
     scenes:[
@@ -1744,8 +1800,33 @@ let curQ = null;
 let addedOptIdx = new Set(); // 08-10：改成每個選項各自可加入字庫，記錄這一題已加過的選項index
 let usedIdioms = [];   // 追蹤已出現的 idiom，避免重複
 
+// 09-29：仿Small Talk的「練習題數」(ROUND_TARGET_KEY)加到Idiom拆彈，換主題=開新一輪、
+// 歸零重新累計（跟Small Talk換情境的範圍界定一致），Idiom沒有綜合分析功能可自動觸發，
+// 純粹只做進度顯示
+const IDIOM_ROUND_TARGET_KEY = 'es_idiom_round_target';
+let idiomRoundTarget = Number(localStorage.getItem(IDIOM_ROUND_TARGET_KEY)) || 0; // 0=不限
+let idiomRoundCount = 0;
+function setIdiomRoundTarget(v){
+  idiomRoundTarget = Number(v) || 0;
+  localStorage.setItem(IDIOM_ROUND_TARGET_KEY, String(idiomRoundTarget));
+  updateIdiomRoundCounter();
+}
+function updateIdiomRoundCounter(){
+  const el = document.getElementById('idiom-round-counter');
+  if(!el) return;
+  if(idiomRoundTarget > 0){
+    el.textContent = `📊 ${idiomRoundCount}/${idiomRoundTarget}`;
+    el.style.display = 'inline';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 function pickTopic(key){
   curTopic = key;
+  // 換主題 = 開新一輪練習，歸零題數進度
+  idiomRoundCount = 0;
+  updateIdiomRoundCounter();
   document.querySelectorAll('#topic-row .sit-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('topic-'+key).classList.add('active');
   genQuestion();
@@ -1789,7 +1870,7 @@ CRITICAL BLANK RULES (violation = bad question):
 2. NEVER split a phrasal verb across the blank and surrounding text. BAD: "really ______ me off" (because "me off" is part of "tick me off"). GOOD: "He was really ______ about the feedback" (blank = "worked up").
 3. After inserting the correct answer into the blank, the full sentence must be grammatically natural.
 4. MOST COMMON MISTAKE — always double-check: if the correct answer ends with a preposition or particle (e.g. "excited about", "upset about", "interested in", "responsible for", "rise to", "get used to", "look forward to"), that preposition must NOT appear again immediately after the blank in the sentence. BAD: "The team was really ______ about the project" (correct="excited about") — "about" duplicates. BAD: "He was ______ about the news" (correct="upset about") — "about" duplicates. BAD: "Let's make sure you ______ to new challenges" (correct="rise to") — "to" duplicates. GOOD: "The team was really ______ by the project's results" (correct="excited about"). GOOD: "He was ______ the news" (correct="upset about"). GOOD: "She needs to ______ the pressure of public speaking" (correct="rise to"). Mentally read the full sentence with the answer inserted before finalising.
-5. UNIQUE CORRECT ANSWER — the sentence must contain enough context that ONLY the correct answer makes sense in the blank, not just "sounds different from the distractors". Before finalizing, mentally substitute EACH distractor into the blank and ask: does the sentence still read as a coherent, natural thing someone would say? If a distractor also fits (even with a slightly different meaning), the sentence lacks disambiguating context and must be rewritten with an added detail, reason, or consequence that rules the distractor out. BAD (ambiguous, real failure case): "Could you ______ the deadline for this project so we can prioritize our tasks?" — both "push back" (postpone it) and "bring up" (mention it, so the team can then discuss reprioritizing) fit naturally; a learner has no way to know which is intended. GOOD (fixed): "Could you ______ the deadline for this project by two weeks so we can prioritize our tasks?" — adding "by two weeks" makes only "push back" grammatically and semantically valid; "bring up" cannot take a duration and becomes nonsensical.
+5. UNIQUE CORRECT ANSWER — the sentence must contain enough context that ONLY the correct answer makes sense in the blank, not just "sounds different from the distractors". Before finalizing, mentally substitute EACH distractor into the blank and ask: does the sentence still read as a coherent, natural thing someone would say? If a distractor also fits (even with a slightly different meaning), the sentence lacks disambiguating context and must be rewritten with an added detail, reason, or consequence that rules the distractor out. BAD (ambiguous, real failure case): "Could you ______ the deadline for this project so we can prioritize our tasks?" — both "push back" (postpone it) and "bring up" (mention it, so the team can then discuss reprioritizing) fit naturally; a learner has no way to know which is intended. GOOD (fixed): "Could you ______ the deadline for this project by two weeks so we can prioritize our tasks?" — adding "by two weeks" makes only "push back" grammatically and semantically valid; "bring up" cannot take a duration and becomes nonsensical. BAD (ambiguous, real failure case #2): "Could you ______ the latest news about your new job?" with correct="fill me in on" and distractors=["tell me about","let me know about","update me on"] — the sentence has no situational cue (who is asking, how formal, why they weren't told yet) that rules out any of the three distractors; a learner correctly feels "the other 3 all sound fine too". GOOD (fixed): give the sentence a specific trigger that only the correct idiom's register/nuance satisfies, e.g. "I just got back from vacation and have no idea what happened — could you ______ on the latest news about my new job?" (the "just got back, no idea what happened" detail specifically calls for the informal, catch-up-on-everything nuance of "fill me in", ruling out the more formal/partial-update feel of the distractors).
 6. ALL FOUR OPTIONS MUST GRAMMATICALLY FIT THE SAME BLANK — this check from rule 5 is not just about meaning, it is about grammar too. If the correct idiom is a "verb + object pronoun (me/you/us/him/her/them) + particle" phrase (e.g. "fill me in", "talk her out of it", "walk him through"), the object pronoun is PART of the idiom and belongs inside the blank — do NOT also place that same pronoun as fixed text right after the blank in the sentence. And every distractor must be able to physically slot into the exact same blank position without creating a leftover duplicate word. BAD (real failure case): sentence "Could you ______ me on whether this decision will impact our long-term goals?" with correct="fill me in" and distractors=["pick me up","turn me down","get me through"] — inserting ANY of these four options produces a doubled "me" ("...fill me in me on...", "...pick me up me on...") because the sentence already fixed "me" outside the blank while every option also independently contains its own "me". GOOD (fixed): sentence "Could you ______ on whether this decision will impact our long-term goals?" with correct="fill me in" and distractors chosen as other verbs that also naturally take "on" without an extra fixed pronoun, e.g. "brief me" / "update me" / "consult me" — reword the distractor list (not the sentence) so every option's own object pronoun (if any) is self-contained and none of them collide with fixed text outside the blank.
 
 Return ONLY valid JSON, no markdown, no extra text:
@@ -1808,28 +1889,21 @@ Rules:
       const raw = await callGroq(prompt, 1200, 'You output ONLY valid JSON. All Chinese fields (zh, explain_zh) must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including kanji shinjitai forms and kana).', true);
       return s2tDeep(safeParseJson(raw));
     };
-    const _hasDupParticle = (sentence, answer) => {
-      const last = (answer||'').trim().split(/\s+/).pop().toLowerCase();
-      const particles = new Set(['about','in','on','at','for','of','to','with','by','up','out','off','into','over','after','before','through','around','down','from','under']);
-      if (!particles.has(last)) return false;
+    // 09-29：使用者截圖回報「brighten my day」代入句子「You really ______ my day.」變成
+    // 「brighten my day my day」重複。這是第三次同類症狀換詞性出現——08-12先抓到介係詞重複
+    // （about/in/on...），同天又抓到代名詞重複（me/you/it...），現在是名詞片語（my day）
+    // 重複，再加第三張詞性字典是whack-a-mole。改用結構性判斷取代前兩個檢查：不管詞性，
+    // 只要空格後緊接的第一個字本身也出現在被測試的選項字詞裡，代入後就一定會產生重複，
+    // 一條規則涵蓋介係詞/代名詞/名詞片語等所有情況
+    const _hasDupWord = (sentence, answer) => {
       const blankParts = sentence.split(/_{4,}/);
       if (blankParts.length !== 2) return false;
-      const after = blankParts[1].trimStart().toLowerCase();
-      return after.startsWith(last + ' ') || after.startsWith(last + ',') || after.startsWith(last + '.');
-    };
-    // 08-12：使用者實測發現「fill me in / pick me up / turn me down / get me through」這種
-    // 「動詞+受格代名詞+介副詞」型態的選項，若句子空格後緊接著固定的「me on...」，四個選項
-    // 代入後全部都會變成「me」重複（例如fill me in me on...）。_hasDupParticle只檢查correct
-    // 答案「最後一個字」是否為介係詞重複，抓不到「受格代名詞出現在句中任何位置」這種情況，
-    // 也完全沒檢查distractors——干擾選項一樣要能實際代入空格，不能只檢查正解
-    const _hasDupPronoun = (sentence, answer) => {
-      const words = (answer||'').trim().toLowerCase().split(/\s+/);
-      const pronouns = new Set(['me','you','us','him','her','them','it']);
-      if (!words.some(w => pronouns.has(w))) return false;
-      const blankParts = sentence.split(/_{4,}/);
-      if (blankParts.length !== 2) return false;
-      const after = blankParts[1].trimStart().toLowerCase();
-      return [...pronouns].some(p => after.startsWith(p + ' ') || after.startsWith(p + ',') || after.startsWith(p + '.'));
+      const afterWords = blankParts[1].trim().toLowerCase().split(/\s+/).filter(Boolean);
+      if (!afterWords.length) return false;
+      const firstAfter = afterWords[0].replace(/^[",']+|[.,!?;:"']+$/g, '');
+      if (!firstAfter) return false;
+      const ansWords = (answer||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
+      return ansWords.includes(firstAfter);
     };
     // 08-19：使用者截圖回報題目直接把答案完整寫進句子裡，完全沒有空格——查出_hasBlankIssue
     // 只檢查「介係詞/代名詞重複」這種次要問題，兩個子檢查都預設blank已經存在（split不出2段
@@ -1838,7 +1912,7 @@ Rules:
     const _hasBlankIssue = (cand) => {
       if (_hasMissingBlank(cand)) return true;
       const opts = [cand.correct, ...(cand.distractors||[]).slice(0,3)];
-      return opts.some(o => _hasDupParticle(cand.sentence, o) || _hasDupPronoun(cand.sentence, o));
+      return opts.some(o => _hasDupWord(cand.sentence, o));
     };
     let candidate = await _fetchCandidate();
     // retry up to 2 more times if any of the 4 options (correct or distractor) can't cleanly slot into the blank
@@ -1945,6 +2019,10 @@ function selectOpt(idx){
 
   $show('idiom-reveal');
   setTimeout(()=>window.scrollTo({top:$('idiom-reveal').offsetTop-80,behavior:'smooth'}),150);
+
+  // 累計本輪練習題數（不論答對答錯都算一題，跟Small Talk行為一致）
+  idiomRoundCount++;
+  updateIdiomRoundCounter();
 }
 
 // 08-10：從單一「加入字庫」按鈕（只存正解）改成四個選項各自可加入，讓使用者也能收藏干擾選項的意思；
@@ -2305,6 +2383,8 @@ renderLib();
 document.getElementById('auto-speak-toggle').checked = isAutoSpeakOn();
 document.getElementById('round-target-select').value = String(roundTarget);
 updateRoundCounter();
+document.getElementById('idiom-round-target-select').value = String(idiomRoundTarget);
+updateIdiomRoundCounter();
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 </script>
 <script src="cc_zht.js"></script>
