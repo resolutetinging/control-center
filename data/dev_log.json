@@ -6,6 +6,13 @@
       "date": "2026-09-29",
       "project": "English Sandbox",
       "file": "ControlCenter/english-sandbox.html",
+      "summary": "使用者回報沒看到剛新增的Idiom情境，查證IDIOM_TOPICS.meeting.scenes.length確實是12（生效中），根因是scenes只當LLM背景context從未顯示在UI上，隨機挑選本來就不容易感知變化，非bug。使用者要求出題同步顯示句子中文意思輔助判斷答案，新增context_zh欄位：AI只翻譯句子已知的上下文，空格處維持____不翻譯、不洩漏正解意思，渲染在#idiom-context-zh（句子下方），跟英文空格同樣.idiom-blank樣式。node --check語法合法，claude-in-chrome實測真實Groq呼叫確認context_zh正確產生且空格未洩漏答案，commit（e4ec2d2）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-29",
+      "project": "English Sandbox",
+      "file": "ControlCenter/english-sandbox.html",
       "summary": "使用者要求Idiom拆彈也仿Small Talk新增情境數量：8主題裡7個只有6個scenes，統一各補6個到12個。使用者截圖回報下一題按鈕跟上方輸入框間距太窄，.reveal-actions加margin-top。使用者截圖回報brighten my day代入You really ______ my day.變成重複，這是第三次同類症狀換詞性出現（08-12介係詞、同天代名詞、這次名詞片語），新增結構性判斷_hasDupWord()取代兩個詞性字典：空格後第一個字若出現在被測答案字詞裡就判定重複。使用者截圖回報另一題四個選項都合理、句子缺情境線索排除選項，純語意模糊code無法判斷，在prompt規則5追加真實失敗案例強化LLM自我檢查。仿Small Talk的練習題數功能加到Idiom拆彈：新增下拉選單+進度顯示，換主題歸零重新累計。node --check語法合法，claude-in-chrome實測選題答題計數器正確遞增、換主題正確歸零，commit（207db28）push成功。",
       "reason": "debug"
     },
