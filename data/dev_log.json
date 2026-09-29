@@ -6,6 +6,13 @@
       "date": "2026-09-29",
       "project": "WordVault",
       "file": "WordVault/WordVault.html",
+      "summary": "使用者要求重新review WordVault架構，派subagent全面查證後更新記憶檔（補上09-08後長出的Groq三層截斷防護鏈：429重試/殘句偵測finish_reason==='length'+1.8倍max_tokens重打/model故障備援，以及匯入格式偵測、備份還原、Quiz計分、XSS防護等舊記憶檔沒提到的部分）。Review順帶抓到2個既有問題：①GROQ_PRIMARY_MODEL常數定義了但3個Groq呼叫點都寫死literal字串，沒有真的引用該常數，跟08-17 daily-optimizer「換model漏改呼叫點」同類風險②單字庫卡片「未翻譯」提示用了<em>斜體標籤違反禁斜體規則。使用者確認要修，3個呼叫點改引用GROQ_PRIMARY_MODEL、<em>改<span>，獨立subagent read-back驗證4項條件全通過，commit（78ee34f）push成功。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-29",
+      "project": "WordVault",
+      "file": "WordVault/WordVault.html",
       "summary": "使用者匯入新批次後回報單字庫出現不該出現的內容（截圖顯示wagon/aspirational等單字中文欄位直接顯示一整段JSON字串）。查code定位根因：batchTranslate()主迴圈w.chinese = found.chinese || found，AI回應裡若某單字的value本身是JSON字串（雙重編碼）而非物件，found.chinese是undefined，退回把整段JSON字串塞進chinese欄位。修法：found為字串時先嘗試JSON.parse還原成物件再取欄位。用claude-in-chrome檢查使用者現有localStorage，掃出15筆受影響單字（不只截圖裡的2筆）：wagon/aspirational/justify/shotgun/neurotic/flick/embark/caravan/tailgate/novelty/collared/geological/unprecedented/poise/delirium，逐一解析修復並呼叫既有syncToGist()推送備份，commit（87dd745）push成功。",
       "reason": "debug"
     },
