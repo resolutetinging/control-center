@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-29",
+      "project": "English Sandbox",
+      "file": "ControlCenter/english-sandbox.html",
+      "summary": "使用者要求Idiom拆彈也仿Small Talk新增情境數量：8主題裡7個只有6個scenes，統一各補6個到12個。使用者截圖回報下一題按鈕跟上方輸入框間距太窄，.reveal-actions加margin-top。使用者截圖回報brighten my day代入You really ______ my day.變成重複，這是第三次同類症狀換詞性出現（08-12介係詞、同天代名詞、這次名詞片語），新增結構性判斷_hasDupWord()取代兩個詞性字典：空格後第一個字若出現在被測答案字詞裡就判定重複。使用者截圖回報另一題四個選項都合理、句子缺情境線索排除選項，純語意模糊code無法判斷，在prompt規則5追加真實失敗案例強化LLM自我檢查。仿Small Talk的練習題數功能加到Idiom拆彈：新增下拉選單+進度顯示，換主題歸零重新累計。node --check語法合法，claude-in-chrome實測選題答題計數器正確遞增、換主題正確歸零，commit（207db28）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-29",
       "project": "WordVault",
       "file": "WordVault/WordVault.html",
       "summary": "使用者截圖回報音標顯示格式不統一（devotee/tuition等無斜線包裹），另回報最新批次翻譯後仍有字未完整翻譯。查實際資料：31筆音標缺/斜線/（根因enrichWithDictPhonetics()/refreshAllPhonetics()把Free Dictionary API音標無條件覆蓋AI已包好斜線的版本）；5筆（surreal/merchant/opium/discernible/amicable）翻譯不完整（根因stillMissing/finalMissing兩層自動重試都只檢查中文是否為空，已有中文只缺詞性/音標的字永遠不會被重試，是安全網結構性缺口）。修法：新增isIncomplete()統一判斷取代三處舊篩選，新增normalizePron()統一補齊斜線；所有補齊寫入改為不覆蓋既有欄位。commit（3d7e924）push成功，部署生效後用修好的batchTranslate()跑5筆漏字全部成功，手動normalize 30筆缺斜線音標，全庫掃描剩0筆未完成，syncToGist()推送備份。",
