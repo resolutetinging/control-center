@@ -5,6 +5,13 @@
     {
       "date": "2026-09-30",
       "project": "Sleep Dashboard",
+      "file": "Sleep Dashboard/v2_v3_migration_report_20260930.md",
+      "summary": "使用者要求整理一份過去啟動交叉驗證→驗證狀況→整合驗證data→建議及下一步的報告，供今晚migration plan決策參考。從sleep_v3_history.json（35夜，08-27~09-30）、v2內嵌RAW資料、git log重新計算完整統計：分期分鐘數32/35夜(91%)一致、3筆分歧皆查明v2端問題；首次完整計算35夜bedtime落差（修正日界跨越計算假象後）：80%落差>5分鐘、平均36.4分鐘、中位數27.5分鐘、最大120分鐘；iPhone三方比對5夜v3誤差皆≤3.5分鐘。結論建議依原計畫10/1啟動③換引擎不換介面，列出bedtime監控盲點修補等3項下一步待辦。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-30",
+      "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard.py、update_dashboard_v3.py",
       "summary": "使用者提供iPhone分期數值三方比對（awake16/rem83/core336/deep10分）。v3解析當晚真實raw資料算出deep9.0/rem82.5/core334.0/awake18.5分鐘，跟iPhone誤差皆≤2.5分鐘，commit（2290748）push成功。v2跑update_dashboard.py，來源檔deep/rem/core/awake（9/82/334/18分鐘）同樣跟v3與iPhone一致，v2/v3交叉比對僅既有3筆已知歷史分歧，無新增異常。",
       "reason": "maintain"
