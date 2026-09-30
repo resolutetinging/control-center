@@ -1537,7 +1537,7 @@ document.addEventListener('mouseup', (ev)=>{
   btn.className = 'gr-hl-float-btn';
   btn.textContent = '🖍 標記';
   btn.style.left = Math.max(4, rect.left) + 'px';
-  btn.style.top = (rect.top - 30 + window.scrollY) + 'px';
+  btn.style.top = Math.max(4, rect.top - 30) + 'px';
   btn.onclick = ()=>{ applyGrHighlight(idx, field, s, e); _dismissGrHlBtn(); };
   document.body.appendChild(btn);
 });
