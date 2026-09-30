@@ -5,6 +5,13 @@
     {
       "date": "2026-09-30",
       "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
+      "summary": "使用者問efficiency缺口怎麼補。查code發現這欄位schema一直都在，只是build_record()寫死回傳0從未真正實作過。修法：v2效率公式=睡眠時間(deep+rem+core)/在床時間(睡眠時間+awake)*100，v3的total_min定義跟v2不同（本身已含awake），故v3公式是(deep+rem+core)/total_min*100，分母不能再重複加awake_min。備份sleep_v3_history.json後對現有35夜一次性backfill，git diff確認只有35處efficiency數值改動、無其他欄位被動到，重跑腳本讓HTML同步更新。派獨立subagent驗證公式/驗算/其餘欄位零改動/HTML一致/語法合法，6項全通過，commit（183ad77）push成功，已同步更新migration報告標注此項為已完成。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-30",
+      "project": "Sleep Dashboard",
       "file": "Sleep Dashboard/v2_v3_migration_report_20260930.md",
       "summary": "使用者指出v2不只睡眠時長趨勢圖，要求先評估把v3邏輯套進v2對所有圖表分析的影響性，確認完風險才動作；同時要求把每夜v2/v3/iPhone比對表也加進報告。先補上35夜完整逐夜比對表。派subagent全面盤點：發現v3輸出缺efficiency欄位（直接套用會讓效率圖表壞掉）；v2內部15個函式受影響（updateStageCompensation/updateFragmentationCorrelation/updatePersonalBaseline等3個歷史累積型分析風險最高，會回溯重算全部歷史）；SAS Hub 9個函式受影響（buildCausalChainNarrative風險最高，可能讓使用者看過的因果敘述換成不同日期）；意外發現Daily Optimizer的fetchSleep()是獨立fetch v2頁面regex解析RAW的第三條消費路徑，遷移時容易漏掉造成跨頁面不一致。報告結論修正為方向仍支持換引擎但不建議10/1當天全面切換，先補efficiency缺口+新資料用v3/既有歷史不回溯覆寫再啟動。",
       "reason": "maintain"
