@@ -854,12 +854,15 @@ function checkGuard(){
   else if(stamina<60){dot.className='warn';txt.textContent='Guard · 戰力偏低（'+stamina+'）';gState='monitoring';}
   else if(chronicFlags.length){dot.className='warn';txt.textContent='Guard · 長期負荷';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
-  // 具體是哪幾項長期訊號或戰力數字掛在 pill 的 hover 提示上，不佔版面也不打斷操作
+  // 具體是哪幾項長期訊號或戰力數字掛在 pill 的 hover 提示上，不佔版面也不打斷操作。
+  // 兩種軟性訊號可能同時成立（stamina<60 又剛好有 chronicFlags），文字只會顯示 else-if
+  // 優先命中的那一個，但 hover 要如實列出全部目前成立的原因，避免文字跟提示對不上
   const gp=document.getElementById('guard-pill');
   if(gp){
-    if(chronicFlags.length)gp.title='長期負荷訊號：'+chronicFlags.join('、')+'（僅提示，不中止操作）';
-    else if(stamina<60)gp.title='戰力'+stamina+'，低於60門檻，僅提示不中止操作';
-    else gp.title='';
+    const _reasons=[];
+    if(stamina<60)_reasons.push('戰力'+stamina+'，低於60門檻');
+    if(chronicFlags.length)_reasons.push('長期負荷訊號：'+chronicFlags.join('、'));
+    gp.title=_reasons.length?(_reasons.join('；')+'（僅提示，不中止操作）'):'';
   }
 }
 function renderCatDisplay(){
