@@ -5,6 +5,13 @@
     {
       "date": "2026-09-30",
       "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v3_live.html、update_dashboard_v3_live.py、run_update.sh、update_dashboard_v3.py、daily-optimizer/daily_optimizer_v3.html",
+      "summary": "使用者拍板10/1-15為migration monitor period執行計畫：v2完全不動照舊跑排程，v3-live（v2逐位元組複製+換資料來源）並行，10/15視狀況決定SAS Hub是否正式切過去；Daily Optimizer風險評估低，10/1直接切不需並行監控。建立sleep_dashboard_v3_live.html+update_dashboard_v3_live.py。測試時踩到真實坑：複製頁一開瀏覽器就把sas_sleep_latest/sas_combat_*等共用localStorage key覆蓋成v3數字，靠重開v2頁面救回，修法新增SAS_KEY_SUFFIX='_v3preview'包裝全部讀寫。run_update.sh補上v3排程缺口。compare_v2_v3()新增bedtime比對，15分鐘門檻，25/35夜超標。建立daily_optimizer_v3.html新分支，今天未在瀏覽器測試避免跟使用者正在用的正式版同源共用localStorage互相干擾。派獨立subagent做6項最終驗證，確認daily_optimizer.html全程未被觸碰，全數通過，4個commit分別push到sleep-dashboard與daily-optimizer repo。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-09-30",
+      "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard_v3.py、sleep_v3_history.json",
       "summary": "使用者問efficiency缺口怎麼補。查code發現這欄位schema一直都在，只是build_record()寫死回傳0從未真正實作過。修法：v2效率公式=睡眠時間(deep+rem+core)/在床時間(睡眠時間+awake)*100，v3的total_min定義跟v2不同（本身已含awake），故v3公式是(deep+rem+core)/total_min*100，分母不能再重複加awake_min。備份sleep_v3_history.json後對現有35夜一次性backfill，git diff確認只有35處efficiency數值改動、無其他欄位被動到，重跑腳本讓HTML同步更新。派獨立subagent驗證公式/驗算/其餘欄位零改動/HTML一致/語法合法，6項全通過，commit（183ad77）push成功，已同步更新migration報告標注此項為已完成。",
       "reason": "debug"
