@@ -6,6 +6,13 @@
       "date": "2026-09-30",
       "project": "Control Center",
       "file": "index.html",
+      "summary": "使用者追問「guard動畫已跳出時，動畫上方pill的內容呢」，查code發現triggerGuard()跳出動畫、endBreak()進入冷卻倒數、guard_snooze今日靜默（checkGuard()早退分支＋snoozeGuard()）共4個地方都手動改dot/txt卻沒同步設guard-pill的title，導致畫面文字已換（例如「執法中」），hover卻停在跳出前舊內容，使用者要求修掉。修法：一次補齊同檔案4個同類缺口，triggerGuard()title沿用函式裡原本算好顯示在動畫上的msgs reason文字，endBreak()補冷卻分鐘數說明，checkGuard()早退分支與snoozeGuard()補語意一致的已靜默說明。node --check語法合法，派獨立subagent驗證7項（4處title內容正確、皆用if保護、git diff只改1檔、既有判斷邏輯逐字未變）全數通過，commit（7bc1803）push成功。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-30",
+      "project": "Control Center",
+      "file": "index.html",
       "summary": "使用者上線後追問「現在顯示的content rule會是什麼」，開真實頁面查即時值，發現戰力46命中「Guard · 戰力偏低（46）」文字時，chronicFlags也同時成立（超頻5天/過載14筆），但hover title獨立用if-elseif（chronicFlags優先）只顯示長期負荷內容，跟畫面文字對不上。根因是兩種軟性條件可能同時成立，checkGuard()決定文字的else-if鏈只會命中其中一個，hover title卻複製了同一種互斥判斷邏輯。修法：hover title改用陣列蒐集所有目前成立的原因一併join顯示，不再只取其中一項。node --check語法合法，派獨立subagent驗證6項（陣列並存邏輯、清空情境、單一情境格式、txt/dot判斷鏈未動、git diff只改1檔、語法）全數通過，commit（5950662）push成功。",
       "reason": "bug_fix"
     },
