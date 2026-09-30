@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-30",
+      "project": "Daily Optimizer",
+      "file": "Daily Optimization/daily_optimizer.html",
+      "summary": "使用者截圖回報昨天8項裡7項done只1項因身體不適skip，AI卻判定低於預期，質疑太嚴格。查明09-29戰力51%屬Critical等級，cpExpect給LLM的期待基準明寫「能完成任何任務都值得肯定」最寬鬆標準，但完成率88%仍判below，跟給定期待基準矛盾——LLM機械式看到有項目沒做就扣分。修法：算出completionPct（同week_plan加權）明確餵給prompt當錨點，status欄位說明要求對齊期待基準寬鬆度。claude-in-chrome實測09-29重新生成，status由below→meet，理由「完成率高，符合Critical標準」，commit（016de53）push成功。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-09-30",
       "project": "Sleep Dashboard",
       "file": "Sleep Dashboard/v2_v3_migration_report_20260930.md",
       "summary": "使用者要求整理一份過去啟動交叉驗證→驗證狀況→整合驗證data→建議及下一步的報告，供今晚migration plan決策參考。從sleep_v3_history.json（35夜，08-27~09-30）、v2內嵌RAW資料、git log重新計算完整統計：分期分鐘數32/35夜(91%)一致、3筆分歧皆查明v2端問題；首次完整計算35夜bedtime落差（修正日界跨越計算假象後）：80%落差>5分鐘、平均36.4分鐘、中位數27.5分鐘、最大120分鐘；iPhone三方比對5夜v3誤差皆≤3.5分鐘。結論建議依原計畫10/1啟動③換引擎不換介面，列出bedtime監控盲點修補等3項下一步待辦。",
