@@ -809,6 +809,8 @@ function snoozeGuard(){
   const txt=document.getElementById('guard-txt');
   if(dot)dot.className='warn';
   if(txt)txt.textContent='Guard · 低戰力（今日靜默）';
+  const gp=document.getElementById('guard-pill');
+  if(gp)gp.title='已手動靜默今日提醒，明天恢復監控';
 }
 function checkGuard(){
   if(gState==='alerting'||gState==='resting')return;
@@ -822,7 +824,10 @@ function checkGuard(){
   const txt=document.getElementById('guard-txt');
   const newDay=(now-end2)>8*60*60*1000;
   if(localStorage.getItem('guard_snooze_'+TODAY)){
-    dot.className='warn';txt.textContent='Guard · 低戰力（今日靜默）';gState='monitoring';return;
+    dot.className='warn';txt.textContent='Guard · 低戰力（今日靜默）';
+    const gpSnooze=document.getElementById('guard-pill');
+    if(gpSnooze)gpSnooze.title='已手動靜默今日提醒，明天恢復監控';
+    gState='monitoring';return;
   }
   // 體能續航觸發：繞過 newDay（日間指標，不受睡眠截止時間限制）
   const _enduranceStr=localStorage.getItem('sas_endurance');
@@ -893,6 +898,8 @@ function triggerGuard(reason='low',riskFlags=[]){
   document.getElementById('guard-overlay').style.display='block';
   document.getElementById('guard-dot').className='alert';
   document.getElementById('guard-txt').textContent='執法中';
+  const gpAlert=document.getElementById('guard-pill');
+  if(gpAlert)gpAlert.title=msgs;
   document.getElementById('guard-stop-btn').style.display='flex';
   startBreak();
 }
@@ -918,6 +925,8 @@ function endBreak(){
   document.getElementById('guard-overlay').style.display='none';
   document.getElementById('guard-dot').className='warn';
   document.getElementById('guard-txt').textContent=`Guard · ${skipDur}m cooldown`;
+  const gpCooldown=document.getElementById('guard-pill');
+  if(gpCooldown)gpCooldown.title=skipDur+'分鐘冷卻中，期間不會再跳出提醒';
   document.getElementById('guard-stop-btn').style.display='none';
   setTimeout(()=>{gState='monitoring';checkGuard();},skipMs);
 }
