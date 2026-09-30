@@ -6,6 +6,13 @@
       "date": "2026-09-30",
       "project": "Control Center",
       "file": "index.html",
+      "summary": "使用者上線後追問「現在顯示的content rule會是什麼」，開真實頁面查即時值，發現戰力46命中「Guard · 戰力偏低（46）」文字時，chronicFlags也同時成立（超頻5天/過載14筆），但hover title獨立用if-elseif（chronicFlags優先）只顯示長期負荷內容，跟畫面文字對不上。根因是兩種軟性條件可能同時成立，checkGuard()決定文字的else-if鏈只會命中其中一個，hover title卻複製了同一種互斥判斷邏輯。修法：hover title改用陣列蒐集所有目前成立的原因一併join顯示，不再只取其中一項。node --check語法合法，派獨立subagent驗證6項（陣列並存邏輯、清空情境、單一情境格式、txt/dot判斷鏈未動、git diff只改1檔、語法）全數通過，commit（5950662）push成功。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-30",
+      "project": "Control Center",
+      "file": "index.html",
       "summary": "使用者詢問Guard今天為何顯示注意，查checkGuard()查明是戰力46低於60門檻的軟性提示、非triggerGuard硬中斷，回答後使用者要求提示語比照這個明確說法改寫。修法：stamina<60分支文字從固定「Guard · 注意」改成內嵌實際數值的「Guard · 戰力偏低（46）」，pill的hover title新增對應分支說明門檻，chronicFlags優先層級維持不變。node --check語法合法，派獨立subagent read-back驗證5項（文字插值、hover title分支、3個hard-trigger分支未動、git diff只改1檔、無殘留舊字樣）全數通過，commit（11bda96）push成功。",
       "reason": "bug_fix"
     },
