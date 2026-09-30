@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-30",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "使用者詢問Guard今天為何顯示注意，查checkGuard()查明是戰力46低於60門檻的軟性提示、非triggerGuard硬中斷，回答後使用者要求提示語比照這個明確說法改寫。修法：stamina<60分支文字從固定「Guard · 注意」改成內嵌實際數值的「Guard · 戰力偏低（46）」，pill的hover title新增對應分支說明門檻，chronicFlags優先層級維持不變。node --check語法合法，派獨立subagent read-back驗證5項（文字插值、hover title分支、3個hard-trigger分支未動、git diff只改1檔、無殘留舊字樣）全數通過，commit（11bda96）push成功。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-30",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/sleep_dashboard_v3_live.html、update_dashboard_v3_live.py、run_update.sh、update_dashboard_v3.py、daily-optimizer/daily_optimizer_v3.html",
       "summary": "使用者拍板10/1-15為migration monitor period執行計畫：v2完全不動照舊跑排程，v3-live（v2逐位元組複製+換資料來源）並行，10/15視狀況決定SAS Hub是否正式切過去；Daily Optimizer風險評估低，10/1直接切不需並行監控。建立sleep_dashboard_v3_live.html+update_dashboard_v3_live.py。測試時踩到真實坑：複製頁一開瀏覽器就把sas_sleep_latest/sas_combat_*等共用localStorage key覆蓋成v3數字，靠重開v2頁面救回，修法新增SAS_KEY_SUFFIX='_v3preview'包裝全部讀寫。run_update.sh補上v3排程缺口。compare_v2_v3()新增bedtime比對，15分鐘門檻，25/35夜超標。建立daily_optimizer_v3.html新分支，今天未在瀏覽器測試避免跟使用者正在用的正式版同源共用localStorage互相干擾。派獨立subagent做6項最終驗證，確認daily_optimizer.html全程未被觸碰，全數通過，4個commit分別push到sleep-dashboard與daily-optimizer repo。",
