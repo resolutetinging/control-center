@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-30",
+      "project": "Sleep Dashboard",
+      "file": "Sleep Dashboard/v2_v3_migration_report_20260930.md",
+      "summary": "使用者指出v2不只睡眠時長趨勢圖，要求先評估把v3邏輯套進v2對所有圖表分析的影響性，確認完風險才動作；同時要求把每夜v2/v3/iPhone比對表也加進報告。先補上35夜完整逐夜比對表。派subagent全面盤點：發現v3輸出缺efficiency欄位（直接套用會讓效率圖表壞掉）；v2內部15個函式受影響（updateStageCompensation/updateFragmentationCorrelation/updatePersonalBaseline等3個歷史累積型分析風險最高，會回溯重算全部歷史）；SAS Hub 9個函式受影響（buildCausalChainNarrative風險最高，可能讓使用者看過的因果敘述換成不同日期）；意外發現Daily Optimizer的fetchSleep()是獨立fetch v2頁面regex解析RAW的第三條消費路徑，遷移時容易漏掉造成跨頁面不一致。報告結論修正為方向仍支持換引擎但不建議10/1當天全面切換，先補efficiency缺口+新資料用v3/既有歷史不回溯覆寫再啟動。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-09-30",
       "project": "Daily Optimizer",
       "file": "Daily Optimization/daily_optimizer.html",
       "summary": "使用者截圖回報昨天8項裡7項done只1項因身體不適skip，AI卻判定低於預期，質疑太嚴格。查明09-29戰力51%屬Critical等級，cpExpect給LLM的期待基準明寫「能完成任何任務都值得肯定」最寬鬆標準，但完成率88%仍判below，跟給定期待基準矛盾——LLM機械式看到有項目沒做就扣分。修法：算出completionPct（同week_plan加權）明確餵給prompt當錨點，status欄位說明要求對齊期待基準寬鬆度。claude-in-chrome實測09-29重新生成，status由below→meet，理由「完成率高，符合Critical標準」，commit（016de53）push成功。",
