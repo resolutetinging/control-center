@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-09-30",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "使用者截圖回報：文法追蹤選字後浮出的「🖍 標記」按鈕，被圈選的文字在畫面下方時就看不到按鈕。查code定位根因：按鈕CSS是position:fixed（視窗座標），算垂直位置卻多加window.scrollY，跟已經是視窗座標的rect.top重複疊加，頁面捲得越多按鈕就被誤推得越低甚至跑出可視範圍外。修法：改成Math.max(4,rect.top-30)，拿掉多餘scrollY並加下限。屬互動行為類bug不能只查靜態DOM，派有瀏覽器工具的subagent做真實選字模擬測試，scrollY=0/600/991.25三種捲動量下按鈕與選取文字相對位移穩定27.5px、皆落可視範圍內，證實修復有效無矯枉過正，commit（5c3f8b4）push成功。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-09-30",
       "project": "Control Center",
       "file": "index.html",
       "summary": "使用者追問「guard動畫已跳出時，動畫上方pill的內容呢」，查code發現triggerGuard()跳出動畫、endBreak()進入冷卻倒數、guard_snooze今日靜默（checkGuard()早退分支＋snoozeGuard()）共4個地方都手動改dot/txt卻沒同步設guard-pill的title，導致畫面文字已換（例如「執法中」），hover卻停在跳出前舊內容，使用者要求修掉。修法：一次補齊同檔案4個同類缺口，triggerGuard()title沿用函式裡原本算好顯示在動畫上的msgs reason文字，endBreak()補冷卻分鐘數說明，checkGuard()早退分支與snoozeGuard()補語意一致的已靜默說明。node --check語法合法，派獨立subagent驗證7項（4處title內容正確、皆用if保護、git diff只改1檔、既有判斷邏輯逐字未變）全數通過，commit（7bc1803）push成功。",
