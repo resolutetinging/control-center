@@ -851,12 +851,16 @@ function checkGuard(){
   if(pastEndurance){triggerGuard('endurance');}
   else if(!newDay&&riskCritical){triggerGuard('risk',riskFlags);}
   else if(!newDay&&(stamina<40||now>end2)){triggerGuard('low');}
-  else if(stamina<60){dot.className='warn';txt.textContent='Guard · 注意';gState='monitoring';}
+  else if(stamina<60){dot.className='warn';txt.textContent='Guard · 戰力偏低（'+stamina+'）';gState='monitoring';}
   else if(chronicFlags.length){dot.className='warn';txt.textContent='Guard · 長期負荷';gState='monitoring';}
   else{dot.className='';txt.textContent='Guard · 監控中';gState='monitoring';}
-  // 具體是哪幾項長期訊號掛在 pill 的 hover 提示上，不佔版面也不打斷操作
+  // 具體是哪幾項長期訊號或戰力數字掛在 pill 的 hover 提示上，不佔版面也不打斷操作
   const gp=document.getElementById('guard-pill');
-  if(gp)gp.title=chronicFlags.length?('長期負荷訊號：'+chronicFlags.join('、')+'（僅提示，不中止操作）'):'';
+  if(gp){
+    if(chronicFlags.length)gp.title='長期負荷訊號：'+chronicFlags.join('、')+'（僅提示，不中止操作）';
+    else if(stamina<60)gp.title='戰力'+stamina+'，低於60門檻，僅提示不中止操作';
+    else gp.title='';
+  }
 }
 function renderCatDisplay(){
   const url=localStorage.getItem('cc_cat_gif')||'';
