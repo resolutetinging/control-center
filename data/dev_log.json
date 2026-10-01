@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v2.html",
+      "summary": "v2頁降為對照備援：v3接手共用戰力key後，打開v2頁仍會把戰力蓋回v2，造成Optimizer/SAS Hub/CC Guard跳回舊值。v2頁比照v3_live加SAS_KEY_SUFFIX='_v2'，改寫入sas_combat_v2等後綴key，打開對照不再影響正式戰力。v2計算邏輯與update_dashboard.py未動，排程只替換RAW區塊不會蓋掉此改動。v2/v3比對本來就在排程compare_v2_v3()內做，與開哪個頁面無關。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
       "project": "SAS Hub / Control Center / Daily Optimizer",
       "file": "sleep-dashboard/update_dashboard_v3_live.py、sleep_dashboard_v3_live.html、index.html；ControlCenter/index.html",
       "summary": "Sleep v3提前於10/1正式切換（原訂10/15）：使用者依iPhone三方比對判定v3較準，決定直接切。10/1前歷史凍結為sleep_v2_frozen_pre1001.json（v2原樣259夜），10/1起改用v3數字。v3_live頁移除預覽banner，SAS_KEY_SUFFIX改空字串，7個sas_* key改正式寫入。Optimizer、SAS Hub首頁、CC Guard的戰力因此全部改為v3來源。SAS Hub側欄、重整、獨立視窗與CC Dock sleep連結改指v3_live，getLinks()自動改寫舊v2覆蓋值。v2頁與排程照常跑到10月底當備援。",
