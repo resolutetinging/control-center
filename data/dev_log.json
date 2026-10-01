@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "SAS Hub",
+      "file": "sleep-dashboard/index.html、sleep_dashboard_v3_live.html",
+      "summary": "停用手動iCloud更新按鈕：它讓使用者手選資料夾讀v2格式sleep_*.txt，合併後寫入共用戰力key。v3_live成為正式頁後，按下會把該晚戰力蓋回v2。SAS Hub框架列與v3_live頁兩個按鈕都已移除，函式開頭直接return並提示自動更新時段。資料只靠電腦端每日4次自動更新。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/update_dashboard_v3.py、update_dashboard_v3_live.py、sleep_dashboard_v3_live.html",
       "summary": "v3時間語意修正＋新增睡眠週期卡片：原始樣本時間戳其實是每段結束時間，v3當開始時間用，入睡時間每晚晚記第一段長度（10-01記23:44實際23:21）。load_samples改為start=ts−dur，history一次性遷移，分期分鐘數不變。v3_live帶入10/1起逐段資料，新增睡眠週期卡片：階段圖、依REM判定週期、逐週期deep/REM。10-01為4個完整週期，deep有94%集中在前兩個週期。順修05-26刪除單夜面板後殘留的updateNight()拋錯。",
