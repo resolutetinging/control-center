@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Control Center",
+      "file": "cc_track.js",
+      "summary": "儲存面板補登Scratchpad標籤：cc_track.js的CC_KEY_INFO補一行cc_scratch_v1，面板改顯示「🗂 Scratchpad｜雜記收件匣」。動手時發現表尾cc_*萬用規則，原本其實被誤標成CC首頁同步統計，不是未歸類。node --check通過，模擬查詢確認其他cc_ key結果不變。另依使用者同意，交辦範本新增「讀repo前先git fetch」通用前置。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
       "project": "生態系全面",
       "file": "~/.claude memory/、Spec/english-sandbox-spec-v1.0.md",
       "summary": "記憶檔第二輪複查：派4個subagent核對全部專案與參考記憶檔，專抓記錄已做但實際沒做。NexusPortal注入SOP開頭指令路徑過時（腳本07-06已搬到NexusPortal_private），照做會找不到檔案，已更正。另修正WordVault Kids說明書路徑失效、repo map殘留已移除的Astro、共用檔爆炸半徑13改15頁、English Sandbox色碼誤植。English Sandbox spec的Idiom主題仍寫6個，實際14個，補登為v1.10。新發現cc_track.js的CC_KEY_INFO未登記Scratchpad key，待使用者決定是否修。dev log雙寫09-17至10-01逐日比對一致。",
