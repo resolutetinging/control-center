@@ -154,7 +154,7 @@ function buildTT(id){
         +(itvDone.length?itvDone.map(t=>`<div style="font-size:11px;color:var(--ink);padding:1px 0 1px 10px;line-height:1.55;">· ${t.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`).join(''):'')
         +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
         +row('💨 Abandoned',li.abandoned+'個',li.abandoned>0?'a':'')
-        +(hasData?'':hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">正在從 Notion 同步…</div>`);
+        +hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">Notion 同步已暫停，顯示上次記錄的數字</div>`;
     }
     case 'oasis':{
       let saved=[];

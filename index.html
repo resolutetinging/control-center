@@ -311,7 +311,11 @@ function _liCount(results){
   }
   return counts;
 }
+// 10-01暫停：corsproxy.io已停止匿名轉送（一律403），且此做法會把Notion token與求職資料送經第三方；
+// 使用者決定先停用同步，Dock卡片顯示上次存的數字。恢復前需改走自建轉送（如Cloudflare Worker）並換新token。
+const NOTION_LI_SYNC_PAUSED=true;
 async function fetchNotionLinkedIn(){
+  if(NOTION_LI_SYNC_PAUSED)return;
   if(Date.now()-_liLastFetch<30000)return;
   _liLastFetch=Date.now();
   const token=localStorage.getItem('notion_token')||'';
@@ -681,6 +685,7 @@ function renderTab(tab){
       <div class="s-sec">
         <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;">☁ Notion 自動同步</div>
         <div style="font-size:11px;color:var(--faint);margin-bottom:12px;line-height:1.6;">填入 Notion Integration Token 和 LinkedIn 職缺資料庫 ID，頁面載入時自動從 Notion 讀取各狀態數量。</div>
+        <div style="font-size:11px;color:var(--warn,#a06a2a);margin-bottom:12px;line-height:1.6;">⏸ 自動同步已暫停（10-01）：原本使用的免費轉送服務已停止提供，目前顯示上次記錄的數字。</div>
         <div class="s-lbl">Notion Integration Token</div>
         <input class="s-inp" type="password" id="li-ntoken" value="${nt}" placeholder="secret_…" style="font-family:monospace;font-size:12px;margin-bottom:12px;"/>
         <div class="s-lbl">Notion Database ID</div>
