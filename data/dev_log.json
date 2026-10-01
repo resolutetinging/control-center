@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "生態系全面",
+      "file": "~/.claude memory/、Spec/english-sandbox-spec-v1.0.md",
+      "summary": "記憶檔第二輪複查：派4個subagent核對全部專案與參考記憶檔，專抓記錄已做但實際沒做。NexusPortal注入SOP開頭指令路徑過時（腳本07-06已搬到NexusPortal_private），照做會找不到檔案，已更正。另修正WordVault Kids說明書路徑失效、repo map殘留已移除的Astro、共用檔爆炸半徑13改15頁、English Sandbox色碼誤植。English Sandbox spec的Idiom主題仍寫6個，實際14個，補登為v1.10。新發現cc_track.js的CC_KEY_INFO未登記Scratchpad key，待使用者決定是否修。dev log雙寫09-17至10-01逐日比對一致。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
+      "project": "生態系全面",
+      "file": "~/.claude memory/、lessons.md",
+      "summary": "記憶檔第一輪稽核（上午，下午補登）：派6個subagent核對22份專案記憶檔。Astro記憶檔仍描述08-19已移除的功能，改標已移除。Ziwei桌面啟動器09-29宣稱已刪實際只備份，補刪並ls核對。Renewable排程待確認為假警報（本機clone未pull）。Sleep Dashboard v1更正為直接刪除非封存。這一輪當時漏寫dev log，第二輪複查才補上。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Sleep Dashboard",
       "file": "daily-optimizer/daily_optimizer_v3.html、control-center/index.html、sleep-dashboard/index.html",
       "summary": "依09-30拍板的四階段遷移計畫，今天是Daily Optimizer從v2直接切轉v3的正式日期（評估風險低，使用者09-30已確認不需monitor period）。移除daily_optimizer_v3.html測試banner，更新全部3個使用者進入點：Control Center Dock的DEFAULT_LINKS常數＋localStorage cc_links_v2使用者覆蓋值（覆蓋優先，只改常數不會生效）、SAS Hub側欄iframe與獨立視窗連結，原本都還指向舊版v2一併改掉；daily_optimizer.html（v2）保留不動作為備援。node --check 3檔語法皆合法，派有瀏覽器工具的獨立subagent做5項功能驗證（非只查程式碼）全數通過。過程中使用者指出流程疑慮，釐清「直接切轉v3」決策09-30已拍板且執行一致，真正沒問完的只是v2舊檔案要不要刪除這個不影響功能的低風險細節，誤判成同等級決策點。commit分別為daily-optimizer（527b5f5）、control-center（b22bcec）、sleep-dashboard（0bc8e96），同步更新daily-optimizer/sas-hub/control-center三份spec文件。",
