@@ -5,6 +5,13 @@
     {
       "date": "2026-10-01",
       "project": "Control Center",
+      "file": "index.html",
+      "summary": "移除Dock LinkedIn圖示：Notion同步暫停後使用者決定直接移除，連帶拿掉設定頁的LinkedIn連結列。設定頁LinkedIn分頁暫時保留，改為用來清除舊Notion token。Notion token作廢換新列為使用者待辦，每次session開頭追問直到完成。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
+      "project": "Control Center",
       "file": "index.html、cc_tooltip.js",
       "summary": "暫停LinkedIn Notion同步：CC的LinkedIn卡片透過corsproxy.io轉送查Notion，該服務已停止匿名使用，一律回403。這個做法還會把Notion token與求職資料送經第三方，已建議換新token。依使用者決定先停用同步，載入與Dock hover都不再發請求，卡片改顯示上次記錄的數字並註明已暫停。不採GitHub自動排程，因為control-center是公開repo會公開求職資料。",
       "reason": "maintain"
