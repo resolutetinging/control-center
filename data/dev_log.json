@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/update_dashboard_v3.py、update_dashboard_v3_live.py、sleep_dashboard_v3_live.html",
+      "summary": "v3時間語意修正＋新增睡眠週期卡片：原始樣本時間戳其實是每段結束時間，v3當開始時間用，入睡時間每晚晚記第一段長度（10-01記23:44實際23:21）。load_samples改為start=ts−dur，history一次性遷移，分期分鐘數不變。v3_live帶入10/1起逐段資料，新增睡眠週期卡片：階段圖、依REM判定週期、逐週期deep/REM。10-01為4個完整週期，deep有94%集中在前兩個週期。順修05-26刪除單夜面板後殘留的updateNight()拋錯。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-01",
+      "project": "Sleep Dashboard",
+      "file": "（分析，無檔案改動）",
+      "summary": "睡眠總時長vs deep關聯分析：260夜資料，總睡眠與deep分鐘相關+0.25（弱），與deep佔比幾乎無關。每多睡1小時deep只多約4分鐘，多出的時間主要是core與REM。deep佔比穩定約8%，所以單靠睡久幾乎拉不高戰力的deep分數。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Daily Optimizer",
       "file": "daily_optimizer_v3.html",
       "summary": "睡眠卡片數據日期行空白修正：showSleep()最後一行引用的debtHours，07-03移除自算戰力公式時已刪除，執行到此拋錯。錯誤被fetchSleep()的try/catch吞掉，自07-03起沒被發現，還誤觸3個備用代理重抓。戰力與四項明細在這行之前已填好，不受影響。依使用者選擇改顯示「數據日期＋總睡眠」，不補回睡眠債以免Optimizer自算公式漂移。",
