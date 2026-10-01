@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v3_live.html",
+      "summary": "睡眠週期卡片新增跨夜分析與可能體感：單晚依起床階段、最後週期是否完整、前段深睡量、REM量、片段程度推測起床體感，用推測語氣並註明非醫療判斷。跨夜分析滿7晚才顯示，7–13晚標僅供參考。複核時發現片段判定把<2分鐘正常短暫清醒也算進去，10-01只醒5.5分鐘卻被判片段，已改為≥2分鐘清醒≥4次或總計≥20分鐘。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-01",
       "project": "SAS Hub",
       "file": "sleep-dashboard/index.html、sleep_dashboard_v3_live.html",
       "summary": "停用手動iCloud更新按鈕：它讓使用者手選資料夾讀v2格式sleep_*.txt，合併後寫入共用戰力key。v3_live成為正式頁後，按下會把該晚戰力蓋回v2。SAS Hub框架列與v3_live頁兩個按鈕都已移除，函式開頭直接return並提示自動更新時段。資料只靠電腦端每日4次自動更新。",
