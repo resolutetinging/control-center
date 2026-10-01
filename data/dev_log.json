@@ -2,6 +2,7 @@
   "generated_through": "2026-10-01",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {"date": "2026-10-01", "project": "Sleep Dashboard／SAS Hub", "file": "sleep-dashboard/update_dashboard_v3_live.py、sleep_dashboard_v3_live.html、index.html；ControlCenter/index.html", "summary": "Sleep v3提前於10/1（原訂10/15）正式切換，取代monitor period。10/1前歷史凍結於新檔sleep_v2_frozen_pre1001.json（從v2 RAW原樣擷取259夜，欄位不增不改），10/1起改用v3數字；update_dashboard_v3_live.py的load_summary()改為合併凍結檔與v3 history並排序，凍結檔讀不到時回空陣列避免注入殘缺資料。sleep_dashboard_v3_live.html移除monitor period測試banner，SAS_KEY_SUFFIX改回正式(無後綴)寫入7個sas_*localStorage key。SAS Hub index.html三處連結/iframe來源改指向v3_live；ControlCenter的SLEEP_URL／DEFAULT_LINKS.sleep同步改向，getLinks()加最小遷移：使用者舊localStorage覆蓋值若仍指v2則自動改採新預設值。驗證：抽樣09-27(core 405，v2值)與10-01(core 326，v3值)皆正確、合併後260筆日期遞增無重複；兩repo inline JS node --check皆過；git show --stat核對repo A四檔案(index.html/v3_live.html/update腳本/凍結json)+自動腳本1檔，repo B僅index.html，皆符合預期無ahead。", "reason": "feature"},
     {
       "date": "2026-10-01",
       "project": "Sleep Dashboard",
