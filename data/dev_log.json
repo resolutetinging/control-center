@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "睡眠卡片數據日期行空白修正：showSleep()最後一行引用的debtHours，07-03移除自算戰力公式時已刪除，執行到此拋錯。錯誤被fetchSleep()的try/catch吞掉，自07-03起沒被發現，還誤觸3個備用代理重抓。戰力與四項明細在這行之前已填好，不受影響。依使用者選擇改顯示「數據日期＋總睡眠」，不補回睡眠債以免Optimizer自算公式漂移。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/sleep_dashboard_v2.html",
       "summary": "v2頁降為對照備援：v3接手共用戰力key後，打開v2頁仍會把戰力蓋回v2，造成Optimizer/SAS Hub/CC Guard跳回舊值。v2頁比照v3_live加SAS_KEY_SUFFIX='_v2'，改寫入sas_combat_v2等後綴key，打開對照不再影響正式戰力。v2計算邏輯與update_dashboard.py未動，排程只替換RAW區塊不會蓋掉此改動。v2/v3比對本來就在排程compare_v2_v3()內做，與開哪個頁面無關。",
