@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "XSS escape全面修補：先全檔掃描所有HTML插值點，15處使用者輸入、AI輸出、storage資料補上escape。按鈕事件改傳索引，連結只准http(s)，Gist還原只接受review_日期格式。獨立驗證抓到歷史面板戰術水管兩處漏網，已補修，自訂地點/心情選擇器也改用CSS.escape。實頁顯示正常，中文沒有變亂碼。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Control Center",
       "file": "index.html",
       "summary": "移除Dock LinkedIn圖示：Notion同步暫停後使用者決定直接移除，連帶拿掉設定頁的LinkedIn連結列。設定頁LinkedIn分頁暫時保留，改為用來清除舊Notion token。Notion token作廢換新列為使用者待辦，每次session開頭追問直到完成。",
