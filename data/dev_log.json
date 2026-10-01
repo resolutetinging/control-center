@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-09-30",
+  "generated_through": "2026-10-01",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-01",
+      "project": "Sleep Dashboard",
+      "file": "daily-optimizer/daily_optimizer_v3.html、control-center/index.html、sleep-dashboard/index.html",
+      "summary": "依09-30拍板的四階段遷移計畫，今天是Daily Optimizer從v2直接切轉v3的正式日期（評估風險低，使用者09-30已確認不需monitor period）。移除daily_optimizer_v3.html測試banner，更新全部3個使用者進入點：Control Center Dock的DEFAULT_LINKS常數＋localStorage cc_links_v2使用者覆蓋值（覆蓋優先，只改常數不會生效）、SAS Hub側欄iframe與獨立視窗連結，原本都還指向舊版v2一併改掉；daily_optimizer.html（v2）保留不動作為備援。node --check 3檔語法皆合法，派有瀏覽器工具的獨立subagent做5項功能驗證（非只查程式碼）全數通過。過程中使用者指出流程疑慮，釐清「直接切轉v3」決策09-30已拍板且執行一致，真正沒問完的只是v2舊檔案要不要刪除這個不影響功能的低風險細節，誤判成同等級決策點。commit分別為daily-optimizer（527b5f5）、control-center（b22bcec）、sleep-dashboard（0bc8e96），同步更新daily-optimizer/sas-hub/control-center三份spec文件。",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-09-30",
       "project": "English Sandbox",
