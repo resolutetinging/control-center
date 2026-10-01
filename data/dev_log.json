@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Control Center",
+      "file": "index.html、cc_tooltip.js",
+      "summary": "暫停LinkedIn Notion同步：CC的LinkedIn卡片透過corsproxy.io轉送查Notion，該服務已停止匿名使用，一律回403。這個做法還會把Notion token與求職資料送經第三方，已建議換新token。依使用者決定先停用同步，載入與Dock hover都不再發請求，卡片改顯示上次記錄的數字並註明已暫停。不採GitHub自動排程，因為control-center是公開repo會公開求職資料。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/sleep_dashboard_v3_live.html",
       "summary": "睡眠週期卡片新增跨夜分析與可能體感：單晚依起床階段、最後週期是否完整、前段深睡量、REM量、片段程度推測起床體感，用推測語氣並註明非醫療判斷。跨夜分析滿7晚才顯示，7–13晚標僅供參考。複核時發現片段判定把<2分鐘正常短暫清醒也算進去，10-01只醒5.5分鐘卻被判片段，已改為≥2分鐘清醒≥4次或總計≥20分鐘。",
