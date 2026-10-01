@@ -97,10 +97,6 @@
       <div class="d-box">📈</div>
       <span class="d-lbl">Stock Tracker</span>
     </div>
-    <div class="d-icon" data-id="linkedin" onclick="dClick(this,'linkedin')">
-      <div class="d-box">💼</div>
-      <span class="d-lbl">LinkedIn</span>
-    </div>
     <div class="d-sep"></div>
     <!-- Learn Group -->
     <div class="d-icon" data-id="wordvault" onclick="dClick(this,'wordvault')">
@@ -625,7 +621,6 @@ function renderTab(tab){
       {id:'aitracker',lbl:'🤖 AI Tracker',ph:'../AI Tracker/ai_tracker_v6.html'},
       {id:'renewable',lbl:'🌱 Renewable Tracker',ph:'../Renewable Tracker/renewable_tracker.html'},
       {id:'stock',lbl:'📈 Stock Tracker',ph:'../Stock Tracker/stock_watchlist.html'},
-      {id:'linkedin',lbl:'💼 LinkedIn',ph:'https://www.linkedin.com/…',highlight:true},
       {id:'wordvault',lbl:'📖 WordVault',ph:'../WordVault/WordVault.html'},
       {id:'mentaltool',lbl:'🧘 Ziwei',ph:'notion://…'},
       {id:'podcast',lbl:'🎧 Podcast Memos',ph:'notion://…'},
@@ -685,7 +680,7 @@ function renderTab(tab){
       <div class="s-sec">
         <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;">☁ Notion 自動同步</div>
         <div style="font-size:11px;color:var(--faint);margin-bottom:12px;line-height:1.6;">填入 Notion Integration Token 和 LinkedIn 職缺資料庫 ID，頁面載入時自動從 Notion 讀取各狀態數量。</div>
-        <div style="font-size:11px;color:var(--warn,#a06a2a);margin-bottom:12px;line-height:1.6;">⏸ 自動同步已暫停（10-01）：原本使用的免費轉送服務已停止提供，目前顯示上次記錄的數字。</div>
+        <div style="font-size:11px;color:var(--warn,#a06a2a);margin-bottom:12px;line-height:1.6;">⏸ 自動同步已暫停、Dock 圖示已移除（10-01）：原本使用的免費轉送服務已停止提供。此分頁暫時保留，用來清除舊的 Notion Token（清空欄位後按儲存）。</div>
         <div class="s-lbl">Notion Integration Token</div>
         <input class="s-inp" type="password" id="li-ntoken" value="${nt}" placeholder="secret_…" style="font-family:monospace;font-size:12px;margin-bottom:12px;"/>
         <div class="s-lbl">Notion Database ID</div>
@@ -737,7 +732,7 @@ function onWPFile(inp){
   r.readAsDataURL(f);
 }
 function saveAllLinks(){
-  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','linkedin','wordvault','mentaltool','podcast','english'];
+  const ids=['sas-hub','sleep','mental','optimizer','refueler','aitracker','wordvault','mentaltool','podcast','english'];
   const l={};
   ids.forEach(id=>{const el=document.getElementById('lnk-'+id);if(el)l[id]=(el.value||'').trim();});
   saveLinks(l);updateUnsetFlags();closeSettings();
