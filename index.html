@@ -219,7 +219,7 @@ const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', 
 // 不呼叫其他檔案的today()函式（見feedback_cc_today_constant教訓，混用曾崩Guard設定頁）。
 function _localDateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 const TODAY=_localDateKey(new Date());
-const SLEEP_URL='https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v2.html';
+const SLEEP_URL='https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v3_live.html';
 const PROXIES=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`];
 
 const CAT_SVG=`<svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" style="width:min(88vw,500px);filter:drop-shadow(0 20px 60px rgba(0,0,0,.5))"><defs><radialGradient id="gbody" cx="40%" cy="30%" r="65%"><stop offset="0%" stop-color="#f8a828"/><stop offset="65%" stop-color="#e07820"/><stop offset="100%" stop-color="#b85c10"/></radialGradient><radialGradient id="gbelly" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#fff3dc"/><stop offset="100%" stop-color="#f5c870"/></radialGradient><radialGradient id="ghead" cx="42%" cy="35%" r="60%"><stop offset="0%" stop-color="#f8a028"/><stop offset="100%" stop-color="#c87018"/></radialGradient></defs>
@@ -399,7 +399,7 @@ async function initLiveData(){
 // ── DEFAULT LINKS ──
 const DEFAULT_LINKS={
   'sas-hub':   'https://resolutetinging.github.io/sleep-dashboard/',
-  'sleep':     'https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v2.html',
+  'sleep':     'https://resolutetinging.github.io/sleep-dashboard/sleep_dashboard_v3_live.html',
   'mental':    'https://resolutetinging.github.io/wellness-tracker/mental-dashboard.html',
   'optimizer': 'https://resolutetinging.github.io/daily-optimizer/daily_optimizer_v3.html',
   'refueler':  './refueler.html',
@@ -415,7 +415,7 @@ const DEFAULT_LINKS={
   'english':   './english-sandbox.html',
   'scratch':   './scratchpad.html',
 };
-function getLinks(){try{return{...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};}catch{return{...DEFAULT_LINKS};}}
+function getLinks(){try{var l={...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};if(typeof l.sleep==='string'&&l.sleep.endsWith('sleep_dashboard_v2.html'))l.sleep=DEFAULT_LINKS.sleep;return l;}catch{return{...DEFAULT_LINKS};}}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
 
 // ── MOCK / LIVE DATA ──
