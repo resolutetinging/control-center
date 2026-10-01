@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-01",
+      "project": "Sleep Dashboard",
+      "file": "Sleep Dashboard/v2_v3_migration_report_20260930.md",
+      "summary": "Monitor period第1天三方比對：iPhone core 328、v3 326、v2 303，v3四項誤差最大2分鐘，v2 core少25分。查出根因：v2直接讀Shortcut預先加總的數字，而Shortcut只算醒來當天午夜後開始的樣本。10-01 23:44入睡那筆23分鐘Core被整筆漏掉，09-27原本未解釋的4.5分落差也是同一原因。午夜前入睡v2就會系統性少算，依獨立鐵律不修，列為10/15決策證據。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-01",
       "project": "Control Center",
       "file": "cc_track.js",
       "summary": "儲存面板補登Scratchpad標籤：cc_track.js的CC_KEY_INFO補一行cc_scratch_v1，面板改顯示「🗂 Scratchpad｜雜記收件匣」。動手時發現表尾cc_*萬用規則，原本其實被誤標成CC首頁同步統計，不是未歸類。node --check通過，模擬查詢確認其他cc_ key結果不變。另依使用者同意，交辦範本新增「讀repo前先git fetch」通用前置。",
