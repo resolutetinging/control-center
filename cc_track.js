@@ -183,6 +183,7 @@
     ['cc_wp_v1', '🏠 CC 首頁', '桌布'],
     ['cc_usage_stats', '🏠 CC 首頁', '使用頻率統計'],
     ['cc_big_manifest', '🏠 CC 首頁', '備份分塊索引（勿刪）'],
+    ['cc_scratch_v1', '🗂 Scratchpad', '雜記收件匣'],
     ['cc_*', '🏠 CC 首頁', '同步/統計'],
     ['gh_pat', '🔑 憑證', 'GitHub PAT'],
     ['gist_id', '🔑 憑證', '備份 Gist 位址'],
