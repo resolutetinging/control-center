@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-02",
+      "project": "生態系全面",
+      "file": "Spec/（15份）",
+      "summary": "Spec全面比對：4組subagent唯讀比對15份spec與現行程式。AI Tracker、Scratchpad、External Me無差異，Mental 21、Optimizer 16、CC 14、Sleep 13處差異最多。共同問題是版本表有更新但正文沒同步，例如模型還寫已棄用的llama、正文仍把已刪檔案當正式頁。修正分批進行中。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-02",
+      "project": "WordVault",
+      "file": "WordVault.html、Spec/wordvault-spec-v1.0.md、Spec/wordvault-kids-spec-v1.0.md",
+      "summary": "補建spec＋匯入頁來源chip：Spec目錄原本沒有WordVault，補建成人版與Kids版兩份。匯入頁來源輸入框下方新增現有來源chip，點選帶入可複選，避免打錯字拆成兩類。onclick參數改雙層跳脫擋雙引號。另全盤掃描補齊3個未翻譯單字。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-02",
       "project": "(system)",
       "file": "~/.claude/settings.local.json",
       "summary": "Claude Code權限清單整理：允許清單從386條減到76條，刪掉311條一次性長指令，多數早被萬用規則涵蓋。新增8條唯讀指令免詢問。刪除檔案、讀鑰匙圈密碼、顯示GitHub token、改SSH金鑰、安裝軟體、開關排程共7條改為每次先問。原檔已備份。",
