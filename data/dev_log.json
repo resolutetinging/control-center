@@ -1,7 +1,35 @@
 {
-  "generated_through": "2026-10-01",
+  "generated_through": "2026-10-02",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-02",
+      "project": "Sleep Dashboard",
+      "file": "（比對，無程式改動）",
+      "summary": "10-02三方比對：iPhone deep 38、REM 73、core 259、awake 17分鐘，v3最大誤差1分鐘。v2這晚與v3相同，因為00:48才入睡，沒有午夜前片段。新的時間戳解讀首次在真實排程跑新夜晚，運作正常。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-02",
+      "project": "Control Center",
+      "file": "index.html、cc_tooltip.js、cc_autosync.js、cc_track.js",
+      "summary": "完整移除LinkedIn與Notion同步功能：使用者已刪除Notion integration並清掉各裝置token。刪除設定分頁、所有Notion函式與tooltip項目，Gist備份白名單移除求職資料快取。新增載入時一次性清理舊key，獨立驗證抓到更舊的v1快取漏清，已補上。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-02",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "XSS修補第二輪完成：id與key改用正式跳脫，圖片網址加白名單，匯入資料驗證id格式並提示略過筆數。獨立驗證重掃42處無遺漏，正常備份可完整匯入。另修嵌入SAS Hub時自訂情緒標籤比預設標籤大的問題，原因是縮小規則漏了自訂標籤。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-01",
+      "project": "Mental Dashboard",
+      "file": "mental-dashboard.html",
+      "summary": "XSS修補第一輪與驗證不通過：第一輪補了37處文字欄位與AI輸出。獨立驗證發現分類與人物的id系統性漏掉，匯入功能也完全沒驗證，匯入惡意檔可造成儲存型XSS。教訓已記入lessons.md，按四類重派第二輪。",
+      "reason": "debug"
+    },
     {
       "date": "2026-10-01",
       "project": "Daily Optimizer",
