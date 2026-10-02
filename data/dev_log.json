@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-02",
+      "project": "(system)",
+      "file": "~/.claude/settings.local.json",
+      "summary": "Claude Code權限清單整理：允許清單從386條減到76條，刪掉311條一次性長指令，多數早被萬用規則涵蓋。新增8條唯讀指令免詢問。刪除檔案、讀鑰匙圈密碼、顯示GitHub token、改SSH金鑰、安裝軟體、開關排程共7條改為每次先問。原檔已備份。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-02",
       "project": "Sleep Dashboard",
       "file": "（比對，無程式改動）",
       "summary": "10-02三方比對：iPhone deep 38、REM 73、core 259、awake 17分鐘，v3最大誤差1分鐘。v2這晚與v3相同，因為00:48才入睡，沒有午夜前片段。新的時間戳解讀首次在真實排程跑新夜晚，運作正常。",
