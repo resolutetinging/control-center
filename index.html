@@ -211,7 +211,7 @@
 const GS_KEY='guard_settings_v1', GROQ_KEY='groq_key', LINKS_KEY='cc_links_v2', WP_KEY='cc_wp_v1', RF_KEY='refueler_v1';
 // 10-02一次性清理：LinkedIn求職進度/Notion同步功能已下線（使用者已刪除Notion integration並清掉Mac/iPhone上的token），
 // 清除瀏覽器殘留的舊資料，避免殘留無用資料或被誤認為仍在使用
-try{['notion_token','notion_li_db','cc_linkedin_v2'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}catch(e){}
+try{['notion_token','notion_li_db','cc_linkedin_v1','cc_linkedin_v2'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}catch(e){}
 // 08-04：TODAY改本地日（原UTC日），跟SAS Hub/Daily Optimizer的dkey()/todayKey()對齊——
 // 本地凌晨0-8點原本會讀到UTC「昨天」的review_/wellness_v5資料。CC規範仍是用TODAY常數，
 // 不呼叫其他檔案的today()函式（見feedback_cc_today_constant教訓，混用曾崩Guard設定頁）。
