@@ -5,6 +5,13 @@
     {
       "date": "2026-10-02",
       "project": "生態系全面",
+      "file": "Spec/wordvault-spec-v1.0.md",
+      "summary": "Spec修正獨立抽查：不看修正報告直接比對程式，11份spec各抽5條全數符合。WordVault函式表行號因當天後續改程式整批偏移約37行，用git前後版本換算行號全部重抓，與函式名搜尋交叉確認無誤。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-02",
+      "project": "生態系全面",
       "file": "Spec/（12份）",
       "summary": "Spec全面比對修正完成：分批派工修正12份spec，每筆差異先查證程式才動手。Mental補上因子分類章節並改寫同步段落，Optimizer與Refueler改正AI模型，Sleep改正正式頁為v3_live。CC移除Astro現役描述，English補文法追蹤章節，Astro與舊草案加上移除或封存標頭。",
       "reason": "spec_change"
