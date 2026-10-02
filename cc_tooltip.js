@@ -137,25 +137,6 @@ function buildTT(id){
       if(!ai.hasNote)return h('AI 追蹤')+`<div style="font-size:11.5px;color:var(--warn);padding:3px 0;font-weight:500;">📝 今天還沒寫新聞筆記！</div>`;
       return h('AI 追蹤')+`<div style="font-size:11px;color:var(--ok);padding:3px 0;">✅ 今日筆記已記錄</div>`;
     }
-    case 'linkedin':{
-      loadLinkedInData();
-      fetchNotionLinkedIn();
-      const li=LIVE.linkedin||{saved:0,applied:0,declined:0,contacted:0,interviewed:0,interviewed_titles:[],to_interviewed:0,to_interviewed_titles:[],abandoned:0};
-      const hasData=li.saved||li.applied||li.declined||li.contacted||li.interviewed||li.to_interviewed||li.abandoned;
-      const itvDone=(li.interviewed_titles||[]);
-      const itvPending=(li.to_interviewed_titles||[]);
-      return h('LinkedIn 求職進度')
-        +row('⭐ Saved',li.saved+'個')
-        +row('📨 Applied',li.applied+'個',li.applied>0?'g':'')
-        +row('💬 Contacted',li.contacted+'個',li.contacted>0?'g':'')
-        +row('🗓 To Be Interviewed',li.to_interviewed+'個',li.to_interviewed>0?'g':'')
-        +(itvPending.length?itvPending.map(t=>`<div style="font-size:11px;color:var(--ok);padding:1px 0 1px 10px;line-height:1.55;">· ${t.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`).join(''):'')
-        +row('✅ Interviewed',li.interviewed+'個',li.interviewed>0?'g':'')
-        +(itvDone.length?itvDone.map(t=>`<div style="font-size:11px;color:var(--ink);padding:1px 0 1px 10px;line-height:1.55;">· ${t.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`).join(''):'')
-        +row('🚫 Declined',li.declined+'個',li.declined>0?'a':'')
-        +row('💨 Abandoned',li.abandoned+'個',li.abandoned>0?'a':'')
-        +hr()+`<div style="font-size:10px;color:var(--faint);text-align:center;padding:2px 0;">Notion 同步已暫停，顯示上次記錄的數字</div>`;
-    }
     case 'oasis':{
       let saved=[];
       try{saved=JSON.parse(localStorage.getItem('oasis_saved')||'[]');}catch{}
