@@ -5,6 +5,20 @@
     {
       "date": "2026-10-02",
       "project": "生態系全面",
+      "file": "Spec/（12份）",
+      "summary": "Spec全面比對修正完成：分批派工修正12份spec，每筆差異先查證程式才動手。Mental補上因子分類章節並改寫同步段落，Optimizer與Refueler改正AI模型，Sleep改正正式頁為v3_live。CC移除Astro現役描述，English補文法追蹤章節，Astro與舊草案加上移除或封存標頭。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-02",
+      "project": "WordVault",
+      "file": "WordVault.html",
+      "summary": "按鈕參數全面改雙層跳脫：全檔掃描找到26處onclick參數只做JS跳脫，雙引號會提早結束HTML屬性。範圍包括篩選chip、朗讀與編輯刪除按鈕、考驗答案按鈕，AI中文解釋含雙引號時答案按鈕會失效。全部改為escHtml(escJs())，實頁驗證各按鈕正常。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-02",
+      "project": "生態系全面",
       "file": "Spec/（15份）",
       "summary": "Spec全面比對：4組subagent唯讀比對15份spec與現行程式。AI Tracker、Scratchpad、External Me無差異，Mental 21、Optimizer 16、CC 14、Sleep 13處差異最多。共同問題是版本表有更新但正文沒同步，例如模型還寫已棄用的llama、正文仍把已刪檔案當正式頁。修正分批進行中。",
       "reason": "spec_change"
