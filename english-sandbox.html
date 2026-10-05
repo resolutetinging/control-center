@@ -1364,7 +1364,7 @@ function renderCombos(){
     const sits=[...new Set(saved.map(it=>it.sit).filter(Boolean))];
     tabBar.innerHTML= sits.length
       ? '<button class="combo-sit-tab'+(curComboSit==='all'?' active':'')+'" onclick="setComboSit(\'all\')">全部</button>'
-        + sits.map(s=>'<button class="combo-sit-tab'+(curComboSit===s?' active':'')+'" onclick="setComboSit(\''+s.replace(/'/g,"\\'")+'\')">'+esc(s)+'</button>').join('')
+        + sits.map(s=>'<button class="combo-sit-tab'+(curComboSit===s?' active':'')+'" onclick="setComboSit('+jsAttr(s)+')">'+esc(s)+'</button>').join('')
       : '';
   }
 
@@ -1476,9 +1476,9 @@ function renderGrHl(text, ranges, idx, field){
   const sorted = [...ranges].sort((a,b)=>a[0]-b[0]);
   let out = '', pos = 0;
   sorted.forEach(([s,e])=>{
-    if(s < pos || e <= s || e > text.length) return; // 防重疊/區間錯亂的舊資料，略過不炸頁面
+    if(!Number.isInteger(s) || !Number.isInteger(e) || s < pos || e <= s || e > text.length) return; // 防重疊/區間錯亂的舊資料，略過不炸頁面
     out += esc(text.slice(pos, s));
-    out += `<mark class="gr-hl" onclick="removeGrHighlight(${idx},'${field}',${s},${e})" title="點擊移除標記">${esc(text.slice(s, e))}</mark>`;
+    out += `<mark class="gr-hl" onclick="removeGrHighlight(${Number(idx)},${jsAttr(field)},${s},${e})" title="點擊移除標記">${esc(text.slice(s, e))}</mark>`;
     pos = e;
   });
   out += esc(text.slice(pos));
@@ -1682,7 +1682,9 @@ function switchTab(tab){
 function $(id){ return document.getElementById(id); }
 function $show(id){ $(id).style.display='block'; }
 function $hide(id){ $(id).style.display='none'; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// inline onclick 的字串參數：JSON.stringify 產生 JS 字串字面量（處理 \ " ' 換行），再 esc 供 HTML 屬性使用
+function jsAttr(x){ return esc(JSON.stringify(String(x==null?'':x))); }
 
 // ══════════════ IDIOM ARCADE ══════════════
 const IDIOM_LIB_KEY = 'es_idiom_lib';
@@ -2403,7 +2405,7 @@ function renderLibQuizQ(){
     <div class="lqb-wrap"><div class="lqb" id="lqb" style="width:${pct}%"></div></div>
     <div class="lq-q">${esc(question)}</div>
     <div class="lq-qsub">${qsub}</div>
-    <div class="lq-opts" id="lq-opts">${opts.map(o=>`<button class="lq-opt" onclick="answerLibQuiz(this,'${esc(o).replace(/'/g,"&#39;")}','${esc(correctAns).replace(/'/g,"&#39;")}','${esc(cur.idiom).replace(/'/g,"&#39;")}')">${esc(o)}</button>`).join('')}</div>
+    <div class="lq-opts" id="lq-opts">${opts.map(o=>`<button class="lq-opt" onclick="answerLibQuiz(this,${jsAttr(o)},${jsAttr(correctAns)},${jsAttr(cur.idiom)})">${esc(o)}</button>`).join('')}</div>
     <div class="lq-fb" id="lq-fb"></div>`;
 }
 function _libShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}

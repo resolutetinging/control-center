@@ -119,7 +119,7 @@ const MAX_ITEMS=200;
 let curType='note';
 
 function $(id){return document.getElementById(id);}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{"items":[]}');return Array.isArray(d.items)?d:{items:[]};}catch(e){return{items:[]};}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
 
@@ -185,17 +185,18 @@ function render(){
   $('inbox-count').textContent=d.items.length?`(${d.items.length})`:'';
   $('inbox-list').innerHTML=d.items.length?d.items.map(it=>{
     const a=ageDays(it.ts);
-    return`<div class="it" data-ts="${it.ts}">
+    const tsN=Number(it.ts),tsOk=Number.isFinite(tsN);
+    return`<div class="it" data-ts="${tsOk?tsN:''}">
       <div class="it-type">${it.type==='todo'?'📌':'💡'}</div>
       <div class="it-main">
-        <div class="it-text" contenteditable="true" spellcheck="false" data-ts="${it.ts}"
+        <div class="it-text" contenteditable="true" spellcheck="false" data-ts="${tsOk?tsN:''}"
           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}else if(event.key==='Escape'){this._esc=1;this.blur();}"
           onblur="editItem(this)">${esc(it.text)}</div>
         ${a>=1?`<span class="it-age${a>=3?' old':''}">躺了 ${a} 天</span>`:''}
       </div>
-      <div class="it-acts">
-        <button class="act-btn to-opt" onclick="transfer(${it.ts})">→ Optimizer</button>
-        <button class="act-btn del" onclick="delItem(${it.ts})">刪除</button>
+      <div class="it-acts">${tsOk?`
+        <button class="act-btn to-opt" onclick="transfer(${tsN})">→ Optimizer</button>
+        <button class="act-btn del" onclick="delItem(${tsN})">刪除</button>`:''}
       </div>
     </div>`;
   }).join(''):'<div class="empty">Inbox 已清空 ✓</div>';

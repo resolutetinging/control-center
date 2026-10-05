@@ -7,7 +7,8 @@
 // ── LEAN TOOLTIP ──
 const ttp=document.getElementById('tooltip');
 let ttT;
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 function row(k,v,c='',trunc=false){return`<div class="tt-row"><span class="tt-k${trunc?' tt-k-trunc':''}">${k}</span><span class="tt-v${c?' '+c:''}${trunc?' tt-v-shrink':''}">${v}</span></div>`;}
 function advRow(k,v){return`<div class="tt-adv"><span class="tt-adv-k">${k}</span><span class="tt-adv-v">${v}</span></div>`;}
 function sub(t){return`<div class="tt-sub">${t}</div>`;}
@@ -23,8 +24,9 @@ function buildTT(id){
   const rf=rfToday();
   switch(id){
     case 'sas-hub':{
-      const cp=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
-      const pace=LIVE.sleep?.pace??'請先訪問 SAS Hub';
+      const cpRaw=LIVE.sleep?.combatPower??LIVE.optimizer?.combatPower??'—';
+      const cp=cpRaw==='—'?'—':num(cpRaw);
+      const pace=esc(LIVE.sleep?.pace??'請先訪問 SAS Hub');
       const sleepCp=parseInt(localStorage.getItem('sas_combat')||'0')||null;
       const endTime=sleepCp?`${String(Math.floor(8+sleepCp/100*14)).padStart(2,'0')}:00`:null;
       const endColor=sleepCp?(sleepCp>=70?'g':sleepCp>=40?'a':'r'):'';
@@ -35,11 +37,11 @@ function buildTT(id){
         const rc=JSON.parse(localStorage.getItem('sas_weekly_recap')||'null');
         const isMonday=new Date().getDay()===1;
         if(rc&&rc.text&&(isMonday||Date.now()-rc.ts<7*86400000)){
-          recapHtml=hr()+`<div style="padding:3px 0;">${sub('📋 上週回顧')}<div style="font-size:10.5px;color:var(--ink);line-height:1.55;">${rc.text}</div></div>`;
+          recapHtml=hr()+`<div style="padding:3px 0;">${sub('📋 上週回顧')}<div style="font-size:10.5px;color:var(--ink);line-height:1.55;">${esc(rc.text)}</div></div>`;
         }
       }catch(e){}
-      const cpSingle=LIVE.sleep?.combatSingle??null;
-      const cpWeighted=LIVE.sleep?.combatWeighted??sleepCp;
+      const cpSingle=LIVE.sleep?.combatSingle!=null?num(LIVE.sleep.combatSingle):null;
+      const cpWeighted=LIVE.sleep?.combatWeighted!=null?num(LIVE.sleep.combatWeighted):sleepCp;
       let combatRows='';
       if(cpSingle!=null&&cpWeighted!=null){
         const diff=cpSingle-cpWeighted;
@@ -67,24 +69,25 @@ function buildTT(id){
       if(!LIVE.sleep)return h('最新睡眠')+`<div style="font-size:11px;color:var(--faint);text-align:center;padding:4px 0;">請先訪問 Sleep Dashboard 以更新資料</div>`;
       const s=LIVE.sleep;
       const dot=(c)=>`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${c};margin-right:4px;vertical-align:middle;opacity:.85;"></span>`;
-      let out=h('睡眠紀錄 · '+s.date);
+      let out=h('睡眠紀錄 · '+esc(s.date));
       // 時長 + 起止
       if(s.totalMin){
-        const durH=Math.floor(s.totalMin/60),durM=s.totalMin%60;
+        const tm=num(s.totalMin);const durH=Math.floor(tm/60),durM=tm%60;
         const durStr=durH+'h'+(durM?durM+'m':'');
         out+=row('時長',durStr,durH>=7?'g':durH>=6?'a':'r');
       }
-      if(s.bedtime&&s.wake) out+=row('起止',s.bedtime+' → '+s.wake);
+      if(s.bedtime&&s.wake) out+=row('起止',esc(s.bedtime)+' → '+esc(s.wake));
       out+=hr();
       // 睡眠分期
-      out+=row(dot('#8aabcc')+'Deep', s.deepP+'%', s.deepP>=18?'g':s.deepP>=12?'a':'r')
-         +row(dot('#a898b8')+'REM',   s.remP+'%',  s.remP>=18?'g':s.remP>=12?'a':'r')
-         +row(dot('#8fac94')+'Core',  s.coreP+'%')
-         +row(dot('#c4aa7c')+'Awake', s.awakeP+'%',s.awakeP<=8?'g':s.awakeP<=15?'a':'r');
+      const dP=num(s.deepP),rP=num(s.remP),cP=num(s.coreP),aP=num(s.awakeP);
+      out+=row(dot('#8aabcc')+'Deep', dP+'%', dP>=18?'g':dP>=12?'a':'r')
+         +row(dot('#a898b8')+'REM',   rP+'%',  rP>=18?'g':rP>=12?'a':'r')
+         +row(dot('#8fac94')+'Core',  cP+'%')
+         +row(dot('#c4aa7c')+'Awake', aP+'%',aP<=8?'g':aP<=15?'a':'r');
       // 近7日趨勢
       if(s.trend7&&s.trend7.length>2){
-        const deepVals=s.trend7.map(n=>n.deepP);
-        const remVals=s.trend7.map(n=>n.remP);
+        const deepVals=s.trend7.map(n=>num(n&&n.deepP));
+        const remVals=s.trend7.map(n=>num(n&&n.remP));
         const latestDeep=deepVals[deepVals.length-1],prevDeep=deepVals[deepVals.length-2];
         const latestRem=remVals[remVals.length-1],prevRem=remVals[remVals.length-2];
         const dArr=latestDeep>prevDeep?'↑':latestDeep<prevDeep?'↓':'→';
@@ -102,9 +105,10 @@ function buildTT(id){
       let out=h('今日 Mental');
       mes.forEach((m,i)=>{
         if(i>0)out+=hr();
-        out+=row(m.time||`#${i+1}`,m.score+'/10',m.score>=7?'g':m.score>=5?'a':'r');
-        if(m.factors.length){
-          out+=m.factors.map(f=>`<div style="font-size:10.5px;color:var(--sub);padding:1px 0 1px 4px;line-height:1.5;">· ${f}</div>`).join('');
+        const sc=num(m.score);
+        out+=row(m.time?esc(m.time):`#${i+1}`,sc+'/10',sc>=7?'g':sc>=5?'a':'r');
+        if(Array.isArray(m.factors)&&m.factors.length){
+          out+=m.factors.map(f=>`<div style="font-size:10.5px;color:var(--sub);padding:1px 0 1px 4px;line-height:1.5;">· ${esc(f)}</div>`).join('');
         }
       });
       return out;
@@ -114,12 +118,12 @@ function buildTT(id){
       const o=LIVE.optimizer;
       if(!o)return h('優化器')+`<div style="font-size:11px;color:var(--faint);">讀取中…</div>`;
       const status=o.rest?'🌿 休假中':'工作中';
-      let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',o.done+'/'+o.total,o.done===o.total?'g':'a')+hr();
+      let out=h('優化器')+row('狀態',status,o.rest?'a':'g')+row('任務',num(o.done)+'/'+num(o.total),o.done===o.total?'g':'a')+hr();
       if(o.tasks&&o.tasks.length){
         out+=`<div style="display:grid;grid-template-columns:14px 1fr;row-gap:5px;column-gap:7px;padding:2px 0;">`;
         for(const t of o.tasks){
           const dn=t.done||false;
-          const lbl=(t.text||t.title||t.label||t.content||t.name||'').slice(0,24)||'—';
+          const lbl=esc(String(t.text||t.title||t.label||t.content||t.name||'').slice(0,24)||'—');
           out+=`<span style="font-size:10px;color:${dn?'#7d9e85':'#bbb'};text-align:center;line-height:1.5;">${dn?'✓':'○'}</span>`
              +`<span style="font-size:10.5px;color:${dn?'var(--faint)':'var(--ink)'};text-decoration:${dn?'line-through':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">${lbl}</span>`;
         }
@@ -128,7 +132,7 @@ function buildTT(id){
       return out;
     }
     case 'refueler':
-      return h('今日攝取')+row('☕ 咖啡',rf.coffee+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',rf.water+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
+      return h('今日攝取')+row('☕ 咖啡',num(rf.coffee)+'杯',rf.coffee<=3?'g':rf.coffee<=4?'a':'r')+row('💧 水分',num(rf.water)+'ml',rf.water>=2000?'g':rf.water>=1000?'a':'r');
     case 'report':
       return h('綜觀分析')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">點擊進行 AI 整合分析</div>`;
     case 'aitracker':{
@@ -143,11 +147,11 @@ function buildTT(id){
       if(!saved.length)return h('🌿 Oasis')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">收藏夾是空的</div>`;
       const item=saved[Math.floor(Math.random()*saved.length)];
       const isZh=(item.lang==='zh');
-      const quote=(item.quote||'').replace(/\n/g,' ').slice(0,80)+(item.quote&&item.quote.replace(/\n/g,' ').length>80?'…':'');
-      const trans=(!isZh&&item.translation)?(item.translation||'').replace(/\n/g,' ').slice(0,60)+(item.translation&&item.translation.replace(/\n/g,' ').length>60?'…':''):'';
-      const metaOrig=[item.title?`《${item.title}》`:'',item.author||''].filter(Boolean).join('　');
-      const metaZh=!isZh?[item.title_zh?`《${item.title_zh}》`:'',item.author_zh||''].filter(Boolean).join('　'):'';
-      const country=item.country||'';
+      const quote=esc((item.quote||'').replace(/\n/g,' ').slice(0,80)+(item.quote&&item.quote.replace(/\n/g,' ').length>80?'…':''));
+      const trans=(!isZh&&item.translation)?esc((item.translation||'').replace(/\n/g,' ').slice(0,60)+(item.translation&&item.translation.replace(/\n/g,' ').length>60?'…':'')):'';
+      const metaOrig=esc([item.title?`《${item.title}》`:'',item.author||''].filter(Boolean).join('　'));
+      const metaZh=!isZh?esc([item.title_zh?`《${item.title_zh}》`:'',item.author_zh||''].filter(Boolean).join('　')):'';
+      const country=esc(item.country||'');
       return h('🌿 Oasis')+
         (country?`<div style="font-size:10px;padding:2px 7px;border-radius:8px;background:var(--card);display:inline-block;margin-bottom:7px;color:var(--sub);">${country}</div>`+hr():'')+
         `<div style="font-size:12px;line-height:1.7;color:var(--ink);margin-bottom:6px;">${quote}</div>`+
@@ -155,7 +159,7 @@ function buildTT(id){
         hr()+
         `<div style="font-size:10.5px;color:var(--faint);">${metaOrig}</div>`+
         (metaZh?`<div style="font-size:10px;color:var(--faint);opacity:.75;">${metaZh}</div>`:'')+
-        ((item.tags&&item.tags.length)?hr()+`<div style="font-size:10px;color:var(--faint);">${item.tags.map(t=>'#'+t).join('　')}</div>`:'');
+        ((item.tags&&item.tags.length)?hr()+`<div style="font-size:10px;color:var(--faint);">${item.tags.map(t=>esc('#'+t)).join('　')}</div>`:'');
     }
     case 'worship':{
       let wl=null;try{wl=JSON.parse(localStorage.getItem('worship_last')||'null');}catch{}

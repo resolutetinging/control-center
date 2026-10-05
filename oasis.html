@@ -256,7 +256,7 @@ function buildCard(c){
 
   // 1. 國別 + 來源類型
   const sourceLbl=SOURCE_MAP[c.source_type]||'';
-  const sourceBadge=sourceLbl?`<span class="source-badge">${sourceLbl}</span>`:'';
+  const sourceBadge=sourceLbl?`<span class="source-badge">${esc(sourceLbl)}</span>`:'';
   const countryHtml=c.country
     ?`<div style="margin-bottom:12px;"><span class="card-country" style="margin-bottom:0;">${esc(c.country)}</span>${sourceBadge}</div>`:'';
 
@@ -275,7 +275,7 @@ function buildCard(c){
   const origParts=[
     c.title?`《${esc(c.title)}》`:'',
     c.author?esc(c.author):'',
-    c.year?String(c.year):'',
+    c.year?esc(c.year):'',
   ].filter(Boolean);
   const metaOrigHtml=origParts.length
     ?`<div class="card-meta-orig">${origParts.join('　')}</div>`:'';
@@ -284,7 +284,7 @@ function buildCard(c){
   const zhParts=!isZh?[
     c.title_zh?`《${esc(c.title_zh)}》`:'',
     c.author_zh?esc(c.author_zh):'',
-    c.year?String(c.year):'',
+    c.year?esc(c.year):'',
   ].filter(Boolean):[];
   const metaZhHtml=zhParts.length
     ?`<div class="card-meta-zh">${zhParts.join('　')}</div>`:'';
@@ -294,12 +294,13 @@ function buildCard(c){
 
   // 來源連結：有 Open Library URL 優先顯示，否則 Google 搜尋
   const searchQ=encodeURIComponent(`"${c.title||''}" ${c.author||''}`);
-  const verifyHtml=c.olUrl
-    ?`<div style="margin-top:8px;"><a href="${c.olUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">📖 Open Library</a></div>`
+  const olSafe=/^https?:\/\//i.test(String(c.olUrl||'').trim())?String(c.olUrl).trim():'';
+  const verifyHtml=olSafe
+    ?`<div style="margin-top:8px;"><a href="${esc(olSafe)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">📖 Open Library</a></div>`
     :`<div style="margin-top:8px;"><a href="https://www.google.com/search?q=${searchQ}" target="_blank" rel="noopener" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">🔍 查核來源</a></div>`;
 
   return `<div class="card">
-    <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave('${esc(c.id)}')"
+    <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave(${jsAttr(c.id)})"
       title="${isSaved?'移除收藏':'加入收藏'}">${isSaved?'🌿':'🤍'}</button>
     ${countryHtml}${quoteHtml}${transHtml}${metaOrigHtml}${metaZhHtml}${tagsHtml}${verifyHtml}
   </div>`;
@@ -318,7 +319,7 @@ function buildDiscover(){
   if(!curKw||!kws.includes(curKw)) curKw=kws[0];
 
   const pills=kws.map(k=>
-    `<div class="kw-pill${k===curKw?' on':''}" onclick="selectKw('${esc(k)}')">${esc(k)}</div>`
+    `<div class="kw-pill${k===curKw?' on':''}" onclick="selectKw(${jsAttr(k)})">${esc(k)}</div>`
   ).join('');
 
   const cache=S.cache,cards=cache[curKw]||[];
@@ -380,15 +381,15 @@ function buildDiscover(){
   const hasFilters=hasOl||countries.length||matchedAuthors.length;
   const filterRow=hasFilters&&!isLoading?`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
     ${hasOl?`<div class="filter-pill${discoverFilter==='ol'?' on':''}" onclick="setDiscoverFilter('ol')">📖 OpenLibrary</div>`:''}
-    ${countries.map(co=>`<div class="filter-pill${discoverFilter==='country:'+co?' on':''}" onclick="setDiscoverFilter('country:${esc(co)}')">${esc(co)}</div>`).join('')}
-    ${matchedAuthors.map(a=>{const k=a.name||a.name_zh,lbl=a.name_zh||a.name;return`<div class="filter-pill${discoverFilter==='author:'+k?' on':''}" onclick="setDiscoverFilter('author:${esc(k)}')">${esc(lbl)}</div>`;}).join('')}
+    ${countries.map(co=>`<div class="filter-pill${discoverFilter==='country:'+co?' on':''}" onclick="setDiscoverFilter(${jsAttr('country:'+co)})">${esc(co)}</div>`).join('')}
+    ${matchedAuthors.map(a=>{const k=a.name||a.name_zh,lbl=a.name_zh||a.name;return`<div class="filter-pill${discoverFilter==='author:'+k?' on':''}" onclick="setDiscoverFilter(${jsAttr('author:'+k)})">${esc(lbl)}</div>`;}).join('')}
   </div>`:'';
 
   return `
     <div id="kw-row">${pills}</div>
     <div id="fetch-bar">
       <span class="last-fetch">上次更新：${ago}</span>
-      <button class="fetch-btn"${isLoading?' disabled':''} onclick="fetchCards('${esc(curKw)}')">
+      <button class="fetch-btn"${isLoading?' disabled':''} onclick="fetchCards(${jsAttr(curKw)})">
         ${isLoading?'⏳ 探索中…':'🔄 重新探索'}
       </button>
     </div>
@@ -411,7 +412,7 @@ function buildSaved(){
   const allTags=['all',...new Set(items.flatMap(i=>i.tags||[]))];
   if(!allTags.includes(savedFilter)) savedFilter='all';
   const filters=allTags.map(t=>
-    `<div class="filter-pill${t===savedFilter?' on':''}" onclick="setSavedFilter('${esc(t)}')">${t==='all'?'全部':esc(t)}</div>`
+    `<div class="filter-pill${t===savedFilter?' on':''}" onclick="setSavedFilter(${jsAttr(t)})">${t==='all'?'全部':esc(t)}</div>`
   ).join('');
 
   // 套用關鍵字標籤篩選
@@ -434,8 +435,8 @@ function buildSaved(){
 
   const filter2Row=hasFilter2?`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
     ${hasOl?`<div class="filter-pill${savedFilter2==='ol'?' on':''}" onclick="setSavedFilter2('ol')">📖 OpenLibrary</div>`:''}
-    ${countries.map(co=>`<div class="filter-pill${savedFilter2==='country:'+co?' on':''}" onclick="setSavedFilter2('country:${esc(co)}')">${esc(co)}</div>`).join('')}
-    ${matchedAuthors.map(a=>{const k=a.name||a.name_zh,lbl=a.name_zh||a.name;return`<div class="filter-pill${savedFilter2==='author:'+k?' on':''}" onclick="setSavedFilter2('author:${esc(k)}')">${esc(lbl)}</div>`;}).join('')}
+    ${countries.map(co=>`<div class="filter-pill${savedFilter2==='country:'+co?' on':''}" onclick="setSavedFilter2(${jsAttr('country:'+co)})">${esc(co)}</div>`).join('')}
+    ${matchedAuthors.map(a=>{const k=a.name||a.name_zh,lbl=a.name_zh||a.name;return`<div class="filter-pill${savedFilter2==='author:'+k?' on':''}" onclick="setSavedFilter2(${jsAttr('author:'+k)})">${esc(lbl)}</div>`;}).join('')}
   </div>`:'';
 
   return `
@@ -882,6 +883,8 @@ function esc(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+// inline onclick 的字串參數：JSON.stringify 產生 JS 字串字面量，再 esc 供 HTML 屬性使用
+function jsAttr(x){return esc(JSON.stringify(String(x==null?'':x)));}
 function timeSince(ts){
   if(!ts)return'從未';
   const s=Math.floor((Date.now()-ts)/1000);

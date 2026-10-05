@@ -283,7 +283,9 @@ function $(id){return document.getElementById(id);}
 function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function loadWP(){try{return JSON.parse(localStorage.getItem(WP_KEY)||'null')||{entries:[]};}catch{return{entries:[]};}}
 function saveWP(d){localStorage.setItem(WP_KEY,JSON.stringify(d));}
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// inline onclick 的字串參數：JSON.stringify 產生 JS 字串字面量，再 esc 供 HTML 屬性使用
+function jsAttr(x){return esc(JSON.stringify(String(x==null?'':x)));}
 
 // ── Toggle & Tabs ──
 var _dropBound=false;
@@ -549,7 +551,7 @@ async function analyzeSlip(){
       {t:'各項指引',b:secs['各項指引']},
       {t:'綜合建議',b:secs['綜合建議']}
     ].filter(function(s){return s.b;}).map(function(s){
-      return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+esc(s.b).replace(/\n/g,'<br>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</div></div>';
+      return '<div class="ai-layer"><div class="ai-layer-title">'+esc(s.t)+'</div><div class="ai-layer-body">'+esc(s.b).replace(/\n/g,'<br>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</div></div>';
     }).join('');
   }catch(e){res.innerHTML='<span style="color:var(--danger)">'+esc(e.message)+'</span>';}
   btn.disabled=false;sp.style.display='none';
@@ -671,7 +673,7 @@ function editEntry(id){
         {t:'二、籤意解析',b:secs['籤意解析']},
         {t:'三、問題綜合解析',b:secs['問題綜合解析']}
       ].filter(function(s){return s.b;}).map(function(s){
-        return '<div class="ai-layer"><div class="ai-layer-title">'+s.t+'</div><div class="ai-layer-body">'+s.b.replace(/\n/g,'<br>')+'</div></div>';
+        return '<div class="ai-layer"><div class="ai-layer-title">'+esc(s.t)+'</div><div class="ai-layer-body">'+esc(s.b).replace(/\n/g,'<br>')+'</div></div>';
       }).join('');
       $('ai-result').style.display='block';
     }
@@ -743,13 +745,13 @@ function renderHistory(){
   var entries=d.entries.slice().sort(function(a,b){return(b.date+b.time).localeCompare(a.date+a.time);});
   if(!entries.length){$('history').innerHTML='<div class="empty">尚無參拜紀錄</div>';return;}
   $('history').innerHTML=entries.map(function(e){
-    var cats=Object.entries(e.reports||{}).filter(function(r){return r[1];}).map(function(r){return'<span class="hist-tag">'+CAT_LABELS[r[0]]+'</span>';}).join('');
+    var cats=Object.entries(e.reports||{}).filter(function(r){return r[1];}).map(function(r){return'<span class="hist-tag">'+esc(CAT_LABELS[r[0]]||'')+'</span>';}).join('');
     var slip=e.hasSlip&&e.slip?'<span class="hist-slip-badge">第 '+esc(e.slip.number)+' 籤</span>':'';
     return '<div class="hist-item">'+
       '<div class="hist-top"><span class="hist-temple">⛩ '+esc(e.temple)+'</span>'+
       '<div style="display:flex;align-items:center;gap:.4rem">'+
-      '<span class="hist-edit" onclick="editEntry(\''+e.id+'\')">✏️</span>'+
-      '<span class="hist-del" onclick="delEntry(event,\''+e.id+'\')">✕</span>'+
+      '<span class="hist-edit" onclick="editEntry('+jsAttr(e.id)+')">✏️</span>'+
+      '<span class="hist-del" onclick="delEntry(event,'+jsAttr(e.id)+')">✕</span>'+
       '<span class="hist-date">'+esc(e.date)+(e.time?' '+esc(e.time):'')+'</span></div></div>'+
       '<div class="hist-tags">'+cats+slip+'</div></div>';
   }).join('');

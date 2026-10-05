@@ -533,6 +533,8 @@
     return node;
   }
   function txt(s) { return document.createTextNode(String(s == null ? '' : s)); }
+  /* 外部連結白名單：只准 http(s)://，其餘（javascript:/data: 等）回傳空字串 */
+  function safeHttp(u) { u = String(u == null ? '' : u).trim(); return /^https?:\/\//i.test(u) ? u : ''; }
   function ap(p) {
     var args = Array.prototype.slice.call(arguments, 1);
     args.forEach(function (c) { if (c != null) p.appendChild(c instanceof Node ? c : txt(c)); });
@@ -1420,8 +1422,8 @@
       var sprof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
       if(lens==='astrology'){
         var astUrl=sprof.link||((LENS_PROFILES[lens]&&LENS_PROFILES[lens].links&&LENS_PROFILES[lens].links[0]&&LENS_PROFILES[lens].links[0].url)||'');
-        if(astUrl){
-          var astSideA=el('a',{className:'ext-link-btn',href:astUrl,target:'_blank',rel:'noopener noreferrer',title:'預約諮詢'});
+        if(safeHttp(astUrl)){
+          var astSideA=el('a',{className:'ext-link-btn',href:safeHttp(astUrl),target:'_blank',rel:'noopener noreferrer',title:'預約諮詢'});
           astSideA.style.marginTop='8px'; astSideA.style.display='inline-flex';
           var astSideIcon=el('span',{className:'ext-link-icon'}); ap(astSideIcon,txt('◆'));
           var astSideLbl=el('span',{}); ap(astSideLbl,txt('預約諮詢'));
@@ -1429,8 +1431,8 @@
         }
       } else {
         var sigUrl=sprof.instagram||(LENS_PROFILES[lens]&&LENS_PROFILES[lens].links&&LENS_PROFILES[lens].links[0]&&LENS_PROFILES[lens].links[0].url)||'';
-        if(sigUrl){
-          var sigA=el('a',{className:'ig-btn',href:sigUrl,target:'_blank',rel:'noopener noreferrer',title:'Instagram'});
+        if(safeHttp(sigUrl)){
+          var sigA=el('a',{className:'ig-btn',href:safeHttp(sigUrl),target:'_blank',rel:'noopener noreferrer',title:'Instagram'});
           sigA.style.marginTop='8px'; sigA.style.display='inline-flex';
           ap(sigA,makeIgIcon(smeta.color)); ap(sident,sigA);
         }
@@ -1453,8 +1455,8 @@
       var eident=el('div',{style:{textAlign:'center'}}); ap(eident,ename);
       var eprof=TINA_DATA_MATRIX.lensProfiles&&TINA_DATA_MATRIX.lensProfiles[lens]||{};
       var liUrl=eprof.linkedin||'';
-      if(liUrl){
-        var liA=el('a',{className:'ig-btn',href:liUrl,target:'_blank',rel:'noopener noreferrer',title:'LinkedIn'});
+      if(safeHttp(liUrl)){
+        var liA=el('a',{className:'ig-btn',href:safeHttp(liUrl),target:'_blank',rel:'noopener noreferrer',title:'LinkedIn'});
         liA.style.marginTop='8px'; liA.style.display='inline-flex';
         ap(liA,makeLinkedInIcon(emeta.color)); ap(eident,liA);
       }
@@ -1553,7 +1555,7 @@
       var grid=el('div',{className:'preview-grid'});
       cardList.filter(function(c){return c.visible!==false;}).forEach(function(card){
         var pcard=el('div',{className:'preview-card'+(card.url?' has-link':'')});
-        if(card.url){pcard.addEventListener('click',(function(u){return function(){window.open(u,'_blank','noopener');};})(card.url));}
+        if(safeHttp(card.url)){pcard.addEventListener('click',(function(u){return function(){window.open(u,'_blank','noopener');};})(safeHttp(card.url)));}
         var inner;
         if(card.img){
           pcard.style.backgroundImage='url('+card.img+')';

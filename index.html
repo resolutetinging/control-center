@@ -332,6 +332,8 @@ const DEFAULT_LINKS={
   'scratch':   './scratchpad.html',
 };
 function getLinks(){try{var l={...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};if(typeof l.sleep==='string'&&l.sleep.endsWith('sleep_dashboard_v2.html'))l.sleep=DEFAULT_LINKS.sleep;return l;}catch{return{...DEFAULT_LINKS};}}
+// 連結 URL 白名單：http(s)、notion://、無 scheme 的相對路徑；其餘（javascript:/data: 等）一律拒絕
+function ccSafeUrl(u){u=String(u==null?'':u).trim();if(/[\u0000-\u001f\u007f]/.test(u))return'';if(/^(https?:\/\/|notion:\/\/)/i.test(u))return u;if(/^[a-z][a-z0-9+.\-]*:/i.test(u))return'';return u;}
 function saveLinks(l){localStorage.setItem(LINKS_KEY,JSON.stringify(l));}
 
 // ── MOCK / LIVE DATA ──
@@ -469,7 +471,9 @@ function dClick(el,id){
   const links=getLinks();
   const url=links[id]||'';
   if(!url){openSettings('links');return;}
-  window.open(url,'_blank');
+  const safe=ccSafeUrl(url);
+  if(!safe){openSettings('links');return;}
+  window.open(safe,'_blank');
 }
 // Mark dock icons whose link is not set
 function updateUnsetFlags(){
@@ -548,7 +552,7 @@ function renderTab(tab){
       <div class="s-sec">
         ${linkRows.map(r=>`
           <div class="s-lbl" style="${r.highlight?'color:#7be08a;':''}">${r.lbl}${r.highlight&&!links[r.id]?' <span style="font-size:9px;background:rgba(123,224,138,.15);padding:2px 7px;border-radius:100px;letter-spacing:0;text-transform:none;">請設定</span>':''}</div>
-          <input class="s-inp" style="margin-bottom:12px;" id="lnk-${r.id}" value="${links[r.id]||''}" placeholder="${r.ph}"/>
+          <input class="s-inp" style="margin-bottom:12px;" id="lnk-${r.id}" value="${esc(links[r.id]||'')}" placeholder="${r.ph}"/>
         `).join('')}
         <button class="s-btn s-btn-pr" onclick="saveAllLinks()">儲存所有連結</button>
       </div>
@@ -565,25 +569,25 @@ function renderTab(tab){
       <div class="s-title">Guard 設定</div>
       <div class="s-sec">
         <div class="s-lbl">今日戰力（自動讀取）</div>
-        <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${cpDisplay}</div>
+        <div style="font-size:22px;font-weight:700;color:var(--deep);margin-bottom:4px;">${esc(cpDisplay)}</div>
         <div style="font-size:11px;color:var(--faint);margin-bottom:${isSnoozed?'8':'16'}px;">來源：Sleep Dashboard 睡眠分析</div>
         ${snoozeBar}
         <div class="s-lbl">工作結束時間</div>
-        <input class="s-inp" type="time" id="gs-t" value="${eff.endTime}" style="margin-bottom:18px;"/>
+        <input class="s-inp" type="time" id="gs-t" value="${esc(eff.endTime)}" style="margin-bottom:18px;"/>
       </div>
       <div class="s-sec">
         <div class="s-lbl">介入時長（Guard Working Time）</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-          <input class="s-inp" type="number" id="gs-work" min="1" max="60" value="${workTime}" style="width:80px;"/>
+          <input class="s-inp" type="number" id="gs-work" min="1" max="60" value="${esc(workTime)}" style="width:80px;"/>
           <span style="font-size:13px;color:var(--faint);">分鐘</span>
         </div>
         <div class="s-lbl">跳過後冷卻時間（Cooldown）</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-          <input class="s-inp" type="number" id="gs-skip" min="5" max="240" value="${skipDur}" style="width:80px;"/>
+          <input class="s-inp" type="number" id="gs-skip" min="5" max="240" value="${esc(skipDur)}" style="width:80px;"/>
           <span style="font-size:13px;color:var(--faint);">分鐘</span>
         </div>
         <div class="s-lbl">GIF / 圖片 URL</div>
-        <input class="s-inp" id="gs-cat" value="${catUrl}" placeholder="貼上 GIF 或圖片網址" style="margin-bottom:18px;"/>
+        <input class="s-inp" id="gs-cat" value="${esc(catUrl)}" placeholder="貼上 GIF 或圖片網址" style="margin-bottom:18px;"/>
         <button class="s-btn s-btn-pr" onclick="saveGS()">儲存設定</button>
       </div>
     `;
@@ -597,20 +601,20 @@ function renderTab(tab){
       <div class="s-sec">
         <div class="s-lbl">Groq API Key</div>
         <div style="display:flex;gap:6px;margin-bottom:22px;">
-          <input class="s-inp" type="password" id="gs-k" value="${k}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <input class="s-inp" type="password" id="gs-k" value="${esc(k)}" placeholder="gsk_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
           <button onclick="toggleVis('gs-k',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
         </div>
         <div class="s-lbl">GitHub PAT（↑↓ 同步用，需 gist 權限）</div>
         <div style="display:flex;gap:6px;margin-bottom:12px;">
-          <input class="s-inp" type="password" id="gs-pat" value="${pat}" placeholder="ghp_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <input class="s-inp" type="password" id="gs-pat" value="${esc(pat)}" placeholder="ghp_…" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
           <button onclick="toggleVis('gs-pat',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
         </div>
         <div class="s-lbl">Gist ID</div>
-        <input class="s-inp" id="gs-gid" value="${gid}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        <input class="s-inp" id="gs-gid" value="${esc(gid)}" placeholder="建立一個空 Gist，貼上 ID" style="font-family:monospace;font-size:12px;margin-bottom:4px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
         <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">至 gist.github.com 建立 Secret Gist → 複製 URL 最後一段 ID。同步採白名單制：生活數據 key 存入 <code style="background:rgba(40,38,32,.07);padding:1px 5px;border-radius:4px;">cc_sync.json</code>，大型資料（圖片等）自動分塊為 cc_big__ 檔案；憑證類 key 一律不上傳。開頁後亦會自動備份（資料有變更時，10 分鐘節流）。</div>
         <div class="s-lbl">NexusPortal 密語</div>
         <div style="display:flex;gap:6px;margin-bottom:8px;">
-          <input class="s-inp" type="password" id="gs-nexus" value="${nexusKey}" placeholder="貼上 NexusPortal access 密語" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+          <input class="s-inp" type="password" id="gs-nexus" value="${esc(nexusKey)}" placeholder="貼上 NexusPortal access 密語" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"/>
           <button onclick="toggleVis('gs-nexus',this)" style="background:rgba(40,38,32,.07);border:none;border-radius:8px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--sub);flex-shrink:0;">👁</button>
         </div>
         <div style="font-size:10.5px;color:var(--faint);margin-bottom:18px;line-height:1.6;">僅存本機瀏覽器（不進源碼、不進 Gist 備份）。填入後左上 🌳 面板連結自動帶擁有者權限，未填時 Edit Mode 隱藏。</div>
@@ -753,9 +757,9 @@ function checkGuard(){
 function renderCatDisplay(){
   const url=localStorage.getItem('cc_cat_gif')||'';
   const el=document.getElementById('big-cat');
-  if(url){
+  if(url&&/^https?:\/\//i.test(url.trim())){
     el.style.fontSize='';
-    el.innerHTML=`<img src="${url}" alt="🐱" onerror="this.innerHTML=CAT_SVG"/>`;
+    el.innerHTML=`<img src="${esc(url.trim())}" alt="🐱" onerror="this.innerHTML=CAT_SVG"/>`;
   } else {
     el.style.fontSize='';
     el.innerHTML=CAT_SVG;
@@ -765,9 +769,9 @@ function triggerGuard(reason='low',riskFlags=[]){
   if(gState==='alerting'||gState==='resting')return;
   gState='alerting';
   const{stamina,endTime,workTime}=getEffective();
-  const msgs=reason==='risk'?'偵測到多項風險訊號同時出現（'+riskFlags.join('、')+'），建議立即休息 ⚠️'
+  const msgs=reason==='risk'?'偵測到多項風險訊號同時出現（'+(Array.isArray(riskFlags)?riskFlags:[]).map(esc).join('、')+'），建議立即休息 ⚠️'
     :reason==='endurance'?'體能續航已結束，建議切換輕量任務或短暫休息 🔋'
-    :stamina<40?'戰力剩 '+stamina+'，需要充電了！':'已過 '+endTime+'，該歇歇了！';
+    :stamina<40?'戰力剩 '+esc(stamina)+'，需要充電了！':'已過 '+esc(endTime)+'，該歇歇了！';
   const cats=['喵！你已經工作很久了<br>是時候休息一下 🌿','喵嗚～戰力不足<br>先補充才能繼續 💪','本貓命令你休息！<br>健康比工作重要 🐱'];
   const reasonEl=document.getElementById('guard-reason');
   if(reasonEl)reasonEl.innerHTML=msgs;
@@ -1017,6 +1021,8 @@ async function syncDownload(){
       // 08-19修正：isSafeKey之前沒從cc_autosync.js的window.ccSyncCore export出來，
       // 直接引用undeclared identifier，typeof恆為'undefined'，這個檢查形同虛設從未生效過
       if(typeof window.ccSyncCore?.isSafeKey==='function'&&!window.ccSyncCore.isSafeKey(k))continue;
+      // 第二道：值必須是字串，且不得夾帶憑證（sink 端已 escape，此為縱深防護）
+      if(typeof v!=='string'||/(ghp_|github_pat_|gho_|gsk_)[A-Za-z0-9_]{20,}/.test(v))continue;
       const ok=await restoreOne(k,v);
       if(!ok)skipped.push(k);
     }
@@ -1138,7 +1144,7 @@ function renderLabContent(){
   const ps=getLabProjects();
   if(_labTab==='exp'){
     el.innerHTML=ps.length
-      ?'<div class="lab-icon-grid">'+ps.map(p=>`<a class="lab-app" href="${labEsc(p.url)}" target="_blank" rel="noopener"><div class="lab-app-box">${p.emoji||'🔗'}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('')+'</div>'
+      ?'<div class="lab-icon-grid">'+ps.map(p=>`<a class="lab-app" href="${labEsc(ccSafeUrl(p.url)||'#')}" target="_blank" rel="noopener noreferrer"><div class="lab-app-box">${labEsc(p.emoji||'🔗')}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('')+'</div>'
       :'<div style="color:var(--faint);font-size:.8rem;text-align:center;padding-top:40px">尚無專案，切換到「連結管理」新增。</div>';
   }else{
     const inp='style="width:100%;padding:8px 10px;border-radius:9px;border:.5px solid var(--bstr);background:rgba(255,255,255,.6);color:var(--ink);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;display:block"';
@@ -1158,7 +1164,7 @@ function renderLabContent(){
     <div style="border-top:.5px solid var(--bstr);padding-top:12px">
       <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:8px">已存專案</div>
       ${ps.length?ps.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)">
-        <span style="font-size:20px;flex-shrink:0">${p.emoji||'🔗'}</span>
+        <span style="font-size:20px;flex-shrink:0">${labEsc(p.emoji||'🔗')}</span>
         <div style="flex:1;min-width:0"><div style="font-size:.8rem;font-weight:600;color:var(--ink)">${labEsc(p.name)}</div><div style="font-size:.65rem;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${labEsc(p.url)}</div></div>
         <button onclick="deleteLabProject(${i})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--faint);padding:4px;border-radius:6px;transition:color .15s" title="刪除">🗑️</button>
       </div>`).join(''):'<div style="color:var(--faint);font-size:.8rem">尚無專案。</div>'}
@@ -1208,7 +1214,7 @@ function deleteLabProject(i){
 function renderLabMobile(){
   const el=document.getElementById('lab-mobile-grid');if(!el)return;
   const ps=getLabProjects();
-  el.innerHTML=ps.map(p=>`<a class="lab-app" href="${labEsc(p.url)}" target="_blank" rel="noopener"><div class="lab-app-box">${p.emoji||'🔗'}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('');
+  el.innerHTML=ps.map(p=>`<a class="lab-app" href="${labEsc(ccSafeUrl(p.url)||'#')}" target="_blank" rel="noopener noreferrer"><div class="lab-app-box">${labEsc(p.emoji||'🔗')}</div><span class="lab-app-lbl">${labEsc(p.name)}</span></a>`).join('');
 }
 renderLabMobile();
 
@@ -1297,7 +1303,7 @@ function renderDevDashboard(){
           const rl=reasonLabels[h.top_reason];
           const reasonBadge=rl?`<span class="dev-hot-reason">${esc(rl.emoji||'')} ${esc(rl.label||h.top_reason||'')}</span>`:'';
           return `<div class="dev-hot-row">
-            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(h.project||h.file||'')}</span>${reasonBadge}<span class="dev-hot-count">${h.count||0}</span></div>
+            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(h.project||h.file||'')}</span>${reasonBadge}<span class="dev-hot-count">${Number(h.count)||0}</span></div>
             <div class="dev-hot-bar-track"><div class="dev-hot-bar-fill" style="width:${pct}%"></div></div>
           </div>`;
         }).join('')+'</div>'

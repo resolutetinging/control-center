@@ -471,7 +471,30 @@ const MN=['一月','二月','三月','四月','五月','六月','七月','八月
 let _syncTimer=null;
 
 // ── DATA ──
-function loadRF(){try{return JSON.parse(localStorage.getItem(RF_KEY))||{entries:[]};}catch{return{entries:[]};}}
+// ── XSS 防護 helpers（資料可經 Gist 同步／匯入進入，一律視為不可信）──
+function _hx(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// inline onclick 的字串參數：JSON.stringify 產生 JS 字串字面量，再 HTML escape 供屬性使用
+function _ja(s){return _hx(JSON.stringify(String(s==null?'':s)));}
+// 圖片 src 白名單：只准 http(s) 或 base64 圖片 data URL；其餘回傳空字串
+function _imgSrc(u){u=typeof u==='string'?u.trim():'';return(/^https?:\/\//i.test(u)||/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(u))?_hx(u):'';}
+// 單筆記錄欄位型別驗證（loadRF 與 loadFromGist 共用）；不合法回傳 null
+// strict=true（遠端 Gist 匯入）：id/type/timestamp 不合法就整筆丟棄；非 strict（本機讀取）：只修正型別，不丟資料
+function _cleanEntry(e,strict){
+  if(!e||typeof e!=='object'||Array.isArray(e))return null;
+  if(strict){
+    if(typeof e.id!=='string'||!e.id)return null;
+    if(e.type!=='coffee'&&e.type!=='water')return null;
+    if(typeof e.timestamp!=='string'&&typeof e.timestamp!=='number')return null;
+    if(isNaN(new Date(e.timestamp).getTime()))return null;
+  }
+  const o={...e};
+  if(o.id!=null&&typeof o.id!=='string')o.id=String(o.id);
+  ['cafe','item','dessert'].forEach(k=>{if(o[k]!=null&&typeof o[k]!=='string')o[k]=String(o[k]);});
+  ['coffeePrice','price','dessertPrice','amount'].forEach(k=>{if(o[k]!=null){const n=Number(o[k]);o[k]=Number.isFinite(n)?n:0;}});
+  if(o.photo!=null&&!(typeof o.photo==='string'&&_imgSrc(o.photo)))o.photo=null;
+  return o;
+}
+function loadRF(){try{const d=JSON.parse(localStorage.getItem(RF_KEY));if(!d||typeof d!=='object'||!Array.isArray(d.entries))return{entries:[]};return{...d,entries:d.entries.map(x=>_cleanEntry(x,false)).filter(Boolean)};}catch{return{entries:[]};}}
 function saveRF(d){
   try{
     localStorage.setItem(RF_KEY,JSON.stringify(d));
@@ -557,7 +580,8 @@ async function loadFromGist(){
       // Merge: combine all entries, deduplicate by id (local + remote)
       const local=loadRF();
       const seen=new Set();
-      const merged=[...(remote.entries||[]),...(local.entries||[])].filter(e=>{
+      const remoteEntries=Array.isArray(remote.entries)?remote.entries.map(x=>_cleanEntry(x,true)).filter(Boolean):[];
+      const merged=[...remoteEntries,...(local.entries||[])].filter(e=>{
         if(seen.has(e.id))return false;
         seen.add(e.id);
         return true;
@@ -600,7 +624,7 @@ function onPhoto(inp){
   r.onload=e=>{
     pendingPhoto=e.target.result;
     const box=document.getElementById('photo-box');
-    box.innerHTML=`<img src="${pendingPhoto}" style="width:54px;height:54px;object-fit:cover;border-radius:7px;"/>`;
+    box.innerHTML=`<img src="${_imgSrc(pendingPhoto)}" style="width:54px;height:54px;object-fit:cover;border-radius:7px;"/>`;
   };
   r.readAsDataURL(f);
 }
@@ -670,22 +694,22 @@ function renderCoffeeLog(editId=null){
     if(e.id===editId){
       return`<div class="log-edit-form">
         <div class="log-edit-grid">
-          <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
-          <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-          <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+          <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${_x(e.cafe||'')}"/></div>
+          <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${_x(e.item||'')}"/></div>
+          <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${_x(e.dessert||'')}"/></div>
           <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
           <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
         </div>
         <div class="log-edit-actions">
-          <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
+          <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit(${_ja(e.id)})">儲存</button>
           <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="renderCoffeeLog()">取消</button>
         </div>
       </div>`;
     }
     const desc=[e.cafe,e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
-    const photoHtml=e.photo?`<img src="${e.photo}" class="log-thumb"/>`:'';
+    const photoHtml=_imgSrc(e.photo)?`<img src="${_imgSrc(e.photo)}" class="log-thumb"/>`:'';
     const priceHtml=[cp?`<span class="log-price" title="咖啡">☕ ${fmtM(cp)}</span>`:'',dp?`<span class="log-price" title="甜點/餐食">🍰 ${fmtM(dp)}</span>`:''].filter(Boolean).join('');
-    return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${desc}</span>${priceHtml}<button class="log-edit" onclick="renderCoffeeLog('${e.id}')">✏️</button><button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
+    return`<div class="log-row">${photoHtml}<span class="log-time">${t}</span><span class="log-desc">${_x(desc)}</span>${priceHtml}<button class="log-edit" onclick="renderCoffeeLog(${_ja(e.id)})">✏️</button><button class="log-del" onclick="delEntry(${_ja(e.id)})">🗑</button></div>`;
   }).join('');
 }
 function saveCoffeeEdit(id){
@@ -706,7 +730,7 @@ function showShopDetail(shop,editId=null){
   document.getElementById('dd-panel').classList.add('dd-panel-wide');
   const d=loadRF();
   const es=(d.entries||[]).filter(e=>e.type==='coffee'&&(e.cafe||'（未填店名）')===shop).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-  const shopEsc=shop.replace(/'/g,"\\'");
+  const shopEsc=_ja(shop);
 
   // 依年月分組（供分月明細與月度走勢圖共用）
   const monthMap={};
@@ -796,29 +820,29 @@ function showShopDetail(shop,editId=null){
       if(e.id===editId){
         return`<div class="log-edit-form" style="margin-bottom:8px;">
           <div class="log-edit-grid">
-            <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
-            <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-            <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+            <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${_x(e.cafe||'')}"/></div>
+            <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${_x(e.item||'')}"/></div>
+            <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${_x(e.dessert||'')}"/></div>
             <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
             <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
           </div>
           <div class="log-edit-actions">
-            <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
-            <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="showShopDetail('${shopEsc}')">取消</button>
+            <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit(${_ja(e.id)})">儲存</button>
+            <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="showShopDetail(${shopEsc})">取消</button>
           </div>
         </div>`;
       }
       const desc=[e.item,e.dessert].filter(Boolean).join(' · ')||'咖啡';
-      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}</div><button class="log-edit" onclick="showShopDetail('${shopEsc}','${e.id}')">✏️</button></div>`;
+      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${dateStr} ${t}</span><br><span style="font-weight:600;">${_x(desc)}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}</div><button class="log-edit" onclick="showShopDetail(${shopEsc},${_ja(e.id)})">✏️</button></div>`;
     }).join('');
     return `<div class="cost-bd-title" style="margin-top:14px;">${g.y}年${MN[g.m]} · ${fmtM(mTotal)} · ${g.entries.length}筆</div>${aggHtml}<div style="margin-top:8px;padding-top:6px;border-top:.5px dashed var(--border);">${rows}</div>`;
   }).join('');
 
   document.getElementById('dd-panel').innerHTML=`<div class="dd-title"><span>☕ ${_x(shop)}</span><button class="dd-cls" onclick="closeDayDetail()">✕</button></div>
     <div class="cost-chart-tabs">
-      <button class="cost-chart-tab${_shopChartMode==='coffee'?' active':''}" data-mode="coffee" onclick="_shopChartMode='coffee';showShopDetail('${shopEsc}')">☕ 咖啡</button>
-      <button class="cost-chart-tab${_shopChartMode==='dessert'?' active':''}" data-mode="dessert" onclick="_shopChartMode='dessert';showShopDetail('${shopEsc}')">🍰 甜點/餐食</button>
-      <button class="cost-chart-tab${_shopChartMode==='all'?' active':''}" data-mode="all" onclick="_shopChartMode='all';showShopDetail('${shopEsc}')">📊 全部</button>
+      <button class="cost-chart-tab${_shopChartMode==='coffee'?' active':''}" data-mode="coffee" onclick="_shopChartMode='coffee';showShopDetail(${shopEsc})">☕ 咖啡</button>
+      <button class="cost-chart-tab${_shopChartMode==='dessert'?' active':''}" data-mode="dessert" onclick="_shopChartMode='dessert';showShopDetail(${shopEsc})">🍰 甜點/餐食</button>
+      <button class="cost-chart-tab${_shopChartMode==='all'?' active':''}" data-mode="all" onclick="_shopChartMode='all';showShopDetail(${shopEsc})">📊 全部</button>
     </div>
     <div style="min-height:60px;margin-bottom:10px;">${chartSvg}</div>
     <div style="font-size:11px;color:var(--faint);margin-bottom:6px;">${es.length} 筆記錄（全部時間）</div>
@@ -833,7 +857,7 @@ function renderWaterLog(){
   if(!te.length){el.innerHTML='<div class="log-empty">這天還沒有水分記錄 💧</div>';return;}
   el.innerHTML=te.map(e=>{
     const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-    return`<div class="log-row"><span class="log-time">${t}</span><span class="log-desc">💧 ${e.amount||250} cc</span><button class="log-del" onclick="delEntry('${e.id}')">🗑</button></div>`;
+    return`<div class="log-row"><span class="log-time">${t}</span><span class="log-desc">💧 ${e.amount||250} cc</span><button class="log-del" onclick="delEntry(${_ja(e.id)})">🗑</button></div>`;
   }).join('');
 }
 
@@ -915,20 +939,20 @@ function showDayDetail(key,type,editId=null){
       if(e.id===editId){
         return`<div class="log-edit-form" style="margin-bottom:8px;">
           <div class="log-edit-grid">
-            <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${e.cafe||''}"/></div>
-            <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${e.item||''}"/></div>
-            <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${e.dessert||''}"/></div>
+            <div><label class="f-lbl">店名</label><input class="f-inp" id="ec-cafe" value="${_x(e.cafe||'')}"/></div>
+            <div><label class="f-lbl">品項</label><input class="f-inp" id="ec-item" value="${_x(e.item||'')}"/></div>
+            <div><label class="f-lbl">甜點/餐食</label><input class="f-inp" id="ec-dessert" value="${_x(e.dessert||'')}"/></div>
             <div><label class="f-lbl">咖啡 NT$</label><input class="f-inp" type="number" id="ec-cprice" value="${cp||''}"/></div>
             <div><label class="f-lbl">甜點/餐食 NT$</label><input class="f-inp" type="number" id="ec-dprice" value="${dp||''}"/></div>
           </div>
           <div class="log-edit-actions">
-            <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit('${e.id}')">儲存</button>
+            <button class="add-btn add-btn-coffee" style="flex:1;padding:7px;" onclick="saveCoffeeEdit(${_ja(e.id)})">儲存</button>
             <button class="add-btn" style="flex:1;padding:7px;background:var(--card2);color:var(--sub);" onclick="showDayDetail('${key}','coffee')">取消</button>
           </div>
         </div>`;
       }
       const parts=[e.cafe,e.item,e.dessert].filter(Boolean);
-      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.join(' · ')||'咖啡'}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}${e.photo?`<br><img src="${e.photo}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}</div><button class="log-edit" onclick="showDayDetail('${key}','coffee','${e.id}')">✏️</button></div>`;
+      return`<div class="dd-entry" style="display:flex;align-items:flex-start;gap:8px;"><div style="flex:1;"><span style="color:var(--faint);font-size:11px;">${t}</span><br><span style="font-weight:600;">${parts.map(_x).join(' · ')||'咖啡'}</span>${(cp||dp)?` <span style="color:var(--faint);font-size:11px;">${fmtM(cp+dp)}</span>`:''}${_imgSrc(e.photo)?`<br><img src="${_imgSrc(e.photo)}" style="margin-top:5px;width:100%;border-radius:8px;object-fit:cover;max-height:140px;"/>`:''}</div><button class="log-edit" onclick="showDayDetail('${key}','coffee',${_ja(e.id)})">✏️</button></div>`;
     }).join('');
   }else{
     const total=es.reduce((s,e)=>s+(e.amount||0),0);
@@ -947,7 +971,7 @@ function showDayDetail(key,type,editId=null){
 function closeDayDetail(){document.getElementById('day-detail').style.display='none';}
 
 // ── HELPERS ──
-const _x=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const _x=_hx;
 const fmtM=n=>'$ '+Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const CHART_COLORS=['#c47a3a','#5a8a9a','#7a9a5a','#8a6a7a','#9a7a4a','#5a7a8a','#c4a43a','#6a5a4a'];
 
@@ -1324,8 +1348,8 @@ function renderCostAnalysis(){
               <span class="cost-tree-trend"></span>
             </div>`;
           }).join('');
-        const shopEsc=shop.replace(/'/g,"\\'");
-        return `<div class="cost-tree-row cost-tree-parent" style="cursor:pointer;" onclick="showShopDetail('${shopEsc}')">
+        const shopEsc=_ja(shop);
+        return `<div class="cost-tree-row cost-tree-parent" style="cursor:pointer;" onclick="showShopDetail(${shopEsc})">
           <div class="cost-tree-name"><span class="cost-tree-lbl">${_x(shop)}</span><span style="font-size:10px;color:var(--faint);margin-left:4px;">✏️</span></div>
           <span class="cost-tree-stats">${fmtM(data.total)}<span class="cost-tree-meta">${sPct}% · ${data.count}次</span></span>
           <span class="cost-tree-trend"></span>
@@ -1413,8 +1437,8 @@ function renderShopList(){
   const rows=Object.entries(shops)
     .sort((a,b)=>b[1].total-a[1].total)
     .map(([shop,data])=>{
-      const shopEsc=shop.replace(/'/g,"\\'");
-      return `<div class="cost-tree-row cost-tree-parent" style="cursor:pointer;" onclick="showShopDetail('${shopEsc}')">
+      const shopEsc=_ja(shop);
+      return `<div class="cost-tree-row cost-tree-parent" style="cursor:pointer;" onclick="showShopDetail(${shopEsc})">
         <div class="cost-tree-name"><span class="cost-tree-lbl">${_x(shop)}</span></div>
         <span class="cost-tree-stats">${fmtM(data.total)}<span class="cost-tree-meta">${data.count}次</span></span>
         <span class="cost-tree-trend"></span>
@@ -1502,7 +1526,7 @@ async function runAI(){
     res.textContent=r.content||'（無回應）';
   }catch(e){
     res.style.display='block';
-    res.innerHTML=`<span style="color:var(--danger);">⚠️ ${e.message}</span>`;
+    res.innerHTML=`<span style="color:var(--danger);">⚠️ ${_x(e.message)}</span>`;
   }
   btn.disabled=false;spinner.style.display='none';txt.textContent='重新分析';
 }
