@@ -5,6 +5,13 @@
     {
       "date": "2026-10-05",
       "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/sleep_dashboard_v3_live.html",
+      "summary": "睡眠週期卡片加資料涵蓋說明：標題下方顯示逐段資料區間、共幾晚，以及其中幾晚切得出完整週期。區間內若有夜晚缺逐段資料，會列出是哪幾天。目前顯示10/1–10/5共5晚，5晚都有有效週期。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-05",
+      "project": "Sleep Dashboard",
       "file": "sleep-dashboard/run_update.sh",
       "summary": "10/3–10/5資料補齊＋快取規則修正：10/4那晚漏掉，是因為Shortcut同一天匯出兩次，快取規則「已有同名檔就跳過」讓完整版進不來。手動跑一次更新補進三晚，v3對iPhone最大誤差1–2.5分鐘，10/3的霧眉小睡沒有被算進去。快取改成iCloud檔案較新時重新複製。",
       "reason": "debug"
