@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-05",
+      "project": "Refueler",
+      "file": "refueler.html",
+      "summary": "月度消費走勢圖例收合：店家多時圖例會佔滿好幾行。改成只常駐月度實際總額與3個月移動平均，店家色點收成「消費店家（N家）」一項，點擊展開或收合。切換分頁或年份時展開狀態會保留。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-05",
       "project": "Sleep Dashboard",
       "file": "sleep-dashboard/sleep_dashboard_v3_live.html",
       "summary": "睡眠週期卡片加資料涵蓋說明：標題下方顯示逐段資料區間、共幾晚，以及其中幾晚切得出完整週期。區間內若有夜晚缺逐段資料，會列出是哪幾天。目前顯示10/1–10/5共5晚，5晚都有有效週期。",
