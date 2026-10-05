@@ -1055,11 +1055,13 @@ function renderCoffeeChart(){
     if(linePts.length>=2)lineLegend+=`<div class="cost-chart-leg-item"><div class="cost-chart-leg-line" style="border-top:2px solid rgba(40,38,32,.32);"></div><span>月度實際總額</span></div>`;
     if(svgMaLine)lineLegend+=`<div class="cost-chart-leg-item"><div class="cost-chart-leg-line" style="border-top:2px dashed #4a7fa5;"></div><span>3個月移動平均</span></div>`;
     // 10-05：店家圖例收合成「消費店家」一項，點擊展開／收合（狀態在重繪間保留）
-    const shopItems=allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join('');
-    const shopToggle=allShops.length?`<div class="cost-chart-leg-item cost-chart-leg-toggle" onclick="toggleCostShopLegend()" title="點擊${_costShopLegendOpen?'收合':'展開'}店家圖例">`
-      +`<span class="cost-chart-leg-dots">${allShops.slice(0,3).map(s=>`<i style="background:${shopColor[s]};"></i>`).join('')}</span>`
-      +`<span>消費店家（${allShops.length} 家）${_costShopLegendOpen?'▾':'▸'}</span></div>`:'';
-    lg.innerHTML=lineLegend+shopToggle+(allShops.length&&_costShopLegendOpen?`<div class="cost-chart-legend cost-chart-shop-legend">${shopItems}</div>`:'');
+    // 只列出目前分頁（咖啡／甜點餐食／全部）在圖上真的有金額的店家；顏色仍依全年店家分配，各分頁同店同色
+    const legendShops=allShops.filter(s=>Object.values(monthData).some(md=>(md[s]||0)>0));
+    const shopItems=legendShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join('');
+    const shopToggle=legendShops.length?`<div class="cost-chart-leg-item cost-chart-leg-toggle" onclick="toggleCostShopLegend()" title="點擊${_costShopLegendOpen?'收合':'展開'}店家圖例">`
+      +`<span class="cost-chart-leg-dots">${legendShops.slice(0,3).map(s=>`<i style="background:${shopColor[s]};"></i>`).join('')}</span>`
+      +`<span>消費店家（${legendShops.length} 家）${_costShopLegendOpen?'▾':'▸'}</span></div>`:'';
+    lg.innerHTML=lineLegend+shopToggle+(legendShops.length&&_costShopLegendOpen?`<div class="cost-chart-legend cost-chart-shop-legend">${shopItems}</div>`:'');
   }
   renderCostInsights();
 }
