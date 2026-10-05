@@ -5,6 +5,13 @@
     {
       "date": "2026-10-05",
       "project": "CC家族",
+      "file": "9個repo共13個頁面",
+      "summary": "資安修補兩輪：依稽核結果修補儲存型XSS，五組平行修完後派獨立驗證，抓到漏網再修第二輪。包含Renewable核能占比0被顯示成空白的回歸。Mental與Refueler新增資料清洗前，先唯讀查正式站資料確認不會誤刪。使用者指出過去review都沒真的全家族看，已寫成固定規則。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-05",
+      "project": "CC家族",
       "file": "（唯讀稽核，無程式改動）",
       "summary": "第三輪全家族資安健檢：分四組平行掃描9個repo，只查不改。共找到22處must-fix，全部是存起來的文字未過濾就當網頁顯示，最優先是cc_tooltip.js與SAS Hub週回顧互相串連。金鑰、開發日誌、線上檔案外洩、settings檔全部乾淨。修復待使用者確認後進行。",
       "reason": "maintain"
