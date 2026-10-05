@@ -188,6 +188,11 @@ body{
 .cost-chart-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
 .cost-chart-leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
 .cost-chart-leg-line{width:14px;height:0;flex-shrink:0;}
+.cost-chart-leg-toggle{cursor:pointer;user-select:none;padding:1px 6px;margin-left:-6px;border-radius:6px;}
+.cost-chart-leg-toggle:hover{background:var(--bg2);color:var(--ink);}
+.cost-chart-leg-dots{display:inline-flex;}
+.cost-chart-leg-dots i{width:7px;height:7px;border-radius:2px;margin-right:-2px;border:1px solid var(--bg);}
+.cost-chart-shop-legend{flex-basis:100%;margin-top:4px;padding-top:6px;border-top:.5px dashed var(--border);}
 .cost-chart-tabs{display:flex;gap:4px;margin-bottom:7px;}
 .cost-chart-tab{font-size:10px;padding:3px 10px;border-radius:10px;border:.5px solid var(--border);background:var(--bg2);color:var(--sub);cursor:pointer;font-family:inherit;transition:background .15s,color .15s;}
 .cost-chart-tab.active{background:var(--coffee-tint2);color:var(--coffee);border-color:var(--coffee-l);font-weight:700;}
@@ -1049,10 +1054,18 @@ function renderCoffeeChart(){
     let lineLegend='';
     if(linePts.length>=2)lineLegend+=`<div class="cost-chart-leg-item"><div class="cost-chart-leg-line" style="border-top:2px solid rgba(40,38,32,.32);"></div><span>月度實際總額</span></div>`;
     if(svgMaLine)lineLegend+=`<div class="cost-chart-leg-item"><div class="cost-chart-leg-line" style="border-top:2px dashed #4a7fa5;"></div><span>3個月移動平均</span></div>`;
-    lg.innerHTML=lineLegend+(allShops.length?allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join(''):'');
+    // 10-05：店家圖例收合成「消費店家」一項，點擊展開／收合（狀態在重繪間保留）
+    const shopItems=allShops.map(s=>`<div class="cost-chart-leg-item"><div class="cost-chart-leg-dot" style="background:${shopColor[s]};"></div><span>${_x(s)}</span></div>`).join('');
+    const shopToggle=allShops.length?`<div class="cost-chart-leg-item cost-chart-leg-toggle" onclick="toggleCostShopLegend()" title="點擊${_costShopLegendOpen?'收合':'展開'}店家圖例">`
+      +`<span class="cost-chart-leg-dots">${allShops.slice(0,3).map(s=>`<i style="background:${shopColor[s]};"></i>`).join('')}</span>`
+      +`<span>消費店家（${allShops.length} 家）${_costShopLegendOpen?'▾':'▸'}</span></div>`:'';
+    lg.innerHTML=lineLegend+shopToggle+(allShops.length&&_costShopLegendOpen?`<div class="cost-chart-legend cost-chart-shop-legend">${shopItems}</div>`:'');
   }
   renderCostInsights();
 }
+
+let _costShopLegendOpen=false;
+function toggleCostShopLegend(){_costShopLegendOpen=!_costShopLegendOpen;renderCoffeeChart();}
 
 // ── COST INSIGHTS（月增減率／同比／異常月份）──
 function momBadge(pct){
