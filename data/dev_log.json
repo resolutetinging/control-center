@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-05",
+      "project": "Renewable Tracker",
+      "file": "scripts/update_renewable.py、data/renewable_pending_review.json",
+      "summary": "週信候選複核與信件改善：Vistra核電42億美元貸款只有媒體引述匿名消息，官方未證實、金額各家不一，判定暫不寫入。信件原本顯示AI自創的英文代號，改成中文欄位名並顯示目標項目，也要求AI沿用既有欄位名。信件內容補上跳脫，來源連結限http(s)。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-05",
       "project": "生態系全面",
       "file": "mental-dashboard.html、wordvault-kids_v2.html",
       "summary": "全生態系未定義名稱盤點：用ESLint掃12個repo所有網頁，找呼叫了但不存在的函式或元素，大多數命中是誤報。真正會踩到的有兩處：Mental「再記一筆」按了沒反應，因為函式讀已刪除的日期標題就出錯；Kids貼紙冊打不開，因為呼叫已刪除的函式。兩處已修，v2備援頁的同型問題依使用者決定不修。實頁驗證另發現再記一筆後畫面日期欄沒回到今天，已一併修正。品質檢查清單新增名稱存在性一項。",
