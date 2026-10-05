@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-10-02",
+  "generated_through": "2026-10-05",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-05",
+      "project": "Sleep Dashboard",
+      "file": "sleep-dashboard/run_update.sh",
+      "summary": "10/3–10/5資料補齊＋快取規則修正：10/4那晚漏掉，是因為Shortcut同一天匯出兩次，快取規則「已有同名檔就跳過」讓完整版進不來。手動跑一次更新補進三晚，v3對iPhone最大誤差1–2.5分鐘，10/3的霧眉小睡沒有被算進去。快取改成iCloud檔案較新時重新複製。",
+      "reason": "debug"
+    },
     {
       "date": "2026-10-02",
       "project": "生態系全面",
