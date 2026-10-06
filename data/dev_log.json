@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-06",
+      "project": "Spec",
+      "file": "Spec/ 全部規格書",
+      "summary": "全面核對18份spec：資安修補沒同步、行號大批偏移、寫錯的key與舊模型都已修正。新建Oasis與Worship規格書。Astro Bot與SAS Hub因子草稿搬入archive。獨立抽查後補修兩份行號。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-06",
+      "project": "Control Center",
+      "file": "worship.html",
+      "summary": "Worship修正：新版AI解析存的籤，編輯時二三段空白、時間軸沒有綜合解析。改為新舊標題都認得，舊紀錄照原樣顯示。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-06",
       "project": "Sleep Dashboard",
       "file": "run_update.sh",
       "summary": "排程推送失敗根因：Mac休眠時系統短暫背景喚醒補跑排程，網路未起就睡回去，約3成推送失敗。開頭加網路前置檢查，連不到GitHub就略過交給下一時段。10-06三方比對v3最大誤差2.5分鐘，v2為2分鐘。",
