@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-06",
+      "project": "AI Tracker",
+      "file": "（部署，無程式改動）",
+      "summary": "本週記錄缺今天資料：排程凌晨已成功產生10-06資料，但GitHub Pages部署卡在排隊9小時。推空commit重新觸發部署，21秒後線上恢復。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-06",
+      "project": "CC家族",
+      "file": "english-sandbox.html等",
+      "summary": "資安修補全數完成：9個repo、13個現役頁面共修4輪，每輪都經獨立驗證。最後一處是English Sandbox字庫錯誤次數未轉數字。修補過程引入的兩個回歸也已修正並驗證。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-06",
       "project": "Control Center",
       "file": "index.html、refueler.html",
       "summary": "修正資安修補引入的首頁回歸：Guard警示呼叫的escape函式比它晚載入，警示一觸發首頁初始化就中斷，dock提示與Guard貓全部不顯示。改為首頁自己先宣告同一份函式。另外放寬Refueler照片格式白名單，避免HEIC等照片在載入時被清掉。",
