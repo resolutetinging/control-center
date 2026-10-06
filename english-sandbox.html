@@ -2151,7 +2151,25 @@ function getZhHint(item){
 // 同義收斂 key：以 LLM 給的 zh 短譯為準，退回 explain_zh 抽取的 hint；
 // 空字串不參與分組（每筆自成一組），避免無意義欄位被歸為同一組
 function _zhKey(item){ return ((item.zh||'').trim() || getZhHint(item) || '').trim(); }
-function _enKey(item){ return (item.idiom||'').trim().toLowerCase(); }
+// 片語逐字詞形還原（10-06）：同一慣用語的不同詞形（bends/bent over backwards、caught/catch off guard）
+// 歸成同一組，浮到重複區交由人工判斷去留；只用於分組比對，不改寫字庫內容。
+// 規則刻意保守：不規則動詞表＋常見字尾（-s/-es/-ies/-ed/-ied/-ing），3 字母以下與 KEEP 清單不動。
+const _LEMMA_IRR={bent:'bend',went:'go',gone:'go',goes:'go',took:'take',taken:'take',broke:'break',broken:'break',gave:'give',given:'give',got:'get',gotten:'get',made:'make',kept:'keep',ran:'run',came:'come',saw:'see',seen:'see',threw:'throw',thrown:'throw',held:'hold',left:'leave',lost:'lose',paid:'pay',said:'say',sold:'sell',told:'tell',thought:'think',brought:'bring',bought:'buy',caught:'catch',fell:'fall',fallen:'fall',felt:'feel',found:'find',flew:'fly',grew:'grow',hung:'hang',knew:'know',led:'lead',lit:'light',met:'meet',rode:'ride',rose:'rise',sang:'sing',sank:'sink',sat:'sit',shook:'shake',shot:'shoot',spilt:'spill',spun:'spin',stood:'stand',stuck:'stick',struck:'strike',swept:'sweep',swam:'swim',tore:'tear',torn:'tear',woke:'wake',wore:'wear',won:'win',wrote:'write',drew:'draw',drawn:'draw',drove:'drive',ate:'eat',bit:'bite',bitten:'bite',blew:'blow',dug:'dig',fed:'feed',fought:'fight',hid:'hide',is:'be',was:'be',were:'be',been:'be',are:'be',am:'be',has:'have',had:'have',does:'do',did:'do',done:'do'};
+const _LEMMA_KEEP=new Set(['backwards','towards','afterwards','always','less','across','this','its','his','hers','yours','ours','theirs','news','means','odds','pants','thanks','basics','yes']);
+function _lemmaWord(w){
+  w=String(w||'').toLowerCase().replace(/[^a-z']/g,'');
+  if(!w) return w;
+  if(_LEMMA_IRR[w]) return _LEMMA_IRR[w];
+  if(_LEMMA_KEEP.has(w)||w.length<=3) return w;
+  if(/ie[sd]$/.test(w)) return w.slice(0,-3)+'y';
+  if(/(ss|us|is)$/.test(w)) return w;
+  if(/(ches|shes|xes|sses|zes)$/.test(w)) return w.slice(0,-2);
+  if(/ing$/.test(w)&&w.length>5){ let s=w.slice(0,-3); if(/([bcdghjkmnpqrtvwxy])\1$/.test(s)) s=s.slice(0,-1); return s; }
+  if(/ed$/.test(w)&&w.length>4){ let s=w.slice(0,-2); if(/([bcdghjkmnpqrtvwxy])\1$/.test(s)) s=s.slice(0,-1); return s; }
+  if(/s$/.test(w)) return w.slice(0,-1);
+  return w;
+}
+function _enKey(item){ return (item.idiom||'').trim().toLowerCase().split(/\s+/).filter(Boolean).map(_lemmaWord).join(' '); }
 
 function renderLib(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
@@ -2209,14 +2227,18 @@ function renderLib(){
           </div>
         </div>`:''}`;
   };
-  const dupHtml = dupGroups.length ? `<div style="font-size:10.5px;color:#b04040;margin-bottom:6px;">🔁 偵測到 ${dupGroups.length} 組英文完全重複，確認是不同情境都要保留可按「確認保留」，否則建議人工刪除多餘項目</div>`
-    + dupGroups.map(g=>`<div class="lib-group lib-group-dup">
+  const dupHtml = dupGroups.length ? `<div style="font-size:10.5px;color:#b04040;margin-bottom:6px;">🔁 偵測到 ${dupGroups.length} 組英文重複或同字不同形，確認是不同情境都要保留可按「確認保留」，否則建議人工刪除多餘項目</div>`
+    + dupGroups.map(g=>{
+      const raws=g.idx.map(i=>(lib[i].idiom||'').trim().toLowerCase());
+      const variant=raws.some(r=>r!==raws[0]);
+      const title=variant?g.idx.map(i=>esc(lib[i].idiom)).join('／'):esc(lib[g.idx[0]].idiom);
+      return `<div class="lib-group lib-group-dup">
       <div class="lib-group-hdr" style="justify-content:space-between;">
-        <span>${esc(lib[g.idx[0]].idiom)}<span class="lib-group-badge lib-group-badge-dup">重複 ×${g.idx.length}</span></span>
+        <span>${title}<span class="lib-group-badge lib-group-badge-dup">${variant?'同字不同形':'重複'} ×${g.idx.length}</span></span>
         <button class="btn btn-ghost btn-sm" style="font-size:10.5px;padding:2px 8px;color:#b04040;" onclick="event.stopPropagation();confirmDupGroup([${g.idx.join(',')}])">✓ 確認保留</button>
       </div>
       ${g.idx.map(i=>row(lib[i], i, false)).join('')}
-    </div>`).join('') : '';
+    </div>`;}).join('') : '';
   $('lib-list').innerHTML = dupHtml + groups.map(g=>{
     if(g.idx.length===1) return row(lib[g.idx[0]], g.idx[0], false);
     return `<div class="lib-group">
