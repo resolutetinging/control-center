@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-06",
+      "project": "Sleep Dashboard",
+      "file": "run_update.sh",
+      "summary": "排程推送失敗根因：Mac休眠時系統短暫背景喚醒補跑排程，網路未起就睡回去，約3成推送失敗。開頭加網路前置檢查，連不到GitHub就略過交給下一時段。10-06三方比對v3最大誤差2.5分鐘，v2為2分鐘。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-06",
       "project": "AI Tracker",
       "file": "（部署，無程式改動）",
       "summary": "本週記錄缺今天資料：排程凌晨已成功產生10-06資料，但GitHub Pages部署卡在排隊9小時。推空commit重新觸發部署，21秒後線上恢復。",
