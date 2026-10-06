@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-10-05",
+  "generated_through": "2026-10-06",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-06",
+      "project": "Control Center",
+      "file": "index.html、refueler.html",
+      "summary": "修正資安修補引入的首頁回歸：Guard警示呼叫的escape函式比它晚載入，警示一觸發首頁初始化就中斷，dock提示與Guard貓全部不顯示。改為首頁自己先宣告同一份函式。另外放寬Refueler照片格式白名單，避免HEIC等照片在載入時被清掉。",
+      "reason": "bug_fix"
+    },
     {
       "date": "2026-10-05",
       "project": "CC家族",
