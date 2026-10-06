@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-06",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "新增臨時任務建議：生成pipeline時在水管上方顯示可否再加臨時任務。比對當日戰力×0.15與勾選任務的加權負荷，係數用過去覆盤資料校準。初版誤用水管時數當容量，使用者澄清為覆盤前快掃後改版。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-06",
       "project": "Spec",
       "file": "Spec/ 全部規格書",
       "summary": "全面核對18份spec：資安修補沒同步、行號大批偏移、寫錯的key與舊模型都已修正。新建Oasis與Worship規格書。Astro Bot與SAS Hub因子草稿搬入archive。獨立抽查後補修兩份行號。",
