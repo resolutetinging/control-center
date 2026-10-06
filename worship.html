@@ -664,16 +664,22 @@ function editEntry(id){
     showPoem(e.temple,e.slip.number,e.slip.poem,e.slip.basicMeaning,false,true);
     if(aiRaw){
       var r=aiRaw;var secs={};
-      ['籤詩意涵','籤意解析','問題綜合解析'].forEach(function(n){
+      // 新版解析標題為「各項指引／綜合建議」，舊紀錄為「籤意解析／問題綜合解析」，兩種都要能讀
+      ['籤詩意涵','各項指引','綜合建議','籤意解析','問題綜合解析'].forEach(function(n){
         var m=r.match(new RegExp('##\\s*'+n+'\\s*([\\s\\S]+?)(?=##|$)'));
         secs[n]=m?m[1].trim():'';
       });
-      $('ai-result').innerHTML=[
+      var isNew=!!(secs['各項指引']||secs['綜合建議']);
+      $('ai-result').innerHTML=(isNew?[
+        {t:'籤詩意涵',b:secs['籤詩意涵']},
+        {t:'各項指引',b:secs['各項指引']},
+        {t:'綜合建議',b:secs['綜合建議']}
+      ]:[
         {t:'一、籤詩意涵',b:secs['籤詩意涵']},
         {t:'二、籤意解析',b:secs['籤意解析']},
         {t:'三、問題綜合解析',b:secs['問題綜合解析']}
-      ].filter(function(s){return s.b;}).map(function(s){
-        return '<div class="ai-layer"><div class="ai-layer-title">'+esc(s.t)+'</div><div class="ai-layer-body">'+esc(s.b).replace(/\n/g,'<br>')+'</div></div>';
+      ]).filter(function(s){return s.b;}).map(function(s){
+        return '<div class="ai-layer"><div class="ai-layer-title">'+esc(s.t)+'</div><div class="ai-layer-body">'+esc(s.b).replace(/\n/g,'<br>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')+'</div></div>';
       }).join('');
       $('ai-result').style.display='block';
     }
@@ -717,7 +723,7 @@ function renderTimeline(){
     var slipHtml='';
     if(e.hasSlip&&e.slip){
       var ai3='';
-      if(e.slip.aiRaw){var m=e.slip.aiRaw.match(/##\s*問題綜合解析\s*([\s\S]+?)(?=##|$)/);ai3=m?m[1].trim():'';}
+      if(e.slip.aiRaw){var m=e.slip.aiRaw.match(/##\s*(?:綜合建議|問題綜合解析)\s*([\s\S]+?)(?=##|$)/);ai3=m?m[1].trim():'';}
       slipHtml='<div class="tl-slip">'+(e.slip.question?'<div class="tl-q">「'+esc(e.slip.question)+'」</div>':'')+
         '<div class="tl-slip-num">第 '+esc(e.slip.number)+' 籤</div>'+
         (e.slip.poem?'<div class="tl-poem">'+esc(e.slip.poem.split('\n').slice(0,2).join('　'))+(e.slip.poem.split('\n').length>2?'…':'')+'</div>':'')+
