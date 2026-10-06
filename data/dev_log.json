@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-06",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "Idiom字庫重複偵測加詞形還原：同一慣用語的不同詞形，例如bends與bent over backwards，歸入重複區交由使用者判斷去留。收藏行為不變。上線前先用正式字庫87筆試跑，確認沒有誤合。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-06",
       "project": "Daily Optimizer",
       "file": "daily_optimizer_v3.html",
       "summary": "新增臨時任務建議：生成pipeline時在水管上方顯示可否再加臨時任務。比對當日戰力×0.15與勾選任務的加權負荷，係數用過去覆盤資料校準。初版誤用水管時數當容量，使用者澄清為覆盤前快掃後改版。",
