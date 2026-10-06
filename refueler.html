@@ -476,7 +476,7 @@ function _hx(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 // inline onclick 的字串參數：JSON.stringify 產生 JS 字串字面量，再 HTML escape 供屬性使用
 function _ja(s){return _hx(JSON.stringify(String(s==null?'':s)));}
 // 圖片 src 白名單：只准 http(s) 或 base64 圖片 data URL；其餘回傳空字串
-function _imgSrc(u){u=typeof u==='string'?u.trim():'';return(/^https?:\/\//i.test(u)||/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(u))?_hx(u):'';}
+function _imgSrc(u){u=typeof u==='string'?u.trim():'';return(/^https?:\/\//i.test(u)||/^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+\/=]+$/i.test(u))?_hx(u):'';}
 // 單筆記錄欄位型別驗證（loadRF 與 loadFromGist 共用）；不合法回傳 null
 // strict=true（遠端 Gist 匯入）：id/type/timestamp 不合法就整筆丟棄；非 strict（本機讀取）：只修正型別，不丟資料
 function _cleanEntry(e,strict){

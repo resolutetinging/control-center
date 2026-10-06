@@ -486,6 +486,8 @@ function updateUnsetFlags(){
 }
 
 // ── LEAN TOOLTIP 已抽出至 cc_tooltip.js（含 esc()，見 </body> 前標籤）──
+// cc_tooltip.js 在本段 inline script 之後才載入；載入時 checkGuard()→triggerGuard() 就會用到 esc，故在此先宣告同一份（cc_tooltip.js 之後覆寫，行為相同）
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 // ── SETTINGS ──
 let curTab='appearance';
@@ -1252,7 +1254,7 @@ function renderDevDashboard(){
       const tl=d.timeline||[];
       const hs=d.hotspots||[];
       const reasonLabels=d.reason_labels||{};
-      if(subEl)subEl.textContent='開發紀錄更新至 '+esc(d.generated_through||'—');
+      if(subEl)subEl.textContent='開發紀錄更新至 '+(d.generated_through||'—');
 
       // ── 開發履歷時間軸：同一天聚合一列，同一天內同一專案也合併一行 ──
       function weekdayZh(dateStr){
