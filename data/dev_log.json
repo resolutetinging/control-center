@@ -5,6 +5,13 @@
     {
       "date": "2026-10-07",
       "project": "Sleep Dashboard",
+      "file": "（一次性分析，無程式改動）",
+      "summary": "分析42晚深層睡眠的影響因素：睡得越久深層分鐘越多，晚睡主要是因為縮短睡眠而減少深層。咖啡、喝水、任務多寡都看不出明確影響。深層會成段好壞，最差的幾晚集中在9月中下旬。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-07",
+      "project": "Sleep Dashboard",
       "file": "run_update.sh、LaunchAgent",
       "summary": "排程只留9:30與22:00兩個時段。腳本開頭加log輪替，只留30天，舊內容另存歸檔。結尾補推未推送的commit，處理跑到一半Mac睡著的情況。頁面顯示的更新時段同步修改。",
       "reason": "user_request"
