@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-10-06",
+  "generated_through": "2026-10-07",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-07",
+      "project": "Sleep Dashboard",
+      "file": "run_update.sh、LaunchAgent",
+      "summary": "排程只留9:30與22:00兩個時段。腳本開頭加log輪替，只留30天，舊內容另存歸檔。結尾補推未推送的commit，處理跑到一半Mac睡著的情況。頁面顯示的更新時段同步修改。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-07",
+      "project": "Sleep Dashboard",
+      "file": "（三方比對，無程式改動）",
+      "summary": "10-07三方比對：v3最大誤差2.5分鐘，v2為2分鐘。這晚23:40入睡有午夜前片段，但v2沒有少算，跟10-01的結論不同，列入觀察。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-10-06",
       "project": "English Sandbox",
