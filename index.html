@@ -1147,7 +1147,7 @@ function collectDataGaps(){
   try{
     const db=JSON.parse(localStorage.getItem('wellness_v5')||'{}')||{};
     let latest=0;
-    (db.entries||[]).forEach(e=>{const t=e&&e.timestamp?new Date(e.timestamp).getTime():NaN;if(!isNaN(t)&&t>latest)latest=t;});
+    (db.entries||[]).forEach(e=>{const ts=e&&(e.timestamp||e.date);const t=ts?new Date(ts).getTime():NaN;if(!isNaN(t)&&t>latest)latest=t;});
     if(latest){
       const n=dayDiff(_localDateKey(new Date(latest)),TODAY);
       if(n>3)gaps.push({icon:'🧠',text:'心情紀錄已 '+n+' 天沒更新',href:links.mental});
@@ -1158,7 +1158,7 @@ function collectDataGaps(){
     if(raw){
       const rev=JSON.parse(raw)||{};
       const items=Array.isArray(rev.items)?rev.items:[];
-      if(Array.isArray(rev.pipes)&&rev.pipes.length&&!items.some(t=>t&&t.status))gaps.push({icon:'📋',text:'昨天的覆盤還沒填',href:links.optimizer});
+      if(!rev.restMode&&Array.isArray(rev.pipes)&&rev.pipes.length&&!items.some(t=>t&&t.status))gaps.push({icon:'📋',text:'昨天的覆盤還沒填',href:links.optimizer});
     }
   }catch{}
   return gaps;
