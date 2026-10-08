@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-08",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "臨時任務建議加可參考選項：顯示可再加臨時任務時，列出耗能設定為中耗能、今天沒勾選的任務，最多5項。生成當下一起存起來，重開當天也看得到。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-08",
       "project": "SAS Hub",
       "file": "index.html、sleep_dashboard_v3_live.html",
       "summary": "新增深層睡眠影響因素卡片：只用v3精確資料，比較睡多久、入睡時間、前一天行為與深層睡眠的關係，並標出深層偏低的期間。總覽頁缺漏橫幅擴充成四類資料維護提醒，規則與CC彈窗一致。",
