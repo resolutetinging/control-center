@@ -169,6 +169,16 @@
   </div>
 </div>
 
+<!-- 資料維護提醒彈窗（B1）：每天最多一次，cc_data_nudge_date 為單裝置設定，不入同步白名單 -->
+<div id="nudge-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDataNudge()">
+  <div style="background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:18px 20px;width:min(86vw,340px);box-shadow:0 8px 30px rgba(40,38,32,.15);">
+    <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:4px;">資料維護提醒</div>
+    <div style="font-size:.66rem;color:var(--faint);margin-bottom:12px;">補齊這些資料，之後的睡眠因素分析才準</div>
+    <div id="nudge-list"></div>
+    <button id="nudge-ok-btn" onclick="closeDataNudge()" style="margin-top:14px;width:100%;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">知道了</button>
+  </div>
+</div>
+
 <!-- Guard Overlay -->
 <div id="guard-overlay" style="display:none;">
   <div id="cat-stage">
@@ -1115,6 +1125,64 @@ function applyNexusLinks(){
 }
 applyNexusLinks();
 
+// ── 資料維護提醒（B1）──
+// 規則須與 SAS Hub 一致：睡眠沿用 checkDataFreshness() 判準（最新一晚比今天早 >=2 天）
+const NUDGE_KEY='cc_data_nudge_date';
+function collectDataGaps(){
+  const gaps=[];const links=getLinks();
+  const yKey=_localDateKey(new Date(Date.now()-86400000));
+  const mdOf=k=>{const p=k.split('-');return (+p[1])+'/'+(+p[2]);};
+  const dayDiff=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);
+  try{
+    const sl=JSON.parse(localStorage.getItem('sas_sleep_latest')||'{}')||{};
+    const trend=sl.trend180||sl.trend30||sl.trend14||sl.trend7||[];
+    const last=trend.length?trend[trend.length-1].date:null;
+    if(last&&dayDiff(last,TODAY)>=2)gaps.push({icon:'🌙',text:'睡眠資料停在 '+mdOf(last),href:links.sleep});
+  }catch{}
+  try{
+    const d=JSON.parse(localStorage.getItem(RF_KEY)||'{}')||{};
+    const hasWater=(d.entries||[]).some(e=>e&&e.type==='water'&&e.timestamp&&_localDateKey(new Date(e.timestamp))===yKey);
+    if(!hasWater)gaps.push({icon:'💧',text:'昨天沒有喝水紀錄',href:links.refueler});
+  }catch{}
+  try{
+    const db=JSON.parse(localStorage.getItem('wellness_v5')||'{}')||{};
+    let latest=0;
+    (db.entries||[]).forEach(e=>{const t=e&&e.timestamp?new Date(e.timestamp).getTime():NaN;if(!isNaN(t)&&t>latest)latest=t;});
+    if(latest){
+      const n=dayDiff(_localDateKey(new Date(latest)),TODAY);
+      if(n>3)gaps.push({icon:'🧠',text:'心情紀錄已 '+n+' 天沒更新',href:links.mental});
+    }
+  }catch{}
+  try{
+    const raw=localStorage.getItem('review_'+yKey);
+    if(raw){
+      const rev=JSON.parse(raw)||{};
+      const items=Array.isArray(rev.items)?rev.items:[];
+      if(Array.isArray(rev.pipes)&&rev.pipes.length&&!items.some(t=>t&&t.status))gaps.push({icon:'📋',text:'昨天的覆盤還沒填',href:links.optimizer});
+    }
+  }catch{}
+  return gaps;
+}
+function checkDataNudge(){
+  try{if(localStorage.getItem(NUDGE_KEY)===TODAY)return;}catch{}
+  const gaps=collectDataGaps();
+  if(!gaps.length)return;
+  const list=document.getElementById('nudge-list');
+  const ov=document.getElementById('nudge-overlay');
+  if(!list||!ov)return;
+  list.innerHTML=gaps.map(g=>{
+    const h=String(g.href||'');
+    const safe=/^(https?:\/\/|\.\/)/.test(h)?h:'#';
+    return '<a class="nudge-row" href="'+esc(safe)+'" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border-radius:10px;background:var(--bg2);border:.5px solid var(--border);font-size:.72rem;color:var(--ink);text-decoration:none;"><span>'+esc(g.icon)+'</span><span style="flex:1">'+esc(g.text)+'</span><span style="color:var(--faint)">前往 ›</span></a>';
+  }).join('');
+  ov.style.display='flex';
+}
+function closeDataNudge(){
+  const ov=document.getElementById('nudge-overlay');
+  if(ov)ov.style.display='none';
+  try{localStorage.setItem(NUDGE_KEY,TODAY);}catch{}
+}
+
 // ── INIT ──
 loadWP();
 tick();setInterval(tick,1000);
@@ -1122,6 +1190,7 @@ checkGuard();setInterval(checkGuard,30000);
 checkGitHistoryReview();
 updateUnsetFlags();
 initLiveData();
+checkDataNudge();
 updateSyncTime();
 updateBackupHealth();
 document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});
