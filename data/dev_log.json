@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-08",
+      "project": "SAS Hub",
+      "file": "index.html、sleep_dashboard_v3_live.html",
+      "summary": "新增深層睡眠影響因素卡片：只用v3精確資料，比較睡多久、入睡時間、前一天行為與深層睡眠的關係，並標出深層偏低的期間。總覽頁缺漏橫幅擴充成四類資料維護提醒，規則與CC彈窗一致。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-08",
       "project": "Control Center",
       "file": "index.html",
       "summary": "新增資料維護提醒彈窗：開頁時檢查睡眠、Refueler、Mental、Optimizer是否有缺漏的紀錄，每天最多跳一次，並附上補資料的連結。",
@@ -13,7 +20,7 @@
       "date": "2026-10-08",
       "project": "Sleep Dashboard",
       "file": "（手動更新與三方比對）",
-      "summary": "因使用者有行程提早手動更新睡眠資料。10-08三方比對：v3與v2幾乎相同，核心睡眠比iPhone少約7分鐘，推測是iPhone把極短清醒併入核心睡眠。",
+      "summary": "手動更新與10-08三方比對：因使用者有行程，提早手動更新睡眠資料。v3與v2幾乎相同，核心睡眠比iPhone少約7分鐘，推測是iPhone把極短清醒併入核心睡眠。",
       "reason": "maintain"
     },
     {
@@ -27,7 +34,7 @@
       "date": "2026-10-07",
       "project": "Sleep Dashboard",
       "file": "run_update.sh、LaunchAgent",
-      "summary": "排程只留9:30與22:00兩個時段。腳本開頭加log輪替，只留30天，舊內容另存歸檔。結尾補推未推送的commit，處理跑到一半Mac睡著的情況。頁面顯示的更新時段同步修改。",
+      "summary": "排程刪減與log輪替：排程只留9:30與22:00兩個時段。腳本開頭加log輪替，只留30天，舊內容另存歸檔。結尾補推未推送的commit，處理跑到一半Mac睡著的情況。頁面顯示的更新時段同步修改。",
       "reason": "user_request"
     },
     {
