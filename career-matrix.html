@@ -59,12 +59,15 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .bar>b{display:block;height:100%;background:var(--ac);border-radius:3px}
 
 
-/* ── 拖拉 ── */
-.grip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:5px;box-sizing:content-box;margin:-5px;flex-shrink:0;border-radius:6px;color:var(--faint);font-size:15px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
-.grip:hover{background:var(--ac-tint)}
-.drag-src{opacity:.4}
-.drop-on{outline:2px dashed var(--ac);outline-offset:-3px;background:var(--ac-tint)}
-#ghost{position:fixed;z-index:9000;pointer-events:none;background:var(--card);border:1px solid var(--ac);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(40,38,32,.25);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.94}
+/* ── 點選放置 ── */
+.pick-btn{flex-shrink:0;font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:8px;border:.5px solid var(--ac);background:transparent;color:var(--ac);cursor:pointer;line-height:1.4;white-space:nowrap}
+.pick-btn:hover{background:var(--ac-tint)}
+.pick-btn.on{background:var(--ac);color:#fff}
+.sel-on{box-shadow:0 0 0 2.5px var(--ac)!important;border-color:var(--ac)!important;background:var(--ac-tint)}
+.picking .q,.picking .grp[data-drop="0"]{cursor:pointer}
+.picking .q:hover{box-shadow:0 0 0 2px var(--ac-l)}
+.pick-hint{display:none;position:sticky;top:48px;z-index:90;margin-bottom:12px;padding:9px 14px;border-radius:10px;background:var(--card);border:1px solid var(--ac);color:var(--ac);font-size:12.5px;font-weight:600;line-height:1.55;box-shadow:var(--shadow)}
+.pick-hint.show{display:block}
 .cd-top{display:flex;gap:8px;align-items:flex-start}
 .cd-top .cd-title{flex:1;min-width:0}
 
@@ -149,6 +152,8 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 <div class="wrap">
   <div class="filter-bar" id="filter-bar"></div>
 
+  <div class="pick-hint" id="pick-hint" role="status"></div>
+
   <div class="board" id="board">
     <div class="ax-corner"></div>
     <div class="ax-top">不　緊　急</div>
@@ -165,7 +170,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
   <div class="maint" id="maint-wrap">
     <div class="m-head">維護區</div>
-    <div class="m-sub">在這裡新增方向，再拖到上方象限（也可用每列的「移到」選單）。方向隨時間改變時，直接重新拖拉即可；點開方向可維護底下的能力細項。</div>
+    <div class="m-sub">在這裡新增方向，按方向列的「選取」鈕，再點上方象限放入（也可先點象限、再按「選取」；或用每列的「移到」選單）。方向隨時間改變時，重新選取再點新象限即可；點開方向可維護底下的能力細項。</div>
     <div class="m-add">
       <input class="inp" id="new-title" maxlength="80" placeholder="新方向名稱，按 Enter 或右側按鈕新增">
       <button class="btn" id="new-btn">＋ 新增方向</button>
@@ -305,18 +310,50 @@ function moveCard(c,q){
 
 /* ───────── 看板 ───────── */
 let filterTag='';
+let selCard='',selQ=0;   // 點選放置的選取狀態（僅頁面變數，不存 localStorage）
 const OPEN=new Set();   // 維護區展開狀態（僅頁面變數）
 let delAskId='';
 function _focusKey(el){
   if(!el||!el.dataset||!el.closest||!el.closest('#maint'))return null;
-  const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:null;
+  const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:el.dataset.pick?'p:pick':null;
   if(!f)return null;
   const m=el.closest('.mc'),r=el.closest('.it');
   let ss=null,se=null;
   try{ss=el.selectionStart;se=el.selectionEnd;}catch(x){ss=null;se=null;}
   return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,tag:el.dataset.tag||null,ss,se};
 }
+function pickBtn(c){
+  const on=c.id===selCard;
+  return`<button class="pick-btn${on?' on':''}" data-pick="${esc(c.id)}" aria-pressed="${on}">${on?'已選取':'選取'}</button>`;
+}
+function clearSel(){selCard='';selQ=0;}
+function updatePickHint(){
+  const el=$('pick-hint'),c=selCard?getCard(selCard):null;
+  let msg='';
+  if(c)msg='已選『'+(c.title||'未命名')+'』，點一個象限放入（點維護區「未放置」列＝取消放置；再點同一個選取鈕或按 Esc 取消）';
+  else if(selQ)msg='已選第'+QN[selQ]+'象限，點方向列的「選取」鈕放入（再點同一象限或按 Esc 取消）';
+  el.textContent=msg;el.classList.toggle('show',!!msg);
+  $('board').classList.toggle('picking',!!c);
+  $('maint-wrap').classList.toggle('picking',!!c);
+}
+function placeSel(c,q){
+  const same=c.quadrant===q;
+  clearSel();
+  if(same){render();toast('已在'+qLabel(q));}else moveCard(c,q);
+}
+function pickCard(id){
+  const c=getCard(id);if(!c)return;
+  if(selQ){placeSel(c,selQ);return;}
+  selCard=(selCard===id)?'':id;
+  render();
+}
+function pickQuad(q){
+  if(selCard){const c=getCard(selCard);if(c){placeSel(c,q);return;}selCard='';}
+  selQ=(selQ===q)?0:q;
+  render();
+}
 function render(){
+  if(selCard&&!getCard(selCard))selCard='';
   const fk=_focusKey(document.activeElement);
   const all=[];
   DB.cards.forEach(c=>c.tags.forEach(t=>{if(all.indexOf(t)<0)all.push(t);}));
@@ -326,17 +363,19 @@ function render(){
     :'<span class="filter-lbl">為方向加上標籤後，可在這裡篩選</span>';
   for(let q=1;q<=4;q++){
     const cards=DB.cards.filter(c=>c.quadrant===q&&(!filterTag||c.tags.indexOf(filterTag)>=0));
+    $('q'+q).classList.toggle('sel-on',selQ===q);
     $('q'+q).innerHTML=`
       <div class="q-head"><span class="q-no">第${QN[q]}象限</span><span class="q-name">${esc(QDEF[q].name)}</span></div>
       <div class="q-desc">${esc(QDEF[q].desc)}</div>
-      <div class="q-list">${cards.length?cards.map(cardHtml).join(''):'<div class="q-empty">'+(filterTag?'沒有符合標籤的方向':'尚無方向，從下方維護區拖拉到這裡')+'</div>'}</div>`;
+      <div class="q-list">${cards.length?cards.map(cardHtml).join(''):'<div class="q-empty">'+(filterTag?'沒有符合標籤的方向':'尚無方向，從下方維護區選取方向後點這裡')+'</div>'}</div>`;
   }
   renderMaint();
+  updatePickHint();
   const bytes=(localStorage.getItem(KEY)||'').length*2;
   $('usage').textContent=`cc_career_v1 佔用 ${(bytes/1024).toFixed(1)} KB・推進紀錄 ${DB.log.length} 筆`;
   if(fk){
     // 重繪會換掉整批 input，依欄位種類＋所屬方向／細項 id 找回同一欄並還原游標（比對字串，不組 selector）
-    for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act]')){
+    for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act],#maint [data-pick]')){
       const k=_focusKey(el);
       if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.tag===fk.tag){
         el.focus();
@@ -348,8 +387,8 @@ function render(){
 }
 function cardHtml(c){
   const n=c.items.length,avg=avgOf(c);
-  return`<div class="cd" data-card="${esc(c.id)}" data-dragcard="${esc(c.id)}">
-    <div class="cd-top"><span class="grip" data-grip="1" title="拖拉到其他象限">⠿</span><div class="cd-title">${esc(c.title)||'（未命名）'}</div></div>
+  return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
+    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}</div></div>
     ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="cd-meta"><span>${n} 個細項</span>${n?`<div class="bar"><b style="width:${avg}%"></b></div><span>平均 ${avg}%</span>`:''}</div>
@@ -376,9 +415,9 @@ function itemHtml(it,k){
 }
 function mcHtml(c){
   const open=OPEN.has(c.id),n=c.items.length;
-  let h=`<div class="mc" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
-    <div class="mc-head" data-toggle="1" data-dragcard="${esc(c.id)}">
-      <span class="grip" data-grip="1" title="拖拉到上方象限">⠿</span>
+  let h=`<div class="mc${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
+    <div class="mc-head" data-toggle="1">
+      ${pickBtn(c)}
       <span class="mc-tg">${open?'▾':'▸'}</span>
       <span class="mc-title">${esc(c.title)||'（未命名）'}</span>
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
@@ -410,9 +449,9 @@ function renderMaint(){
   for(let q=0;q<=4;q++){
     const cards=DB.cards.filter(c=>c.quadrant===q);
     const lbl=q===0?'未放置':'第'+QN[q]+'象限';
-    const sub=q===0?'新增後先放這裡，拖到上方象限即放置':QDEF[q].name;
+    const sub=q===0?'新增後先放這裡，按「選取」再點上方象限即放置':QDEF[q].name;
     h+=`<div class="grp" data-drop="${q}"><div class="grp-lbl"><span>${esc(lbl)}</span><span>${esc(sub)}・${cards.length}</span></div>`
-      +(cards.length?cards.map(mcHtml).join(''):`<div class="grp-empty">${q===0?'沒有未放置的方向':'此象限沒有方向（可把方向拖到這裡）'}</div>`)
+      +(cards.length?cards.map(mcHtml).join(''):`<div class="grp-empty">${q===0?'沒有未放置的方向':'此象限沒有方向'}</div>`)
       +'</div>';
   }
   $('maint').innerHTML=h;
@@ -474,8 +513,9 @@ function onMaintInput(e){
   if(t.dataset&&t.dataset.f==='iprog'){const n=t.closest('.it').querySelector('[data-f="inum"]');n.value=t.value;}
 }
 function onMaintClick(e){
-  if(_dragged){_dragged=false;return;}
   const t=e.target;
+  const pk=t.closest('[data-pick]');
+  if(pk){pickCard(pk.dataset.pick);return;}
   const b=t.closest('[data-act]');
   if(b){
     const c=cardOf(b);if(!c)return;
@@ -500,11 +540,15 @@ function onMaintClick(e){
     else if(act==='delok'){
       DB.cards=DB.cards.filter(x=>x.id!==c.id);
       DB.log=DB.log.filter(l=>l.cardId!==c.id); // 刪卡片連帶刪 log
-      OPEN.delete(c.id);delAskId='';save();render();toast('已刪除');
+      OPEN.delete(c.id);delAskId='';if(selCard===c.id)selCard='';save();render();toast('已刪除');
     }
     return;
   }
   if(t.closest('select,input,textarea,button,.pill'))return;
+  if(selCard){
+    const g=t.closest('.grp');
+    if(g&&g.dataset.drop==='0'){const sc=getCard(selCard);if(sc){placeSel(sc,0);return;}}
+  }
   const head=t.closest('[data-toggle]');
   if(head){
     const c=cardOf(head);if(!c)return;
@@ -519,77 +563,6 @@ function onMaintKey(e){
   else if(t.tagName==='INPUT'){t.blur();}
 }
 
-/* ───────── 拖拉（Pointer Events；滑鼠可拖整張卡，觸控用握把） ───────── */
-let _drag=null,_dragged=false;
-function dropZoneAt(x,y){
-  const el=document.elementFromPoint(x,y);
-  return el?el.closest('[data-drop]'):null;
-}
-function startTrack(e){
-  if(e.button!==undefined&&e.button!==0)return;
-  const src=e.target.closest('[data-dragcard]');
-  if(!src)return;
-  const grip=!!e.target.closest('[data-grip]');
-  if(!grip){
-    if(e.pointerType!=='mouse')return;   // 觸控只准握把，保留捲動
-    if(e.target.closest('select,input,textarea,button,.pill,a'))return;
-  }
-  const c=getCard(src.dataset.dragcard);
-  if(!c)return;
-  _drag={id:c.id,x:e.clientX,y:e.clientY,pid:e.pointerId,active:false,src,zone:null};
-  document.addEventListener('pointermove',onDragMove);
-  document.addEventListener('pointerup',onDragEnd);
-  document.addEventListener('pointercancel',onDragCancel);
-  if(grip)e.preventDefault();
-}
-function onDragMove(e){
-  const d=_drag;if(!d||e.pointerId!==d.pid)return;
-  if(!d.active){
-    if(Math.hypot(e.clientX-d.x,e.clientY-d.y)<5)return;
-    d.active=true;
-    const c=getCard(d.id);
-    const g=document.createElement('div');g.id='ghost';g.textContent=(c&&c.title)||'（未命名）';
-    document.body.appendChild(g);d.ghost=g;
-    d.src.classList.add('drag-src');
-  }
-  e.preventDefault();
-  d.ghost.style.left=(e.clientX+12)+'px';d.ghost.style.top=(e.clientY+12)+'px';
-  const z=dropZoneAt(e.clientX,e.clientY);
-  if(z!==d.zone){
-    if(d.zone)d.zone.classList.remove('drop-on');
-    d.zone=z;if(z)z.classList.add('drop-on');
-  }
-}
-function cleanupDrag(){
-  const d=_drag;
-  document.removeEventListener('pointermove',onDragMove);
-  document.removeEventListener('pointerup',onDragEnd);
-  document.removeEventListener('pointercancel',onDragCancel);
-  if(d){
-    if(d.ghost)d.ghost.remove();
-    if(d.zone)d.zone.classList.remove('drop-on');
-    if(d.src)d.src.classList.remove('drag-src');
-  }
-  _drag=null;
-}
-function onDragEnd(e){
-  const d=_drag;if(!d||e.pointerId!==d.pid)return;
-  const wasActive=d.active;
-  const z=wasActive?dropZoneAt(e.clientX,e.clientY):null;
-  const id=d.id;
-  cleanupDrag();
-  if(wasActive){
-    _dragged=true;setTimeout(()=>{_dragged=false;},0);  // 吞掉拖完接著的 click
-    if(z){const c=getCard(id);if(c)moveCard(c,Number(z.dataset.drop));}  // 無效區：原地不動
-  }
-}
-function onDragCancel(e){
-  const d=_drag;if(!d||e.pointerId!==d.pid)return;
-  const was=d.active;
-  cleanupDrag();
-  if(was){_dragged=true;setTimeout(()=>{_dragged=false;},0);}
-}
-
 /* ───────── 事件綁定（全為委派，無 inline handler） ───────── */
 function scrollToCard(id){
   OPEN.add(id);render();
@@ -600,18 +573,23 @@ function scrollToCard(id){
   }
 }
 $('board').addEventListener('click',e=>{
-  if(_dragged){_dragged=false;return;}
+  const pk=e.target.closest('[data-pick]');
+  if(pk){pickCard(pk.dataset.pick);return;}
   const tag=e.target.closest('[data-tag]');
   if(tag){filterTag=(filterTag===tag.dataset.tag)?'':tag.dataset.tag;render();return;}
+  const qz=e.target.closest('.q[data-q]');
+  if(selCard){if(qz)pickQuad(Number(qz.dataset.q));return;}
   const cd=e.target.closest('[data-card]');
-  if(cd)scrollToCard(cd.dataset.card);
+  if(cd){scrollToCard(cd.dataset.card);return;}
+  if(qz)pickQuad(Number(qz.dataset.q));
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&(selCard||selQ)){clearSel();render();}
 });
 $('filter-bar').addEventListener('click',e=>{
   const tag=e.target.closest('[data-tag]');
   if(tag){filterTag=(filterTag===tag.dataset.tag)?'':tag.dataset.tag;render();}
 });
-$('board').addEventListener('pointerdown',startTrack);
-$('maint').addEventListener('pointerdown',startTrack);
 // 延到焦點移到下一欄之後才處理，避免重繪把點擊／Tab 的目標換掉
 $('maint').addEventListener('change',e=>setTimeout(()=>onMaintChange(e),0));
 $('maint').addEventListener('input',onMaintInput);
