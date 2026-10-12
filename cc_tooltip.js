@@ -244,11 +244,21 @@ function buildTT(id){
       // v1.1 總額度依天數分配；舊資料（無 total）以各期收入加總遷移
       let total=amt(pl.total);
       if(total===null){const defI=amt(pl.defaultIncome)||0;total=ps.reduce((a,p)=>{const io=amt(p.m.income);return a+(io!==null?io:defI);},0);}
-      const D=ps.reduce((a,p)=>a+p.d,0),S=total-ps.reduce((a,p)=>a+fixedT*p.w,0);
+      const D=ps.reduce((a,p)=>a+p.d,0),fixedAll=ps.reduce((a,p)=>a+fixedT*p.w,0);
+      // v1.4 預計特定月份消費：繳費月在區間內才計算，第 1 個月到繳費月依天數分攤（驗證規則同頁面 normalize）
+      ps.forEach(p=>{p.share=0;p.pay=0;});
+      (Array.isArray(pl.planned)?pl.planned:[]).slice(0,50).forEach(x=>{
+        if(!x||typeof x!=='object'||typeof x.id!=='string'||typeof x.name!=='string'||!okD(x.month))return;
+        const a=amt(x.amount);if(a===null)return;
+        const k=ps.findIndex(p=>p.st===x.month);if(k<0)return;
+        let cum=0;for(let j=0;j<=k;j++)cum+=ps[j].d;
+        for(let j=0;j<=k;j++)ps[j].share+=a*ps[j].d/cum;
+        ps[k].pay+=a;
+      });
       ps.forEach(p=>{
         const at=amt(p.m.actualTotal);
-        p.base=S*p.d/D;p.closed=p.m.closed===true&&at!==null;
-        p.dev=p.closed?p.base-(at-fixedT*p.w):0;p.spent=amt(p.m.spentToDate)||0;p.pend=!p.closed&&td>p.en;
+        p.base=(total-fixedAll)*p.d/D-p.share;p.closed=p.m.closed===true&&at!==null;
+        p.dev=p.closed?p.base-(at-fixedT*p.w-p.pay):0;p.spent=amt(p.m.spentToDate)||0;p.pend=!p.closed&&td>p.en;
       });
       const carry=ps.reduce((a,p)=>a+p.dev,0),openD=ps.reduce((a,p)=>a+(p.closed?0:p.d),0);
       const pend=ps.filter(p=>p.pend).length;
