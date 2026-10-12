@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "finance-planner.html／cc_tooltip.js",
+      "summary": "財務規劃頁驗證後小修：用Tab換欄位時游標不再跳回頁首，圖表數字與日期拉開距離。圖例色塊不再用i標籤，提示框超支金額格式與頁面一致。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "finance-planner.html",
       "summary": "新增動態財務規劃頁：依收入與固定花費，反推每期與今天起每天的建議花費上限。月底回填實際支出後，偏差平均攤到後面還沒結算的月份，並畫出趨勢圖。",
       "reason": "feature"
