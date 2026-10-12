@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "career-matrix.html／cc_tooltip.js",
+      "summary": "四象限細項拿掉進度百分比：學術領域的進度很難用百分比界定，改成自由文字並顯示狀態分布。Optimizer改只依狀態排序，SAS Hub推進日改看狀態升級或文字更新。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "finance-planner.html／cc_tooltip.js",
       "summary": "財務規劃新增預計特定月份消費：可填保費這類特定月份的大筆支出，填月份、項目與金額。金額從規劃第一個月起依天數分攤預留到繳費當月，之後的月份不受影響。",
       "reason": "user_request"
