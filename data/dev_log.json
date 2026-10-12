@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-12",
+      "project": "Stock Tracker",
+      "file": "intraday-stock-update.yml",
+      "summary": "排程失敗檢查：晚上一次延遲執行的盤中更新在推送步驟失敗，當天盤中資料已存，沒有缺漏。另發現GitHub排程嚴重延遲，使用者決定暫不改用外部排程。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-12",
       "project": "Control Center",
       "file": "career-matrix.html／cc_tooltip.js",
       "summary": "四象限細項改成學習紀錄：每次學了什麼就新增一筆，自動帶日期也能補記，舊紀錄保留。里程碑改稱下一步，原本的進度描述自動轉成第一筆紀錄。",
