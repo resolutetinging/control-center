@@ -4,6 +4,27 @@
   "timeline": [
     {
       "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "career-matrix.html／cc_tooltip.js",
+      "summary": "四象限細項新增主題清單：每個細項列出要學的主題，分待學、學習中、已學三種狀態，學會時自動記日期。下一步欄位拿掉，學習紀錄改成選填。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "長期目標提示列出學習中主題：細項有學習中的主題時直接列出主題名，最多兩個，排序也參考最近學會的日期。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "發展推進加入主題學會日：四象限細項的主題標成已學的那一天也算推進日。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
       "project": "Stock Tracker",
       "file": "intraday-stock-update.yml",
       "summary": "排程失敗檢查：晚上一次延遲執行的盤中更新在推送步驟失敗，當天盤中資料已存，沒有缺漏。另發現GitHub排程嚴重延遲，使用者決定暫不改用外部排程。",
