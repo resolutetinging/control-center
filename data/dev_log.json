@@ -6,6 +6,20 @@
       "date": "2026-10-12",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
+      "summary": "接球判斷新增追問AI：在有沒有接住對方的球區塊可以直接問AI判斷理由，能來回討論。AI只談溝通判斷，理由成立會承認並修正判定。原本用下方文法追問問接球，只會回文法。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限放置改成點選再點選：比照Optimizer水管沙盒，先點方向的選取鈕再點象限就放入，也可以反過來點。拖拉和握把拿掉，同時修好維護區改完一格後點下一格字會遺失的問題。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
       "summary": "新人第一天情境角色修正：明確指定練習者是新人、出題者是資深同事。原本情境沒寫清楚角色，出題者常自己變成新人。",
       "reason": "bug_fix"
     },
