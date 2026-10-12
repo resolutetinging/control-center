@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "career-matrix.html／index.html／cc_tooltip.js",
+      "summary": "Career圖示換成梯子：原本的指南針跟SAS Hub的分頁圖示重複，改成梯子。Dock、頁面、提示框與SAS Hub卡片一起換。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "career-matrix.html／finance-planner.html",
       "summary": "兩頁新增儲存按鈕：頁首顯示已儲存時間，按下儲存會立刻備份到Gist並顯示成功或失敗。原本會自動存檔但畫面沒有任何提示。",
       "reason": "user_request"
