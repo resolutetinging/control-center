@@ -79,6 +79,10 @@
       <div class="d-box">🧭</div>
       <span class="d-lbl">四象限</span>
     </div>
+    <div class="d-icon" data-id="finance" onclick="dClick(this,'finance')">
+      <div class="d-box">💳</div>
+      <span class="d-lbl">財務規劃</span>
+    </div>
     <div class="d-icon" data-id="refueler" onclick="dClick(this,'refueler')">
       <div class="d-box">☕</div>
       <span class="d-lbl">Refueler</span>
@@ -345,6 +349,7 @@ const DEFAULT_LINKS={
   'english':   './english-sandbox.html',
   'scratch':   './scratchpad.html',
   'career':    './career-matrix.html',
+  'finance':   './finance-planner.html',
 };
 function getLinks(){try{var l={...DEFAULT_LINKS,...JSON.parse(localStorage.getItem(LINKS_KEY)||'{}')};if(typeof l.sleep==='string'&&l.sleep.endsWith('sleep_dashboard_v2.html'))l.sleep=DEFAULT_LINKS.sleep;return l;}catch{return{...DEFAULT_LINKS};}}
 // 連結 URL 白名單：http(s)、notion://、無 scheme 的相對路徑；其餘（javascript:/data: 等）一律拒絕
@@ -564,6 +569,7 @@ function renderTab(tab){
       {id:'english',lbl:'🎯 English Sandbox',ph:'./english-sandbox.html'},
       {id:'scratch',lbl:'🗂 Scratchpad',ph:'./scratchpad.html'},
       {id:'career',lbl:'🧭 未來發展四象限',ph:'./career-matrix.html'},
+      {id:'finance',lbl:'💳 動態財務規劃',ph:'./finance-planner.html'},
     ];
     el.innerHTML=`
       <div class="s-title">連結管理</div>

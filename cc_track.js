@@ -184,6 +184,7 @@
     ['cc_big_manifest', '🏠 CC 首頁', '備份分塊索引（勿刪）'],
     ['cc_scratch_v1', '🗂 Scratchpad', '雜記收件匣'],
     ['cc_career_v1', '🧭 四象限', '未來發展方向／細項進度／推進紀錄'],
+    ['cc_finance_v1', '💳 財務規劃', '規劃期間／固定花費／各期回填數字'],
     ['cc_*', '🏠 CC 首頁', '同步/統計'],
     ['gh_pat', '🔑 憑證', 'GitHub PAT'],
     ['gist_id', '🔑 憑證', '備份 Gist 位址'],

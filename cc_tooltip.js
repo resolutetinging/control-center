@@ -216,6 +216,49 @@ function buildTT(id){
       out+=row('最近推進日',last?esc(last):'—');
       return out;
     }
+    case 'finance':{
+      // 動態財務規劃（cc_finance_v1）：本期每日上限／剩餘可花／待回填期數。計算規則須與 finance-planner.html 的 computePlan 一致；資料不可信，數值一律轉數字、文字 esc
+      let fp=null;try{fp=JSON.parse(localStorage.getItem('cc_finance_v1')||'null');}catch{}
+      const pl=(fp&&fp.plan&&typeof fp.plan==='object')?fp.plan:{};
+      const okD=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s);
+      const amt=v=>{const n=Number(v);return(v!==null&&v!==''&&typeof v!=='boolean'&&Number.isFinite(n)&&n>=0)?n:null;};
+      if(!okD(pl.start)||!okD(pl.end)||pl.end<pl.start)return h('💳 動態財務規劃')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定規劃期間，點擊設定</div>`;
+      const dm=(y,m)=>new Date(Date.UTC(y,m,0)).getUTCDate();
+      const sY=+pl.start.slice(0,4),sM=+pl.start.slice(5,7),sD=+pl.start.slice(8,10);
+      const ms=i=>{const t=sM-1+i,y=sY+Math.floor(t/12),m=t%12+1;return y+'-'+String(m).padStart(2,'0')+'-'+String(Math.min(sD,dm(y,m))).padStart(2,'0');};
+      const ud=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10));
+      const prevDay=s=>{const d=new Date(ud(s)-86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');};
+      const now=new Date(),td=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+      const fixedT=(Array.isArray(pl.fixed)?pl.fixed:[]).reduce((a,f)=>a+(amt(f&&f.amount)||0),0);
+      const defI=amt(pl.defaultIncome)||0;
+      const mo=(fp.months&&typeof fp.months==='object')?fp.months:{};
+      const ps=[];
+      for(let i=0;i<60;i++){
+        const st=ms(i);if(st>pl.end)break;
+        let en=prevDay(ms(i+1));if(en>pl.end)en=pl.end;
+        const m=(mo[st]&&typeof mo[st]==='object')?mo[st]:{};
+        const at=amt(m.actualTotal),io=amt(m.income);
+        const base=(io!==null?io:defI)-fixedT,closed=m.closed===true&&at!==null;
+        ps.push({st,en,base,closed,dev:closed?base-(at-fixedT):0,spent:amt(m.spentToDate)||0,pend:!closed&&td>en});
+      }
+      const carry=ps.reduce((a,p)=>a+p.dev,0),R=ps.filter(p=>!p.closed).length;
+      const pend=ps.filter(p=>p.pend).length;
+      const cur=ps.find(p=>td>=p.st&&td<=p.en);
+      let out=h('💳 動態財務規劃');
+      if(!cur){out+=row('狀態',td<ps[0].st?'尚未開始':'規劃期間已結束');}
+      else{
+        const sd2=s=>(+s.slice(5,7))+'/'+(+s.slice(8,10));
+        out+=row('本期',esc(sd2(cur.st)+' – '+sd2(cur.en)));
+        if(cur.closed)out+=row('本期','已結算','g');
+        else{
+          const rem=cur.base+carry/R-cur.spent,days=Math.round((ud(cur.en)-ud(td))/86400000)+1;
+          out+=row('今天起每日上限','NT$'+Math.round(rem>0?rem/days:0).toLocaleString('en-US'),rem>0?'g':'r');
+          out+=row('剩餘可花','NT$'+Math.round(rem).toLocaleString('en-US'),rem>0?'':'r');
+        }
+      }
+      out+=row('待回填期數',pend+' 期',pend>0?'a':'');
+      return out;
+    }
     default:return'';
   }
 }
