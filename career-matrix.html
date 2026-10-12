@@ -23,6 +23,17 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px}
 .nav-title{font-size:14px;font-weight:700;color:var(--ac);padding:13px 0;letter-spacing:.02em;white-space:nowrap}
 .back-link{margin-left:auto;font-size:11.5px;color:var(--faint);text-decoration:none;padding:5px 9px;border-radius:6px;transition:background .15s;white-space:nowrap}
+.save-wrap{display:flex;align-items:center;gap:6px;margin-left:10px;min-width:0}
+.save-st{font-size:11px;font-weight:500;padding:3px 9px;border-radius:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;color:var(--faint);transition:all .3s}
+.save-st.ok{color:var(--ok);background:var(--ok-bg)}
+.save-st.ing{color:var(--ac);background:var(--ac-tint)}
+.save-st.err{color:#a03030;background:rgba(160,48,48,.12)}
+.save-btn{font-size:11.5px;font-weight:600;color:var(--ac);background:var(--ac-tint);border:1px solid var(--ac-tint2);border-radius:6px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+.save-btn:hover{background:var(--ac-tint2)}
+.save-btn:disabled{opacity:.55;cursor:default}
+.nav .back-link{margin-left:auto}
+.save-wrap + .back-link{margin-left:auto}
+@media(max-width:480px){.nav{padding:0 10px}.save-wrap{margin-left:6px;gap:4px}.save-st{max-width:92px;font-size:10.5px;padding:3px 6px}.save-btn{padding:4px 6px;font-size:11px}.back-link{padding:5px 4px;font-size:11px}}
 .back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
 
 .wrap{padding:22px 16px 96px;max-width:1040px;margin:0 auto}
@@ -147,6 +158,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 <div class="nav">
   <div class="nav-title">🧭 Career</div>
+  <div class="save-wrap"><span class="save-st" id="save-st" role="status" aria-live="polite"></span><button type="button" class="save-btn" id="save-btn" onclick="ccSaveClick()">💾 儲存</button></div>
   <a class="back-link" href="./index.html">← Control Center</a>
 </div>
 
@@ -277,7 +289,40 @@ function load(){
   DB=normalize(raw);
 }
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){toast('儲存失敗（儲存空間不足？）');}
+  let ok=true;
+  try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){ok=false;console.error(e);toast('儲存失敗（儲存空間不足？）');}
+  _ccOk=ok;
+  if(ok)ccSt('ok','✓ 已儲存 '+ccHM());else ccSt('err','⚠ 儲存失敗');
+}
+// ── 儲存狀態列／儲存按鈕（只讀寫狀態顯示，不碰資料結構） ──
+let _ccOk=true;
+function ccHM(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function ccSt(kind,msg){
+  const el=document.getElementById('save-st');if(!el)return;
+  el.className='save-st '+kind;el.textContent=msg;el.title=msg;
+}
+function ccShowLoaded(){
+  const el=document.getElementById('save-st');
+  if(el&&!el.textContent&&localStorage.getItem(KEY))ccSt('ok','✓ 已載入');
+}
+async function ccSaveClick(){
+  const btn=document.getElementById('save-btn');
+  const a=document.activeElement;
+  if(a&&a!==document.body&&a!==btn&&typeof a.blur==='function')a.blur(); // 讓正在編輯的欄位觸發 change
+  await new Promise(r=>setTimeout(r,80)); // 等 change 的 setTimeout(0)／render／焦點還原跑完
+  save();
+  if(!_ccOk)return;
+  const hasCred=!!((localStorage.getItem('gh_pat')||'').trim()&&(localStorage.getItem('gist_id')||'').trim());
+  const core=window.ccSyncCore;
+  if(!hasCred||!core||typeof core.uploadFull!=='function'){ccSt('ok','✓ 已儲存（未設定 Gist 備份）');return;}
+  btn.disabled=true;ccSt('ing','☁ 備份中…');
+  try{
+    await core.uploadFull();
+    ccSt('ok','☁ 已備份 '+ccHM());
+  }catch(e){
+    ccSt('err','⚠ 備份失敗');
+    toast('備份失敗：'+String((e&&e.message)||'未知原因').slice(0,40));
+  }finally{btn.disabled=false;}
 }
 
 // log 規則（規格 2 節）：同日同細項同欄位合併（保留第一筆 from、更新 to）；from===to 則刪除；上限 3000
@@ -601,6 +646,7 @@ $('new-title').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefau
 
 load();
 render();
+ccShowLoaded();
 </script>
 <script src="cc_autosync.js"></script>
 <script src="cc_track.js" data-cc-key="career" data-cc-label="Career"></script>
