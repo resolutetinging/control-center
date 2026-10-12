@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Sleep Dashboard",
+      "file": "run_update.sh／update.log",
+      "summary": "22:00排程健檢：10-07到10-11五次都有啟動，完全成功2次，3次因Mac休眠中短暫喚醒跑到一半又睡著而推送失敗。沒有遺失資料，10-10與10-11兩晚都靠22:00補上。另發現v3讀到未同步的iCloud檔會直接報錯中止。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Sleep Dashboard",
       "file": "run_update.sh／v2_v3_migration_report_20260930.md",
       "summary": "手動更新與三方比對：手動跑更新，10-09到10-12四晚上線。v3對iPhone誤差1到7.5分，超過3分的兩晚分別是分類差異與早上回籠覺未算入主睡眠，都不是算錯。另查出v2入睡時間系統性錯位一天，45夜中27夜等於前一晚。",
       "reason": "user_request"
