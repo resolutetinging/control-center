@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "finance-planner.html",
+      "summary": "財務規劃日期年份檢查補強：年份欄打超過4位數時，不再誤跳格式錯誤提示，直接視為還沒打完。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "career-matrix.html／index.html／cc_tooltip.js",
       "summary": "Career圖示換成梯子：原本的指南針跟SAS Hub的分頁圖示重複，改成梯子。Dock、頁面、提示框與SAS Hub卡片一起換。",
       "reason": "user_request"
