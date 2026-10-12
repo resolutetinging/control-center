@@ -201,11 +201,11 @@ function buildTT(id){
       // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限平均進度、最近一次推進日；資料不可信，數值一律轉數字、文字 esc
       let cm=null;try{cm=JSON.parse(localStorage.getItem('cc_career_v1')||'null');}catch{}
       const cards=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
-      if(!cards.length)return h('🧭 未來發展四象限')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
+      if(!cards.length)return h('🧭 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
       const cnt=[0,0,0,0];
       cards.forEach(c=>{const q=Number(c.quadrant);if(q>=1&&q<=4)cnt[q-1]++;});
       const nm=['第一象限 重要又緊急','第二象限 重要但不緊急','第三象限 不重要也不緊急','第四象限 不重要但緊急'];
-      let out=h('🧭 未來發展四象限');
+      let out=h('🧭 Career');
       nm.forEach((n,i)=>{out+=row(esc(n),cnt[i]+' 張');});
       const prog=[];
       cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{const p=Number(it&&it.progress);if(Number.isFinite(p))prog.push(Math.max(0,Math.min(100,p)));});});
@@ -224,7 +224,7 @@ function buildTT(id){
       const pl=(fp&&fp.plan&&typeof fp.plan==='object')?fp.plan:{};
       const okD=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s);
       const amt=v=>{const n=Number(v);return(v!==null&&v!==''&&typeof v!=='boolean'&&Number.isFinite(n)&&n>=0)?n:null;};
-      if(!okD(pl.start)||!okD(pl.end)||pl.end<pl.start)return h('💳 動態財務規劃')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定規劃期間，點擊設定</div>`;
+      if(!okD(pl.start)||!okD(pl.end)||pl.end<pl.start)return h('💳 Finance')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定規劃期間，點擊設定</div>`;
       const dm=(y,m)=>new Date(Date.UTC(y,m,0)).getUTCDate();
       const sY=+pl.start.slice(0,4),sM=+pl.start.slice(5,7),sD=+pl.start.slice(8,10);
       const ms=i=>{const t=sM-1+i,y=sY+Math.floor(t/12),m=t%12+1;return y+'-'+String(m).padStart(2,'0')+'-'+String(Math.min(sD,dm(y,m))).padStart(2,'0');};
@@ -253,7 +253,7 @@ function buildTT(id){
       const carry=ps.reduce((a,p)=>a+p.dev,0),openD=ps.reduce((a,p)=>a+(p.closed?0:p.d),0);
       const pend=ps.filter(p=>p.pend).length;
       const cur=ps.find(p=>td>=p.st&&td<=p.en);
-      let out=h('💳 動態財務規劃');
+      let out=h('💳 Finance');
       if(!cur){out+=row('狀態',td<ps[0].st?'尚未開始':'規劃期間已結束');}
       else{
         const sd2=s=>(+s.slice(5,7))+'/'+(+s.slice(8,10));
