@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限選取提示改浮在底部：原本選取後提示出現在看板上方，把看板往下推，容易點錯象限。改成浮在畫面底部不佔版面，看板位置不再移動。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-12",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "接球判斷新增追問AI：在有沒有接住對方的球區塊可以直接問AI判斷理由，能來回討論。AI只談溝通判斷，理由成立會承認並修正判定。原本用下方文法追問問接球，只會回文法。",
