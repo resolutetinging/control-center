@@ -198,7 +198,7 @@ function buildTT(id){
       return out;
     }
     case 'career':{
-      // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限狀態分布、最近一次推進日；資料不可信，數值一律轉數字、文字 esc
+      // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限狀態分布、最近學習；資料不可信，數值一律轉數字、文字 esc
       let cm=null;try{cm=JSON.parse(localStorage.getItem('cc_career_v1')||'null');}catch{}
       const cards=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
       if(!cards.length)return h('🪜 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
@@ -214,9 +214,13 @@ function buildTT(id){
       out+=hr();
       const dist=stN.map((n,k)=>stC[k]?n+' '+stC[k]:'').filter(Boolean).join('・');
       out+=row('第二象限狀態',dist?esc(dist):'—','g');
-      let last='';
-      (Array.isArray(cm.log)?cm.log:[]).forEach(l=>{if(l&&l.field==='progress'&&Number(l.to)>Number(l.from)&&typeof l.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(l.date)&&l.date>last)last=l.date;});
-      out+=row('最近推進日',last?esc(last):'—');
+      // 最近學習：全部細項 journal 中日期最新一筆（資料不可信：日期格式與名稱逐項驗證）
+      let lastD='',lastN='';
+      cards.forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{
+        if(!it||typeof it!=='object'||!Array.isArray(it.journal))return;
+        it.journal.forEach(j=>{if(j&&typeof j.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(j.date)&&j.date>=lastD){lastD=j.date;lastN=(typeof it.name==='string'&&it.name)?it.name.slice(0,30):'（未命名）';}});
+      });});
+      if(lastD)out+=row('最近學習',esc(lastD.slice(5,7)+'/'+lastD.slice(8,10)+' '+lastN));
       return out;
     }
     case 'finance':{
