@@ -253,7 +253,7 @@ function buildTT(id){
         else{
           const rem=cur.base+carry/R-cur.spent,days=Math.round((ud(cur.en)-ud(td))/86400000)+1;
           out+=row('今天起每日上限','NT$'+Math.round(rem>0?rem/days:0).toLocaleString('en-US'),rem>0?'g':'r');
-          out+=row('剩餘可花','NT$'+Math.round(rem).toLocaleString('en-US'),rem>0?'':'r');
+          out+=row('剩餘可花',(rem<0?'-':'')+'NT$'+Math.abs(Math.round(rem)).toLocaleString('en-US'),rem>0?'':'r');
         }
       }
       out+=row('待回填期數',pend+' 期',pend>0?'a':'');

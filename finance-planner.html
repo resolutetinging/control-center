@@ -79,7 +79,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 /* 趨勢圖 */
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--sub);margin-bottom:8px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .chart-box{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .chart-box svg{display:block}
 .tx{fill:var(--sub);font-size:10px}
@@ -276,9 +276,24 @@ function getM(key){
 }
 
 let CP=null,openKey='',delFid='';
+function _focusKey(el){
+  if(!el||!el.dataset)return null;
+  const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:null;
+  if(!f)return null;
+  const r=el.closest('[data-fid],[data-key]');
+  return{f,fid:r&&r.dataset.fid||null,key:el.dataset.key||(r&&r.dataset.key)||null};
+}
 function render(){
+  const fk=_focusKey(document.activeElement);
   CP=computePlan(DB,today());
   renderOv();renderSet();renderList();renderChart();
+  if(fk){
+    // 重繪會換掉整批 input，依欄位種類＋所屬列找回同一欄重新聚焦（比對字串，不組 selector）
+    for(const el of document.querySelectorAll('[data-f],[data-act]')){
+      const k=_focusKey(el);
+      if(k.f===fk.f&&k.fid===fk.fid&&k.key===fk.key){el.focus();break;}
+    }
+  }
   const bytes=(localStorage.getItem(KEY)||'').length*2;
   $('usage').textContent=`cc_finance_v1 佔用 ${(bytes/1024).toFixed(1)} KB`;
 }
@@ -401,7 +416,7 @@ function updatePrev(key){
 function kfmt(v){const a=Math.abs(v);return(v<0?'-':'')+(a>=1000?(a/1000).toFixed(a>=10000?0:1)+'k':String(Math.round(a)));}
 function chartHtml(){
   const ps=CP.periods,n=ps.length,gw=76,pl=44,pr=14,W=pl+pr+gw*n;
-  const top=20,H1=150,ax=34,H2=84,H=top+H1+ax+H2+18;
+  const top=20,H1=150,ax=46,H2=84,H=top+H1+ax+H2+18;
   let mx=1;
   ps.forEach(p=>{mx=Math.max(mx,p.suggest,p.actualVar||0);});
   const step=Math.pow(10,Math.floor(Math.log10(mx)));
@@ -449,7 +464,7 @@ function renderChart(){
   const el=$('s-chart');
   let h='<div class="sec-t">趨勢圖</div>';
   if(!CP.valid){el.innerHTML=h+'<div class="muted">設定規劃期間後會顯示趨勢圖。</div>';return;}
-  h+=`<div class="legend"><span><i style="background:var(--ac)"></i>建議額度（已結算期為原建議）</span><span><i style="background:var(--warn)"></i>實際變動支出</span><span><i style="background:var(--ac-tint);border:1px dashed var(--ac)"></i>預估（未結算）</span><span><i style="background:var(--ok)"></i>累計偏差（正＝有剩）</span></div>`;
+  h+=`<div class="legend"><span><b style="background:var(--ac)"></b>建議額度（已結算期為原建議）</span><span><b style="background:var(--warn)"></b>實際變動支出</span><span><b style="background:var(--ac-tint);border:1px dashed var(--ac)"></b>預估（未結算）</span><span><b style="background:var(--ok)"></b>累計偏差（正＝有剩）</span></div>`;
   h+=`<div class="chart-box">${chartHtml()}</div>`;
   el.innerHTML=h;
 }
@@ -537,7 +552,8 @@ function onClick(e){
     getM(key).closed=false;openKey='';save();render();toast('已改回未結算');return;
   }
 }
-$('app').addEventListener('change',onChange);
+// 延到焦點移到下一欄之後才處理，render() 才能把焦點還原到使用者 Tab 過去的欄位
+$('app').addEventListener('change',e=>setTimeout(()=>onChange(e),0));
 $('app').addEventListener('input',onInput);
 $('app').addEventListener('click',onClick);
 $('app').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')e.target.blur();});
