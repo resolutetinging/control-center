@@ -106,6 +106,9 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .mc-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
 .mc-tg{width:20px;flex-shrink:0;color:var(--faint);font-size:12px;text-align:center}
 .mc-title{flex:1 1 140px;min-width:0;font-size:14px;font-weight:700;word-break:break-word}
+.mc-title-inp{background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 6px;margin:-3px -6px;color:var(--ink);font-family:inherit;cursor:text;outline:none;text-overflow:ellipsis}
+.mc-title-inp:hover{border-bottom-color:var(--bstr)}
+.mc-title-inp:focus{background:var(--card);border-color:var(--ac-l)}
 .mc-badge{font-size:10.5px;padding:1px 8px;border-radius:9px;background:var(--ac-tint2);color:var(--ac);font-weight:700;white-space:nowrap}
 .mc-badge.q0{background:var(--bg);color:var(--faint)}
 .mc-avg{font-size:11px;color:var(--faint);white-space:nowrap}
@@ -475,7 +478,7 @@ function mcHtml(c){
     <div class="mc-head" data-toggle="1">
       ${pickBtn(c)}
       <span class="mc-tg">${open?'▾':'▸'}</span>
-      <span class="mc-title">${esc(c.title)||'（未命名）'}</span>
+      <input class="mc-title mc-title-inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱" aria-label="方向名稱">
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
       ${c.tags.length?`<span class="mc-tags">${c.tags.map(t=>`<span class="pill" data-nofilter="1">#${esc(t)}</span>`).join('')}</span>`:''}
       <span class="mc-avg">${n} 項・平均 ${avgOf(c)}%</span>
@@ -484,7 +487,6 @@ function mcHtml(c){
   if(open){
     const sug=SUG_TAGS.filter(t=>c.tags.indexOf(t)<0);
     h+=`<div class="mc-body">
-      <div class="fld"><label>標題</label><input class="inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱"></div>
       <div class="fld"><label>說明</label><textarea class="ta" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
       <div class="fld"><label>標籤</label>
         <div class="chips">${c.tags.map(t=>`<span class="chip">#${esc(t)}<button data-act="tagdel" data-tag="${esc(t)}" aria-label="移除標籤">×</button></span>`).join('')}</div>
