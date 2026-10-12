@@ -73,9 +73,8 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .cd-it-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cd-it-st{font-size:10.5px;flex-shrink:0;color:var(--faint)}
 .cd-it-st.st1{color:var(--warn)}.cd-it-st.st2{color:var(--ac)}.cd-it-st.st3{color:var(--ok)}
-.cd-it-p{width:34px;text-align:right;flex-shrink:0;color:var(--faint)}
-.bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
-.bar>b{display:block;height:100%;background:var(--ac);border-radius:3px}
+.cd-it-p{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--faint)}
+.cd-dist{color:var(--sub)}
 
 
 /* ── 點選放置 ── */
@@ -136,8 +135,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .it-del:hover{background:rgba(192,80,80,.12);color:#a04040}
 .it-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .it-row .sel{width:104px;flex-shrink:0}
-.it-row input[type=range]{flex:1;accent-color:var(--ac);min-width:0}
-.it-row .num{width:62px;flex-shrink:0;text-align:center}
+.it-note{margin-bottom:10px;min-height:52px;resize:vertical}
 .btn{font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;border:.5px solid var(--ac-tint2);background:var(--ac-tint);color:var(--ac);cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--ac-tint2)}
 .btn.danger{background:rgba(192,80,80,.1);color:#a04040;border-color:rgba(192,80,80,.3)}
@@ -161,7 +159,6 @@ button,input,select,textarea{font-family:inherit;color:inherit}
   .mc-body{padding:4px 10px 14px}
   .tree{margin-left:4px;padding-left:8px}
   .it-row{flex-wrap:wrap}
-  .it-row input[type=range]{flex:1 1 100px}
 }
 </style>
 </head>
@@ -209,7 +206,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 <script>
 const KEY='cc_career_v1';
 const STATUSES=['未評估','需強化','掌握中','已精通'];
-const FIELDS=['progress','status','milestone','quadrant'];
+const FIELDS=['progress','status','milestone','note','quadrant'];
 const QN=['','一','二','三','四'];
 const QDEF={
   1:{name:'重要又緊急',desc:'工作上的任務，需花最多精力處理的事（計畫書、研討會、實驗等）'},
@@ -261,6 +258,7 @@ function normalize(raw){
         status:STATUSES.indexOf(it.status)>=0?it.status:'未評估',
         progress:clampP(it.progress),
         milestone:str(it.milestone,200),
+        note:str(it.note,500),
         updatedAt:TS_RE.test(it.updatedAt)?it.updatedAt:nowStr()
       });
     });
@@ -352,7 +350,11 @@ function logChange(cardId,itemId,field,from,to){
 }
 function getCard(id){return DB.cards.find(c=>c.id===id);}
 function touch(c){c.updatedAt=nowStr();}
-function avgOf(c){const n=c.items.length;return n?Math.round(c.items.reduce((a,i)=>a+i.progress,0)/n):0;}
+function distOf(c){
+  const cnt=[0,0,0,0];
+  c.items.forEach(i=>{const k=STATUSES.indexOf(i.status);if(k>=0)cnt[k]++;});
+  return STATUSES.map((s,k)=>cnt[k]?s+' '+cnt[k]:'').filter(Boolean).join('・');
+}
 function qLabel(q){return q===0?'未放置':'第'+QN[q]+'象限';}
 
 function moveCard(c,q){
@@ -444,13 +446,13 @@ function render(){
 }
 const BOARD_OPEN=new Set(); // 看板卡片細項展開狀態：僅頁面變數，不存 localStorage
 function cardHtml(c){
-  const n=c.items.length,avg=avgOf(c),bo=n>0&&BOARD_OPEN.has(c.id);
+  const n=c.items.length,dist=distOf(c),bo=n>0&&BOARD_OPEN.has(c.id);
   return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
     <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}</div></div>
     ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
-    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n?`<div class="bar"><b style="width:${avg}%"></b></div><span>平均 ${avg}%</span>`:''}</div>
-    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span><span class="cd-it-p">${Number(it.progress)||0}%</span></div>`;}).join('')}</div>`:''}
+    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
+    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${it.note?`<span class="cd-it-p">${esc(it.note.length>30?it.note.slice(0,30)+'…':it.note)}</span>`:''}</div>`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -466,9 +468,8 @@ function itemHtml(it,k){
       <button class="it-del" data-act="idel">刪除</button></div>
     <div class="it-row">
       <select class="sel" data-f="istatus">${STATUSES.map(s=>`<option value="${esc(s)}"${s===it.status?' selected':''}>${esc(s)}</option>`).join('')}</select>
-      <input type="range" min="0" max="100" step="1" value="${it.progress}" data-f="iprog">
-      <input class="inp num" type="number" min="0" max="100" step="1" value="${it.progress}" data-f="inum">
     </div>
+    <textarea class="ta it-note" data-f="inote" rows="2" maxlength="500" placeholder="進度描述（自由輸入，例如：讀完第 3 章、下週約老師討論）">${esc(it.note)}</textarea>
     <input class="inp" data-f="imile" value="${esc(it.milestone)}" maxlength="200" placeholder="目前里程碑（可空）">
   </div>`;
 }
@@ -481,7 +482,7 @@ function mcHtml(c){
       <input class="mc-title mc-title-inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱" aria-label="方向名稱">
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
       ${c.tags.length?`<span class="mc-tags">${c.tags.map(t=>`<span class="pill" data-nofilter="1">#${esc(t)}</span>`).join('')}</span>`:''}
-      <span class="mc-avg">${n} 項・平均 ${avgOf(c)}%</span>
+      <span class="mc-avg">${n} 項</span>
       ${moveSelHtml(c)}
     </div>`;
   if(open){
@@ -558,9 +559,9 @@ function onMaintChange(e){
   else if(f==='istatus'){
     if(STATUSES.indexOf(t.value)<0)return;
     const from=it.status;it.status=t.value;logChange(c.id,it.id,'status',from,it.status);
-  }else if(f==='iprog'||f==='inum'){
-    const from=it.progress,to=clampP(t.value);
-    it.progress=to;logChange(c.id,it.id,'progress',from,to);
+  }else if(f==='inote'){
+    const from=str(it.note,500);it.note=str(t.value,500);
+    logChange(c.id,it.id,'note',from.slice(0,200),it.note.slice(0,200));
   }else if(f==='imile'){
     const from=it.milestone;it.milestone=str(t.value,200).trim();logChange(c.id,it.id,'milestone',from,it.milestone);
   }else return;
@@ -568,7 +569,7 @@ function onMaintChange(e){
 }
 function onMaintInput(e){
   const t=e.target;
-  if(t.dataset&&t.dataset.f==='iprog'){const n=t.closest('.it').querySelector('[data-f="inum"]');n.value=t.value;}
+  if(t.dataset&&t.dataset.f==='inote'){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,240)+'px';}
 }
 function onMaintClick(e){
   const t=e.target;
@@ -582,7 +583,7 @@ function onMaintClick(e){
     else if(act==='tagsug'){addTag(c,b.dataset.tag,null);}
     else if(act==='iadd'){
       if(c.items.length>=ITEM_MAX){toast('細項已達 '+ITEM_MAX+' 個上限');return;}
-      c.items.push({id:uid('i'),name:'',status:'未評估',progress:0,milestone:'',updatedAt:nowStr()});
+      c.items.push({id:uid('i'),name:'',status:'未評估',progress:0,milestone:'',note:'',updatedAt:nowStr()});
       touch(c);save();render();
       const names=$('mc-'+c.id).querySelectorAll('[data-f="iname"]');
       if(names.length)names[names.length-1].focus();

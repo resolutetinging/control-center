@@ -198,7 +198,7 @@ function buildTT(id){
       return out;
     }
     case 'career':{
-      // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限平均進度、最近一次推進日；資料不可信，數值一律轉數字、文字 esc
+      // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限狀態分布、最近一次推進日；資料不可信，數值一律轉數字、文字 esc
       let cm=null;try{cm=JSON.parse(localStorage.getItem('cc_career_v1')||'null');}catch{}
       const cards=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
       if(!cards.length)return h('🪜 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
@@ -207,12 +207,13 @@ function buildTT(id){
       const nm=['第一象限 重要又緊急','第二象限 重要但不緊急','第三象限 不重要也不緊急','第四象限 不重要但緊急'];
       let out=h('🪜 Career');
       nm.forEach((n,i)=>{out+=row(esc(n),cnt[i]+' 張');});
-      const prog=[];
-      cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{const p=Number(it&&it.progress);if(Number.isFinite(p))prog.push(Math.max(0,Math.min(100,p)));});});
+      const stN=['未評估','需強化','掌握中','已精通'],stC=[0,0,0,0];
+      cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{const k=stN.indexOf(it&&it.status);if(k>=0)stC[k]++;});});
       const unpl=cards.filter(c=>{const q=Number(c.quadrant);return !(q>=1&&q<=4);}).length;
       out+=row('未放置',unpl+' 張');
       out+=hr();
-      out+=row('第二象限平均進度',prog.length?Math.round(prog.reduce((a,b)=>a+b,0)/prog.length)+'%':'—','g');
+      const dist=stN.map((n,k)=>stC[k]?n+' '+stC[k]:'').filter(Boolean).join('・');
+      out+=row('第二象限狀態',dist?esc(dist):'—','g');
       let last='';
       (Array.isArray(cm.log)?cm.log:[]).forEach(l=>{if(l&&l.field==='progress'&&Number(l.to)>Number(l.from)&&typeof l.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(l.date)&&l.date>last)last=l.date;});
       out+=row('最近推進日',last?esc(last):'—');
