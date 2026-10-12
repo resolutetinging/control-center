@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "finance-planner.html／cc_tooltip.js",
+      "summary": "財務規劃固定花費改每月整月扣：欄位改名每月固定花費，規劃期間每一期都扣全額，最後不滿一個月的那期也一樣。金額輸入欄打字時即時顯示$與千分位，游標不會亂跳。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "career-matrix.html",
       "summary": "四象限選取提示改浮在底部：原本選取後提示出現在看板上方，把看板往下推，容易點錯象限。改成浮在畫面底部不佔版面，看板位置不再移動。",
       "reason": "bug_fix"
