@@ -158,11 +158,9 @@ function cleanAmt(v){ // 有限非負數才算數；否則 null
 }
 function cleanStr(v,max){return typeof v==='string'?v.slice(0,max):'';}
 function emptyData(){return{version:2,plan:{start:'',end:'',total:0,fixed:[]},months:{}};}
-// 第 i 期天數 d（含頭尾）與月份權重 w（完整一個月＝1；最後一期不足月依天數比例）
+// 第 i 期天數 d（含頭尾）與固定花費權重 w：每一期（含不足月的最後一期）都整月照扣，w 恆為 1（規格 v1.2）
 function periodDW(start,p){
-  const s=parseYMD(start),d=diffDays(p.start,p.end)+1;
-  const full=diffDays(p.start,monthStart(s,p.idx+1));
-  return{d,w:Math.min(1,d/full)};
+  return{d:diffDays(p.start,p.end)+1,w:1};
 }
 // 讀取驗證（規格 2 節）：匯入／Gist 還原資料不可信
 function normalize(raw){
@@ -280,11 +278,16 @@ function toast(msg){
   const t=$('toast');t.textContent=msg;t.classList.add('show');
   clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),1800);
 }
-function parseAmtInput(v){ // 輸入欄位：空字串 → null；非法 → undefined
-  v=String(v).trim();
+function parseAmtInput(v){ // 輸入欄位：空字串 → null；非法 → undefined；先去除 $、逗號、空白
+  v=String(v).replace(/[$,\s]/g,'');
   if(v==='')return null;
   const n=cleanAmt(v);
   return n===null?undefined:n;
+}
+function fmtAmt(v){ // 金額欄位顯示：$ 前綴＋千分位；空值維持空白
+  if(v===null||v===undefined||v==='')return'';
+  const n=Number(v);
+  return Number.isFinite(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:2}):'';
 }
 function getM(key){
   if(!DB.months[key])DB.months[key]={income:null,spentToDate:null,spentUpdatedAt:null,closed:false,actualTotal:null,saved:null,note:''};
@@ -349,7 +352,7 @@ function renderOv(){
     <div class="stat"><div class="stat-l">剩餘可花</div><div class="stat-v">${money(cur.remaining)}</div></div>
     <div class="stat"><div class="stat-l">剩餘天數（含今天）</div><div class="stat-v">${cur.days} 天</div></div>
     <div class="stat"><div class="stat-l">本期到目前已花（不含固定花費）</div>
-      <input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="spent" data-key="${esc(p.key)}" value="${p.spentToDate===null?'':esc(p.spentToDate)}" placeholder="0">
+      <input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="spent" data-key="${esc(p.key)}" value="${esc(fmtAmt(p.spentToDate))}" placeholder="$0">
       <div class="muted" style="margin-top:3px">${p.spentUpdatedAt?'更新於 '+esc(p.spentUpdatedAt):'尚未填寫'}</div></div>
   </div>`;
   el.innerHTML=h;
@@ -365,13 +368,13 @@ function renderSet(){
   let h='<div class="sec-t">設定</div><div class="grid2">'
     +`<div class="fld"><label>規劃開始日</label><input class="inp" type="date" data-f="pstart" value="${esc(pl.start)}"></div>`
     +`<div class="fld"><label>規劃結束日</label><input class="inp" type="date" data-f="pend" value="${esc(pl.end)}"></div></div>`
-    +`<div class="fld"><label>規劃期間總額度（NT$，整段期間可用、含固定花費）</label><input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="ptotal" value="${esc(pl.total)}"><div class="muted" id="tot-note" style="margin-top:4px">${totNote()}</div></div>`
-    +`<div class="fld"><label>每期固定花費（${pl.fixed.length}）</label>`;
+    +`<div class="fld"><label>規劃期間總額度（整段期間可用、含固定花費）</label><input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="ptotal" value="${esc(fmtAmt(pl.total))}"><div class="muted" id="tot-note" style="margin-top:4px">${totNote()}</div></div>`
+    +`<div class="fld"><label>每月固定花費（${pl.fixed.length}）</label>`;
   h+=pl.fixed.map(f=>{
     const ask=delFid===f.id;
     return`<div class="fx" data-fid="${esc(f.id)}">
       <input class="inp" data-f="fname" maxlength="${STR_MAX}" value="${esc(f.name)}" placeholder="名稱（例如：房租）">
-      <input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="famt" value="${esc(f.amount)}">
+      <input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="famt" value="${esc(fmtAmt(f.amount))}">
       <span class="fx-del">${ask
         ?`<span class="ask">確定刪除？</span> <button class="btn danger sm" data-act="fdelok">刪除</button> <button class="btn plain sm" data-act="fdelno">取消</button>`
         :`<button class="btn plain sm" data-act="fdel">刪除</button>`}</span></div>`;
@@ -386,8 +389,8 @@ function renderSet(){
 function formHtml(p){
   return`<div class="form" data-key="${esc(p.key)}">
     <div class="grid2">
-      <div class="fld"><label>本期實際總支出（含固定花費）</label><input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="atotal" value="${p.actualTotal===null?'':esc(p.actualTotal)}"></div>
-      <div class="fld"><label>本期實際儲蓄（只記錄，不參與計算）</label><input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="saved" value="${p.saved===null?'':esc(p.saved)}"></div>
+      <div class="fld"><label>本期實際總支出（含固定花費）</label><input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="atotal" value="${esc(fmtAmt(p.actualTotal))}"></div>
+      <div class="fld"><label>本期實際儲蓄（只記錄，不參與計算）</label><input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="saved" value="${esc(fmtAmt(p.saved))}"></div>
     </div>
     <div class="fld"><label>備註</label><textarea class="ta" data-f="note" maxlength="${STR_MAX}">${esc(p.note)}</textarea></div>
     <div class="prev" data-prev></div>
@@ -528,8 +531,29 @@ function onChange(e){
     save();render();return;
   }
 }
+const AMT_FIELDS=['ptotal','famt','spent','atotal','saved'];
+// 打字當下就地重排成 $1,234,567，並依「游標前的數字（含小數點）個數」還原游標；只改這個 input 的 value，不整頁重繪
+function liveFmt(t){
+  const raw=t.value;
+  if(/[^0-9.,$\s]/.test(raw))return; // 有非法字元：不動它，留給 change 的 toast
+  const caret=t.selectionStart===null?raw.length:t.selectionStart;
+  const keep=c=>c>='0'&&c<='9'||c==='.';
+  let n=0;for(let i=0;i<caret;i++)if(keep(raw[i]))n++;
+  let c=[...raw].filter(keep).join('');
+  const di=c.indexOf('.');
+  if(di>=0)c=c.slice(0,di+1)+c.slice(di+1).replace(/\./g,'').slice(0,2);
+  if(c===''){if(raw!=='')t.value='';return;}
+  const ip=di>=0?c.slice(0,di):c,fp=di>=0?c.slice(di):'';
+  const out='$'+(ip.replace(/^0+(?=\d)/,'')||'0').replace(/\B(?=(\d{3})+$)/g,',')+fp;
+  let pos=0,seen=0;
+  while(pos<out.length&&seen<n){if(keep(out[pos]))seen++;pos++;}
+  if(n===0)pos=1;
+  if(out!==raw)t.value=out;
+  try{t.setSelectionRange(pos,pos);}catch{}
+}
 function onInput(e){
   const t=e.target;
+  if(t.dataset&&AMT_FIELDS.includes(t.dataset.f))liveFmt(t);
   if(t.dataset&&t.dataset.f==='atotal'){const k=periodKey(t);if(k)updatePrev(k);}
 }
 function onClick(e){
@@ -571,6 +595,15 @@ function onClick(e){
 // 延到焦點移到下一欄之後才處理，render() 才能把焦點還原到使用者 Tab 過去的欄位
 $('app').addEventListener('change',e=>setTimeout(()=>onChange(e),0));
 $('app').addEventListener('input',onInput);
+// 離開欄位時再補一次正規格式（如 $12. → $12）；非法輸入留給 change 的 toast 處理
+$('app').addEventListener('focusout',e=>{
+  const t=e.target;
+  if(!t.dataset||!AMT_FIELDS.includes(t.dataset.f))return;
+  const n=parseAmtInput(t.value);
+  if(n===undefined)return;
+  const f=fmtAmt(n);
+  if(t.value!==f)t.value=f;
+});
 $('app').addEventListener('click',onClick);
 $('app').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')e.target.blur();});
 

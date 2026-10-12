@@ -238,7 +238,7 @@ function buildTT(id){
         const st=ms(i);if(st>pl.end)break;
         let en=prevDay(ms(i+1));if(en>pl.end)en=pl.end;
         const m=(mo[st]&&typeof mo[st]==='object')?mo[st]:{};
-        const d=Math.round((ud(en)-ud(st))/86400000)+1,w=Math.min(1,d/Math.round((ud(ms(i+1))-ud(st))/86400000));
+        const d=Math.round((ud(en)-ud(st))/86400000)+1,w=1;
         ps.push({st,en,d,w,m});
       }
       // v1.1 總額度依天數分配；舊資料（無 total）以各期收入加總遷移
