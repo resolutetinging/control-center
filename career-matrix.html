@@ -66,6 +66,14 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .cd-desc{font-size:11.5px;color:var(--sub);line-height:1.55;margin-top:3px;word-break:break-word}
 .cd-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
 .cd-meta{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:11px;color:var(--faint)}
+.cd-tg{cursor:pointer}
+.cd-items{margin-top:8px;padding-top:6px;border-top:.5px dashed var(--bstr);display:flex;flex-direction:column;gap:3px}
+.cd-it{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--sub);min-width:0}
+.cd-it-n{color:var(--faint);flex-shrink:0}
+.cd-it-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cd-it-st{font-size:10.5px;flex-shrink:0;color:var(--faint)}
+.cd-it-st.st1{color:var(--warn)}.cd-it-st.st2{color:var(--ac)}.cd-it-st.st3{color:var(--ok)}
+.cd-it-p{width:34px;text-align:right;flex-shrink:0;color:var(--faint)}
 .bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
 .bar>b{display:block;height:100%;background:var(--ac);border-radius:3px}
 
@@ -431,19 +439,21 @@ function render(){
     }
   }
 }
+const BOARD_OPEN=new Set(); // 看板卡片細項展開狀態：僅頁面變數，不存 localStorage
 function cardHtml(c){
-  const n=c.items.length,avg=avgOf(c);
+  const n=c.items.length,avg=avgOf(c),bo=n>0&&BOARD_OPEN.has(c.id);
   return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
     <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}</div></div>
     ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
-    <div class="cd-meta"><span>${n} 個細項</span>${n?`<div class="bar"><b style="width:${avg}%"></b></div><span>平均 ${avg}%</span>`:''}</div>
+    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n?`<div class="bar"><b style="width:${avg}%"></b></div><span>平均 ${avg}%</span>`:''}</div>
+    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span><span class="cd-it-p">${Number(it.progress)||0}%</span></div>`;}).join('')}</div>`:''}
   </div>`;
 }
 
 /* ───────── 維護區（階層樹狀） ───────── */
 function moveSelHtml(c){
-  return`<select class="sel" data-f="move" aria-label="移到">${[0,1,2,3,4].map(q=>`<option value="${q}"${q===c.quadrant?' selected':''}>移到：${q===0?'未放置':'第'+QN[q]+'象限'}</option>`).join('')}</select>`;
+  return`<select class="sel" data-f="move" aria-label="移到">${[0,1,2,3,4].map(q=>`<option value="${q}"${q===c.quadrant?' selected':''}>移到：${q===0?'未放置':esc(QDEF[q].name)+'（第'+QN[q]+'象限）'}</option>`).join('')}</select>`;
 }
 function itemHtml(it,k){
   const letter=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');
@@ -623,6 +633,8 @@ $('board').addEventListener('click',e=>{
   if(pk){pickCard(pk.dataset.pick);return;}
   const tag=e.target.closest('[data-tag]');
   if(tag){filterTag=(filterTag===tag.dataset.tag)?'':tag.dataset.tag;render();return;}
+  const bt=e.target.closest('[data-bt]');
+  if(bt){const id=bt.dataset.bt;if(BOARD_OPEN.has(id))BOARD_OPEN.delete(id);else BOARD_OPEN.add(id);render();return;}
   const qz=e.target.closest('.q[data-q]');
   if(selCard){if(qz)pickQuad(Number(qz.dataset.q));return;}
   const cd=e.target.closest('[data-card]');
