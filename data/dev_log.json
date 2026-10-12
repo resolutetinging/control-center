@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-10-08",
+  "generated_through": "2026-10-12",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-12",
+      "project": "Sleep Dashboard",
+      "file": "run_update.sh／v2_v3_migration_report_20260930.md",
+      "summary": "手動更新與三方比對：手動跑更新，10-09到10-12四晚上線。v3對iPhone誤差1到7.5分，超過3分的兩晚分別是分類差異與早上回籠覺未算入主睡眠，都不是算錯。另查出v2入睡時間系統性錯位一天，45夜中27夜等於前一晚。",
+      "reason": "user_request"
+    },
     {
       "date": "2026-10-08",
       "project": "Daily Optimizer",
