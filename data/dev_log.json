@@ -4,6 +4,27 @@
   "timeline": [
     {
       "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "新增未來發展四象限頁：用四象限管理發展方向，每張卡片可加標籤與能力細項。細項記自我審核狀態、進度與里程碑，每天的推進紀錄給Optimizer與SAS Hub使用，資料隨Gist備份。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "臨時任務建議加長期目標提示：判定還能加任務時，列出四象限頁第二象限待推進的能力細項，最多3項，需強化的排前面。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "新增發展推進與睡眠情緒卡片：比對四象限頁有推進進度的日子與沒推進的日子，看當晚睡眠與當天情緒差多少。資料滿14天且推進日滿5天才顯示數字，之前顯示累積中。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
       "project": "Sleep Dashboard",
       "file": "update_dashboard_v3.py",
       "summary": "v3遇到未下載的iCloud檔改成跳過：原始檔還沒從iCloud下載完成時，v3原本會報錯中止。現在改成印出跳過訊息，交給下一個排程時段，計算邏輯不變。",
