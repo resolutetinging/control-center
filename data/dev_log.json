@@ -5,6 +5,27 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "career-matrix.html／finance-planner.html",
+      "summary": "兩頁新增儲存按鈕：頁首顯示已儲存時間，按下儲存會立刻備份到Gist並顯示成功或失敗。原本會自動存檔但畫面沒有任何提示。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "finance-planner.html",
+      "summary": "財務規劃日期欄修正：用鍵盤輸入開始或結束日時，年份打到一半會被清掉。改成離開欄位才檢查並存檔。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限三項小改：維護區的方向標題可以直接在標題列修改。移到選單改顯示類別名稱，看板上的細項可以點開簡列名稱、狀態與進度。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "finance-planner.html／cc_tooltip.js",
       "summary": "財務規劃用詞統一與全形數字：整段時間改稱規劃區間，每個月改稱本月或第N個月。中文輸入法打的全形數字也會自動轉成一般數字。",
       "reason": "user_request"
