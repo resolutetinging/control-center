@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "finance-planner.html／cc_tooltip.js",
+      "summary": "財務規劃用詞統一與全形數字：整段時間改稱規劃區間，每個月改稱本月或第N個月。中文輸入法打的全形數字也會自動轉成一般數字。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "career-matrix.html",
       "summary": "四象限建議標籤拿掉加號：灰色建議標籤只顯示#標籤名，點了一樣會加入。",
       "reason": "user_request"
