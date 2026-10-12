@@ -546,7 +546,8 @@ function commitDate(t){
   if(v===DB.plan[key])return;
   if(t.validity&&t.validity.badInput){render();return;}
   if(v){
-    const y=+v.slice(0,4);
+    // 年份必須剛好 4 位數（Chrome 允許打 6 位數年份，slice 會誤判通過）
+    const y=/^\d{4}-/.test(v)?+v.slice(0,4):NaN;
     if(!(y>=2000&&y<=2100)){render();return;}
     if(!parseYMD(v)){toast('日期格式不正確');render();return;}
   }
