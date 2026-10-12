@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py",
+      "summary": "v3遇到未下載的iCloud檔改成跳過：原始檔還沒從iCloud下載完成時，v3原本會報錯中止。現在改成印出跳過訊息，交給下一個排程時段，計算邏輯不變。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Sleep Dashboard",
       "file": "run_update.sh／update.log",
       "summary": "22:00排程健檢：10-07到10-11五次都有啟動，完全成功2次，3次因Mac休眠中短暫喚醒跑到一半又睡著而推送失敗。沒有遺失資料，10-10與10-11兩晚都靠22:00補上。另發現v3讀到未同步的iCloud檔會直接報錯中止。",
       "reason": "debug"
