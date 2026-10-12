@@ -421,6 +421,14 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
         <div class="resp-footer">
           <button class="save-btn" id="save-fb_content" onclick="savePhrase('fb_content')">⭐ 收藏</button>
         </div>
+        <div class="gr-ask-block" id="ball-ask-block" style="display:none">
+          <div class="fb-block-lbl">🤖 對這個判斷有疑問？問問 AI</div>
+          <div class="gr-chat-log" id="ball-chat-log"></div>
+          <div class="gr-ask-row">
+            <input type="text" id="ball-ask-input" placeholder="例如：我有回應他的問題，為什麼算勉強接到？" onkeydown="if(event.key==='Enter')askBallWhy()">
+            <button id="ball-ask-btn" onclick="askBallWhy()">問</button>
+          </div>
+        </div>
       </div>
       <div class="fb-block fb-add fb-section">
         <div class="fb-block-lbl">💡 可以再補充什麼</div>
@@ -713,6 +721,7 @@ function updateRoundCounter(){
   }
 }
 let grContext = null; // 文法審核追問用：{orig,note,fixed}，換下一句時重置
+let ballContext = null; // 接球判斷追問用：{sit,opener,reply,verdict,content,tone,add,history}，換下一句時重置
 let idiomContext = null; // 拆彈題目追問用：{sentence,options,correct,chosen,explain_zh}，換下一題時重置
 
 // ── API ──
@@ -1170,8 +1179,12 @@ Output ONLY valid JSON:
       }
       $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
+      ballContext = results.fb_content ? { sit: SITS[curSit]?.en||'', opener: curOpener, reply: inp, verdict, content: results.fb_content||'', tone: results.fb_tone||'', add: results.fb_add||'', history: [] } : null;
+      $('ball-chat-log').innerHTML='';
+      $('ball-ask-block').style.display = ballContext ? 'block' : 'none';
     } else {
       $('fb-card').style.display='none';
+      ballContext = null;
     }
 
     // 文法／語句寫法審核卡（獨立於接球判斷，不影響 fb_ball_verdict）
@@ -1288,6 +1301,47 @@ Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markd
     appendGrChat('ai', _sanitizePlainText(s2t((raw||'').trim())));
   }catch(e){
     appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。');
+  }
+  btn.disabled = false; inp.disabled = false; btn.textContent = '問';
+}
+
+async function askBallWhy(){
+  if(!ballContext) return;
+  const inp = $('ball-ask-input');
+  const q = inp.value.trim();
+  if(!q) return;
+  const ctx = ballContext; // 送出期間換題時不寫回舊題
+  const btn = $('ball-ask-btn');
+  btn.disabled = true; inp.disabled = true; btn.textContent = '…';
+  appendGrChat('user', q, 'ball-chat-log');
+  inp.value='';
+  try{
+    const verdictZh = {caught:'接住了', partial:'勉強接到', missed:'沒接到'}[ctx.verdict] || '未判定';
+    const hist = ctx.history.slice(-4).map(h=>`Learner: ${h.q}\nYou: ${h.a}`).join('\n');
+    const prompt = `You are a small-talk conversation coach. You just judged whether a business English learner "caught the ball" in a small-talk exchange — i.e. whether their reply actually responded to what the other person said and kept the conversation going. The learner now wants to discuss your judgment.
+
+Situation: ${ctx.sit}
+The other person said: "${ctx.opener}"
+Learner replied: "${ctx.reply}"
+Your verdict: ${verdictZh}
+Your ball-catching analysis: "${ctx.content}"
+Your tone analysis: "${ctx.tone}"
+Your "what to add" suggestion: "${ctx.add}"
+${hist ? `Earlier in this discussion:\n${hist}\n` : ''}
+Learner's question: "${q}"
+
+Answer ONLY this question about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. If the learner's reasoning shows your verdict was too harsh or too lenient, say so honestly and state the revised verdict; if your verdict still stands, explain why concretely. If useful, give one short English example line.
+
+Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
+    const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
+    const raw = await callGroq(prompt, 800, sys, false);
+    const ans = _sanitizePlainText(s2t((raw||'').trim()));
+    if(ballContext===ctx){
+      ctx.history.push({ q, a: ans });
+      appendGrChat('ai', ans, 'ball-chat-log');
+    }
+  }catch(e){
+    if(ballContext===ctx) appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。', 'ball-chat-log');
   }
   btn.disabled = false; inp.disabled = false; btn.textContent = '問';
 }
@@ -1654,6 +1708,7 @@ function resetAll(){
   clearTimer();
   $hide('opener-card'); $hide('input-section'); $hide('result-section'); $hide('loading-opener'); $hide('loading-result');
   $('fb-card').style.display='none';
+  ballContext = null; $('ball-chat-log').innerHTML='';
   $('opener-zh-card').style.display='none';
   $('user-input').disabled=false; $('user-input').value='';
   $('submit-btn').disabled=false;
