@@ -214,13 +214,16 @@ function buildTT(id){
       out+=hr();
       const dist=stN.map((n,k)=>stC[k]?n+' '+stC[k]:'').filter(Boolean).join('・');
       out+=row('第二象限狀態',dist?esc(dist):'—','g');
-      // 最近學習：全部細項 journal 中日期最新一筆（資料不可信：日期格式與名稱逐項驗證）
-      let lastD='',lastN='';
+      // 最近學習：全部細項 topics.learnedAt 與 journal.date 中最新者（資料不可信：日期格式與名稱逐項驗證）
+      let lastD='',lastN='',lastK='最近學習';
+      const okDt=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d);
+      const nmOf=(v,fb)=>(typeof v==='string'&&v)?v.slice(0,30):fb;
       cards.forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{
-        if(!it||typeof it!=='object'||!Array.isArray(it.journal))return;
-        it.journal.forEach(j=>{if(j&&typeof j.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(j.date)&&j.date>=lastD){lastD=j.date;lastN=(typeof it.name==='string'&&it.name)?it.name.slice(0,30):'（未命名）';}});
+        if(!it||typeof it!=='object')return;
+        if(Array.isArray(it.journal))it.journal.forEach(j=>{if(j&&okDt(j.date)&&j.date>=lastD){lastD=j.date;lastN=nmOf(it.name,'（未命名）');lastK='最近學習';}});
+        if(Array.isArray(it.topics))it.topics.forEach(tp=>{if(tp&&tp.state==='已學'&&okDt(tp.learnedAt)&&tp.learnedAt>=lastD){lastD=tp.learnedAt;lastN=nmOf(tp.name,nmOf(it.name,'（未命名）'));lastK='最近學會';}});
       });});
-      if(lastD)out+=row('最近學習',esc(lastD.slice(5,7)+'/'+lastD.slice(8,10)+' '+lastN));
+      if(lastD)out+=row(lastK,esc(lastD.slice(5,7)+'/'+lastD.slice(8,10)+' '+lastN));
       return out;
     }
     case 'finance':{

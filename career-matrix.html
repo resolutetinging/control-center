@@ -147,6 +147,20 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .jr-ask{font-size:12px;color:#a04040}
 .jmore{font-size:11.5px;color:var(--ac);background:none;border:none;cursor:pointer;padding:3px 0}
 .jempty{font-size:12px;color:var(--faint);padding:2px 0 6px}
+.jtog{display:block;width:100%;text-align:left;font-size:11.5px;font-weight:600;color:var(--sub);background:none;border:none;border-top:.5px dashed var(--bstr);cursor:pointer;padding:9px 0 3px;margin-top:6px}
+.jtog:hover{color:var(--ac)}
+.tn{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.tn .inp{flex:1;min-width:0}
+.tg-lbl{font-size:10.5px;font-weight:700;color:var(--faint);margin:8px 0 5px}
+.tp{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.tp .tpn{flex:1 1 140px;min-width:100px;padding:5px 9px;font-size:12.5px}
+.tp .td{width:140px;flex-shrink:0;padding:5px 8px;font-size:12.5px}
+.tseg{display:inline-flex;flex-shrink:0;border:.5px solid var(--bstr);border-radius:8px;overflow:hidden}
+.tseg button{font-size:11px;padding:4px 9px;border:none;background:var(--bg2);color:var(--sub);cursor:pointer;white-space:nowrap}
+.tseg button+button{border-left:.5px solid var(--bstr)}
+.tseg button:hover{background:var(--ac-tint)}
+.tseg button.on{background:var(--ac);color:#fff;font-weight:600}
+.tp .btn{padding:4px 9px;font-size:11px}
 .btn{font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;border:.5px solid var(--ac-tint2);background:var(--ac-tint);color:var(--ac);cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--ac-tint2)}
 .btn.danger{background:rgba(192,80,80,.1);color:#a04040;border-color:rgba(192,80,80,.3)}
@@ -227,6 +241,7 @@ const QDEF={
 };
 const SUG_TAGS=['高價值','內心推進動能高','探索','主業'];
 const JOURNAL_MAX=100,JSHOW=3;
+const TOPIC_MAX=100,TSTATES=['待學','學習中','已學'];
 const LOG_MAX=3000,CARD_MAX=100,ITEM_MAX=50,TAG_MAX=8;
 
 function $(id){return document.getElementById(id);}
@@ -275,6 +290,23 @@ function normJournal(it){
   }
   return out;
 }
+// 主題清單（規格 9 節）：陣列、id 字串（不重複）、name 非空字串 ≤80、state 三值（不合格→待學）、learnedAt 僅「已學」且日期有效才保留、createdAt 有效否則今天；上限 100 個
+function normTopics(it){
+  const out=[];
+  if(!Array.isArray(it.topics))return out;
+  const seen=new Set();
+  it.topics.forEach(tp=>{
+    if(out.length>=TOPIC_MAX)return;
+    if(!tp||typeof tp!=='object'||typeof tp.id!=='string'||!ID_RE.test(tp.id)||seen.has(tp.id))return;
+    if(typeof tp.name!=='string')return;
+    const name=tp.name.slice(0,80);
+    if(!name.trim())return;
+    const state=TSTATES.indexOf(tp.state)>=0?tp.state:'待學';
+    seen.add(tp.id);
+    out.push({id:tp.id,name,state,learnedAt:(state==='已學'&&validDate(tp.learnedAt))?tp.learnedAt:'',createdAt:validDate(tp.createdAt)?tp.createdAt:today()});
+  });
+  return out;
+}
 // 讀取驗證（規格 2 節）：匯入／Gist 還原資料不可信，欄位逐一檢查，不合格丟棄或給預設
 function normalize(raw){
   const out={version:1,cards:[],log:[]};
@@ -303,7 +335,8 @@ function normalize(raw){
         milestone:str(it.milestone,200),
         note:str(it.note,500),
         journal:normJournal(it),
-        updatedAt:TS_RE.test(it.updatedAt)?it.updatedAt:nowStr()
+        updatedAt:TS_RE.test(it.updatedAt)?it.updatedAt:nowStr(),
+        topics:normTopics(it)
       });
     });
     out.cards.push(card);
@@ -418,6 +451,11 @@ const OPEN=new Set();   // 維護區展開狀態（僅頁面變數）
 let delAskId='';
 const JALL=new Set();   // 學習紀錄「顯示全部」狀態：item id（僅頁面變數）
 const JDRAFT={};        // 新增紀錄的輸入草稿 {itemId:{date,text}}，重繪時保留
+const JOPEN=new Set();   // 學習紀錄區展開狀態：item id（僅頁面變數，預設收合）
+const TNEW={};          // 新增主題輸入草稿 {itemId:text}
+let tDelAsk='';         // 等待確認刪除的主題 id
+function tCounts(it){const n={'已學':0,'學習中':0,'待學':0};it.topics.forEach(t=>{n[t.state]++;});return n;}
+function tDist(it){const n=tCounts(it);return['已學','學習中','待學'].filter(k=>n[k]).map(k=>k+' '+n[k]).join('・');}
 let jDelAsk='';         // 等待確認刪除的紀錄 id
 function jSorted(it){return it.journal.map((j,i)=>[j,i]).sort((a,b)=>a[0].date<b[0].date?1:a[0].date>b[0].date?-1:b[1]-a[1]).map(x=>x[0]);}
 function mmdd(d){return d.slice(5,7)+'/'+d.slice(8,10);}
@@ -425,10 +463,10 @@ function _focusKey(el){
   if(!el||!el.dataset||!el.closest||!el.closest('#maint'))return null;
   const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:el.dataset.pick?'p:pick':null;
   if(!f)return null;
-  const m=el.closest('.mc'),r=el.closest('.it'),jr=el.closest('.jr');
+  const m=el.closest('.mc'),r=el.closest('.it'),jr=el.closest('.jr'),tp=el.closest('.tp');
   let ss=null,se=null;
   try{ss=el.selectionStart;se=el.selectionEnd;}catch(x){ss=null;se=null;}
-  return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,jid:jr&&jr.dataset.jid||null,tag:el.dataset.tag||null,ss,se};
+  return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,jid:jr&&jr.dataset.jid||null,tid:tp&&tp.dataset.tid||null,tag:el.dataset.tag||el.dataset.s||null,ss,se};
 }
 function pickBtn(c){
   const on=c.id===selCard;
@@ -485,7 +523,7 @@ function render(){
     // 重繪會換掉整批 input，依欄位種類＋所屬方向／細項 id 找回同一欄並還原游標（比對字串，不組 selector）
     for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act],#maint [data-pick]')){
       const k=_focusKey(el);
-      if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.jid===fk.jid&&k.tag===fk.tag){
+      if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.jid===fk.jid&&k.tid===fk.tid&&k.tag===fk.tag){
         el.focus();
         if(fk.ss!==null&&fk.se!==null){try{el.setSelectionRange(fk.ss,fk.se);}catch(x){}}
         break;
@@ -501,7 +539,7 @@ function cardHtml(c){
     ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
-    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${(()=>{const j=jSorted(it)[0];return j?`<span class="cd-it-p">最近 ${esc(mmdd(j.date))} ${esc(j.text.length>20?j.text.slice(0,20)+'…':j.text)}</span>`:`<span class="cd-it-p">尚無紀錄</span>`;})()}</div>`;}).join('')}</div>`:''}
+    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span><span class="cd-it-p">${esc(tDist(it)||'尚無主題')}</span></div>`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -527,6 +565,26 @@ function journalHtml(it){
   if(all.length>JSHOW)h+=`<button class="jmore" data-act="jmore">${showAll?'收起':'顯示全部 '+all.length+' 筆'}</button>`;
   return h;
 }
+function topicsHtml(it){
+  let h=`<div class="tn"><input class="inp" data-f="tnew" value="${esc(TNEW[it.id]||'')}" maxlength="80" placeholder="新增主題" aria-label="新增主題">
+    <button class="btn" data-act="tadd">新增主題</button></div>`;
+  if(!it.topics.length)return h+'<div class="jempty">尚無主題</div>';
+  ['已學','學習中','待學'].forEach(st=>{
+    let list=it.topics.filter(t=>t.state===st);
+    if(st==='已學')list=list.map((t,i)=>[t,i]).sort((a,b)=>a[0].learnedAt<b[0].learnedAt?1:a[0].learnedAt>b[0].learnedAt?-1:a[1]-b[1]).map(x=>x[0]);
+    h+=`<div class="tg-lbl">${esc(st)}（${list.length}）</div>`;
+    list.forEach(t=>{
+      h+=`<div class="tp" data-tid="${esc(t.id)}"><input class="inp tpn" data-f="tname" value="${esc(t.name)}" maxlength="80" aria-label="主題名稱">
+        <span class="tseg" role="group" aria-label="狀態">${TSTATES.map(s=>`<button type="button" data-act="tstate" data-s="${esc(s)}" class="${s===t.state?'on':''}" aria-pressed="${s===t.state}">${esc(s)}</button>`).join('')}</span>`
+        +(t.state==='已學'?`<input type="date" class="inp td" data-f="tdate" value="${esc(t.learnedAt)}" min="2000-01-01" max="2100-12-31" aria-label="學會日期">`:'')
+        +(tDelAsk===t.id
+          ?`<span class="jr-ask">確定刪除？</span><button class="btn danger" data-act="tdelok">確定</button><button class="btn plain" data-act="tdelno">取消</button>`
+          :`<button class="btn plain" data-act="tdel">刪除</button>`)
+        +'</div>';
+    });
+  });
+  return h;
+}
 function itemHtml(it,k){
   const letter=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');
   return`<div class="it" data-iid="${esc(it.id)}">
@@ -536,10 +594,10 @@ function itemHtml(it,k){
     <div class="it-row">
       <select class="sel" data-f="istatus">${STATUSES.map(s=>`<option value="${esc(s)}"${s===it.status?' selected':''}>${esc(s)}</option>`).join('')}</select>
     </div>
-    <div class="it-lbl">下一步</div>
-    <input class="inp it-mile" data-f="imile" value="${esc(it.milestone)}" maxlength="200" placeholder="做完就能打勾的下一個目標">
-    <div class="it-lbl">學習紀錄（${it.journal.length}）</div>
-    ${journalHtml(it)}
+    <div class="it-lbl">主題清單（${it.topics.length}）</div>
+    ${topicsHtml(it)}
+    <button class="jtog" data-act="jtoggle" aria-expanded="${JOPEN.has(it.id)}">學習紀錄（選填，${it.journal.length} 筆）${JOPEN.has(it.id)?'▾':'▸'}</button>
+    ${JOPEN.has(it.id)?journalHtml(it):''}
   </div>`;
 }
 function mcHtml(c){
@@ -630,6 +688,18 @@ function onMaintChange(e){
     if(f==='jnewtext')d.text=str(t.value,500);
     return;
   }
+  if(f==='tnew'){TNEW[it.id]=str(t.value,80);return;}
+  if(f==='tname'||f==='tdate'){
+    const tr=t.closest('.tp'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);
+    if(!tp)return;
+    if(f==='tdate'){
+      if(document.activeElement===t)return; // 仍在輸入中：離開欄位再驗證
+      commitTDate(t,c,tp);return;
+    }
+    const v=str(t.value,80).trim();
+    if(!v){render();return;} // 不允許清成空白（要刪請用刪除）
+    tp.name=v;touch(c);save();render();return;
+  }
   if(f==='jdate'||f==='jtext'){
     const jr=t.closest('.jr'),j=jr&&it.journal.find(x=>x.id===jr.dataset.jid);
     if(!j)return;
@@ -645,13 +715,12 @@ function onMaintChange(e){
   else if(f==='istatus'){
     if(STATUSES.indexOf(t.value)<0)return;
     const from=it.status;it.status=t.value;logChange(c.id,it.id,'status',from,it.status);
-  }else if(f==='imile'){
-    const from=it.milestone;it.milestone=str(t.value,200).trim();logChange(c.id,it.id,'milestone',from,it.milestone);
   }else return;
   it.updatedAt=nowStr();touch(c);save();render();
 }
 function onMaintInput(e){
   const t=e.target,f=t.dataset&&t.dataset.f;
+  if(f==='tnew'){const row=t.closest('.it');if(row)TNEW[row.dataset.iid]=str(t.value,80);return;}
   // 新增紀錄草稿即時記下，重繪時才不會被清掉
   if(f==='jnewtext'||f==='jnewdate'){
     const row=t.closest('.it');if(!row)return;
@@ -667,6 +736,23 @@ function commitJDate(t,it,j){
   if(!validDate(v)||(t.validity&&t.validity.badInput)){render();return;}
   const c=DB.cards.find(x=>x.items.indexOf(it)>=0);
   j.date=v;if(c)touch(c);save();render();
+}
+function commitTDate(t,c,tp){
+  const v=t.value;
+  if(v===tp.learnedAt)return;
+  if(!validDate(v)||(t.validity&&t.validity.badInput)){render();return;}
+  tp.learnedAt=v;touch(c);save();render();
+}
+function addTopic(c,it,row){
+  const te=row.querySelector('[data-f="tnew"]');
+  const name=str(te?te.value:(TNEW[it.id]||''),80).trim();
+  if(!name)return; // 空白不新增
+  if(it.topics.length>=TOPIC_MAX){toast('主題已達 '+TOPIC_MAX+' 個上限');return;}
+  it.topics.push({id:uid('t'),name,state:'待學',learnedAt:'',createdAt:today()});
+  TNEW[it.id]='';
+  touch(c);save();render();
+  const ne=document.querySelector('#maint .it[data-iid="'+it.id+'"] [data-f="tnew"]');
+  if(ne)ne.focus();
 }
 function commitJNewDate(t,it){
   const d=JDRAFT[it.id]||(JDRAFT[it.id]={date:today(),text:''});
@@ -702,10 +788,25 @@ function onMaintClick(e){
     else if(act==='tagsug'){addTag(c,b.dataset.tag,null);}
     else if(act==='iadd'){
       if(c.items.length>=ITEM_MAX){toast('細項已達 '+ITEM_MAX+' 個上限');return;}
-      c.items.push({id:uid('i'),name:'',status:'未評估',progress:0,milestone:'',note:'',journal:[],updatedAt:nowStr()});
+      c.items.push({id:uid('i'),name:'',status:'未評估',progress:0,milestone:'',note:'',journal:[],updatedAt:nowStr(),topics:[]});
       touch(c);save();render();
       const names=$('mc-'+c.id).querySelectorAll('[data-f="iname"]');
       if(names.length)names[names.length-1].focus();
+    }
+    else if(act==='tadd'||act==='tstate'||act==='tdel'||act==='tdelok'||act==='tdelno'||act==='jtoggle'){
+      const row=b.closest('.it'),it=row&&c.items.find(i=>i.id===row.dataset.iid);
+      if(!it)return;
+      if(act==='jtoggle'){if(JOPEN.has(it.id))JOPEN.delete(it.id);else JOPEN.add(it.id);render();return;}
+      if(act==='tadd'){addTopic(c,it,b.closest('.tn'));return;}
+      const tr=b.closest('.tp'),tid=tr&&tr.dataset.tid,tp=it.topics.find(x=>x.id===tid);
+      if(!tp)return;
+      if(act==='tdel'){tDelAsk=tid;render();return;}
+      if(act==='tdelno'){tDelAsk='';render();return;}
+      if(act==='tdelok'){it.topics=it.topics.filter(x=>x.id!==tid);tDelAsk='';touch(c);save();render();return;}
+      const ns=b.dataset.s;
+      if(TSTATES.indexOf(ns)<0||ns===tp.state)return;
+      tp.state=ns;tp.learnedAt=(ns==='已學')?today():''; // 已學自動帶今天；離開已學則清空
+      touch(c);save();render();
     }
     else if(act==='jadd'||act==='jmore'||act==='jdel'||act==='jdelok'||act==='jdelno'){
       const row=b.closest('.it'),it=row&&c.items.find(i=>i.id===row.dataset.iid);
@@ -749,6 +850,12 @@ function onMaintKey(e){
   if(e.key!=='Enter')return;
   const t=e.target;
   if(t.dataset&&t.dataset.f==='tagnew'){e.preventDefault();const c=cardOf(t);if(c)addTag(c,t.value,t);}
+  else if(t.dataset&&t.dataset.f==='tnew'){
+    e.preventDefault();
+    const row=t.closest('.tn'),ir=t.closest('.it'),c=cardOf(t);
+    const it=c&&ir&&c.items.find(i=>i.id===ir.dataset.iid);
+    if(it&&row)addTopic(c,it,row);
+  }
   else if(t.dataset&&t.dataset.f==='jnewtext'){
     e.preventDefault();
     const row=t.closest('.jn'),ir=t.closest('.it'),c=cardOf(t);
@@ -794,11 +901,12 @@ $('maint').addEventListener('click',onMaintClick);
 $('maint').addEventListener('keydown',onMaintKey);
 $('maint').addEventListener('focusout',e=>{
   const t=e.target,f=t.dataset&&t.dataset.f;
-  if(f!=='jdate'&&f!=='jnewdate')return;
+  if(f!=='jdate'&&f!=='jnewdate'&&f!=='tdate')return;
   setTimeout(()=>{ // 等焦點落到下一欄後再驗證，render 才能還原焦點
     if(document.activeElement===t||!t.isConnected)return;
     const c=cardOf(t),ir=t.closest('.it'),it=c&&ir&&c.items.find(i=>i.id===ir.dataset.iid);
     if(!it)return;
+    if(f==='tdate'){const tr=t.closest('.tp'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);if(tp)commitTDate(t,c,tp);return;}
     if(f==='jnewdate'){commitJNewDate(t,it);return;}
     const jr=t.closest('.jr'),j=jr&&it.journal.find(x=>x.id===jr.dataset.jid);
     if(j)commitJDate(t,it,j);
