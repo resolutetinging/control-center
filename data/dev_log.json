@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-12",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "新人第一天情境角色修正：明確指定練習者是新人、出題者是資深同事。原本情境沒寫清楚角色，出題者常自己變成新人。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-12",
       "project": "Control Center",
       "file": "finance-planner.html／cc_tooltip.js",
       "summary": "財務規劃改成整段總額度：改填整個規劃期間的總額度，扣掉固定花費後依天數分配到各期。不滿一個月的最後一期依天數打折，舊資料自動換算，頁面標題改成英文Finance。",
