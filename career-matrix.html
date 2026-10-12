@@ -434,7 +434,7 @@ function mcHtml(c){
       <div class="fld"><label>標籤</label>
         <div class="chips">${c.tags.map(t=>`<span class="chip">#${esc(t)}<button data-act="tagdel" data-tag="${esc(t)}" aria-label="移除標籤">×</button></span>`).join('')}</div>
         <input class="inp" data-f="tagnew" maxlength="20" placeholder="輸入標籤後按 Enter 新增">
-        ${sug.length?`<div class="sug">${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">＋ #${esc(t)}</span>`).join('')}</div>`:''}</div>
+        ${sug.length?`<div class="sug">${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}</div>
       <div class="sec-lbl">能力細項（${n}）</div>
       <div class="tree">${c.items.map(itemHtml).join('')||'<div class="q-empty">尚無細項</div>'}</div>
       <div style="margin-top:10px"><button class="btn" data-act="iadd">＋ 新增細項</button></div>
