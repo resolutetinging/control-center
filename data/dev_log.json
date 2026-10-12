@@ -6,6 +6,27 @@
       "date": "2026-10-12",
       "project": "Control Center",
       "file": "career-matrix.html／cc_tooltip.js",
+      "summary": "四象限細項改成學習紀錄：每次學了什麼就新增一筆，自動帶日期也能補記，舊紀錄保留。里程碑改稱下一步，原本的進度描述自動轉成第一筆紀錄。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "長期目標提示改看最近學習：同樣狀態的細項，最久沒有學習紀錄的排前面，並顯示上次學習日期。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "SAS Hub",
+      "file": "index.html",
+      "summary": "發展推進改看學習紀錄：四象限細項有新增學習紀錄的日子就算推進日，補記過去日期算在那一天。原本的狀態升級與下一步更新也照算。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
+      "file": "career-matrix.html／cc_tooltip.js",
       "summary": "四象限細項拿掉進度百分比：學術領域的進度很難用百分比界定，改成自由文字並顯示狀態分布。Optimizer改只依狀態排序，SAS Hub推進日改看狀態升級或文字更新。",
       "reason": "user_request"
     },
