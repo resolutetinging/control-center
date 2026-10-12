@@ -209,6 +209,8 @@ function buildTT(id){
       nm.forEach((n,i)=>{out+=row(esc(n),cnt[i]+' 張');});
       const prog=[];
       cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{const p=Number(it&&it.progress);if(Number.isFinite(p))prog.push(Math.max(0,Math.min(100,p)));});});
+      const unpl=cards.filter(c=>{const q=Number(c.quadrant);return !(q>=1&&q<=4);}).length;
+      out+=row('未放置',unpl+' 張');
       out+=hr();
       out+=row('第二象限平均進度',prog.length?Math.round(prog.reduce((a,b)=>a+b,0)/prog.length)+'%':'—','g');
       let last='';
