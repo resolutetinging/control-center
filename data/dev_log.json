@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "index.html",
+      "summary": "Dock標籤統一英文：四象限改Career，財務規劃改Finance，Stock Tracker縮成Stock。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "finance-planner.html／cc_tooltip.js",
       "summary": "財務規劃頁驗證後小修：用Tab換欄位時游標不再跳回頁首，圖表數字與日期拉開距離。圖例色塊不再用i標籤，提示框超支金額格式與頁面一致。",
       "reason": "bug_fix"
