@@ -201,11 +201,11 @@ function buildTT(id){
       // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限平均進度、最近一次推進日；資料不可信，數值一律轉數字、文字 esc
       let cm=null;try{cm=JSON.parse(localStorage.getItem('cc_career_v1')||'null');}catch{}
       const cards=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
-      if(!cards.length)return h('🧭 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
+      if(!cards.length)return h('🪜 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
       const cnt=[0,0,0,0];
       cards.forEach(c=>{const q=Number(c.quadrant);if(q>=1&&q<=4)cnt[q-1]++;});
       const nm=['第一象限 重要又緊急','第二象限 重要但不緊急','第三象限 不重要也不緊急','第四象限 不重要但緊急'];
-      let out=h('🧭 Career');
+      let out=h('🪜 Career');
       nm.forEach((n,i)=>{out+=row(esc(n),cnt[i]+' 張');});
       const prog=[];
       cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{const p=Number(it&&it.progress);if(Number.isFinite(p))prog.push(Math.max(0,Math.min(100,p)));});});
