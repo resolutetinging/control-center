@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "finance-planner.html／cc_tooltip.js",
+      "summary": "財務規劃改成整段總額度：改填整個規劃期間的總額度，扣掉固定花費後依天數分配到各期。不滿一個月的最後一期依天數打折，舊資料自動換算，頁面標題改成英文Finance。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "career-matrix.html／cc_tooltip.js",
       "summary": "四象限頁改成維護區拖拉：在下方維護區新增方向，再拖到上方四個象限，換象限也會記錄。細項改在維護區用樹狀就地維護，拿掉右側面板，頁面標題改成英文Career。",
       "reason": "user_request"
