@@ -540,16 +540,27 @@ function renderChart(){
 
 /* ───────── 事件（全為委派，無 inline handler） ───────── */
 function periodKey(t){const b=t.closest('[data-key]');return b?b.dataset.key:'';}
+// 日期欄離開焦點後才驗證／存檔；未完成輸入（badInput、年份不在 2000–2100）不 toast、不寫入，僅還原顯示
+function commitDate(t){
+  const f=t.dataset.f,key=f==='pstart'?'start':'end',v=t.value;
+  if(v===DB.plan[key])return;
+  if(t.validity&&t.validity.badInput){render();return;}
+  if(v){
+    const y=+v.slice(0,4);
+    if(!(y>=2000&&y<=2100)){render();return;}
+    if(!parseYMD(v)){toast('日期格式不正確');render();return;}
+  }
+  const ns=f==='pstart'?v:DB.plan.start,ne=f==='pend'?v:DB.plan.end;
+  if(ns&&ne&&ne<ns){toast('結束日不可早於開始日');render();return;}
+  DB.plan[key]=v;
+  save();render();
+}
 function onChange(e){
   const t=e.target,f=t.dataset&&t.dataset.f;
   if(!f)return;
   if(f==='pstart'||f==='pend'){
-    const v=t.value;
-    const ns=f==='pstart'?v:DB.plan.start,ne=f==='pend'?v:DB.plan.end;
-    if(v&&!parseYMD(v)){toast('日期格式不正確');render();return;}
-    if(ns&&ne&&ne<ns){toast('結束日不可早於開始日');render();return;}
-    DB.plan[f==='pstart'?'start':'end']=v;
-    save();render();return;
+    if(document.activeElement===t)return; // 仍在輸入中（逐段打年月日／日曆剛選完）：等離開欄位再處理
+    commitDate(t);return;
   }
   if(f==='ptotal'){
     const n=parseAmtInput(t.value);
@@ -650,6 +661,11 @@ $('app').addEventListener('focusout',e=>{
   if(n===undefined)return;
   const f=fmtAmt(n);
   if(t.value!==f)t.value=f;
+});
+$('app').addEventListener('focusout',e=>{
+  const t=e.target;
+  if(!t.dataset||(t.dataset.f!=='pstart'&&t.dataset.f!=='pend'))return;
+  setTimeout(()=>{if(document.activeElement!==t)commitDate(t);},0); // 等焦點落到下一欄後再重繪，render 才能還原焦點
 });
 $('app').addEventListener('click',onClick);
 $('app').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')e.target.blur();});
