@@ -25,7 +25,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .back-link{margin-left:auto;font-size:11.5px;color:var(--faint);text-decoration:none;padding:5px 9px;border-radius:6px;transition:background .15s;white-space:nowrap}
 .back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
 
-.wrap{padding:22px 16px 48px;max-width:1040px;margin:0 auto}
+.wrap{padding:22px 16px 96px;max-width:1040px;margin:0 auto}
 
 /* ── 標籤篩選列 ── */
 .filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;min-height:28px}
@@ -66,7 +66,8 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .sel-on{box-shadow:0 0 0 2.5px var(--ac)!important;border-color:var(--ac)!important;background:var(--ac-tint)}
 .picking .q,.picking .grp[data-drop="0"]{cursor:pointer}
 .picking .q:hover{box-shadow:0 0 0 2px var(--ac-l)}
-.pick-hint{display:none;position:sticky;top:48px;z-index:90;margin-bottom:12px;padding:9px 14px;border-radius:10px;background:var(--card);border:1px solid var(--ac);color:var(--ac);font-size:12.5px;font-weight:600;line-height:1.55;box-shadow:var(--shadow)}
+/* 浮在畫面底部，不佔版面：選取時看板不會被往下推，避免點錯位置 */
+.pick-hint{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:max-content;max-width:calc(100% - 32px);z-index:90;padding:9px 14px;border-radius:10px;background:var(--card);border:1px solid var(--ac);color:var(--ac);font-size:12.5px;font-weight:600;line-height:1.55;box-shadow:var(--shadow)}
 .pick-hint.show{display:block}
 .cd-top{display:flex;gap:8px;align-items:flex-start}
 .cd-top .cd-title{flex:1;min-width:0}
@@ -130,7 +131,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 /* ── 手機：單欄依 1→4 堆疊 ── */
 @media(max-width:699px){
-  .wrap{padding:16px 16px 40px}
+  .wrap{padding:16px 16px 110px}
   .board{display:flex;flex-direction:column;gap:14px}
   .ax-top,.ax-left,.ax-corner{display:none}
   .q{min-height:0;padding:18px 16px 16px}
