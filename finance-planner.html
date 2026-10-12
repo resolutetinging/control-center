@@ -4,7 +4,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%220.9em%22 font-size=%2290%22>💳</text></svg>">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>動態財務規劃</title>
+<title>Finance</title>
 <style>
 /* ── BASE: CC 共用色系 ── */
 :root{
@@ -21,7 +21,6 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 .nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px}
 .nav-title{font-size:14px;font-weight:700;color:var(--ac);padding:13px 0;letter-spacing:.02em;white-space:nowrap}
-.nav-sub{font-size:11px;color:var(--faint);margin-left:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .back-link{margin-left:auto;font-size:11.5px;color:var(--faint);text-decoration:none;padding:5px 9px;border-radius:6px;transition:background .15s;white-space:nowrap}
 .back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
 
@@ -70,7 +69,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .st.pending{background:var(--warn-bg);color:var(--warn)}
 .st.current{background:var(--ac-tint2);color:var(--ac)}
 .st.closed{background:var(--ok-bg);color:var(--ok)}
-.pd-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.pd-g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
 .pd-g .stat{background:var(--card)}
 .pd-dev{font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:8px}
 .pos{color:var(--ok);font-weight:700}.neg{color:var(--warn);font-weight:700}
@@ -91,7 +90,6 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 @media(max-width:560px){
   .wrap{padding:14px 16px 40px}
-  .nav-sub{display:none}
   .grid2{grid-template-columns:1fr}
   .fx{grid-template-columns:1fr 92px;}
   .fx .fx-del{grid-column:1 / -1;justify-self:end}
@@ -103,8 +101,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 <body>
 
 <div class="nav">
-  <div class="nav-title">💳 動態財務規劃</div>
-  <div class="nav-sub">收入 − 固定花費 → 每月與每日建議上限</div>
+  <div class="nav-title">💳 Finance</div>
   <a class="back-link" href="./index.html">← Control Center</a>
 </div>
 
@@ -160,14 +157,19 @@ function cleanAmt(v){ // 有限非負數才算數；否則 null
   return(Number.isFinite(n)&&n>=0&&n<=AMT_MAX)?Math.round(n*100)/100:null;
 }
 function cleanStr(v,max){return typeof v==='string'?v.slice(0,max):'';}
-function emptyData(){return{version:1,plan:{start:'',end:'',defaultIncome:0,fixed:[]},months:{}};}
+function emptyData(){return{version:2,plan:{start:'',end:'',total:0,fixed:[]},months:{}};}
+// 第 i 期天數 d（含頭尾）與月份權重 w（完整一個月＝1；最後一期不足月依天數比例）
+function periodDW(start,p){
+  const s=parseYMD(start),d=diffDays(p.start,p.end)+1;
+  const full=diffDays(p.start,monthStart(s,p.idx+1));
+  return{d,w:Math.min(1,d/full)};
+}
 // 讀取驗證（規格 2 節）：匯入／Gist 還原資料不可信
 function normalize(raw){
   const out=emptyData();
   if(!raw||typeof raw!=='object'||Array.isArray(raw))return out;
   const p=(raw.plan&&typeof raw.plan==='object')?raw.plan:{};
   if(parseYMD(p.start)&&parseYMD(p.end)&&p.end>=p.start){out.plan.start=p.start;out.plan.end=p.end;}
-  out.plan.defaultIncome=cleanAmt(p.defaultIncome)||0;
   const seen=new Set();
   (Array.isArray(p.fixed)?p.fixed:[]).slice(0,FIXED_MAX).forEach(f=>{
     if(!f||typeof f!=='object')return;
@@ -191,43 +193,56 @@ function normalize(raw){
       note:cleanStr(m.note,STR_MAX)
     };
   });
+  // 舊資料遷移（version 1 → 2）：沒有 total 時，把各期收入（覆寫值或 defaultIncome）加總成總額度
+  const tot=cleanAmt(p.total);
+  if(tot!==null)out.plan.total=tot;
+  else{
+    const defInc=cleanAmt(p.defaultIncome)||0;
+    out.plan.total=buildPeriods(out.plan.start,out.plan.end).reduce((a,q)=>{
+      const o=out.months[q.key]?out.months[q.key].income:null;
+      return a+(o!==null&&o!==undefined?o:defInc);
+    },0);
+  }
   return out;
 }
 // 計算（規格 3 節）：輸入 data＋todayStr，輸出各期結果；全部即時重算
 function computePlan(data,todayStr){
   const plan=(data&&data.plan)||{};
   const periods=buildPeriods(plan.start,plan.end);
-  const res={valid:periods.length>0,periods:[],fixedTotal:0,carry:0,R:0,current:null,pending:[],outsideCount:0,truncated:false,today:todayStr};
+  const res={valid:periods.length>0,periods:[],fixedTotal:0,total:0,S:0,D:0,W:0,carry:0,R:0,current:null,pending:[],outsideCount:0,truncated:false,today:todayStr};
   if(!res.valid)return res;
   const months=(data.months&&typeof data.months==='object')?data.months:{};
   const fixedTotal=(Array.isArray(plan.fixed)?plan.fixed:[]).reduce((a,f)=>a+(cleanAmt(f&&f.amount)||0),0);
-  const defInc=cleanAmt(plan.defaultIncome)||0;
-  res.fixedTotal=fixedTotal;
+  const total=cleanAmt(plan.total)||0;
+  res.fixedTotal=fixedTotal;res.total=total;
   res.truncated=periods[periods.length-1].end<plan.end;
   const keys=new Set(periods.map(p=>p.key));
   res.outsideCount=Object.keys(months).filter(k=>!keys.has(k)).length;
-  const ps=periods.map(p=>{
+  const dw=periods.map(p=>periodDW(plan.start,p));
+  const D=dw.reduce((a,x)=>a+x.d,0),W=dw.reduce((a,x)=>a+x.w,0);
+  const S=total-dw.reduce((a,x)=>a+fixedTotal*x.w,0);
+  res.D=D;res.W=W;res.S=S;
+  const ps=periods.map((p,i)=>{
     const m=months[p.key]||{};
-    const incOv=cleanAmt(m.income);
-    const income=incOv!==null?incOv:defInc;
     const actualTotal=cleanAmt(m.actualTotal);
     const closed=m.closed===true&&actualTotal!==null;
-    const base=income-fixedTotal;
+    const days=dw[i].d,fixed=fixedTotal*dw[i].w,base=S*days/D;
     let status;
     if(closed)status='closed';
     else if(todayStr<p.start)status='upcoming';
     else if(todayStr<=p.end)status='current';
     else status='pending';
-    const r={idx:p.idx,key:p.key,start:p.start,end:p.end,status,closed,income,incomeOverride:incOv,base,
+    const r={idx:p.idx,key:p.key,start:p.start,end:p.end,status,closed,days,fixed,base,
       actualTotal,saved:cleanAmt(m.saved),note:cleanStr(m.note,STR_MAX),
       spentToDate:cleanAmt(m.spentToDate),spentUpdatedAt:parseYMD(m.spentUpdatedAt)?m.spentUpdatedAt:null,
       actualVar:null,dev:null,suggest:base};
-    if(closed){r.actualVar=actualTotal-fixedTotal;r.dev=base-r.actualVar;}
+    if(closed){r.actualVar=actualTotal-fixed;r.dev=base-r.actualVar;}
     return r;
   });
   res.carry=ps.reduce((a,r)=>a+(r.closed?r.dev:0),0);
   res.R=ps.filter(r=>!r.closed).length;
-  ps.forEach(r=>{if(!r.closed)r.suggest=r.base+res.carry/res.R;});
+  const openD=ps.reduce((a,r)=>a+(r.closed?0:r.days),0);
+  ps.forEach(r=>{if(!r.closed)r.suggest=r.base+res.carry*r.days/openD;});
   res.periods=ps;
   res.pending=ps.filter(r=>r.status==='pending').map(r=>r.idx);
   const cur=ps.find(r=>todayStr>=r.start&&todayStr<=r.end);
@@ -255,6 +270,7 @@ function load(){
   let raw=null;
   try{raw=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){raw=null;}
   DB=normalize(raw);
+  if(raw&&typeof raw==='object'&&(raw.version!==2||!raw.plan||raw.plan.total===undefined))save(); // 舊格式遷移後寫回
 }
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){toast('儲存失敗（儲存空間不足？）');}
@@ -310,7 +326,7 @@ function renderOv(){
   const el=$('s-ov');
   let h='<div class="sec-t">本期概況</div>';
   if(!CP.valid){
-    el.innerHTML=h+'<div class="muted">尚未設定規劃期間。請先在下方「設定」填入開始日、結束日、每期收入與固定花費。</div>';
+    el.innerHTML=h+'<div class="muted">尚未設定規劃期間。請先在下方「設定」填入開始日、結束日、規劃期間總額度與固定花費。</div>';
     return;
   }
   h+=bannersHtml();
@@ -340,12 +356,16 @@ function renderOv(){
 }
 
 /* ───────── 2. 設定 ───────── */
+function totNote(){
+  if(!CP||!CP.valid)return'填好開始日與結束日後，這裡會顯示換算。';
+  return`共 ${CP.periods.length} 期・約每月 ${money(CP.total/CP.W)}・扣掉固定花費後每天約 ${money(CP.S/CP.D)}`;
+}
 function renderSet(){
   const pl=DB.plan;
   let h='<div class="sec-t">設定</div><div class="grid2">'
     +`<div class="fld"><label>規劃開始日</label><input class="inp" type="date" data-f="pstart" value="${esc(pl.start)}"></div>`
     +`<div class="fld"><label>規劃結束日</label><input class="inp" type="date" data-f="pend" value="${esc(pl.end)}"></div></div>`
-    +`<div class="fld"><label>每期收入／額度預設值（NT$）</label><input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="pinc" value="${esc(pl.defaultIncome)}"></div>`
+    +`<div class="fld"><label>規劃期間總額度（NT$，整段期間可用、含固定花費）</label><input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="ptotal" value="${esc(pl.total)}"><div class="muted" id="tot-note" style="margin-top:4px">${totNote()}</div></div>`
     +`<div class="fld"><label>每期固定花費（${pl.fixed.length}）</label>`;
   h+=pl.fixed.map(f=>{
     const ask=delFid===f.id;
@@ -357,7 +377,7 @@ function renderSet(){
         :`<button class="btn plain sm" data-act="fdel">刪除</button>`}</span></div>`;
   }).join('')||'<div class="muted" style="margin-bottom:8px">尚無固定花費</div>';
   h+=`<button class="btn" data-act="fadd">＋ 新增固定花費</button></div>`;
-  if(CP&&CP.valid)h+=`<div class="muted">固定花費合計 ${money(CP.fixedTotal)}・每期預設基礎可支配 ${money(pl.defaultIncome-CP.fixedTotal)}・共 ${CP.periods.length} 期</div>`;
+  if(CP&&CP.valid)h+=`<div class="muted">每月固定花費合計 ${money(CP.fixedTotal)}・共 ${CP.periods.length} 期・${CP.D} 天</div>`;
   else h+=`<div class="muted">請填入開始日與結束日（結束日不可早於開始日）。</div>`;
   $('s-set').innerHTML=h;
 }
@@ -390,7 +410,8 @@ function renderList(){
     return`<div class="pd${isCur?' cur':''}" data-key="${esc(p.key)}">
       <div class="pd-h"><span class="pd-t">第 ${p.idx+1} 期</span><span class="pd-r">${esc(rng(p.start,p.end))}</span><span class="st ${p.status}">${STL[p.status]}</span></div>
       <div class="pd-g">
-        <div class="stat"><div class="stat-l">收入（可覆寫）</div><input class="inp" type="number" inputmode="decimal" min="0" step="1" data-f="inc" value="${p.incomeOverride===null?'':esc(p.incomeOverride)}" placeholder="預設 ${esc(DB.plan.defaultIncome)}"></div>
+        <div class="stat"><div class="stat-l">天數</div><div class="stat-v">${p.days} 天</div></div>
+        <div class="stat"><div class="stat-l">本期固定花費</div><div class="stat-v">${money(p.fixed)}</div></div>
         <div class="stat"><div class="stat-l">基礎可支配</div><div class="stat-v">${money(p.base)}</div></div>
         <div class="stat"><div class="stat-l">${p.closed?'原建議額度':'建議額度'}</div><div class="stat-v">${money(p.suggest)}</div></div>
       </div>${body}
@@ -408,8 +429,8 @@ function updatePrev(key){
   const v=parseAmtInput(f.querySelector('[data-f="atotal"]').value);
   const el=f.querySelector('[data-prev]');
   if(typeof v!=='number'){el.textContent='填入實際總支出後，這裡會顯示偏差。';return;}
-  const dev=p.base-(v-CP.fixedTotal);
-  el.textContent='實際變動支出 '+money(v-CP.fixedTotal)+'・偏差 '+(dev>=0?'+':'')+money(dev)+(dev>=0?'（有剩）':'（超支）');
+  const dev=p.base-(v-p.fixed);
+  el.textContent='實際變動支出 '+money(v-p.fixed)+'・偏差 '+(dev>=0?'+':'')+money(dev)+(dev>=0?'（有剩）':'（超支）');
 }
 
 /* ───────── 4. 趨勢圖 ───────── */
@@ -482,10 +503,10 @@ function onChange(e){
     DB.plan[f==='pstart'?'start':'end']=v;
     save();render();return;
   }
-  if(f==='pinc'){
+  if(f==='ptotal'){
     const n=parseAmtInput(t.value);
     if(n===undefined){toast('請輸入大於或等於 0 的數字');render();return;}
-    DB.plan.defaultIncome=n||0;save();render();return;
+    DB.plan.total=n||0;save();render();return;
   }
   if(f==='fname'||f==='famt'){
     const row=t.closest('[data-fid]'),fx=row&&DB.plan.fixed.find(x=>x.id===row.dataset.fid);
@@ -505,11 +526,6 @@ function onChange(e){
     if(n===undefined){toast('請輸入大於或等於 0 的數字');render();return;}
     const m=getM(key);m.spentToDate=n;m.spentUpdatedAt=n===null?null:today();
     save();render();return;
-  }
-  if(f==='inc'){
-    const n=parseAmtInput(t.value);
-    if(n===undefined){toast('請輸入大於或等於 0 的數字');render();return;}
-    getM(key).income=n;save();render();return;
   }
 }
 function onInput(e){
@@ -562,6 +578,6 @@ load();
 render();
 </script>
 <script src="cc_autosync.js"></script>
-<script src="cc_track.js" data-cc-key="finance" data-cc-label="動態財務規劃"></script>
+<script src="cc_track.js" data-cc-key="finance" data-cc-label="Finance"></script>
 </body>
 </html>

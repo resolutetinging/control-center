@@ -232,18 +232,25 @@ function buildTT(id){
       const prevDay=s=>{const d=new Date(ud(s)-86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');};
       const now=new Date(),td=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
       const fixedT=(Array.isArray(pl.fixed)?pl.fixed:[]).reduce((a,f)=>a+(amt(f&&f.amount)||0),0);
-      const defI=amt(pl.defaultIncome)||0;
       const mo=(fp.months&&typeof fp.months==='object')?fp.months:{};
       const ps=[];
       for(let i=0;i<60;i++){
         const st=ms(i);if(st>pl.end)break;
         let en=prevDay(ms(i+1));if(en>pl.end)en=pl.end;
         const m=(mo[st]&&typeof mo[st]==='object')?mo[st]:{};
-        const at=amt(m.actualTotal),io=amt(m.income);
-        const base=(io!==null?io:defI)-fixedT,closed=m.closed===true&&at!==null;
-        ps.push({st,en,base,closed,dev:closed?base-(at-fixedT):0,spent:amt(m.spentToDate)||0,pend:!closed&&td>en});
+        const d=Math.round((ud(en)-ud(st))/86400000)+1,w=Math.min(1,d/Math.round((ud(ms(i+1))-ud(st))/86400000));
+        ps.push({st,en,d,w,m});
       }
-      const carry=ps.reduce((a,p)=>a+p.dev,0),R=ps.filter(p=>!p.closed).length;
+      // v1.1 總額度依天數分配；舊資料（無 total）以各期收入加總遷移
+      let total=amt(pl.total);
+      if(total===null){const defI=amt(pl.defaultIncome)||0;total=ps.reduce((a,p)=>{const io=amt(p.m.income);return a+(io!==null?io:defI);},0);}
+      const D=ps.reduce((a,p)=>a+p.d,0),S=total-ps.reduce((a,p)=>a+fixedT*p.w,0);
+      ps.forEach(p=>{
+        const at=amt(p.m.actualTotal);
+        p.base=S*p.d/D;p.closed=p.m.closed===true&&at!==null;
+        p.dev=p.closed?p.base-(at-fixedT*p.w):0;p.spent=amt(p.m.spentToDate)||0;p.pend=!p.closed&&td>p.en;
+      });
+      const carry=ps.reduce((a,p)=>a+p.dev,0),openD=ps.reduce((a,p)=>a+(p.closed?0:p.d),0);
       const pend=ps.filter(p=>p.pend).length;
       const cur=ps.find(p=>td>=p.st&&td<=p.en);
       let out=h('💳 動態財務規劃');
@@ -253,7 +260,7 @@ function buildTT(id){
         out+=row('本期',esc(sd2(cur.st)+' – '+sd2(cur.en)));
         if(cur.closed)out+=row('本期','已結算','g');
         else{
-          const rem=cur.base+carry/R-cur.spent,days=Math.round((ud(cur.en)-ud(td))/86400000)+1;
+          const rem=cur.base+carry*cur.d/openD-cur.spent,days=Math.round((ud(cur.en)-ud(td))/86400000)+1;
           out+=row('今天起每日上限','NT$'+Math.round(rem>0?rem/days:0).toLocaleString('en-US'),rem>0?'g':'r');
           out+=row('剩餘可花',(rem<0?'-':'')+'NT$'+Math.abs(Math.round(rem)).toLocaleString('en-US'),rem>0?'':'r');
         }
