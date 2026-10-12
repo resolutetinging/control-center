@@ -60,7 +60,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 
 /* ── 拖拉 ── */
-.grip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex-shrink:0;border-radius:6px;color:var(--faint);font-size:15px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.grip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:5px;box-sizing:content-box;margin:-5px;flex-shrink:0;border-radius:6px;color:var(--faint);font-size:15px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .grip:hover{background:var(--ac-tint)}
 .drag-src{opacity:.4}
 .drop-on{outline:2px dashed var(--ac);outline-offset:-3px;background:var(--ac-tint)}
@@ -307,7 +307,17 @@ function moveCard(c,q){
 let filterTag='';
 const OPEN=new Set();   // 維護區展開狀態（僅頁面變數）
 let delAskId='';
+function _focusKey(el){
+  if(!el||!el.dataset||!el.closest||!el.closest('#maint'))return null;
+  const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:null;
+  if(!f)return null;
+  const m=el.closest('.mc'),r=el.closest('.it');
+  let ss=null,se=null;
+  try{ss=el.selectionStart;se=el.selectionEnd;}catch(x){ss=null;se=null;}
+  return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,tag:el.dataset.tag||null,ss,se};
+}
 function render(){
+  const fk=_focusKey(document.activeElement);
   const all=[];
   DB.cards.forEach(c=>c.tags.forEach(t=>{if(all.indexOf(t)<0)all.push(t);}));
   if(filterTag&&all.indexOf(filterTag)<0)filterTag='';
@@ -324,6 +334,17 @@ function render(){
   renderMaint();
   const bytes=(localStorage.getItem(KEY)||'').length*2;
   $('usage').textContent=`cc_career_v1 佔用 ${(bytes/1024).toFixed(1)} KB・推進紀錄 ${DB.log.length} 筆`;
+  if(fk){
+    // 重繪會換掉整批 input，依欄位種類＋所屬方向／細項 id 找回同一欄並還原游標（比對字串，不組 selector）
+    for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act]')){
+      const k=_focusKey(el);
+      if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.tag===fk.tag){
+        el.focus();
+        if(fk.ss!==null&&fk.se!==null){try{el.setSelectionRange(fk.ss,fk.se);}catch(x){}}
+        break;
+      }
+    }
+  }
 }
 function cardHtml(c){
   const n=c.items.length,avg=avgOf(c);
@@ -403,7 +424,7 @@ function addCard(){
   const title=str(inp.value,80).trim()||'新方向';
   const ts=nowStr();
   const c={id:uid('c'),quadrant:0,title,desc:'',tags:[],items:[],createdAt:ts,updatedAt:ts};
-  DB.cards.push(c);OPEN.add(c.id);save();inp.value='';render();
+  DB.cards.push(c);OPEN.clear();OPEN.add(c.id);save();inp.value='';render();
   toast('已新增到「未放置」');
   const el=$('mc-'+c.id);if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'});
 }
@@ -591,7 +612,8 @@ $('filter-bar').addEventListener('click',e=>{
 });
 $('board').addEventListener('pointerdown',startTrack);
 $('maint').addEventListener('pointerdown',startTrack);
-$('maint').addEventListener('change',onMaintChange);
+// 延到焦點移到下一欄之後才處理，避免重繪把點擊／Tab 的目標換掉
+$('maint').addEventListener('change',e=>setTimeout(()=>onMaintChange(e),0));
 $('maint').addEventListener('input',onMaintInput);
 $('maint').addEventListener('click',onMaintClick);
 $('maint').addEventListener('keydown',onMaintKey);
