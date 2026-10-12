@@ -224,7 +224,7 @@ function buildTT(id){
       const pl=(fp&&fp.plan&&typeof fp.plan==='object')?fp.plan:{};
       const okD=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s);
       const amt=v=>{const n=Number(v);return(v!==null&&v!==''&&typeof v!=='boolean'&&Number.isFinite(n)&&n>=0)?n:null;};
-      if(!okD(pl.start)||!okD(pl.end)||pl.end<pl.start)return h('💳 Finance')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定規劃期間，點擊設定</div>`;
+      if(!okD(pl.start)||!okD(pl.end)||pl.end<pl.start)return h('💳 Finance')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚未設定規劃區間，點擊設定</div>`;
       const dm=(y,m)=>new Date(Date.UTC(y,m,0)).getUTCDate();
       const sY=+pl.start.slice(0,4),sM=+pl.start.slice(5,7),sD=+pl.start.slice(8,10);
       const ms=i=>{const t=sM-1+i,y=sY+Math.floor(t/12),m=t%12+1;return y+'-'+String(m).padStart(2,'0')+'-'+String(Math.min(sD,dm(y,m))).padStart(2,'0');};
@@ -254,18 +254,18 @@ function buildTT(id){
       const pend=ps.filter(p=>p.pend).length;
       const cur=ps.find(p=>td>=p.st&&td<=p.en);
       let out=h('💳 Finance');
-      if(!cur){out+=row('狀態',td<ps[0].st?'尚未開始':'規劃期間已結束');}
+      if(!cur){out+=row('狀態',td<ps[0].st?'尚未開始':'規劃區間已結束');}
       else{
         const sd2=s=>(+s.slice(5,7))+'/'+(+s.slice(8,10));
-        out+=row('本期',esc(sd2(cur.st)+' – '+sd2(cur.en)));
-        if(cur.closed)out+=row('本期','已結算','g');
+        out+=row('本月',esc(sd2(cur.st)+' – '+sd2(cur.en)));
+        if(cur.closed)out+=row('本月','已結算','g');
         else{
           const rem=cur.base+carry*cur.d/openD-cur.spent,days=Math.round((ud(cur.en)-ud(td))/86400000)+1;
           out+=row('今天起每日上限','NT$'+Math.round(rem>0?rem/days:0).toLocaleString('en-US'),rem>0?'g':'r');
           out+=row('剩餘可花',(rem<0?'-':'')+'NT$'+Math.abs(Math.round(rem)).toLocaleString('en-US'),rem>0?'':'r');
         }
       }
-      out+=row('待回填期數',pend+' 期',pend>0?'a':'');
+      out+=row('待回填月數',pend+' 個月',pend>0?'a':'');
       return out;
     }
     default:return'';
