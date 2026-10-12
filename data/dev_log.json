@@ -5,6 +5,13 @@
     {
       "date": "2026-10-12",
       "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限建議標籤拿掉加號：灰色建議標籤只顯示#標籤名，點了一樣會加入。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-12",
+      "project": "Control Center",
       "file": "finance-planner.html／cc_tooltip.js",
       "summary": "財務規劃固定花費改每月整月扣：欄位改名每月固定花費，規劃期間每一期都扣全額，最後不滿一個月的那期也一樣。金額輸入欄打字時即時顯示$與千分位，游標不會亂跳。",
       "reason": "user_request"
