@@ -5,6 +5,13 @@
     {
       "date": "2026-10-13",
       "project": "Control Center",
+      "file": "cc_autosync.js／index.html",
+      "summary": "跨裝置同步防覆蓋：上傳前先檢查雲端有沒有另一台的較新資料，這台沒改過就自動下載，兩台都改過才跳出橫幅讓使用者選，不再悄悄用舊資料蓋掉新資料。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
       "file": "career-matrix.html",
       "summary": "主題升到掌握較多算推進日：主題換到掌握較多時背景記下日期，畫面不顯示，只給SAS Hub統計推進日用。",
       "reason": "user_request"
