@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-13",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "新聞跨分類避重上線：產生巨頭角力時先讓AI看硬體缺口已寫的標題，避免同一則新聞出現兩次。有開關可關，並保留改動前版本與三種回復方式。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3.py／sleep_dashboard_v3_live.html",
+      "summary": "發現睡眠時數定義不一致：v3的總時長把清醒時間也算進去，10月起的睡眠時數、睡眠債與戰力都被高估。已提出修法，等使用者同意再改。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-13",
       "project": "English Sandbox",
       "file": "english-sandbox.html",
       "summary": "彈出視窗改頁內提示：錯誤訊息改成頁面下方提示，三個清空按鈕改成原地兩段式確認，風格跟新頁一致，清空範圍不變。",
