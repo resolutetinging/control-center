@@ -5,6 +5,13 @@
     {
       "date": "2026-10-13",
       "project": "Control Center",
+      "file": "Spec/career-optimizer-integration-plan.md",
+      "summary": "四象限與Optimizer整合規劃：建立規劃書，任務以編號對應四象限的方向或細項，象限跟著方向走。分成盤點對齊、建立對應、雙向可見、容量規劃四個階段，今天不實作。",
+      "reason": "spec_change"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
       "file": "cc_autosync.js",
       "summary": "同步保護最後修正並通過驗證：其他分頁更新過時，舊分頁存檔會明確顯示未儲存。下載時保留較新的SAS Hub風險燈號，Guard提醒不會消失。",
       "reason": "bug_fix"
