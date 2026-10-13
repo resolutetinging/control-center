@@ -139,6 +139,10 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .it-top .inp{flex:1;min-width:0}
 .it{position:relative}
 .it-ask{margin:-4px 0 10px}
+.sec-row{display:flex;align-items:center;gap:10px;margin:18px 0 10px}.sec-row .sec-lbl{margin:0}
+.ord-btn{height:32px;border-radius:16px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);font-size:13px;padding:0 12px;cursor:pointer;font-family:inherit}
+.ord-btn:hover,.ord-btn.on{border-color:var(--ac);color:var(--ac)}
+.st-ic.mv-ic{font-size:15px;color:var(--sub)}.st-ic.mv-ic:hover,.st-ic.mv-ic:focus-visible{color:var(--ac);border-color:var(--ac)}
 .st-ic.st0{color:var(--faint)}
 .st-ic.tr-ic{color:var(--sub)}
 .st-ic.tr-ic svg{width:16px;height:16px;display:block}
@@ -486,6 +490,7 @@ const MEMO_OPEN=new Set(); // 展開備註編輯的主題 id（僅頁面變數�
 const TNEW={};          // 新增主題輸入草稿 {itemId|state:text}
 let tDelAsk='';
 let iMenu='';           // 開啟狀態選單的細項 id
+let ordCid='';          // 正在調整細項順序的方向 id（僅頁面變數，不存 localStorage）
 let iDelAsk='';         // 等待確認刪除的細項 id
 let tMenu='';           // 開啟狀態選單的主題 id
 const TICON=['◔','◑','●'];
@@ -611,12 +616,13 @@ function topicsHtml(it){
   });
   return h+'</div>';
 }
-function itemHtml(it,k){
+function itemHtml(it,k,arr){
   const letter=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');
   const si=Math.max(0,STATUSES.indexOf(it.status));
   return`<div class="it" data-iid="${esc(it.id)}">
     <div class="it-top"><span class="it-no">${esc(letter)}.</span>
       <input class="inp" data-f="iname" value="${esc(it.name)}" maxlength="80" placeholder="細項名稱（例如：英文簡報能力）" aria-label="細項名稱">
+      ${ordCid&&arr?`${k>0?'<button type="button" class="st-ic mv-ic" data-act="imove" data-dir="up" aria-label="上移" title="上移">↑</button>':''}${k<arr.length-1?'<button type="button" class="st-ic mv-ic" data-act="imove" data-dir="down" aria-label="下移" title="下移">↓</button>':''}`:''}
       <button type="button" class="st-ic st${si}" data-act="istate" aria-haspopup="menu" aria-expanded="${iMenu===it.id}" aria-label="細項狀態：${esc(it.status)}，點擊變更" title="${esc(it.status)}">${ICON_S[si]}</button>
       <button type="button" class="st-ic tr-ic" data-act="idel" aria-label="刪除細項" title="刪除">${TRASH}</button></div>
     ${iMenu===it.id?`<div class="tmenu imenu" role="menu" aria-label="選擇細項狀態">${STATUSES.map((x,xi)=>`<button type="button" role="menuitemradio" aria-checked="${x===it.status}" data-act="iset" data-s="${esc(x)}"><span class="ck">${x===it.status?'✓':''}</span><span>${ICON_S[xi]} ${esc(x)}</span></button>`).join('')}</div>`:''}
@@ -648,8 +654,8 @@ function mcHtml(c){
   if(open){
     h+=`<div class="mc-body">
       <div class="fld"><label>說明</label><textarea class="ta" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
-      <div class="sec-lbl">能力細項（${n}）</div>
-      <div class="tree">${c.items.map(itemHtml).join('')||'<div class="q-empty">尚無細項</div>'}</div>
+      <div class="sec-row"><div class="sec-lbl">能力細項（${n}）</div>${n>1?`<button type="button" class="ord-btn${ordCid===c.id?' on':''}" data-act="iord" aria-pressed="${ordCid===c.id}">${ordCid===c.id?'完成':'調整順序'}</button>`:''}</div>
+      <div class="tree">${c.items.map((it,k,arr)=>itemHtml(it,k,ordCid===c.id?arr:null)).join('')||'<div class="q-empty">尚無細項</div>'}</div>
       <div style="margin-top:10px"><button class="btn" data-act="iadd">＋ 新增細項</button></div>
       <div class="del-zone">${delAskId===c.id
         ?`<div class="del-ask">確定刪除「${esc(c.title)||'未命名'}」？此方向的細項與推進紀錄會一併刪除，無法復原。</div><div><button class="btn danger" data-act="delok">確定刪除</button><button class="btn plain" data-act="delno">取消</button></div>`
@@ -779,6 +785,18 @@ function onMaintClick(e){
     const act=b.dataset.act;
     if(act==='tagdel'){c.tags=c.tags.filter(x=>x!==b.dataset.tag);touch(c);save();render();}
     else if(act==='tagsug'){addTag(c,b.dataset.tag,null);}
+    else if(act==='iord'){ordCid=(ordCid===c.id)?'':c.id;render();}
+    else if(act==='imove'){
+      const row=b.closest('.it'),iid=row&&row.dataset.iid,dir=b.dataset.dir;
+      const i=c.items.findIndex(x=>x.id===iid),j=dir==='up'?i-1:i+1;
+      if(i<0||j<0||j>=c.items.length)return;
+      const tmp=c.items[i];c.items[i]=c.items[j];c.items[j]=tmp;
+      save();render();
+      let ok=false;
+      for(const el of document.querySelectorAll('#maint .it-top [data-act="imove"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid&&el.dataset.dir===dir){ok=true;break;}}
+      if(!ok){const od=dir==='up'?'down':'up';
+        for(const el of document.querySelectorAll('#maint .it-top [data-act="imove"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid&&el.dataset.dir===od){el.focus();break;}}}
+    }
     else if(act==='iadd'){
       if(c.items.length>=ITEM_MAX){toast('細項已達 '+ITEM_MAX+' 個上限');return;}
       c.items.push({id:uid('i'),name:'',status:'未評估',progress:0,milestone:'',note:'',journal:[],updatedAt:nowStr(),topics:[]});
