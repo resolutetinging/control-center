@@ -5,6 +5,13 @@
     {
       "date": "2026-10-13",
       "project": "Control Center",
+      "file": "cc_autosync.js",
+      "summary": "同步保護驗證抓到問題：上線版本會誤報衝突，同裝置兩個分頁也可能回傳舊資料。已請使用者看到橫幅先按稍後，正在修正判定規則與分頁同步。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
       "file": "cc_autosync.js／index.html",
       "summary": "跨裝置同步防覆蓋：上傳前先檢查雲端有沒有另一台的較新資料，這台沒改過就自動下載，兩台都改過才跳出橫幅讓使用者選，不再悄悄用舊資料蓋掉新資料。",
       "reason": "user_request"
