@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-13",
+      "project": "Sleep Dashboard",
+      "file": "v2_v3_migration_report_20260930.md",
+      "summary": "10-13睡眠三方比對：自動更新正常，v3與iPhone四項總和只差1.5分鐘，最大誤差6分鐘在核心與清醒的分類。v2入睡時間再次對上前一晚，錯位一天的判斷成立。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-13",
       "project": "Control Center",
       "file": "index.html／cc_track.js／Spec",
       "summary": "整體健檢：所有頁面語法、Dock對應、備份登記與線上版本都正常，沒有一定要修的問題。順手把兩處舊標籤改成Career與Finance，並把五份規格書與記憶檔對齊昨天的改版。",
