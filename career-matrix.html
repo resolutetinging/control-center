@@ -71,7 +71,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .cd-items{margin-top:8px;padding-top:6px;border-top:.5px dashed var(--bstr);display:flex;flex-direction:column;gap:3px}
 .cd-it{display:flex;align-items:center;gap:6px;font-size:var(--fs2);color:var(--sub);min-width:0}
 .cd-it-n{color:var(--faint);flex-shrink:0}
-.cd-it-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cd-it-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;color:var(--ink)}
 .cd-it-st{font-size:var(--fs3);flex-shrink:0;color:var(--faint)}
 .cd-it-st.st1{color:var(--warn)}.cd-it-st.st2{color:var(--ac)}.cd-it-st.st3{color:var(--ok)}
 .cd-dist{color:var(--sub)}
@@ -88,7 +88,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 /* 浮在畫面底部，不佔版面：選取時看板不會被往下推，避免點錯位置 */
 .pick-hint{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:max-content;max-width:calc(100% - 32px);z-index:90;padding:9px 14px;border-radius:10px;background:var(--card);border:1px solid var(--ac);color:var(--ac);font-size:var(--fs3);font-weight:600;line-height:1.55;box-shadow:var(--shadow)}
 .pick-hint.show{display:block}
-.cd-top{display:flex;gap:8px;align-items:flex-start}
+.cd-top{display:flex;gap:8px;align-items:center}
 .cd-top .cd-title{flex:1;min-width:0}
 
 /* ── 維護區 ── */
@@ -108,7 +108,9 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 @media (prefers-reduced-motion:reduce){.mc.flash{animation:none}}
 .mc-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
 .mc-tg{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.mc-tg:hover{border-color:var(--ac);color:var(--ac)}
+.mc-tg:hover,.cd-tg:hover .mc-tg{border-color:var(--ac);color:var(--ac)}
+.mc-tg svg{display:block;transition:transform .15s}.mc-tg.open svg{transform:rotate(90deg)}
+.cd-desc-in{font-size:var(--fs3);font-weight:400;color:var(--sub);margin-left:8px}
 .mc-title{flex:1 1 140px;min-width:0;font-size:var(--fs1);font-weight:700;word-break:break-word}
 .mc-title-inp{background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 6px;margin:-3px -6px;color:var(--ink);font-family:inherit;cursor:text;outline:none;text-overflow:ellipsis}
 .mc-title-inp:hover{border-bottom-color:var(--bstr)}
@@ -575,10 +577,9 @@ const BOARD_OPEN=new Set(); // 看板卡片細項展開狀態：僅頁面變數�
 function cardHtml(c){
   const n=c.items.length,dist=distOf(c),bo=n>0&&BOARD_OPEN.has(c.id);
   return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
-    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}</div></div>
-    ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
+    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div></div>
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
-    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
+    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
     ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span></div>${tkHtml(it)}`;}).join('')}</div>`:''}
   </div>`;
 }
@@ -637,7 +638,7 @@ function mcHtml(c){
   let h=`<div class="mc${c.id===selCard?' sel-on':''}${c.id===focusId?' focus-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
     <div class="mc-head" data-toggle="1">
       ${pickBtn(c)}
-      <span class="mc-tg" title="${open?'收合':'展開'}" aria-label="${open?'收合':'展開'}">${open?'▾':'▸'}</span>
+      <span class="mc-tg${open?' open':''}" title="${open?'收合':'展開'}" aria-label="${open?'收合':'展開'}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       <input class="mc-title mc-title-inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱" aria-label="方向名稱">
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
       <span class="mc-avg">${n} 項</span>
