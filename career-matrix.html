@@ -171,7 +171,10 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .tcol-add .btn{min-height:32px}
 .cd-it-st{font-weight:700}
 .cd-tp{font-size:var(--fs3);color:var(--faint);padding:2px 0 2px 18px}
-.cd-tk{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:3px 0 6px 18px}
+.cd-tk{position:relative;display:flex;gap:4px;margin:3px 0 6px 18px}
+/* 10-13：三格依內容分配寬度（空欄「—」自動變窄，讓有內容的欄位少換行） */
+.cd-tk>.cd-tkc{flex:1 1 auto;min-width:78px}
+.cd-tk>.cd-tkc.empty{flex:0 1 auto}
 /* 10-13：掌握程度像時間軸——一條橫線貫穿三格標題列，格子底色在線與標題文字下方 */
 .cd-tk::before{content:"";position:absolute;left:6px;right:6px;top:13px;height:1.5px;background:var(--bstr);z-index:1;pointer-events:none}
 .cd-tkc{background:#fcfbf8;border:none;border-radius:7px;padding:4px 6px;min-width:0}
@@ -503,7 +506,7 @@ function tkHtml(it){
   if(!it.topics.length)return'<div class="cd-tp">尚無主題</div>';
   return'<div class="cd-tk">'+TSTATES.map((st,si)=>{
     const names=it.topics.filter(t=>t.state===st).map(t=>t.name);
-    return`<div class="cd-tkc c${si+1}"><div class="cd-tkh">${esc(TLBL[st])}</div><div class="cd-tkn">${names.length?names.map(n=>'<div class="cd-b">'+esc(n)+'</div>').join(''):'—'}</div></div>`;
+    return`<div class="cd-tkc c${si+1}${names.length?'':' empty'}"><div class="cd-tkh">${esc(TLBL[st])}</div><div class="cd-tkn">${names.length?names.map(n=>'<div class="cd-b">'+esc(n)+'</div>').join(''):'—'}</div></div>`;
   }).join('')+'</div>';
 }
 function _focusKey(el){
