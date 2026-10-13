@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "career-matrix.html／cc_tooltip.js",
+      "summary": "四象限維護改版：主題改成掌握低、掌握一些、掌握較多三欄看板，學習紀錄與日期拿掉。看板展開直接列出各欄主題，象限加上時間管理建議，標籤移到標題列並可選用其他方向建過的標籤。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "長期目標提示配合四象限改版：拿掉上次學習日期，學習中的主題改顯示為掌握一些。",
+      "reason": "feature"
+    },
+    {
+      "date": "2026-10-13",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v3_live.html",
       "summary": "手機也能查名詞定義：窄螢幕頁首新增定義按鈕，點開從下方滑出全螢幕面板，內容與電腦版側欄是同一份。",
