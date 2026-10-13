@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-13",
+      "project": "Sleep Dashboard",
+      "file": "update_dashboard_v3_live.py／sleep_dashboard_v3_live.html",
+      "summary": "睡眠時數統一不含清醒：10月起的睡眠時數改成深層加REM加核心，與iPhone和10月前的資料一致，睡眠債與戰力回到真實水準。圖表新增睡眠與在床兩條線，時長一律顯示整數分鐘。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-13",
       "project": "AI Tracker",
       "file": "scripts/update_data.py",
       "summary": "新聞跨分類避重上線：產生巨頭角力時先讓AI看硬體缺口已寫的標題，避免同一則新聞出現兩次。有開關可關，並保留改動前版本與三種回復方式。",
