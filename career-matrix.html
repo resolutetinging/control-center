@@ -142,6 +142,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .sec-row{display:flex;align-items:center;gap:10px;margin:18px 0 10px}.sec-row .sec-lbl{margin:0}
 .ord-btn{height:32px;border-radius:16px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);font-size:13px;padding:0 12px;cursor:pointer;font-family:inherit}
 .ord-btn:hover,.ord-btn.on{border-color:var(--ac);color:var(--ac)}
+.grp-lbl .ord-btn{margin-left:auto;align-self:center;letter-spacing:0;font-weight:400}
 .st-ic.mv-ic{font-size:15px;color:var(--sub)}.st-ic.mv-ic:hover,.st-ic.mv-ic:focus-visible{color:var(--ac);border-color:var(--ac)}
 .st-ic.st0{color:var(--faint)}
 .st-ic.tr-ic{color:var(--sub)}
@@ -493,6 +494,7 @@ const MEMO_OPEN=new Set(); // 展開備註編輯的主題 id（僅頁面變數�
 const TNEW={};          // 新增主題輸入草稿 {itemId|state:text}
 let tDelAsk='';
 let iMenu='';           // 開啟狀態選單的細項 id
+let ordQ=-1;            // 正在調整方向順序的象限（0=未放置，-1=無；僅頁面變數）
 let ordCid='';          // 正在調整細項順序的方向 id（僅頁面變數，不存 localStorage）
 let iDelAsk='';         // 等待確認刪除的細項 id
 let tMenu='';           // 開啟狀態選單的主題 id
@@ -642,13 +644,14 @@ function tagBarHtml(c){
     <div class="mc-tagrow"><input class="inp tgi" data-f="tagnew" maxlength="20" placeholder="＋標籤，按 Enter" aria-label="新增標籤">
     ${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div></div>`;
 }
-function mcHtml(c){
+function mcHtml(c,gk,grp){
   const open=OPEN.has(c.id),n=c.items.length;
   let h=`<div class="mc${c.id===selCard?' sel-on':''}${c.id===focusId?' focus-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
     <div class="mc-head" data-toggle="1">
       ${pickBtn(c)}
       <span class="mc-tg${open?' open':''}" title="${open?'收合':'展開'}" aria-label="${open?'收合':'展開'}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       <input class="mc-title mc-title-inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱" aria-label="方向名稱">
+      ${ordQ===c.quadrant&&grp?`${gk>0?'<button type="button" class="st-ic mv-ic" data-act="cmove" data-dir="up" aria-label="上移方向" title="上移方向">↑</button>':''}${gk<grp.length-1?'<button type="button" class="st-ic mv-ic" data-act="cmove" data-dir="down" aria-label="下移方向" title="下移方向">↓</button>':''}`:''}
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
       <span class="mc-avg">${n} 項</span>
       ${moveSelHtml(c)}
@@ -673,8 +676,8 @@ function renderMaint(){
     const cards=DB.cards.filter(c=>c.quadrant===q);
     const lbl=q===0?'未放置':'第'+QN[q]+'象限';
     const sub=q===0?'新增後先放這裡，按「選取」再點上方象限即放置':QDEF[q].name;
-    h+=`<div class="grp" data-drop="${q}"><div class="grp-lbl"><span>${esc(lbl)}</span><span>${esc(sub)}・${cards.length}</span></div>`
-      +(cards.length?cards.map(mcHtml).join(''):`<div class="grp-empty">${q===0?'沒有未放置的方向':'此象限沒有方向'}</div>`)
+    h+=`<div class="grp" data-drop="${q}"><div class="grp-lbl"><span>${esc(lbl)}</span><span>${esc(sub)}・${cards.length}</span>${cards.length>1?`<button type="button" class="ord-btn${ordQ===q?' on':''}" data-act="cord" data-q="${q}" aria-pressed="${ordQ===q}">${ordQ===q?'完成':'調整順序'}</button>`:''}</div>`
+      +(cards.length?cards.map((c,k,a)=>mcHtml(c,k,a)).join(''):`<div class="grp-empty">${q===0?'沒有未放置的方向':'此象限沒有方向'}</div>`)
       +'</div>';
   }
   $('maint').innerHTML=h;
@@ -784,10 +787,21 @@ function onMaintClick(e){
   if(pk){pickCard(pk.dataset.pick);return;}
   const b=t.closest('[data-act]');
   if(b){
-    const c=cardOf(b);if(!c)return;
     const act=b.dataset.act;
+    if(act==='cord'){const q=parseInt(b.dataset.q,10);ordQ=(ordQ===q||!(q>=0&&q<=4))?-1:q;render();return;}
+    const c=cardOf(b);if(!c)return;
     if(act==='tagdel'){c.tags=c.tags.filter(x=>x!==b.dataset.tag);touch(c);save();render();}
     else if(act==='tagsug'){addTag(c,b.dataset.tag,null);}
+    else if(act==='cmove'){
+      const dir=b.dataset.dir,cid=c.id,q=c.quadrant;
+      const i=DB.cards.indexOf(c);let j=i;
+      do{j+=dir==='up'?-1:1;}while(j>=0&&j<DB.cards.length&&DB.cards[j].quadrant!==q);
+      if(i<0||j<0||j>=DB.cards.length)return;
+      const tmp=DB.cards[i];DB.cards[i]=DB.cards[j];DB.cards[j]=tmp;
+      save();render();
+      const pick=d=>{for(const el of document.querySelectorAll('#maint .mc-head [data-act="cmove"]')){const m=el.closest('.mc');if(m&&m.dataset.card===cid&&el.dataset.dir===d){el.focus();return true;}}return false;};
+      if(!pick(dir))pick(dir==='up'?'down':'up');
+    }
     else if(act==='iord'){ordCid=(ordCid===c.id)?'':c.id;render();}
     else if(act==='imove'){
       const row=b.closest('.it'),iid=row&&row.dataset.iid,dir=b.dataset.dir;
