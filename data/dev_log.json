@@ -6,6 +6,20 @@
       "date": "2026-10-13",
       "project": "Control Center",
       "file": "career-matrix.html",
+      "summary": "四象限看板細節調整：選取鈕與標題置中對齊，方向說明放在標題旁，細項名稱改粗體，展開鈕改成較大的圓形箭頭。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限細項可調整順序：維護區按調整順序才出現上下移按鈕，避免誤觸，調整後看板與維護區依新順序重新編號。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "career-matrix.html",
       "summary": "四象限按鈕改成圓形圖示：刪除改垃圾桶並先確認，細項狀態改成點圖示選擇並和名稱排在同一列，選取按鈕也改成圓形，維護區更精簡。",
       "reason": "user_request"
     },
