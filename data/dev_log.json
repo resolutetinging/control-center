@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-13",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3_live.html",
+      "summary": "睡眠定義補上理論與來源：十項定義改成摘要加展開，附研究依據、本頁算法與解讀限制。修正分期建議範圍誤標AASM的問題，深層改用文獻的10到25%，自訂門檻都標明本頁自訂。趨勢圖兩種總時長標籤改得更好讀。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
       "project": "Daily Optimizer",
       "file": "daily_optimizer_v3.html",
       "summary": "歷史覆盤加註戰力偏高：10月1日到13日的覆盤卡加上說明，當時戰力把清醒時間算進睡眠，比實際偏高，歷史數字不回溯修改。",
