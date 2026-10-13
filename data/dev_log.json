@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-10-12",
+  "generated_through": "2026-10-13",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "localStorage",
+      "summary": "清理舊Groq金鑰：盤點瀏覽器裡的Groq金鑰只看末四碼，找出兩把沒在用的舊金鑰，使用者在Groq後台撤銷後從瀏覽器刪除。另發現WordVault用自己的一把金鑰，已保留。",
+      "reason": "maintain"
+    },
     {
       "date": "2026-10-12",
       "project": "Control Center",
