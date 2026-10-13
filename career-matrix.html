@@ -78,9 +78,9 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 
 /* ── 點選放置 ── */
-.pick-btn{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:.5px solid var(--ac);background:var(--bg2);color:var(--ac);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.pick-btn svg{width:18px;height:18px;display:block}
-.pick-btn:hover{background:var(--ac-tint)}
+.pick-btn{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ac);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pick-btn svg{width:16px;height:16px;display:block}
+.pick-btn:hover{background:var(--ac-tint);border-color:var(--ac)}
 .pick-btn.on{background:var(--ac);color:#fff;box-shadow:0 0 0 2px var(--ac-tint2)}
 .sel-on{box-shadow:0 0 0 2.5px var(--ac)!important;border-color:var(--ac)!important;background:var(--ac-tint)}
 .picking .q,.picking .grp[data-drop="0"]{cursor:pointer}
@@ -107,7 +107,8 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 @keyframes mcBlink{0%,100%{box-shadow:0 0 0 3px var(--ac)}50%{box-shadow:0 0 0 3px transparent}}
 @media (prefers-reduced-motion:reduce){.mc.flash{animation:none}}
 .mc-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
-.mc-tg{width:20px;flex-shrink:0;color:var(--faint);font-size:var(--fs3);text-align:center}
+.mc-tg{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mc-tg:hover{border-color:var(--ac);color:var(--ac)}
 .mc-title{flex:1 1 140px;min-width:0;font-size:var(--fs1);font-weight:700;word-break:break-word}
 .mc-title-inp{background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 6px;margin:-3px -6px;color:var(--ink);font-family:inherit;cursor:text;outline:none;text-overflow:ellipsis}
 .mc-title-inp:hover{border-bottom-color:var(--bstr)}
@@ -636,7 +637,7 @@ function mcHtml(c){
   let h=`<div class="mc${c.id===selCard?' sel-on':''}${c.id===focusId?' focus-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
     <div class="mc-head" data-toggle="1">
       ${pickBtn(c)}
-      <span class="mc-tg">${open?'▾':'▸'}</span>
+      <span class="mc-tg" title="${open?'收合':'展開'}" aria-label="${open?'收合':'展開'}">${open?'▾':'▸'}</span>
       <input class="mc-title mc-title-inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱" aria-label="方向名稱">
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
       <span class="mc-avg">${n} 項</span>
