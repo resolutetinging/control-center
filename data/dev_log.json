@@ -6,6 +6,13 @@
       "date": "2026-10-13",
       "project": "Control Center",
       "file": "cc_autosync.js",
+      "summary": "同步保護修正：上傳成功一律記下已同步，改用裝置來源判斷雲端是否被別台修改，不受時鐘影響。同裝置其他分頁會跟著更新，打字中不會被自動重新整理打斷。",
+      "reason": "bug_fix"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "cc_autosync.js",
       "summary": "同步保護驗證抓到問題：上線版本會誤報衝突，同裝置兩個分頁也可能回傳舊資料。已請使用者看到橫幅先按稍後，正在修正判定規則與分頁同步。",
       "reason": "debug"
     },
