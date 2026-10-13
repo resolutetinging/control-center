@@ -36,7 +36,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 @media(max-width:480px){.nav{padding:0 10px}.save-wrap{margin-left:6px;gap:4px}.save-st{max-width:92px;font-size:10.5px;padding:3px 6px}.save-btn{padding:4px 6px;font-size:11px}.back-link{padding:5px 4px;font-size:11px}}
 .back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
 
-.wrap{padding:22px 16px 96px;max-width:1040px;margin:0 auto}
+.wrap{padding:22px 16px 96px;max-width:1360px;margin:0 auto}
 
 /* ── 標籤篩選列 ── */
 .filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;min-height:28px}
@@ -140,7 +140,8 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .jr-ask{font-size:12px;color:#a04040}
 .jempty{font-size:12px;color:var(--faint);padding:2px 0 6px}
 .q-tip{font-size:11.5px;color:var(--ac);line-height:1.5;margin:2px 0 8px}
-.mc-tagbar{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-left:28px}
+.mc-tagbar{flex-basis:100%;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding-left:28px}
+.mc-tagrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .mc-tagbar .chip{padding:2px 4px 2px 9px}
 .mc-tagbar .chip button{min-width:24px;min-height:24px}
 .mc-tagbar .inp.tgi{width:150px;padding:4px 9px;font-size:12px}
@@ -156,7 +157,16 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .tcol-add{display:flex;flex-direction:column;gap:5px;margin-top:8px}
 .tcol-add .inp{padding:5px 8px;font-size:12.5px;min-height:32px}
 .tcol-add .btn{min-height:32px}
-.cd-tp{font-size:11px;color:var(--faint);line-height:1.5;padding-left:18px;word-break:break-word}
+.cd-it-st{font-weight:700}
+.cd-tk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:3px 0 6px 18px}
+.cd-tkc{background:var(--bg2);border:.5px solid var(--bstr);border-radius:7px;padding:4px 6px;min-width:0}
+.cd-tkh{font-size:10px;font-weight:700;color:var(--ac);margin-bottom:2px}
+.cd-tkn{font-size:11px;color:var(--sub);line-height:1.45;word-break:break-word}
+@media(max-width:480px){.cd-tk{margin-left:0;gap:3px}.cd-tkc{padding:3px 4px}.cd-tkh{font-size:9px}.cd-tkn{font-size:10px}}
+.ta.tmemo{min-height:40px;resize:none;overflow:hidden;font-size:12.5px}
+.tcard .memo-btn{display:block;width:100%;text-align:left;margin-top:5px;min-height:28px;padding:3px 8px;font-size:11.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcard .ta.tmemo{margin-top:5px;padding:5px 8px}
+.tcard-b .sel{width:auto;flex:1;min-width:0;padding:4px 8px;font-size:12px;min-height:32px}
 @media(max-width:599px){.tkan{grid-template-columns:1fr}}
 .btn{font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;border:.5px solid var(--ac-tint2);background:var(--ac-tint);color:var(--ac);cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--ac-tint2)}
@@ -302,7 +312,7 @@ function normTopics(it){
     if(!name.trim())return;
     const state=TSTATES.indexOf(tp.state)>=0?tp.state:'待學';
     seen.add(tp.id);
-    out.push({id:tp.id,name,state,learnedAt:validDate(tp.learnedAt)?tp.learnedAt:'',createdAt:validDate(tp.createdAt)?tp.createdAt:today()});
+    out.push({id:tp.id,name,state,learnedAt:validDate(tp.learnedAt)?tp.learnedAt:'',createdAt:validDate(tp.createdAt)?tp.createdAt:today(),memo:str(tp.memo,500)}); // memo：維護區專用備註，非字串→''
   });
   return out;
 }
@@ -449,17 +459,15 @@ let focusId='';           // 點看板卡片後要維護的方向：維護區粗
 let selCard='',selQ=0;   // 點選放置的選取狀態（僅頁面變數，不存 localStorage）
 const OPEN=new Set();   // 維護區展開狀態（僅頁面變數）
 let delAskId='';
+const MEMO_OPEN=new Set(); // 展開備註編輯的主題 id（僅頁面變數）
 const TNEW={};          // 新增主題輸入草稿 {itemId|state:text}
 let tDelAsk='';         // 等待確認刪除的主題 id
-function tSummary(it){
-  const parts=[];
-  TSTATES.forEach(st=>{
+function tkHtml(it){
+  if(!it.topics.length)return'<div class="cd-tp">尚無主題</div>';
+  return'<div class="cd-tk">'+TSTATES.map(st=>{
     const names=it.topics.filter(t=>t.state===st).map(t=>t.name);
-    if(!names.length)return;
-    const shown=names.slice(0,3).map(n=>n.length>20?n.slice(0,20)+'…':n).join('、');
-    parts.push(TLBL[st]+'：'+shown+(names.length>3?' 等 '+names.length+' 個':''));
-  });
-  return parts.join('｜');
+    return`<div class="cd-tkc"><div class="cd-tkh">${esc(TLBL[st])}</div><div class="cd-tkn">${names.length?names.map(n=>'<div>'+esc(n)+'</div>').join(''):'—'}</div></div>`;
+  }).join('')+'</div>';
 }
 function _focusKey(el){
   if(!el||!el.dataset||!el.closest||!el.closest('#maint'))return null;
@@ -542,7 +550,7 @@ function cardHtml(c){
     ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
-    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span></div><div class="cd-tp">${esc(tSummary(it)||'尚無主題')}</div>`;}).join('')}</div>`:''}
+    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span></div>${tkHtml(it)}`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -557,14 +565,15 @@ function topicsHtml(it){
     h+=`<div class="tcol" data-col="${esc(st)}"><div class="tcol-h">${esc(TLBL[st])}（${list.length}）</div>`;
     list.forEach(t=>{
       h+=`<div class="tcard" data-tid="${esc(t.id)}"><input class="inp tpn" data-f="tname" value="${esc(t.name)}" maxlength="80" aria-label="主題名稱">
-        <div class="tcard-b">`
-        +(si>0?`<button type="button" class="btn plain" data-act="tmove" data-dir="-1" aria-label="移到${esc(TLBL[TSTATES[si-1]])}">◀</button>`:'')
-        +(si<2?`<button type="button" class="btn plain" data-act="tmove" data-dir="1" aria-label="移到${esc(TLBL[TSTATES[si+1]])}">▶</button>`:'')
-        +'<span class="sp"></span>'
+        <div class="tcard-b"><select class="sel" data-f="tmove" aria-label="移到哪一欄">${TSTATES.map(x=>`<option value="${esc(x)}"${x===st?' selected':''}>${esc(TLBL[x])}</option>`).join('')}</select>`
         +(tDelAsk===t.id
           ?`<span class="jr-ask">確定刪除？</span><button class="btn danger" data-act="tdelok">確定</button><button class="btn plain" data-act="tdelno">取消</button>`
           :`<button class="btn plain" data-act="tdel">刪除</button>`)
-        +'</div></div>';
+        +'</div>'
+        +(MEMO_OPEN.has(t.id)
+          ?`<textarea class="ta tmemo" data-f="tmemo" maxlength="500" rows="1" placeholder="備註（只在這裡顯示）" aria-label="主題備註">${esc(t.memo)}</textarea>`
+          :`<button type="button" class="btn plain memo-btn" data-act="tmemoopen">${t.memo?'備註：'+esc(t.memo.split('\n')[0].slice(0,24)):'＋ 備註'}</button>`)
+        +'</div>';
     });
     h+=`<div class="tcol-add"><input class="inp" data-f="tnew" data-s="${esc(st)}" value="${esc(TNEW[it.id+'|'+st]||'')}" maxlength="80" placeholder="新增主題" aria-label="新增主題到${esc(TLBL[st])}">
       <button class="btn" data-act="tadd" data-s="${esc(st)}">新增</button></div></div>`;
@@ -588,9 +597,9 @@ function tagBarHtml(c){
   const pool=SUG_TAGS.slice();
   DB.cards.forEach(x=>x.tags.forEach(t=>{if(pool.indexOf(t)<0)pool.push(t);}));
   const sug=pool.filter(t=>c.tags.indexOf(t)<0);
-  return`<div class="mc-tagbar">${c.tags.map(t=>`<span class="chip">#${esc(t)}<button data-act="tagdel" data-tag="${esc(t)}" aria-label="移除標籤">×</button></span>`).join('')}
-    <input class="inp tgi" data-f="tagnew" maxlength="20" placeholder="＋標籤，按 Enter" aria-label="新增標籤">
-    ${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`;
+  return`<div class="mc-tagbar">${c.tags.length?`<div class="mc-tagrow">${c.tags.map(t=>`<span class="chip">#${esc(t)}<button data-act="tagdel" data-tag="${esc(t)}" aria-label="移除標籤">×</button></span>`).join('')}</div>`:''}
+    <div class="mc-tagrow"><input class="inp tgi" data-f="tagnew" maxlength="20" placeholder="＋標籤，按 Enter" aria-label="新增標籤">
+    ${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div></div>`;
 }
 function mcHtml(c){
   const open=OPEN.has(c.id),n=c.items.length;
@@ -628,6 +637,7 @@ function renderMaint(){
       +'</div>';
   }
   $('maint').innerHTML=h;
+  document.querySelectorAll('#maint .tmemo').forEach(growNote);
 }
 
 function addCard(){
@@ -678,6 +688,19 @@ function onMaintChange(e){
     if(v===tp.name)return;
     tp.name=v;touch(c);save();render();return;
   }
+  if(f==='tmove'){
+    const tr=t.closest('.tcard'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);
+    if(!tp||TSTATES.indexOf(t.value)<0||tp.state===t.value){render();return;}
+    tp.state=t.value; // 換欄只改 state；不寫也不清 learnedAt（規格 10 節）
+    touch(c);save();render();return;
+  }
+  if(f==='tmemo'){
+    const tr=t.closest('.tcard'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);
+    if(!tp)return;
+    const v=str(t.value,500);
+    if(v===tp.memo)return;
+    tp.memo=v;touch(c);save();render();return; // 主題備註不寫 log
+  }
   if(f==='iname'){it.name=str(t.value,80).trim();}
   else if(f==='istatus'){
     if(STATUSES.indexOf(t.value)<0)return;
@@ -685,8 +708,10 @@ function onMaintChange(e){
   }else return;
   it.updatedAt=nowStr();touch(c);save();render();
 }
+function growNote(t){if(t.scrollHeight>0){t.style.height='auto';t.style.height=t.scrollHeight+'px';}}
 function onMaintInput(e){
   const t=e.target,f=t.dataset&&t.dataset.f;
+  if(f==='tmemo')growNote(t);
   if(f==='tnew'){const row=t.closest('.it');if(row)TNEW[row.dataset.iid+'|'+(t.dataset.s||'')]=str(t.value,80);}
 }
 function addTopic(c,it,col){
@@ -695,7 +720,7 @@ function addTopic(c,it,col){
   const name=str(te?te.value:'',80).trim();
   if(!name)return; // 空白不新增
   if(it.topics.length>=TOPIC_MAX){toast('主題已達 '+TOPIC_MAX+' 個上限');return;}
-  it.topics.push({id:uid('t'),name,state:st,learnedAt:'',createdAt:today()}); // v1.7 不再寫 learnedAt
+  it.topics.push({id:uid('t'),name,state:st,learnedAt:'',createdAt:today(),memo:''}); // v1.7 不再寫 learnedAt
   TNEW[it.id+'|'+st]='';
   touch(c);save();render();
   for(const el of document.querySelectorAll('#maint .it [data-f="tnew"]')){
@@ -720,19 +745,20 @@ function onMaintClick(e){
       const names=$('mc-'+c.id).querySelectorAll('[data-f="iname"]');
       if(names.length)names[names.length-1].focus();
     }
-    else if(act==='tadd'||act==='tmove'||act==='tdel'||act==='tdelok'||act==='tdelno'){
+    else if(act==='tadd'||act==='tmemoopen'||act==='tdel'||act==='tdelok'||act==='tdelno'){
       const row=b.closest('.it'),it=row&&c.items.find(i=>i.id===row.dataset.iid);
       if(!it)return;
       if(act==='tadd'){const col=b.closest('.tcol');if(col)addTopic(c,it,col);return;}
       const tr=b.closest('.tcard'),tid=tr&&tr.dataset.tid,tp=it.topics.find(x=>x.id===tid);
       if(!tp)return;
+      if(act==='tmemoopen'){
+        MEMO_OPEN.add(tid);render();
+        for(const el of document.querySelectorAll('#maint .tmemo')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+        return;
+      }
       if(act==='tdel'){tDelAsk=tid;render();return;}
       if(act==='tdelno'){tDelAsk='';render();return;}
       if(act==='tdelok'){it.topics=it.topics.filter(x=>x.id!==tid);tDelAsk='';touch(c);save();render();return;}
-      const ns=TSTATES[TSTATES.indexOf(tp.state)+Number(b.dataset.dir)];
-      if(!ns)return;
-      tp.state=ns; // 換欄只改 state；不寫也不清 learnedAt（規格 10 節）
-      touch(c);save();render();
     }
     else if(act==='idel'){
       const row=b.closest('.it');const iid=row&&row.dataset.iid;
