@@ -181,17 +181,14 @@
         // Refueler 開頁自有 Gist 合併會重排 entries、正規化型別：以 entries 集合比較，內容相同即視為未修改
         const o = JSON.parse(v);
         if (!o || typeof o !== 'object' || !Array.isArray(o.entries)) return v;
-        const seen = new Set(); const out = [];
+        const out = []; // 完整多重集合（重複 id 不去重，避免第一筆不同就誤判相同）
         for (const e of o.entries) {
           if (!e || typeof e !== 'object') continue;
           const c = Object.assign({}, e);
           if (c.id != null) c.id = String(c.id);
           ['cafe', 'item', 'dessert'].forEach(function (f) { if (c[f] != null && typeof c[f] !== 'string') c[f] = String(c[f]); });
           ['coffeePrice', 'price', 'dessertPrice', 'amount'].forEach(function (f) { if (c[f] != null) { const n = Number(c[f]); c[f] = isFinite(n) ? n : 0; } });
-          const str = stableStr(c);
-          const idKey = c.id != null ? 'i' + c.id : 's' + str;
-          if (seen.has(idKey)) continue;
-          seen.add(idKey); out.push(str);
+          out.push(stableStr(c));
         }
         out.sort();
         return 'RF[' + out.join(',') + ']';
@@ -554,6 +551,7 @@
       if (!isSafeKey(k)) continue;
       // 第二道：值必須是字串，且不得夾帶憑證
       if (typeof v !== 'string' || /(ghp_|github_pat_|gho_|gsk_)[A-Za-z0-9_]{20,}/.test(v)) continue;
+      if (TS_STRIP_KEYS.has(k) && localTsNewer(k, v)) continue; // 本機計算較新的狀態旗標：保留本機（Guard 24 小時視窗靠 ts）
       const ok = await restoreOne(k, v);
       if (!ok) skipped.push(k);
     }
@@ -584,6 +582,17 @@
     }
     if (bigRestored) try { localStorage.setItem('cc_big_manifest', snap[MANIFEST_KEY] || '{}'); } catch (e) {}
     return { skipped: skipped, incomplete: incomplete, bigRestored: bigRestored };
+  }
+
+  function tsOf(v) {
+    try { const o = JSON.parse(v); const t = o && typeof o === 'object' ? Number(o.ts) : NaN; return isFinite(t) ? t : -Infinity; }
+    catch (e) { return -Infinity; }
+  }
+  // 逐 key 比 ts：本機值的 ts 嚴格較新才保留本機；本機無值或無法解析一律採雲端
+  function localTsNewer(k, cloudVal) {
+    const lv = lsGet(k);
+    if (lv == null) return false;
+    return tsOf(lv) > tsOf(cloudVal);
   }
 
   // 下載完成後：本機 rev 對齊雲端、hash 設為下載後狀態（之後不被誤判為有修改）
@@ -859,6 +868,7 @@
       _tabStale = true;
       setState('stale');
       hideBanner();
+      try { window.dispatchEvent(new CustomEvent('cc-sync-stale')); } catch (x2) {}
       if (isUserEditing()) { guardStaleWrites(); showNotice('stale'); }
       else { guardStaleWrites(); window.location.reload(); }
     } catch (x) {}
@@ -888,6 +898,7 @@
   // 供 CC 首頁手動同步按鈕共用同一套核心（強制上傳、無節流）
   window.ccSyncCore = {
     buildSnapshot: buildSnapshot, uploadFull: uploadFull, MANIFEST_KEY: MANIFEST_KEY, isSafeKey: isSafeKey,
-    fetchCloud: fetchCloud, applySnapshot: applySnapshot, markDownloaded: markDownloaded, snapHash: snapHash
+    fetchCloud: fetchCloud, applySnapshot: applySnapshot, markDownloaded: markDownloaded, snapHash: snapHash,
+    isStaleTab: function () { return _tabStale; }
   };
 })();

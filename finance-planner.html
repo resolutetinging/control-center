@@ -314,6 +314,10 @@ function load(){
 }
 function save(){
   let ok=true;
+  // 跨裝置防覆蓋（spec 3.3a）：其他分頁已下載新資料時，本分頁寫入會被 cc_autosync 略過，不可顯示已儲存
+  if(window.ccSyncCore&&typeof window.ccSyncCore.isStaleTab==='function'&&window.ccSyncCore.isStaleTab()){
+    _ccOk=false;ccSt('err','⚠ 未儲存：資料已在其他分頁更新，請重新整理');toast('未儲存：資料已在其他分頁更新，請重新整理');return;
+  }
   try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){ok=false;console.error(e);toast('儲存失敗（儲存空間不足？）');}
   _ccOk=ok;
   if(ok)ccSt('ok','✓ 已儲存 '+ccHM());else ccSt('err','⚠ 儲存失敗');
