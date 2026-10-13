@@ -5,6 +5,13 @@
     {
       "date": "2026-10-13",
       "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限閱讀與維護再調整：看板展開的主題改成一列三格，細項狀態改粗體。主題換欄改用下拉選單，每個主題可寫只在維護區看的備註，標籤分兩列，電腦版畫面加寬。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
       "file": "career-matrix.html／cc_tooltip.js",
       "summary": "四象限維護改版：主題改成掌握低、掌握一些、掌握較多三欄看板，學習紀錄與日期拿掉。看板展開直接列出各欄主題，象限加上時間管理建議，標籤移到標題列並可選用其他方向建過的標籤。",
       "reason": "user_request"
