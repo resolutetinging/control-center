@@ -6,6 +6,13 @@
       "date": "2026-10-13",
       "project": "Control Center",
       "file": "career-matrix.html",
+      "summary": "四象限按鈕改成圓形圖示：刪除改垃圾桶並先確認，細項狀態改成點圖示選擇並和名稱排在同一列，選取按鈕也改成圓形，維護區更精簡。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "career-matrix.html",
       "summary": "四象限字級與配色調整：全頁字級分成五層，象限標題最大、下層一定比上層小。看板主題格改用淡色並逐項加圓點，維護區改用主題旁的小圖示切換掌握程度。",
       "reason": "user_request"
     },
