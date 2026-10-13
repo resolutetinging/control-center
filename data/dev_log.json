@@ -6,6 +6,13 @@
       "date": "2026-10-13",
       "project": "Control Center",
       "file": "career-matrix.html",
+      "summary": "四象限字級與配色調整：全頁字級分成五層，象限標題最大、下層一定比上層小。看板主題格改用淡色並逐項加圓點，維護區改用主題旁的小圖示切換掌握程度。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "career-matrix.html",
       "summary": "四象限閱讀與維護再調整：看板展開的主題改成一列三格，細項狀態改粗體。主題換欄改用下拉選單，每個主題可寫只在維護區看的備註，標籤分兩列，電腦版畫面加寬。",
       "reason": "user_request"
     },
