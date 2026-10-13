@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-13",
+      "project": "English Sandbox",
+      "file": "english-sandbox.html",
+      "summary": "彈出視窗改頁內提示：錯誤訊息改成頁面下方提示，三個清空按鈕改成原地兩段式確認，風格跟新頁一致，清空範圍不變。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "AI Tracker",
+      "file": "scripts/update_data.py",
+      "summary": "新聞重複原因診斷：同一則Microsoft晶片新聞從兩個來源進到兩個分類，去重機制只比同網址或跨天內容，同一天跨分類完全沒防護。已提出修法，等使用者決定，尚未修改。",
+      "reason": "debug"
+    },
+    {
+      "date": "2026-10-13",
       "project": "Sleep Dashboard",
       "file": "v2_v3_migration_report_20260930.md",
       "summary": "10-13睡眠三方比對：自動更新正常，v3與iPhone四項總和只差1.5分鐘，最大誤差6分鐘在核心與清醒的分類。v2入睡時間再次對上前一晚，錯位一天的判斷成立。",
