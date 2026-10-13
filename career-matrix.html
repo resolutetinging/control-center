@@ -446,6 +446,7 @@ async function ccSaveClick(){
     await core.uploadFull();
     ccSt('ok','☁ 已備份 '+ccHM());
   }catch(e){
+    if(e&&(e.ccConflict||e.ccNewer||e.ccStale)){ccSt('err','⚠ 雲端較新，請看頁面上方提示');return;} // 跨裝置防覆蓋（spec 3.3a）：已顯示頂端提示
     ccSt('err','⚠ 備份失敗');
     toast('備份失敗：'+String((e&&e.message)||'未知原因').slice(0,40));
   }finally{btn.disabled=false;}

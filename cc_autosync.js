@@ -16,6 +16,12 @@
  *  - 開頁先查雲端 rev：相同→照舊；雲端較新且本機無修改→自動下載並重載一次；兩邊都改→衝突橫幅、停止自動上傳
  *  - 可見時每 5 分鐘＋回到前景重新檢查；quickSync 只在最近一次檢查判定「雲端未變」時才上傳
  *  - 任何檢查錯誤一律退回「不上傳、不下載、不打擾」
+ * v3.1（2026-10-13，驗證修正）：
+ *  - 判定：雲端 _meta.rev ≠ 本機 rev 且 _meta.device ≠ 本機 → 別台改過；device 相同 → 對齊 rev；_meta 損壞且本機 rev≠0 → 未知來源改過
+ *  - 所有成功上傳（全量／輕量／手動）都更新 rev 與 hash；輕量上傳先記 cc_sync_pending，下次檢查以雲端 device＋rev 確認
+ *  - 輕量上傳只在「最近一次檢查開始 ≤60 秒且判定雲端未變」時進行；檢查開始即把狀態設回 unknown
+ *  - 同裝置他分頁下載後（cc_sync_dl 旗標）本分頁停止上傳並重載；正在輸入時改顯示提示不自動重載
+ *  - hash 排除狀態快照（oasis_status）、忽略 sas_*_flags 的 ts、refueler_v1 以 entries 集合比較
  */
 (function () {
   'use strict';
@@ -82,7 +88,12 @@
   ];
 
   // 變更偵測時忽略的高頻噪音 key（仍會被上傳，只是不觸發同步）
-  const VOLATILE_KEYS = new Set(['cc_last_sync', 'cc_usage_stats', 'cc_quota_stat', 'cc_quota_ack']);
+  // v3.1：oasis_status（Oasis 每次開頁重寫的統計快照，含 ts）亦排除，否則開 Oasis 就永遠被判「有修改」
+  const VOLATILE_KEYS = new Set(['cc_last_sync', 'cc_usage_stats', 'cc_quota_stat', 'cc_quota_ack', 'oasis_status']);
+  const LEGACY_VOLATILE_KEYS = new Set(['cc_last_sync', 'cc_usage_stats', 'cc_quota_stat', 'cc_quota_ack']); // v3.0 hash 相容比對用
+  // 開頁會重寫 ts 的狀態型 key：比較時忽略 ts 欄位（SAS Hub 同源寫入；level/flags 變了仍算修改）
+  const TS_STRIP_KEYS = new Set(['sas_risk_flags', 'sas_week_flags', 'sas_pace_flags']);
+  const HASH_PREFIX = 'h2:';
 
   const BIG_LIMIT = 200000;      // 超過此長度的 key 走分塊
   const CHUNK_SIZE = 700000;     // 單一分塊檔上限（<1MB，避免 gist API 讀取截斷）
@@ -93,8 +104,12 @@
 
   // v3：裝置本地 key 與 _meta 永不上傳、永不還原（即使日後誤加進白名單也擋下）
   const META_KEY = '_meta';
-  const DEVICE_LOCAL_KEYS = ['cc_sync_rev', 'cc_device_id', 'cc_auto_hash', 'cc_auto_at', 'cc_big_manifest'];
+  const DEVICE_LOCAL_KEYS = ['cc_sync_rev', 'cc_device_id', 'cc_auto_hash', 'cc_auto_at', 'cc_big_manifest',
+    'cc_big_hash', 'cc_sync_pending', 'cc_sync_dl'];
   const CHECK_INTERVAL_MS = 5 * 60 * 1000;
+  const FRESH_MS = 60 * 1000;     // 離頁輕量上傳：最近一次檢查（開始時間）須在 60 秒內
+  const DIRTY_RECHECK_MS = 40 * 1000; // 有未上傳修改時，可見期間約每 40 秒重新檢查，讓離頁時檢查結果保持新鮮
+  const TICK_MS = 15 * 1000;
 
   function isSafeKey(k) {
     if (typeof k !== 'string' || k === META_KEY || DEVICE_LOCAL_KEYS.indexOf(k) >= 0) return false;
@@ -144,14 +159,68 @@
   }
 
   // djb2 —— 對快照（排除噪音 key）算變更指紋
+  function djb2(h, s) {
+    for (let j = 0; j < s.length; j++) h = ((h << 5) + h + s.charCodeAt(j)) | 0;
+    return h;
+  }
+  function stableStr(v) {
+    if (v === null || typeof v !== 'object') return String(JSON.stringify(v));
+    if (Array.isArray(v)) return '[' + v.map(stableStr).join(',') + ']';
+    return '{' + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ':' + stableStr(v[k]); }).join(',') + '}';
+  }
+  // 比較用的正規化值（只影響 hash，不影響上傳內容）
+  function canonVal(k, v) {
+    try {
+      if (TS_STRIP_KEYS.has(k)) {
+        const o = JSON.parse(v);
+        if (!o || typeof o !== 'object' || Array.isArray(o)) return v;
+        const c = Object.assign({}, o); delete c.ts;
+        return 'TS' + stableStr(c);
+      }
+      if (k === 'refueler_v1') {
+        // Refueler 開頁自有 Gist 合併會重排 entries、正規化型別：以 entries 集合比較，內容相同即視為未修改
+        const o = JSON.parse(v);
+        if (!o || typeof o !== 'object' || !Array.isArray(o.entries)) return v;
+        const seen = new Set(); const out = [];
+        for (const e of o.entries) {
+          if (!e || typeof e !== 'object') continue;
+          const c = Object.assign({}, e);
+          if (c.id != null) c.id = String(c.id);
+          ['cafe', 'item', 'dessert'].forEach(function (f) { if (c[f] != null && typeof c[f] !== 'string') c[f] = String(c[f]); });
+          ['coffeePrice', 'price', 'dessertPrice', 'amount'].forEach(function (f) { if (c[f] != null) { const n = Number(c[f]); c[f] = isFinite(n) ? n : 0; } });
+          const str = stableStr(c);
+          const idKey = c.id != null ? 'i' + c.id : 's' + str;
+          if (seen.has(idKey)) continue;
+          seen.add(idKey); out.push(str);
+        }
+        out.sort();
+        return 'RF[' + out.join(',') + ']';
+      }
+    } catch (e) {}
+    return v;
+  }
   function snapHash(snap) {
     let h = 5381;
     const keys = Object.keys(snap).filter(function (k) { return !VOLATILE_KEYS.has(k); }).sort();
-    for (let i = 0; i < keys.length; i++) {
-      const s = keys[i] + '' + snap[keys[i]] + '';
-      for (let j = 0; j < s.length; j++) h = ((h << 5) + h + s.charCodeAt(j)) | 0;
-    }
+    for (let i = 0; i < keys.length; i++) h = djb2(h, keys[i] + '\u0001' + canonVal(keys[i], snap[keys[i]]) + '\u0002');
+    return HASH_PREFIX + h;
+  }
+  // v3.0 的 hash（無前綴）：升級後第一次比對用，相符即換成新格式
+  function legacyHash(snap) {
+    let h = 5381;
+    const keys = Object.keys(snap).filter(function (k) { return !LEGACY_VOLATILE_KEYS.has(k); }).sort();
+    for (let i = 0; i < keys.length; i++) h = djb2(h, keys[i] + '\u0001' + snap[keys[i]] + '\u0002');
     return String(h);
+  }
+  // 大型 key（走分塊、輕量上傳不帶）的指紋：判斷輕量上傳後雲端是否已完整反映本機
+  function bigHash(snap) {
+    const big = {};
+    for (const k in snap) { if (snap[k].length > BIG_LIMIT) big[k] = snap[k]; }
+    return snapHash(big);
+  }
+  function hasData(snap) {
+    for (const k in snap) { if (!VOLATILE_KEYS.has(k)) return true; }
+    return false;
   }
 
   // 僅供本機測試覆寫（指向 mock Gist）；正式環境不設定時固定 api.github.com
@@ -176,26 +245,96 @@
     const n = parseInt(lsGet('cc_sync_rev') || '0', 10);
     return (isFinite(n) && n > 0) ? n : 0;
   }
-  // 本機是否有未上傳修改：沿用全量同步的快照 hash
-  function hasLocalChanges() { return snapHash(buildSnapshot()) !== lsGet('cc_auto_hash'); }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  // 本機快照是否與「雲端已反映的狀態」一致：true／false；null＝從未同步（無 cc_auto_hash）
+  function storedHashMatches(snap) {
+    const stored = lsGet('cc_auto_hash');
+    if (!stored) return null;
+    if (stored.indexOf(HASH_PREFIX) === 0) return stored === snapHash(snap);
+    if (stored === legacyHash(snap)) { lsSet('cc_auto_hash', snapHash(snap)); return true; } // v3.0 → v3.1 格式遷移
+    return false;
+  }
+  // 本機是否有未上傳修改；全新／空裝置（從未同步且白名單 key 全空）視為無修改
+  function hasLocalChanges() {
+    const snap = buildSnapshot();
+    const m = storedHashMatches(snap);
+    if (m === null) return hasData(snap);
+    return !m;
+  }
   function metaOf(snap) {
     const m = snap && snap[META_KEY];
-    if (!m || typeof m !== 'object') return { rev: 0, device: '' }; // 無 _meta（升級前資料）視為 rev 0
+    if (!m || typeof m !== 'object' || Array.isArray(m)) return { rev: 0, device: '', valid: false };
     const r = Number(m.rev);
-    return { rev: (isFinite(r) && r > 0) ? r : 0, device: typeof m.device === 'string' ? m.device : '' };
+    if (!(isFinite(r) && r > 0) || typeof m.device !== 'string' || !m.device) return { rev: 0, device: '', valid: false };
+    const hist = Array.isArray(m.hist) ? m.hist.map(Number).filter(function (x) { return isFinite(x) && x > 0; }).slice(0, 8) : [];
+    return { rev: r, device: m.device, valid: true, hist: hist };
   }
-  // 雲端是否比本機新（自己這台裝置上傳的不算，順手對齊本機 rev，涵蓋 keepalive 回應沒被處理的情況）
-  function cloudIsNewer(meta) {
-    if (!(meta.rev > localRev())) return false;
-    if (meta.device && meta.device === deviceId()) { lsSet('cc_sync_rev', String(meta.rev)); return false; }
-    return true;
+  // 上傳時寫入 _meta.hist：本次覆蓋前的雲端 rev 鏈（最多 8 個），讓先前上傳但沒收到回應的裝置能確認自己的上傳曾落地
+  function histFrom(meta) {
+    return (meta && meta.valid) ? [meta.rev].concat(meta.hist || []).slice(0, 8) : [];
+  }
+  function cloudHasData(snap) {
+    if (!snap) return false;
+    for (const k in snap) {
+      if (k === META_KEY) continue;
+      if (k === MANIFEST_KEY && (snap[k] === '{}' || !snap[k])) continue;
+      return true;
+    }
+    return false;
+  }
+  function readPending() {
+    try { const p = JSON.parse(lsGet('cc_sync_pending') || 'null'); return (p && typeof p === 'object') ? p : null; } catch (e) { return null; }
+  }
+  // 上傳確認成功（回應 ok，或下次檢查時雲端 device＝本機且 rev＝pending）：rev 與 hash 一起更新
+  function confirmUpload(rev, hash) {
+    lsSet('cc_sync_rev', String(rev));
+    if (hash) lsSet('cc_auto_hash', hash);
+    const p = readPending();
+    if (p && Number(p.rev) === rev) lsDel('cc_sync_pending');
+    _lastCloudRev = rev;
+  }
+  function settlePending(meta) {
+    const p = readPending();
+    if (!p) return;
+    const pr = Number(p.rev);
+    const landed = meta.valid && ((meta.device === deviceId() && pr === meta.rev) || (meta.hist || []).indexOf(pr) >= 0);
+    if (landed) {
+      // 雲端就是本機的 pending 版本，或後來的上傳是以它為基礎（hist 含 pending rev）→ 輕量上傳確實成功
+      confirmUpload(pr, typeof p.hash === 'string' ? p.hash : '');
+    } else if (!(Date.now() - Number(p.at || 0) < 30000)) {
+      lsDel('cc_sync_pending'); // 上傳未落地（失敗或已被後續版本取代）
+    }
+  }
+  /**
+   * 雲端狀態分類：'same'（雲端未變，或是本裝置自己上傳的）｜'newer'（被別台或未知來源改過）
+   * 只呼叫在 cloud 非 missing／corrupt 時。
+   */
+  function classifyCloud(cloud) {
+    const meta = cloud.meta;
+    const lr = localRev();
+    if (!meta.valid) {
+      if (!cloudHasData(cloud.snap)) return 'same';
+      if (lr !== 0) return 'newer';                       // 本機同步過 rev，雲端卻沒有有效 _meta → 未知來源改過
+      return hasData(buildSnapshot()) ? 'same' : 'newer'; // 升級前資料沿用舊行為；空裝置則下載
+    }
+    settlePending(meta);
+    const lr2 = localRev();
+    if (meta.rev === lr2) return 'same';
+    if (meta.device === deviceId()) {
+      // 同裝置（其他分頁或回應沒被處理的 keepalive）上傳的：對齊 rev
+      if (meta.rev < lr2) lsSet('cc_auto_hash', HASH_PREFIX + 'resend'); // 雲端比本機記錄舊（自己的上傳遺失）→ 視為有修改，下次重傳
+      lsSet('cc_sync_rev', String(meta.rev));
+      return 'same';
+    }
+    return 'newer';
   }
 
   /**
    * 讀取雲端 cc_sync.json（含 truncated → raw_url）。
    * strict=true（首頁 ↓／下載用）：內容缺失或格式錯誤即拋錯；
-   * strict=false（上傳前／開頁檢查）：格式錯誤時 snap=null、rev 視為 0（沿用舊行為，允許上傳修復）。
-   * 網路錯誤、HTTP 錯誤一律拋錯（呼叫端據此「不上傳、不下載」）。
+   * strict=false（上傳前／開頁檢查）：找不到 cc_sync.json → missing:true；格式錯誤 → corrupt:true（snap=null）。
+   *   自動檢查／自動上傳遇到 missing／corrupt 一律視為檢查失敗；僅手動上傳允許覆蓋修復。
+   * 網路錯誤、HTTP 錯誤、回應缺 files 一律拋錯（呼叫端據此「不上傳、不下載」）。
    */
   async function fetchCloud(strict) {
     const c = creds();
@@ -205,13 +344,15 @@
     catch (fe) { throw new Error('網路錯誤 ' + (fe && fe.message)); }
     if (!r.ok) throw new Error('GitHub ' + r.status + (r.status === 401 ? '（PAT 無效）' : r.status === 404 ? '（Gist ID 錯誤）' : ''));
     const j = await r.json();
-    const fileData = j && j.files ? j.files['cc_sync.json'] : null;
-    if (!fileData) {
+    if (!j || typeof j !== 'object' || !j.files || typeof j.files !== 'object') throw new Error('Gist 回應缺少 files');
+    const fileData = j.files['cc_sync.json'];
+    if (!fileData || typeof fileData !== 'object') {
       if (strict) throw new Error('Gist 內找不到 cc_sync.json');
-      return { j: j, snap: null, meta: { rev: 0, device: '' } };
+      return { j: j, snap: null, meta: metaOf(null), missing: true };
     }
     let content = fileData.content;
     if (fileData.truncated) {
+      if (typeof fileData.raw_url !== 'string' || !/^https?:\/\//.test(fileData.raw_url)) throw new Error('raw_url 缺漏');
       let rawR;
       try { rawR = await fetch(fileData.raw_url); }
       catch (fe) { throw new Error('讀取完整內容失敗 ' + (fe && fe.message)); }
@@ -225,7 +366,7 @@
     }
     if (!snap || typeof snap !== 'object' || Array.isArray(snap)) {
       if (strict) throw new Error('資料結構錯誤，請重新 Upload');
-      return { j: j, snap: null, meta: { rev: 0, device: '' } };
+      return { j: j, snap: null, meta: metaOf(null), corrupt: true };
     }
     return { j: j, snap: snap, meta: metaOf(snap) };
   }
@@ -247,8 +388,9 @@
     const nowStr = new Date().toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     try { localStorage.setItem('cc_last_sync', nowStr); } catch (e) {}
   }
-  // 只有「全量」成功才更新 hash 與節流時間戳；輕量 quickSync 不碰，
+  // 只有「全量」成功才更新節流時間戳 cc_auto_at；輕量 quickSync 不碰，
   // 否則開頁 8 秒內離頁一次就會把全量同步節流掉（大型 key 永遠輪不到上傳）。
+  // （v3.1：hash 則由所有成功上傳路徑更新，見 confirmUpload）
   function markFullSynced(hash) {
     stampLastSync();
     try {
@@ -274,8 +416,15 @@
       _fullInFlight = false;
     }
   }
+  function staleError() {
+    const err = new Error('資料已在其他分頁更新，請重新整理後再上傳');
+    err.ccStale = true;
+    return err;
+  }
   async function _uploadFullInner(c, opts) {
+    if (_tabStale) { showNotice('stale'); throw staleError(); } // 本分頁持有舊資料，任何上傳都擋下
     const syncSnap = buildSnapshot();
+    if (opts.auto && !hasData(syncSnap)) throw new Error('本機無資料，略過自動上傳'); // 空裝置永不自動覆蓋雲端
     const hash = snapHash(syncSnap); // 沿用 localStorage-only 快照算 hash，維持既有節流/變更偵測語意
     const full = await mergeMigratedKeys(syncSnap); // 上傳內容則補上已遷移到 IndexedDB 的圖片真實內容
     const small = {};
@@ -288,11 +437,14 @@
       } else small[k] = full[k];
     }
     // 1) 取現有檔案清單（供清理舊分塊）＋ v3：先查雲端版本，雲端較新時不覆蓋（opts.force 除外）
+    const checkStart = Date.now();
     const cloud = await fetchCloud(false);
     const gj = cloud.j || {};
     const existing = Object.keys(gj.files || {});
+    if ((cloud.missing || cloud.corrupt) && opts.auto) throw new Error('雲端資料缺漏或格式錯誤，已暫停自動上傳');
     _lastCloudRev = cloud.meta.rev;
-    if (!opts.force && cloudIsNewer(cloud.meta)) {
+    // 手動上傳遇到雲端缺檔／格式錯誤：允許覆蓋修復（沿用 v2 行為）
+    if (!opts.force && !cloud.missing && !cloud.corrupt && classifyCloud(cloud) === 'newer') {
       let err;
       if (hasLocalChanges()) {
         setState('conflict');
@@ -301,11 +453,13 @@
         err.ccConflict = true;
       } else {
         setState('newer');
-        err = new Error('雲端有較新資料，請先下載再上傳');
+        showNotice('update');
+        err = new Error('雲端有較新資料，請先更新（見頁面上方提示）');
         err.ccNewer = true;
       }
       throw err;
     }
+    if (_tabStale) { showNotice('stale'); throw staleError(); }
     const rev = Math.max(Date.now(), cloud.meta.rev + 1, localRev() + 1);
     // 2) 分塊並逐塊上傳
     const ts = Date.now().toString(36);
@@ -339,7 +493,7 @@
     const finalFiles = {};
     const smallWithManifest = Object.assign({}, small);
     smallWithManifest[MANIFEST_KEY] = JSON.stringify(manifest);
-    smallWithManifest[META_KEY] = { rev: rev, device: deviceId() };
+    smallWithManifest[META_KEY] = { rev: rev, device: deviceId(), hist: histFrom(cloud.meta) };
     finalFiles['cc_sync.json'] = { content: JSON.stringify(smallWithManifest) };
     let deletedStale = 0;
     for (const name of existing) {
@@ -351,20 +505,29 @@
     const fr = await gistFetch(c, 'PATCH', { files: finalFiles });
     if (!fr.ok) throw new Error('GitHub ' + fr.status);
     try { localStorage.setItem('cc_big_manifest', JSON.stringify(manifest)); } catch (e) {}
-    lsSet('cc_sync_rev', String(rev));
-    _lastCloudRev = rev;
+    lsSet('cc_big_hash', bigHash(syncSnap));
+    lsDel('cc_sync_pending'); // 較早的輕量上傳 pending 已被本次全量取代
+    confirmUpload(rev, hash);
+    _lastCloudMeta = { rev: rev, device: deviceId(), valid: true, hist: histFrom(cloud.meta) };
     markFullSynced(hash);
     setState('same');
+    _lastSameAt = checkStart;
     hideBanner();
+    hideNotice();
     return { keyCount: Object.keys(full).length, bigKeys: Object.keys(big), skippedBig: skippedBig, deletedStale: deletedStale };
   }
 
   // ── v3 雲端版本狀態 ──────────────────────────────────────────────
-  // unknown：尚未檢查｜same：雲端未變（可自動上傳）｜newer：雲端較新、本機無修改｜conflict：兩邊都改｜error：檢查失敗
+  // unknown：尚未檢查／檢查中｜same：雲端未變（可自動上傳）｜newer：雲端較新、本機無修改｜conflict：兩邊都改｜error：檢查失敗
+  // stale：同裝置其他分頁已下載新資料，本分頁持有舊資料（停止一切上傳，等重新整理）
   let _state = 'unknown';
   let _lastCloudRev = 0;
   let _checking = false;
   let _bannerSnoozed = false;
+  let _lastCheckStart = 0; // 最近一次檢查（含上傳前檢查）開始時間
+  let _lastSameAt = 0;     // 最近一次判定「雲端未變」的那次檢查的開始時間
+  let _tabStale = false;
+  let _lastCloudMeta = null; // 最近一次判定「雲端未變」時的雲端 _meta（輕量上傳寫 hist 用）
   function setState(s) {
     _state = s;
     if (s === 'same') _bannerSnoozed = false;
@@ -425,45 +588,63 @@
 
   // 下載完成後：本機 rev 對齊雲端、hash 設為下載後狀態（之後不被誤判為有修改）
   function markDownloaded(meta) {
-    const r = meta && meta.rev > 0 ? meta.rev : 0;
-    if (r > 0) lsSet('cc_sync_rev', String(r));
+    const r = meta && meta.valid && meta.rev > 0 ? meta.rev : 0;
+    lsSet('cc_sync_rev', String(r)); // 雲端無有效 _meta 時歸 0（升級前資料語意），避免下次又被判「未知來源改過」而重複下載
     _lastCloudRev = r;
-    lsSet('cc_auto_hash', snapHash(buildSnapshot()));
+    const snap = buildSnapshot();
+    lsSet('cc_auto_hash', snapHash(snap));
+    lsSet('cc_big_hash', bigHash(snap));
+    lsDel('cc_sync_pending');
+    lsSet('cc_sync_dl', String(r) + ':' + Date.now()); // 通知同裝置其他分頁：資料已被下載覆蓋
     setState('same');
     hideBanner();
+    hideNotice();
   }
 
-  // auto=true：自動下載（重驗條件＋防重載迴圈）；auto=false：使用者在橫幅按「下載雲端版」
-  async function downloadAndReload(auto, cloud) {
+  // auto=true：自動下載（重驗條件＋防重載迴圈＋輸入保護）；auto=false：使用者在衝突橫幅按「下載雲端版」
+  // userClick=true：使用者在「雲端有新資料」提示按〔立即更新〕（仍重驗本機修改，但不受輸入保護與重載防迴圈限制）
+  async function downloadAndReload(auto, cloud, userClick) {
+    if (_tabStale) { showNotice('stale'); return false; }
     if (!cloud) cloud = await fetchCloud(true);
     if (!cloud.snap) throw new Error('Gist 內找不到 cc_sync.json');
+    const guardVal = cloud.meta.valid ? String(cloud.meta.rev) : 'nometa';
     if (auto) {
-      let guard = null;
-      try { guard = sessionStorage.getItem('cc_sync_dl_rev'); } catch (e) {}
-      if (guard === String(cloud.meta.rev)) { setState('error'); return false; } // 同一 rev 已自動下載過一次，避免重載迴圈
-      if (hasLocalChanges()) { setState('conflict'); showBanner(false); return false; }
+      if (!userClick) {
+        let guard = null;
+        try { guard = sessionStorage.getItem('cc_sync_dl_rev'); } catch (e) {}
+        if (guard === guardVal) { setState('error'); return false; } // 同一版本已自動下載過一次，避免重載迴圈
+      }
+      if (hasLocalChanges()) { setState('conflict'); hideNotice(); showBanner(!!userClick); return false; }
+      if (!userClick && isUserEditing()) { setState('newer'); showNotice('update'); return false; } // 正在輸入：不覆蓋、不重載
     }
     await applySnapshot(cloud.j, cloud.snap);
     markDownloaded(cloud.meta);
-    try { sessionStorage.setItem('cc_sync_dl_rev', String(cloud.meta.rev)); } catch (e) {}
+    try { sessionStorage.setItem('cc_sync_dl_rev', guardVal); } catch (e) {}
     try { window.location.reload(); } catch (e) {}
     return true;
   }
 
   // ── 開頁／前景／定時：檢查雲端版本 ────────────────────────────────
-  async function checkCloud(isOpen) {
-    if (!creds() || _checking || _fullInFlight) return;
+  async function checkCloud() {
+    if (!creds() || _checking || _fullInFlight || _tabStale) return;
     _checking = true;
+    const startedAt = Date.now();
+    _lastCheckStart = startedAt;
+    setState('unknown'); // 請求掛著時不可沿用舊結果（離頁輕量上傳會被擋下）
     try {
       const cloud = await fetchCloud(false);
+      if (cloud.missing || cloud.corrupt) { setState('error'); return; } // 回應異常：不上傳、不下載
       _lastCloudRev = cloud.meta.rev;
-      if (!cloudIsNewer(cloud.meta)) {
+      if (classifyCloud(cloud) === 'same') {
         setState('same');
+        _lastSameAt = startedAt;
+        _lastCloudMeta = cloud.meta;
         hideBanner();
-        if (isOpen) maybeAutoFull();
+        hideNotice();
+        maybeAutoFull();
         return;
       }
-      if (hasLocalChanges()) { setState('conflict'); showBanner(false); return; }
+      if (hasLocalChanges()) { setState('conflict'); hideNotice(); showBanner(false); return; }
       setState('newer');
       await downloadAndReload(true, cloud);
     } catch (e) {
@@ -485,6 +666,7 @@
         document.addEventListener('DOMContentLoaded', function () { showBanner(fromManual); }, { once: true });
         return;
       }
+      hideNotice();
       if (document.getElementById(BANNER_ID)) return;
       const bar = document.createElement('div');
       bar.id = BANNER_ID;
@@ -524,16 +706,84 @@
     } catch (e) {}
   }
 
-  // ── 開頁自動全量同步（hash 變更＋10 分鐘節流；僅在檢查判定雲端未變後呼叫） ──
+  // ── 單鈕提示（雲端有新資料／其他分頁已更新；與衝突橫幅同樣式） ─────────
+  const NOTICE_ID = 'cc-sync-notice';
+  function hideNotice() {
+    try { const el = document.getElementById(NOTICE_ID); if (el) el.remove(); } catch (e) {}
+  }
+  function showNotice(kind) {
+    try {
+      if (!document.body) {
+        document.addEventListener('DOMContentLoaded', function () { showNotice(kind); }, { once: true });
+        return;
+      }
+      const old = document.getElementById(NOTICE_ID);
+      if (old && old.getAttribute('data-kind') === kind) return;
+      if (old) old.remove();
+      hideBanner();
+      const bar = document.createElement('div');
+      bar.id = NOTICE_ID;
+      bar.setAttribute('role', 'status');
+      bar.setAttribute('data-kind', kind);
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483000;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 16px;background:#f4ede1;color:#3b372f;border-bottom:1px solid #d6cab6;box-shadow:0 2px 10px rgba(60,50,35,.12);font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;font-style:normal;box-sizing:border-box';
+      const msg = document.createElement('span');
+      msg.style.cssText = 'flex:1 1 260px;font-style:normal';
+      msg.textContent = kind === 'stale' ? '資料已在其他分頁更新，這個分頁的修改不會再儲存，請重新整理' : '雲端有新資料（另一台裝置更新過）';
+      bar.appendChild(msg);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-act', kind === 'stale' ? 'reload' : 'update');
+      b.textContent = kind === 'stale' ? '立即重新整理' : '立即更新';
+      b.style.cssText = 'font:inherit;font-style:normal;font-size:13px;padding:6px 12px;border-radius:8px;cursor:pointer;background:#5b7891;color:#fff;border:1px solid #5b7891;';
+      b.addEventListener('click', function () {
+        if (kind === 'stale') { try { window.location.reload(); } catch (e) {} return; }
+        b.disabled = true;
+        msg.textContent = '下載雲端資料中…';
+        downloadAndReload(true, null, true).then(function (ok) { if (!ok) hideNotice(); })
+          .catch(function (e) { b.disabled = false; msg.textContent = '更新失敗：' + ((e && e.message) || '未知原因') + '，請稍後再試'; });
+      });
+      bar.appendChild(b);
+      document.body.appendChild(bar);
+    } catch (e) {}
+  }
+
+  // ── 輸入保護：正在輸入或有未存的輸入值時，不自動覆蓋／重載 ─────────────
+  const _touched = new Set();
+  try {
+    document.addEventListener('input', function (e) {
+      try { const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) _touched.add(t); } catch (x) {}
+    }, true);
+  } catch (e) {}
+  const NON_TEXT_INPUT = ['button', 'submit', 'reset', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'hidden'];
+  function isEditable(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (el.isContentEditable) return true;
+    if (el.tagName === 'TEXTAREA') return !el.readOnly && !el.disabled;
+    if (el.tagName === 'INPUT') return !el.readOnly && !el.disabled && NON_TEXT_INPUT.indexOf(String(el.type || 'text').toLowerCase()) < 0;
+    return false;
+  }
+  function isUserEditing() {
+    try {
+      if (isEditable(document.activeElement)) return true;
+      let dirty = false;
+      _touched.forEach(function (el) {
+        if (!el.isConnected) { _touched.delete(el); return; } // 頁面重新渲染後被替換＝已存檔
+        if (el.value !== el.defaultValue) dirty = true;        // 打過字、值仍與渲染時不同＝可能未存
+      });
+      return dirty;
+    } catch (e) { return true; } // 判斷不了就保守視為輸入中（不自動重載）
+  }
+
+  // ── 自動全量同步（hash 變更＋10 分鐘節流；僅在檢查判定雲端未變後呼叫） ──
   function maybeAutoFull() {
     try {
       const c = creds();
-      if (!c || _state !== 'same') return;
+      if (!c || _state !== 'same' || _tabStale) return;
       const last = parseInt(localStorage.getItem('cc_auto_at') || '0', 10);
       if (Date.now() - last < AUTO_MIN_GAP_MS) return;
-      const hash = snapHash(buildSnapshot());
-      if (hash === localStorage.getItem('cc_auto_hash')) return;
-      uploadFull().catch(function (e) { console.warn('[cc_autosync] 自動全量同步略過：', e.message); });
+      const snap = buildSnapshot();
+      if (!hasData(snap) || storedHashMatches(snap) === true) return;
+      uploadFull({ auto: true }).catch(function (e) { console.warn('[cc_autosync] 自動全量同步略過：', e.message); });
     } catch (e) {}
   }
 
@@ -541,31 +791,78 @@
   let _fired = false;
   function quickSync() {
     try {
-      if (_fired) return;
+      if (_fired || _tabStale) return;
       if (_fullInFlight) return; // 全量同步進行中，避免舊 manifest 蓋掉新索引（競態防護）
-      if (_state !== 'same') return; // v3：最近一次檢查未判定「雲端未變」（含衝突、檢查失敗、尚未檢查）→ 不上傳
-      _fired = true;
-      setTimeout(function () { _fired = false; }, 5000);
+      if (_state !== 'same') return; // 最近一次檢查未判定「雲端未變」（含檢查中、衝突、檢查失敗、尚未檢查）→ 不上傳
+      if (!(Date.now() - _lastSameAt <= FRESH_MS)) return; // v3.1：檢查結果超過 60 秒不可沿用；資料留在本機，下次開頁檢查後再傳
       const c = creds();
       if (!c) return;
       const full = buildSnapshot();
+      if (!hasData(full)) return;
+      if (storedHashMatches(full) === true) return;
+      _fired = true;
+      setTimeout(function () { _fired = false; }, 5000);
       const hash = snapHash(full);
-      if (hash === localStorage.getItem('cc_auto_hash')) return;
-      const small = {};
-      for (const k in full) { if (full[k].length <= BIG_LIMIT) small[k] = full[k]; }
+      const small = {}, bigNow = {};
+      for (const k in full) { if (full[k].length <= BIG_LIMIT) small[k] = full[k]; else bigNow[k] = full[k]; }
+      // 大型 key 與上次全量／下載時相同 → 上傳後雲端即完整反映本機，可更新 hash；否則保留「有修改」讓下次全量補傳
+      const bh = lsGet('cc_big_hash');
+      const bigSame = bh ? bh === snapHash(bigNow) : Object.keys(bigNow).length === 0;
+      const pendHash = bigSame ? hash : '';
       // 保留上次全量上傳的 manifest，避免輕量同步蓋掉大型 key 的索引
       small[MANIFEST_KEY] = localStorage.getItem('cc_big_manifest') || '{}';
       const rev = Math.max(Date.now(), _lastCloudRev + 1, localRev() + 1);
-      small[META_KEY] = { rev: rev, device: deviceId() };
+      const hist = histFrom(_lastCloudMeta);
+      small[META_KEY] = { rev: rev, device: deviceId(), hist: hist };
       const body = { files: { 'cc_sync.json': { content: JSON.stringify(small) } } };
       const useKeepalive = JSON.stringify(body).length < KEEPALIVE_LIMIT;
+      // keepalive 回應可能永遠收不到（頁面已卸載）：先記 pending，下次檢查看到雲端 device＝本機且 rev＝pending 即判定成功
+      lsSet('cc_sync_pending', JSON.stringify({ rev: rev, hash: pendHash, at: Date.now() }));
       gistFetch(c, 'PATCH', body, useKeepalive)
         .then(function (r) {
-          if (r.ok) { stampLastSync(); lsSet('cc_sync_rev', String(rev)); _lastCloudRev = rev; }
-        }) // 輕量同步不更新 cc_auto_at/hash（見 markFullSynced 註解）
+          if (r.ok) { // 輕量同步不更新 cc_auto_at（見 markFullSynced 註解）
+            stampLastSync();
+            confirmUpload(rev, pendHash);
+            _lastCloudMeta = { rev: rev, device: deviceId(), valid: true, hist: hist };
+          }
+        })
         .catch(function () {});
     } catch (e) {}
   }
+
+  // ── 同裝置其他分頁下載了新資料（cc_sync_dl 變更）→ 本分頁停止上傳並重載 ──
+  // 正在輸入而不自動重載時：本分頁對白名單 key 的寫入一律略過（頁面記憶體裡是舊資料，
+  // 存檔會把剛下載的新資料蓋回舊版，之後再被當成「本機修改」上傳）
+  function guardStaleWrites() {
+    try {
+      const proto = Storage.prototype;
+      if (proto.setItem && proto.setItem.__ccStaleGuard) return;
+      const origSet = proto.setItem, origDel = proto.removeItem;
+      const blocked = function (st, k) {
+        if (!_tabStale || st !== window.localStorage) return false;
+        const key = String(k);
+        if (!isSafeKey(key) || VOLATILE_KEYS.has(key)) return false;
+        showNotice('stale');
+        try { console.warn('[cc_autosync] 本分頁資料已過期，略過寫入：' + key); } catch (e) {}
+        return true;
+      };
+      const wSet = function (k, v) { if (blocked(this, k)) return; return origSet.apply(this, arguments); };
+      const wDel = function (k) { if (blocked(this, k)) return; return origDel.apply(this, arguments); };
+      wSet.__ccStaleGuard = true;
+      proto.setItem = wSet;
+      proto.removeItem = wDel;
+    } catch (e) {}
+  }
+  window.addEventListener('storage', function (e) {
+    try {
+      if (e.key !== 'cc_sync_dl' || !e.newValue || e.newValue === e.oldValue) return;
+      _tabStale = true;
+      setState('stale');
+      hideBanner();
+      if (isUserEditing()) { guardStaleWrites(); showNotice('stale'); }
+      else { guardStaleWrites(); window.location.reload(); }
+    } catch (x) {}
+  });
 
   let _lastVisibleCheck = 0;
   document.addEventListener('visibilitychange', function () {
@@ -573,18 +870,24 @@
     // 回到前景：重新檢查（10 秒內不重複）
     if (Date.now() - _lastVisibleCheck < 10000) return;
     _lastVisibleCheck = Date.now();
-    checkCloud(false);
+    checkCloud();
   });
   window.addEventListener('pagehide', quickSync);
 
   // 開頁檢查（取代 v2 的 8 秒後直接 maybeAutoFull）
-  setTimeout(function () { checkCloud(true); }, 1500);
-  // 頁面可見時每 5 分鐘重新檢查
-  setInterval(function () { if (!document.hidden) checkCloud(false); }, CHECK_INTERVAL_MS);
+  setTimeout(function () { checkCloud(); }, 1500);
+  // 頁面可見時：每 5 分鐘重新檢查；有未上傳修改時約每 40 秒檢查一次（讓離頁輕量上傳有新鮮的檢查結果可用）
+  setInterval(function () {
+    try {
+      if (document.hidden || _checking || _tabStale || !creds()) return;
+      const age = Date.now() - _lastCheckStart;
+      if (age >= CHECK_INTERVAL_MS || (age >= DIRTY_RECHECK_MS && _state === 'same' && hasLocalChanges())) checkCloud();
+    } catch (e) {}
+  }, TICK_MS);
 
   // 供 CC 首頁手動同步按鈕共用同一套核心（強制上傳、無節流）
   window.ccSyncCore = {
     buildSnapshot: buildSnapshot, uploadFull: uploadFull, MANIFEST_KEY: MANIFEST_KEY, isSafeKey: isSafeKey,
-    fetchCloud: fetchCloud, applySnapshot: applySnapshot, markDownloaded: markDownloaded
+    fetchCloud: fetchCloud, applySnapshot: applySnapshot, markDownloaded: markDownloaded, snapHash: snapHash
   };
 })();
