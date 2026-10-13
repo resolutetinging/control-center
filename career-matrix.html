@@ -330,7 +330,7 @@ function normJournal(it){
   }
   return out;
 }
-// 主題清單（規格 9 節）：陣列、id 字串（不重複）、name 非空字串 ≤80、state 三值（不合格→待學）、learnedAt 日期有效才保留（v1.7 起不再寫入也不清除，既有值原樣保留）、createdAt 有效否則今天；上限 100 個
+// 主題清單（規格 9 節）：陣列、id 字串（不重複）、name 非空字串 ≤80、state 三值（不合格→待學）、learnedAt 日期有效才保留（換到已學或在已學欄新增時寫入今天，背景用、不顯示；換離不清）、createdAt 有效否則今天；上限 100 個
 function normTopics(it){
   const out=[];
   if(!Array.isArray(it.topics))return out;
@@ -755,7 +755,7 @@ function addTopic(c,it,col){
   const name=str(te?te.value:'',80).trim();
   if(!name)return; // 空白不新增
   if(it.topics.length>=TOPIC_MAX){toast('主題已達 '+TOPIC_MAX+' 個上限');return;}
-  it.topics.push({id:uid('t'),name,state:st,learnedAt:'',createdAt:today(),memo:''}); // v1.7 不再寫 learnedAt
+  it.topics.push({id:uid('t'),name,state:st,learnedAt:st==='已學'?today():'',createdAt:today(),memo:''}); // 掌握較多欄新增：背景記推進日（不顯示）
   TNEW[it.id+'|'+st]='';
   touch(c);save();render();
   for(const el of document.querySelectorAll('#maint .it [data-f="tnew"]')){
@@ -836,7 +836,7 @@ function onMaintClick(e){
       if(act==='tset'){
         const v=b.dataset.s;tMenu='';
         if(TSTATES.indexOf(v)<0||tp.state===v){render();focusTBtn(tid);return;}
-        tp.state=v; // 換欄只改 state；不寫也不清 learnedAt（規格 10 節）
+        tp.state=v;if(v==='已學')tp.learnedAt=today(); // 換欄改 state；換到已學時背景記 learnedAt=今天（僅供 SAS Hub 統計，不顯示）；換離不清
         touch(c);save();render();focusTBtn(tid);return;
       }
       if(act==='tmemoopen'){
