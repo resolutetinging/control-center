@@ -6,6 +6,13 @@
       "date": "2026-10-13",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v3_live.html",
+      "summary": "手機也能查名詞定義：窄螢幕頁首新增定義按鈕，點開從下方滑出全螢幕面板，內容與電腦版側欄是同一份。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3_live.html",
       "summary": "睡眠定義補上理論與來源：十項定義改成摘要加展開，附研究依據、本頁算法與解讀限制。修正分期建議範圍誤標AASM的問題，深層改用文獻的10到25%，自訂門檻都標明本頁自訂。趨勢圖兩種總時長標籤改得更好讀。",
       "reason": "user_request"
     },
