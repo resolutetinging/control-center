@@ -6,6 +6,20 @@
       "date": "2026-10-13",
       "project": "Control Center",
       "file": "career-matrix.html",
+      "summary": "四象限方向也能調整順序：維護區各象限分組旁按調整順序，才出現上下移按鈕，只在同一象限內交換位置。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "Spec",
+      "summary": "規格書整合：四象限規格整份改寫成現行規格加版本紀錄，另外五份規格補上今天的改動並重新對準行號，改前原檔都有備份。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
+      "file": "career-matrix.html",
       "summary": "四象限看板細節調整：選取鈕與標題置中對齊，方向說明放在標題旁，細項名稱改粗體，展開鈕改成較大的圓形箭頭。",
       "reason": "user_request"
     },
