@@ -5,6 +5,13 @@
     {
       "date": "2026-10-13",
       "project": "Control Center",
+      "file": "index.html／cc_track.js／Spec",
+      "summary": "整體健檢：所有頁面語法、Dock對應、備份登記與線上版本都正常，沒有一定要修的問題。順手把兩處舊標籤改成Career與Finance，並把五份規格書與記憶檔對齊昨天的改版。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-13",
+      "project": "Control Center",
       "file": "localStorage",
       "summary": "清理舊Groq金鑰：盤點瀏覽器裡的Groq金鑰只看末四碼，找出兩把沒在用的舊金鑰，使用者在Groq後台撤銷後從瀏覽器刪除。另發現WordVault用自己的一把金鑰，已保留。",
       "reason": "maintain"
