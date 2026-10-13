@@ -78,9 +78,10 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 
 /* ── 點選放置 ── */
-.pick-btn{flex-shrink:0;font-size:var(--fs3);font-weight:600;padding:5px 11px;border-radius:8px;border:.5px solid var(--ac);background:transparent;color:var(--ac);cursor:pointer;line-height:1.4;white-space:nowrap}
+.pick-btn{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:.5px solid var(--ac);background:var(--bg2);color:var(--ac);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pick-btn svg{width:18px;height:18px;display:block}
 .pick-btn:hover{background:var(--ac-tint)}
-.pick-btn.on{background:var(--ac);color:#fff}
+.pick-btn.on{background:var(--ac);color:#fff;box-shadow:0 0 0 2px var(--ac-tint2)}
 .sel-on{box-shadow:0 0 0 2.5px var(--ac)!important;border-color:var(--ac)!important;background:var(--ac-tint)}
 .picking .q,.picking .grp[data-drop="0"]{cursor:pointer}
 .picking .q:hover{box-shadow:0 0 0 2px var(--ac-l)}
@@ -131,12 +132,15 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .sec-lbl{font-size:var(--fs4);font-weight:700;letter-spacing:.08em;color:var(--ac);margin:18px 0 10px}
 .it{border:.5px solid var(--bstr);border-radius:12px;background:#faf8f4;padding:12px 13px}
 .it-top{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.it-no{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--ac-tint2);color:var(--ac);font-size:var(--fs4);font-weight:700;display:flex;align-items:center;justify-content:center}
+.it-no{flex-shrink:0;min-width:22px;height:22px;padding:0 5px;box-sizing:border-box;border-radius:11px;background:var(--ac-tint2);color:var(--ac);font-size:var(--fs4);font-weight:700;display:flex;align-items:center;justify-content:center}
 .it-top .inp{flex:1;min-width:0}
-.it-del{flex-shrink:0;font-size:var(--fs4);padding:5px 9px;border-radius:8px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer}
-.it-del:hover{background:rgba(192,80,80,.12);color:#a04040}
-.it-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
-.it-row .sel{width:104px;flex-shrink:0}
+.it{position:relative}
+.it-ask{margin:-4px 0 10px}
+.st-ic.st0{color:var(--faint)}
+.st-ic.tr-ic{color:var(--sub)}
+.st-ic.tr-ic svg{width:16px;height:16px;display:block}
+.st-ic.tr-ic:hover,.st-ic.tr-ic:focus-visible{color:#a04040;border-color:rgba(192,80,80,.45);background:rgba(192,80,80,.1)}
+.tmenu.imenu{left:auto;right:13px;top:56px;min-width:150px}
 .it-lbl{font-size:var(--fs4);font-weight:600;color:var(--faint);margin:2px 0 5px}
 .jr-ask{font-size:var(--fs3);color:#a04040}
 .jempty{font-size:var(--fs3);color:var(--faint);padding:2px 0 6px}
@@ -207,7 +211,6 @@ button,input,select,textarea{font-family:inherit;color:inherit}
   .q[data-q="1"]{order:1}.q[data-q="2"]{order:2}.q[data-q="3"]{order:3}.q[data-q="4"]{order:4}
   .mc-body{padding:4px 10px 14px}
   .tree{margin-left:4px;padding-left:8px}
-  .it-row{flex-wrap:wrap}
 }
 </style>
 </head>
@@ -479,8 +482,12 @@ let delAskId='';
 const MEMO_OPEN=new Set(); // 展開備註編輯的主題 id（僅頁面變數）
 const TNEW={};          // 新增主題輸入草稿 {itemId|state:text}
 let tDelAsk='';
+let iMenu='';           // 開啟狀態選單的細項 id
+let iDelAsk='';         // 等待確認刪除的細項 id
 let tMenu='';           // 開啟狀態選單的主題 id
-const TICON=['◔','◑','●'];         // 等待確認刪除的主題 id
+const TICON=['◔','◑','●'];
+const ICON_S=['○','◔','◑','●'];     // 細項四狀態符號（依 STATUSES 順序）
+const TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';         // 等待確認刪除的主題 id
 function tkHtml(it){
   if(!it.topics.length)return'<div class="cd-tp">尚無主題</div>';
   return'<div class="cd-tk">'+TSTATES.map((st,si)=>{
@@ -499,7 +506,9 @@ function _focusKey(el){
 }
 function pickBtn(c){
   const on=c.id===selCard;
-  return`<button class="pick-btn${on?' on':''}" data-pick="${esc(c.id)}" aria-pressed="${on}">${on?'已選取':'選取'}</button>`;
+  const lb=on?'已選取，點象限放入':'選取（放到象限）';
+  const svg=on?'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none"/><circle cx="12" cy="12" r="3.6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>';
+  return`<button type="button" class="pick-btn${on?' on':''}" data-pick="${esc(c.id)}" aria-pressed="${on}" aria-label="${lb}" title="${lb}">${svg}</button>`;
 }
 function clearSel(){selCard='';selQ=0;}
 function updatePickHint(){
@@ -584,13 +593,12 @@ function topicsHtml(it){
     h+=`<div class="tcol" data-col="${esc(st)}"><div class="tcol-h">${esc(TLBL[st])}（${list.length}）</div>`;
     list.forEach(t=>{
       h+=`<div class="tcard" data-tid="${esc(t.id)}"><div class="tcard-t"><input class="inp tpn" data-f="tname" value="${esc(t.name)}" maxlength="80" aria-label="主題名稱">
-        <button type="button" class="st-ic st${si+1}" data-act="tstate" aria-haspopup="menu" aria-expanded="${tMenu===t.id}" aria-label="掌握狀態：${esc(TLBL[st])}，點擊變更" title="${esc(TLBL[st])}">${TICON[si]}</button></div>`
+        <button type="button" class="st-ic st${si+1}" data-act="tstate" aria-haspopup="menu" aria-expanded="${tMenu===t.id}" aria-label="掌握狀態：${esc(TLBL[st])}，點擊變更" title="${esc(TLBL[st])}">${TICON[si]}</button>
+        <button type="button" class="st-ic tr-ic" data-act="tdel" aria-label="刪除主題" title="刪除">${TRASH}</button></div>`
         +(tMenu===t.id?`<div class="tmenu" role="menu" aria-label="選擇掌握狀態">${TSTATES.map((x,xi)=>`<button type="button" role="menuitemradio" aria-checked="${x===st}" data-act="tset" data-s="${esc(x)}"><span class="ck">${x===st?'✓':''}</span><span>${TICON[xi]} ${esc(TLBL[x])}</span></button>`).join('')}</div>`:'')
-        +'<div class="tcard-b">'
         +(tDelAsk===t.id
-          ?`<span class="jr-ask">確定刪除？</span><button class="btn danger" data-act="tdelok">確定</button><button class="btn plain" data-act="tdelno">取消</button>`
-          :`<button class="btn plain" data-act="tdel">刪除</button>`)
-        +'</div>'
+          ?`<div class="tcard-b"><span class="jr-ask">確定刪除？</span><button class="btn danger" data-act="tdelok">確定</button><button class="btn plain" data-act="tdelno">取消</button></div>`
+          :'')
         +(MEMO_OPEN.has(t.id)
           ?`<textarea class="ta tmemo" data-f="tmemo" maxlength="500" rows="1" placeholder="備註（只在這裡顯示）" aria-label="主題備註">${esc(t.memo)}</textarea>`
           :`<button type="button" class="btn plain memo-btn" data-act="tmemoopen">${t.memo?'備註：'+esc(t.memo.split('\n')[0].slice(0,24)):'＋ 備註'}</button>`)
@@ -603,13 +611,14 @@ function topicsHtml(it){
 }
 function itemHtml(it,k){
   const letter=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');
+  const si=Math.max(0,STATUSES.indexOf(it.status));
   return`<div class="it" data-iid="${esc(it.id)}">
-    <div class="it-top"><span class="it-no">${esc(letter)}</span>
-      <input class="inp" data-f="iname" value="${esc(it.name)}" maxlength="80" placeholder="細項名稱（例如：英文簡報能力）">
-      <button class="it-del" data-act="idel">刪除</button></div>
-    <div class="it-row">
-      <select class="sel" data-f="istatus">${STATUSES.map(s=>`<option value="${esc(s)}"${s===it.status?' selected':''}>${esc(s)}</option>`).join('')}</select>
-    </div>
+    <div class="it-top"><span class="it-no">${esc(letter)}.</span>
+      <input class="inp" data-f="iname" value="${esc(it.name)}" maxlength="80" placeholder="細項名稱（例如：英文簡報能力）" aria-label="細項名稱">
+      <button type="button" class="st-ic st${si}" data-act="istate" aria-haspopup="menu" aria-expanded="${iMenu===it.id}" aria-label="細項狀態：${esc(it.status)}，點擊變更" title="${esc(it.status)}">${ICON_S[si]}</button>
+      <button type="button" class="st-ic tr-ic" data-act="idel" aria-label="刪除細項" title="刪除">${TRASH}</button></div>
+    ${iMenu===it.id?`<div class="tmenu imenu" role="menu" aria-label="選擇細項狀態">${STATUSES.map((x,xi)=>`<button type="button" role="menuitemradio" aria-checked="${x===it.status}" data-act="iset" data-s="${esc(x)}"><span class="ck">${x===it.status?'✓':''}</span><span>${ICON_S[xi]} ${esc(x)}</span></button>`).join('')}</div>`:''}
+    ${iDelAsk===it.id?`<div class="tcard-b it-ask"><span class="jr-ask">確定刪除此細項？其推進紀錄會一併刪除。</span><button type="button" class="btn danger" data-act="idelok">確定</button><button type="button" class="btn plain" data-act="idelno">取消</button></div>`:''}
     <div class="it-lbl">主題清單（${it.topics.length}）</div>
     ${topicsHtml(it)}
   </div>`;
@@ -717,10 +726,7 @@ function onMaintChange(e){
     tp.memo=v;touch(c);save();render();return; // 主題備註不寫 log
   }
   if(f==='iname'){it.name=str(t.value,80).trim();}
-  else if(f==='istatus'){
-    if(STATUSES.indexOf(t.value)<0)return;
-    const from=it.status;it.status=t.value;logChange(c.id,it.id,'status',from,it.status);
-  }else return;
+  else return;
   it.updatedAt=nowStr();touch(c);save();render();
 }
 function growNote(t){if(t.scrollHeight>0){t.style.height='auto';t.style.height=t.scrollHeight+'px';}}
@@ -745,6 +751,15 @@ function addTopic(c,it,col){
 }
 function focusTBtn(tid){
   for(const el of document.querySelectorAll('#maint .st-ic')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+}
+function focusIBtn(iid,act){
+  for(const el of document.querySelectorAll('#maint .it-top [data-act="'+act+'"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid){el.focus();break;}}
+}
+function closeIMenu(refocus){
+  const id=iMenu;if(!id)return false;
+  iMenu='';render();
+  if(refocus)focusIBtn(id,'istate');
+  return true;
 }
 function closeTMenu(refocus){
   const id=tMenu;if(!id)return false;
@@ -792,15 +807,44 @@ function onMaintClick(e){
         for(const el of document.querySelectorAll('#maint .tmemo')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
         return;
       }
-      if(act==='tdel'){tDelAsk=tid;render();return;}
-      if(act==='tdelno'){tDelAsk='';render();return;}
+      if(act==='tdel'){
+        tDelAsk=tid;iDelAsk='';render();
+        for(const el of document.querySelectorAll('#maint .tcard-b [data-act="tdelno"]')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+        return;
+      }
+      if(act==='tdelno'){
+        tDelAsk='';render();
+        for(const el of document.querySelectorAll('#maint .tcard-t [data-act="tdel"]')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+        return;
+      }
       if(act==='tdelok'){it.topics=it.topics.filter(x=>x.id!==tid);tDelAsk='';touch(c);save();render();return;}
     }
-    else if(act==='idel'){
-      const row=b.closest('.it');const iid=row&&row.dataset.iid;
-      c.items=c.items.filter(i=>i.id!==iid);
-      DB.log=DB.log.filter(l=>!(l.cardId===c.id&&l.itemId===iid)); // 刪細項連帶刪 log
-      touch(c);save();render();
+    else if(act==='istate'||act==='iset'||act==='idel'||act==='idelok'||act==='idelno'){
+      const row=b.closest('.it'),iid=row&&row.dataset.iid,it=c.items.find(i=>i.id===iid);
+      if(!it)return;
+      if(act==='istate'){
+        iMenu=(iMenu===iid)?'':iid;iDelAsk='';tMenu='';render();
+        if(iMenu===iid){const o=document.querySelector('#maint .imenu [aria-checked="true"]');if(o)o.focus();}
+        else focusIBtn(iid,'istate');
+        return;
+      }
+      if(act==='iset'){
+        const v=b.dataset.s;iMenu='';
+        if(STATUSES.indexOf(v)>=0&&v!==it.status){
+          const from=it.status;it.status=v;logChange(c.id,it.id,'status',from,v);
+          it.updatedAt=nowStr();touch(c);save();
+        }
+        render();focusIBtn(iid,'istate');return;
+      }
+      if(act==='idel'){iDelAsk=iid;iMenu='';tDelAsk='';render();focusIBtn(iid,'idel');
+        for(const el of document.querySelectorAll('#maint .it-ask [data-act="idelno"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid){el.focus();break;}}
+        return;}
+      if(act==='idelno'){iDelAsk='';render();focusIBtn(iid,'idel');return;}
+      if(act==='idelok'){
+        c.items=c.items.filter(i=>i.id!==iid);
+        DB.log=DB.log.filter(l=>!(l.cardId===c.id&&l.itemId===iid)); // 刪細項連帶刪 log
+        iDelAsk='';touch(c);save();render();return;
+      }
     }
     else if(act==='delask'){delAskId=c.id;render();}
     else if(act==='delno'){delAskId='';render();}
@@ -859,11 +903,13 @@ $('board').addEventListener('click',e=>{
   if(qz)pickQuad(Number(qz.dataset.q));
 });
 document.addEventListener('click',e=>{
+  if(iMenu&&!e.target.closest('.imenu,[data-act="istate"],[data-act="iset"]'))closeIMenu(false);
   if(!tMenu)return;
   if(e.target.closest('.tmenu,[data-act="tstate"],[data-act="tset"]'))return;
   closeTMenu(false);
 });
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&iMenu){e.preventDefault();closeIMenu(true);return;}
   if(e.key==='Escape'&&tMenu){e.preventDefault();closeTMenu(true);return;}
   if(e.key==='Escape'&&(selCard||selQ)){clearSel();render();}
 });
