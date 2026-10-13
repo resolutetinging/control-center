@@ -171,16 +171,19 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .tcol-add .btn{min-height:32px}
 .cd-it-st{font-weight:700}
 .cd-tp{font-size:var(--fs3);color:var(--faint);padding:2px 0 2px 18px}
-.cd-tk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:3px 0 6px 18px}
-.cd-tkc{background:#fcfbf8;border:.5px solid var(--bstr);border-radius:7px;padding:4px 6px;min-width:0}
+.cd-tk{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:3px 0 6px 18px}
+/* 10-13：掌握程度像時間軸——一條橫線貫穿三格標題列，格子底色在線與標題文字下方 */
+.cd-tk::before{content:"";position:absolute;left:6px;right:6px;top:13px;height:1.5px;background:var(--bstr);z-index:1;pointer-events:none}
+.cd-tkc{background:#fcfbf8;border:none;border-radius:7px;padding:4px 6px;min-width:0}
 .cd-tkc.c1{background:#fdf5ea}.cd-tkc.c1 .cd-tkh{color:var(--warn)}
 .cd-tkc.c2{background:#f9f9f6}.cd-tkc.c2 .cd-tkh{color:var(--sub)}
 .cd-tkc.c3{background:#f2f7fb}.cd-tkc.c3 .cd-tkh{color:var(--ac)}
-.cd-tkh{font-size:var(--fs3);font-weight:700;color:var(--ac);margin-bottom:3px}
+.cd-tkh{position:relative;z-index:2;display:inline-flex;align-items:center;gap:5px;padding-right:6px;background:inherit;border-radius:4px;font-size:var(--fs3);font-weight:700;color:var(--ac);margin-bottom:3px;line-height:18px}
+.cd-tkh::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
 .cd-tkn .cd-b{position:relative;padding-left:12px}
 .cd-tkn .cd-b::before{content:"\2022";position:absolute;left:2px;top:0}
 .cd-tkn{font-size:var(--fs3);color:var(--sub);line-height:1.45;word-break:break-word}
-@media(max-width:480px){.cd-tk{margin-left:0;gap:3px}.cd-tkc{padding:3px 4px}.cd-tkh{font-size:var(--fs4)}.cd-tkn{font-size:var(--fs4)}}
+@media(max-width:480px){.cd-tk{margin-left:0;gap:3px}.cd-tk::before{top:12px}.cd-tkc{padding:3px 4px}.cd-tkh{font-size:var(--fs4)}.cd-tkn{font-size:var(--fs4)}}
 .ta.tmemo{min-height:40px;resize:none;overflow:hidden;font-size:var(--fs3)}
 .tcard .memo-btn{display:block;width:100%;text-align:left;margin-top:5px;min-height:28px;padding:3px 8px;font-size:var(--fs4);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tcard .ta.tmemo{margin-top:5px;padding:5px 8px}
