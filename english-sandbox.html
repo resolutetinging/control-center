@@ -599,7 +599,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <div id="lib-main-view">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">📚 我的 Idiom 字庫 <span id="lib-tab-count2"></span></div>
-      <button class="btn btn-ghost btn-sm" onclick="clearLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearLib(this)" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:10px 12px;background:var(--bg2);border-radius:10px;">
       <span style="font-size:12px;color:var(--sub);">抽取</span>
@@ -634,7 +634,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 <div class="page" id="page-combo">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">⭐ 收藏對話組合</div>
-    <button class="btn btn-ghost btn-sm" onclick="clearCombos()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearCombos(this)" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
   </div>
   <div class="combo-sit-tabs" id="combo-sit-tabs"></div>
   <div id="combo-list"></div>
@@ -644,7 +644,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 <div class="page" id="page-grammar">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">✍️ 文法修正收藏</div>
-    <button class="btn btn-ghost btn-sm" onclick="clearGrammarLib()" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearGrammarLib(this)" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空收藏</button>
   </div>
   <div class="combo-sit-tabs" id="grammar-cat-tabs"></div>
   <div id="grammar-list"></div>
@@ -900,7 +900,7 @@ Rules:
   }catch(e){
     $hide('loading-opener');
     disableSitBtns(false);
-    alert('生成失敗：'+e.message);
+    showErrToast('生成失敗：'+e.message);
   }
   disableSitBtns(false);
 }
@@ -1252,7 +1252,7 @@ Output ONLY valid JSON:
   }catch(e){
     $hide('loading-result');
     $('user-input').disabled=false; $('submit-btn').disabled=false;
-    alert('分析失敗：'+e.message);
+    showErrToast('分析失敗：'+e.message);
   }
 }
 
@@ -1392,6 +1392,39 @@ function savePhrase(type){
   renderSaved(true);
 }
 
+function showErrToast(msg){
+  let t=document.getElementById('err-toast');
+  if(!t){
+    t=document.createElement('div'); t.id='err-toast';
+    t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);max-width:90vw;background:#38342e;color:#f4f0e8;font-size:13px;line-height:1.5;padding:9px 34px 9px 16px;border-radius:14px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s;word-break:break-word;';
+    const m=document.createElement('span'); m.className='err-msg'; t.appendChild(m);
+    const x=document.createElement('span'); x.textContent='\u00d7'; x.style.cssText='position:absolute;right:12px;top:6px;cursor:pointer;font-size:16px;';
+    x.onclick=function(){ t.style.opacity='0'; t.style.pointerEvents='none'; clearTimeout(t._tid); };
+    t.appendChild(x); document.body.appendChild(t);
+  }
+  t.firstChild.textContent=msg; t.style.opacity='1'; t.style.pointerEvents='auto';
+  clearTimeout(t._tid); t._tid=setTimeout(function(){ t.style.opacity='0'; t.style.pointerEvents='none'; },5000);
+}
+
+function twoStepConfirm(btn, fn){
+  if(!btn){ fn(); return; }
+  if(btn._confirming){ return; }
+  btn._confirming=true;
+  const orig=btn.textContent, origCss=btn.style.cssText, origClick=btn.getAttribute('onclick');
+  const wrap=document.createElement('span');
+  wrap.style.cssText='display:inline-flex;gap:6px;align-items:center;';
+  function restore(){ clearTimeout(wrap._tid); if(wrap.parentNode) wrap.parentNode.replaceChild(btn,wrap); btn._confirming=false; }
+  const ok=document.createElement('button'); ok.className='btn btn-sm'; ok.textContent='確定清空？';
+  ok.style.cssText='font-size:11px;padding:4px 10px;background:var(--en);color:#fff;border-color:var(--en)';
+  const no=document.createElement('button'); no.className='btn btn-ghost btn-sm'; no.textContent='取消';
+  no.style.cssText='font-size:11px;padding:4px 10px;color:var(--faint)';
+  ok.onclick=function(){ restore(); fn(); };
+  no.onclick=restore;
+  wrap.appendChild(ok); wrap.appendChild(no);
+  btn.parentNode.replaceChild(wrap,btn);
+  wrap._tid=setTimeout(restore,4000);
+}
+
 function showSaveToast(msg, ok=false){
   let t = document.getElementById('save-toast');
   if(!t){ t=document.createElement('div'); t.id='save-toast'; t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#38342e;color:#f4f0e8;font-size:12px;padding:7px 16px;border-radius:20px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;'; document.body.appendChild(t); }
@@ -1495,12 +1528,11 @@ function delCombo(i){
   renderCombos();
   renderSaved();
 }
-function clearCombos(){
-  if(!confirm('確定清空全部收藏對話？')) return;
+function clearCombos(btn){ twoStepConfirm(btn,function(){
   localStorage.removeItem(SAVED_KEY);
   renderCombos();
   renderSaved();
-}
+}); }
 
 // ── Grammar Tracking Page（獨立收藏，不與Small Talk收藏組合共用SAVED_KEY）──
 function saveGrammarItem(){
@@ -1650,11 +1682,10 @@ function editGrCat(i, cat){
   localStorage.setItem(GRAMMAR_KEY,JSON.stringify(lib));
   renderGrammarLib();
 }
-function clearGrammarLib(){
-  if(!confirm('確定清空全部文法收藏？')) return;
+function clearGrammarLib(btn){ twoStepConfirm(btn,function(){
   localStorage.removeItem(GRAMMAR_KEY);
   renderGrammarLib();
-}
+}); }
 
 // ── Reset ──
 async function runOverallAnalysis(){
@@ -2093,7 +2124,7 @@ Rules:
     if(skipBtn) skipBtn.disabled = false;
   }catch(e){
     $hide('loading-question');
-    alert('生成失敗：'+e.message);
+    showErrToast('生成失敗：'+e.message);
   }
   disableTopicBtns(false);
 }
@@ -2330,11 +2361,10 @@ function confirmDupGroup(idxArr){
   renderLib();
 }
 
-function clearLib(){
-  if(!confirm('確定清空全部字庫？')) return;
+function clearLib(btn){ twoStepConfirm(btn,function(){
   localStorage.removeItem(IDIOM_LIB_KEY);
   renderLib();
-}
+}); }
 
 // ── 字庫背誦 ──
 let libStudyPool = [];
@@ -2370,8 +2400,8 @@ function _groupStudyPool(picked){
 }
 function startLibStudy(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
-  if(lib.length < 1){ alert('字庫是空的，先收藏一些 idiom 吧！'); return; }
-  if(lib.length < 4){ alert('至少需要 4 個 idiom 才能開始。'); return; }
+  if(lib.length < 1){ showErrToast('字庫是空的，先收藏一些 idiom 吧！'); return; }
+  if(lib.length < 4){ showErrToast('至少需要 4 個 idiom 才能開始。'); return; }
   libStudyPool = _groupStudyPool(_pickLibPool());
   const total = libStudyPool.reduce((s,g)=>s+g.members.length,0);
   document.getElementById('lib-study-count').textContent =
@@ -2433,11 +2463,11 @@ let libQuizState = null;
 function startLibQuizFromStudy(){ _startLibQuiz(libStudyPool.flatMap(g=>g.members)); }
 function startLibQuizDirect(){
   const lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]');
-  if(lib.length < 4){ alert('至少需要 4 個 idiom 才能考驗。'); return; }
+  if(lib.length < 4){ showErrToast('至少需要 4 個 idiom 才能考驗。'); return; }
   _startLibQuiz(_pickLibPool());
 }
 function _startLibQuiz(pool){
-  if(pool.length < 4){ alert('至少需要 4 個 idiom。'); return; }
+  if(pool.length < 4){ showErrToast('至少需要 4 個 idiom。'); return; }
   const shuffled = [...pool];
   for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
   libQuizState = { pool: shuffled, allLib: JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]'), index:0, correct:0, wrong:0, wrongItems:[], answered:false };
