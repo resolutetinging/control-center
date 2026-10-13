@@ -198,7 +198,7 @@ function buildTT(id){
       return out;
     }
     case 'career':{
-      // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限狀態分布、最近學習；資料不可信，數值一律轉數字、文字 esc
+      // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限狀態分布與主題分布；資料不可信，數值一律轉數字、文字 esc
       let cm=null;try{cm=JSON.parse(localStorage.getItem('cc_career_v1')||'null');}catch{}
       const cards=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
       if(!cards.length)return h('🪜 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
@@ -214,16 +214,13 @@ function buildTT(id){
       out+=hr();
       const dist=stN.map((n,k)=>stC[k]?n+' '+stC[k]:'').filter(Boolean).join('・');
       out+=row('第二象限狀態',dist?esc(dist):'—','g');
-      // 最近學習：全部細項 topics.learnedAt 與 journal.date 中最新者（資料不可信：日期格式與名稱逐項驗證）
-      let lastD='',lastN='',lastK='最近學習';
-      const okDt=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d);
-      const nmOf=(v,fb)=>(typeof v==='string'&&v)?v.slice(0,30):fb;
-      cards.forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{
-        if(!it||typeof it!=='object')return;
-        if(Array.isArray(it.journal))it.journal.forEach(j=>{if(j&&okDt(j.date)&&j.date>=lastD){lastD=j.date;lastN=nmOf(it.name,'（未命名）');lastK='最近學習';}});
-        if(Array.isArray(it.topics))it.topics.forEach(tp=>{if(tp&&tp.state==='已學'&&okDt(tp.learnedAt)&&tp.learnedAt>=lastD){lastD=tp.learnedAt;lastN=nmOf(tp.name,nmOf(it.name,'（未命名）'));lastK='最近學會';}});
+      // 第二象限主題分布（v1.7）：state 三值轉顯示用詞（掌握低／掌握一些／掌握較多）；資料不可信，只計數、不輸出原文
+      const tN=['待學','學習中','已學'],tL=['掌握低','掌握一些','掌握較多'],tC=[0,0,0];
+      cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{
+        (it&&Array.isArray(it.topics)?it.topics:[]).forEach(tp=>{const k=tN.indexOf(tp&&tp.state);if(k>=0)tC[k]++;});
       });});
-      if(lastD)out+=row(lastK,esc(lastD.slice(5,7)+'/'+lastD.slice(8,10)+' '+lastN));
+      const tDist=tL.map((n,k)=>tC[k]?n+' '+tC[k]:'').filter(Boolean).join('・');
+      out+=row('第二象限主題',tDist?esc(tDist):'—');
       return out;
     }
     case 'finance':{

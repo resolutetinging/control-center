@@ -73,7 +73,6 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .cd-it-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cd-it-st{font-size:10.5px;flex-shrink:0;color:var(--faint)}
 .cd-it-st.st1{color:var(--warn)}.cd-it-st.st2{color:var(--ac)}.cd-it-st.st3{color:var(--ok)}
-.cd-it-p{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--faint)}
 .cd-dist{color:var(--sub)}
 
 
@@ -101,7 +100,10 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .grp-lbl span+span{color:var(--faint);font-weight:400;letter-spacing:0}
 .grp-empty{font-size:12px;color:var(--faint);padding:10px 12px;border:.5px dashed var(--bstr);border-radius:10px}
 .mc{background:var(--card);border:.5px solid var(--bstr);border-radius:12px;margin-bottom:8px;box-shadow:var(--shadow)}
-.mc.flash{box-shadow:0 0 0 2px var(--ac)}
+.mc.focus-on{box-shadow:0 0 0 3px var(--ac)}
+.mc.flash{animation:mcBlink .45s ease-in-out 4}
+@keyframes mcBlink{0%,100%{box-shadow:0 0 0 3px var(--ac)}50%{box-shadow:0 0 0 3px transparent}}
+@media (prefers-reduced-motion:reduce){.mc.flash{animation:none}}
 .mc-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
 .mc-tg{width:20px;flex-shrink:0;color:var(--faint);font-size:12px;text-align:center}
 .mc-title{flex:1 1 140px;min-width:0;font-size:14px;font-weight:700;word-break:break-word}
@@ -113,7 +115,6 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .mc-avg{font-size:11px;color:var(--faint);white-space:nowrap}
 .mc-head .sel{width:auto;max-width:150px;padding:4px 8px;font-size:12px}
 .mc-body{padding:4px 14px 16px 14px;border-top:.5px solid var(--border)}
-.mc-tags{display:flex;flex-wrap:wrap;gap:6px;width:100%}
 .tree{margin-left:12px;padding-left:12px;border-left:2px solid var(--ac-tint2)}
 .tree .it{margin-bottom:10px}
 .fld{margin:14px 0}
@@ -136,31 +137,27 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .it-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .it-row .sel{width:104px;flex-shrink:0}
 .it-lbl{font-size:11px;font-weight:600;color:var(--faint);margin:2px 0 5px}
-.it-mile{margin-bottom:10px}
-.jn{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
-.jn .jd{width:140px;flex-shrink:0}
-.jn .jt{flex:1;min-width:120px}
-.jr{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
-.jr .jd{width:140px;flex-shrink:0;padding:5px 8px;font-size:12.5px}
-.jr .jt{flex:1;min-width:120px;padding:5px 9px;font-size:12.5px}
-.jr .btn{padding:4px 9px;font-size:11px}
 .jr-ask{font-size:12px;color:#a04040}
-.jmore{font-size:11.5px;color:var(--ac);background:none;border:none;cursor:pointer;padding:3px 0}
 .jempty{font-size:12px;color:var(--faint);padding:2px 0 6px}
-.jtog{display:block;width:100%;text-align:left;font-size:11.5px;font-weight:600;color:var(--sub);background:none;border:none;border-top:.5px dashed var(--bstr);cursor:pointer;padding:9px 0 3px;margin-top:6px}
-.jtog:hover{color:var(--ac)}
-.tn{display:flex;gap:6px;align-items:center;margin-bottom:10px}
-.tn .inp{flex:1;min-width:0}
-.tg-lbl{font-size:10.5px;font-weight:700;color:var(--faint);margin:8px 0 5px}
-.tp{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
-.tp .tpn{flex:1 1 140px;min-width:100px;padding:5px 9px;font-size:12.5px}
-.tp .td{width:140px;flex-shrink:0;padding:5px 8px;font-size:12.5px}
-.tseg{display:inline-flex;flex-shrink:0;border:.5px solid var(--bstr);border-radius:8px;overflow:hidden}
-.tseg button{font-size:11px;padding:4px 9px;border:none;background:var(--bg2);color:var(--sub);cursor:pointer;white-space:nowrap}
-.tseg button+button{border-left:.5px solid var(--bstr)}
-.tseg button:hover{background:var(--ac-tint)}
-.tseg button.on{background:var(--ac);color:#fff;font-weight:600}
-.tp .btn{padding:4px 9px;font-size:11px}
+.q-tip{font-size:11.5px;color:var(--ac);line-height:1.5;margin:2px 0 8px}
+.mc-tagbar{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-left:28px}
+.mc-tagbar .chip{padding:2px 4px 2px 9px}
+.mc-tagbar .chip button{min-width:24px;min-height:24px}
+.mc-tagbar .inp.tgi{width:150px;padding:4px 9px;font-size:12px}
+.mc-tagbar .pill{cursor:pointer}
+.tkan{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:start}
+.tcol{background:var(--bg2);border:.5px solid var(--bstr);border-radius:10px;padding:8px;min-width:0}
+.tcol-h{font-size:11px;font-weight:700;color:var(--ac);margin:0 0 8px 2px}
+.tcard{background:#fff;border:.5px solid var(--bstr);border-radius:9px;padding:6px;margin-bottom:6px}
+.tcard .inp.tpn{padding:5px 8px;font-size:12.5px;min-height:32px}
+.tcard-b{display:flex;gap:4px;align-items:center;margin-top:5px;flex-wrap:wrap}
+.tcard-b .btn{min-height:32px;min-width:32px;padding:4px 9px;font-size:12px}
+.tcard-b .sp{flex:1}
+.tcol-add{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.tcol-add .inp{padding:5px 8px;font-size:12.5px;min-height:32px}
+.tcol-add .btn{min-height:32px}
+.cd-tp{font-size:11px;color:var(--faint);line-height:1.5;padding-left:18px;word-break:break-word}
+@media(max-width:599px){.tkan{grid-template-columns:1fr}}
 .btn{font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;border:.5px solid var(--ac-tint2);background:var(--ac-tint);color:var(--ac);cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--ac-tint2)}
 .btn.danger{background:rgba(192,80,80,.1);color:#a04040;border-color:rgba(192,80,80,.3)}
@@ -242,6 +239,8 @@ const QDEF={
 const SUG_TAGS=['高價值','內心推進動能高','探索','主業'];
 const JOURNAL_MAX=100,JSHOW=3;
 const TOPIC_MAX=100,TSTATES=['待學','學習中','已學'];
+const TLBL={'待學':'掌握低','學習中':'掌握一些','已學':'掌握較多'}; // 只改顯示用詞，資料值不變
+const QTIP={1:'立即處理，但留意是否常因第二象限被忽略而變多',2:'排進固定時段，最值得投資',3:'設上限，當作有意識的休息',4:'能委託就委託，或批次快速處理'};
 const LOG_MAX=3000,CARD_MAX=100,ITEM_MAX=50,TAG_MAX=8;
 
 function $(id){return document.getElementById(id);}
@@ -290,7 +289,7 @@ function normJournal(it){
   }
   return out;
 }
-// 主題清單（規格 9 節）：陣列、id 字串（不重複）、name 非空字串 ≤80、state 三值（不合格→待學）、learnedAt 僅「已學」且日期有效才保留、createdAt 有效否則今天；上限 100 個
+// 主題清單（規格 9 節）：陣列、id 字串（不重複）、name 非空字串 ≤80、state 三值（不合格→待學）、learnedAt 日期有效才保留（v1.7 起不再寫入也不清除，既有值原樣保留）、createdAt 有效否則今天；上限 100 個
 function normTopics(it){
   const out=[];
   if(!Array.isArray(it.topics))return out;
@@ -303,7 +302,7 @@ function normTopics(it){
     if(!name.trim())return;
     const state=TSTATES.indexOf(tp.state)>=0?tp.state:'待學';
     seen.add(tp.id);
-    out.push({id:tp.id,name,state,learnedAt:(state==='已學'&&validDate(tp.learnedAt))?tp.learnedAt:'',createdAt:validDate(tp.createdAt)?tp.createdAt:today()});
+    out.push({id:tp.id,name,state,learnedAt:validDate(tp.learnedAt)?tp.learnedAt:'',createdAt:validDate(tp.createdAt)?tp.createdAt:today()});
   });
   return out;
 }
@@ -446,27 +445,30 @@ function moveCard(c,q){
 
 /* ───────── 看板 ───────── */
 let filterTag='';
+let focusId='';           // 點看板卡片後要維護的方向：維護區粗外框標示，直到點另一張卡片
 let selCard='',selQ=0;   // 點選放置的選取狀態（僅頁面變數，不存 localStorage）
 const OPEN=new Set();   // 維護區展開狀態（僅頁面變數）
 let delAskId='';
-const JALL=new Set();   // 學習紀錄「顯示全部」狀態：item id（僅頁面變數）
-const JDRAFT={};        // 新增紀錄的輸入草稿 {itemId:{date,text}}，重繪時保留
-const JOPEN=new Set();   // 學習紀錄區展開狀態：item id（僅頁面變數，預設收合）
-const TNEW={};          // 新增主題輸入草稿 {itemId:text}
+const TNEW={};          // 新增主題輸入草稿 {itemId|state:text}
 let tDelAsk='';         // 等待確認刪除的主題 id
-function tCounts(it){const n={'已學':0,'學習中':0,'待學':0};it.topics.forEach(t=>{n[t.state]++;});return n;}
-function tDist(it){const n=tCounts(it);return['已學','學習中','待學'].filter(k=>n[k]).map(k=>k+' '+n[k]).join('・');}
-let jDelAsk='';         // 等待確認刪除的紀錄 id
-function jSorted(it){return it.journal.map((j,i)=>[j,i]).sort((a,b)=>a[0].date<b[0].date?1:a[0].date>b[0].date?-1:b[1]-a[1]).map(x=>x[0]);}
-function mmdd(d){return d.slice(5,7)+'/'+d.slice(8,10);}
+function tSummary(it){
+  const parts=[];
+  TSTATES.forEach(st=>{
+    const names=it.topics.filter(t=>t.state===st).map(t=>t.name);
+    if(!names.length)return;
+    const shown=names.slice(0,3).map(n=>n.length>20?n.slice(0,20)+'…':n).join('、');
+    parts.push(TLBL[st]+'：'+shown+(names.length>3?' 等 '+names.length+' 個':''));
+  });
+  return parts.join('｜');
+}
 function _focusKey(el){
   if(!el||!el.dataset||!el.closest||!el.closest('#maint'))return null;
   const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:el.dataset.pick?'p:pick':null;
   if(!f)return null;
-  const m=el.closest('.mc'),r=el.closest('.it'),jr=el.closest('.jr'),tp=el.closest('.tp');
+  const m=el.closest('.mc'),r=el.closest('.it'),tp=el.closest('.tcard');
   let ss=null,se=null;
   try{ss=el.selectionStart;se=el.selectionEnd;}catch(x){ss=null;se=null;}
-  return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,jid:jr&&jr.dataset.jid||null,tid:tp&&tp.dataset.tid||null,tag:el.dataset.tag||el.dataset.s||null,ss,se};
+  return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,tid:tp&&tp.dataset.tid||null,tag:el.dataset.tag||el.dataset.s||el.dataset.dir||null,ss,se};
 }
 function pickBtn(c){
   const on=c.id===selCard;
@@ -512,6 +514,7 @@ function render(){
     $('q'+q).classList.toggle('sel-on',selQ===q);
     $('q'+q).innerHTML=`
       <div class="q-head"><span class="q-no">第${QN[q]}象限</span><span class="q-name">${esc(QDEF[q].name)}</span></div>
+      <div class="q-tip">${esc(QTIP[q])}</div>
       <div class="q-desc">${esc(QDEF[q].desc)}</div>
       <div class="q-list">${cards.length?cards.map(cardHtml).join(''):'<div class="q-empty">'+(filterTag?'沒有符合標籤的方向':'尚無方向，從下方維護區選取方向後點這裡')+'</div>'}</div>`;
   }
@@ -523,7 +526,7 @@ function render(){
     // 重繪會換掉整批 input，依欄位種類＋所屬方向／細項 id 找回同一欄並還原游標（比對字串，不組 selector）
     for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act],#maint [data-pick]')){
       const k=_focusKey(el);
-      if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.jid===fk.jid&&k.tid===fk.tid&&k.tag===fk.tag){
+      if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.tid===fk.tid&&k.tag===fk.tag){
         el.focus();
         if(fk.ss!==null&&fk.se!==null){try{el.setSelectionRange(fk.ss,fk.se);}catch(x){}}
         break;
@@ -539,7 +542,7 @@ function cardHtml(c){
     ${c.desc?`<div class="cd-desc">${esc(c.desc)}</div>`:''}
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}><span>${n?(bo?'▾ ':'▸ '):''}${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
-    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span><span class="cd-it-p">${esc(tDist(it)||'尚無主題')}</span></div>`;}).join('')}</div>`:''}
+    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span><span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span></div><div class="cd-tp">${esc(tSummary(it)||'尚無主題')}</div>`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -547,43 +550,26 @@ function cardHtml(c){
 function moveSelHtml(c){
   return`<select class="sel" data-f="move" aria-label="移到">${[0,1,2,3,4].map(q=>`<option value="${q}"${q===c.quadrant?' selected':''}>移到：${q===0?'未放置':esc(QDEF[q].name)+'（第'+QN[q]+'象限）'}</option>`).join('')}</select>`;
 }
-function journalHtml(it){
-  const dr=JDRAFT[it.id]||{date:today(),text:''};
-  let h=`<div class="jn"><input type="date" class="inp jd" data-f="jnewdate" value="${esc(dr.date)}" min="2000-01-01" max="2100-12-31" aria-label="紀錄日期">
-    <input class="inp jt" data-f="jnewtext" value="${esc(dr.text)}" maxlength="500" placeholder="這次學了什麼？" aria-label="學習紀錄內容">
-    <button class="btn" data-act="jadd">新增</button></div>`;
-  const all=jSorted(it),showAll=JALL.has(it.id),list=showAll?all:all.slice(0,JSHOW);
-  if(!all.length)h+='<div class="jempty">尚無紀錄</div>';
-  list.forEach(j=>{
-    h+=`<div class="jr" data-jid="${esc(j.id)}"><input type="date" class="inp jd" data-f="jdate" value="${esc(j.date)}" min="2000-01-01" max="2100-12-31" aria-label="日期">
-      <input class="inp jt" data-f="jtext" value="${esc(j.text)}" maxlength="500" aria-label="紀錄內容">`
-      +(jDelAsk===j.id
-        ?`<span class="jr-ask">確定刪除？</span><button class="btn danger" data-act="jdelok">確定</button><button class="btn plain" data-act="jdelno">取消</button>`
-        :`<button class="btn plain" data-act="jdel">刪除</button>`)
-      +'</div>';
-  });
-  if(all.length>JSHOW)h+=`<button class="jmore" data-act="jmore">${showAll?'收起':'顯示全部 '+all.length+' 筆'}</button>`;
-  return h;
-}
 function topicsHtml(it){
-  let h=`<div class="tn"><input class="inp" data-f="tnew" value="${esc(TNEW[it.id]||'')}" maxlength="80" placeholder="新增主題" aria-label="新增主題">
-    <button class="btn" data-act="tadd">新增主題</button></div>`;
-  if(!it.topics.length)return h+'<div class="jempty">尚無主題</div>';
-  ['已學','學習中','待學'].forEach(st=>{
-    let list=it.topics.filter(t=>t.state===st);
-    if(st==='已學')list=list.map((t,i)=>[t,i]).sort((a,b)=>a[0].learnedAt<b[0].learnedAt?1:a[0].learnedAt>b[0].learnedAt?-1:a[1]-b[1]).map(x=>x[0]);
-    h+=`<div class="tg-lbl">${esc(st)}（${list.length}）</div>`;
+  let h='<div class="tkan">';
+  TSTATES.forEach((st,si)=>{
+    const list=it.topics.filter(t=>t.state===st);
+    h+=`<div class="tcol" data-col="${esc(st)}"><div class="tcol-h">${esc(TLBL[st])}（${list.length}）</div>`;
     list.forEach(t=>{
-      h+=`<div class="tp" data-tid="${esc(t.id)}"><input class="inp tpn" data-f="tname" value="${esc(t.name)}" maxlength="80" aria-label="主題名稱">
-        <span class="tseg" role="group" aria-label="狀態">${TSTATES.map(s=>`<button type="button" data-act="tstate" data-s="${esc(s)}" class="${s===t.state?'on':''}" aria-pressed="${s===t.state}">${esc(s)}</button>`).join('')}</span>`
-        +(t.state==='已學'?`<input type="date" class="inp td" data-f="tdate" value="${esc(t.learnedAt)}" min="2000-01-01" max="2100-12-31" aria-label="學會日期">`:'')
+      h+=`<div class="tcard" data-tid="${esc(t.id)}"><input class="inp tpn" data-f="tname" value="${esc(t.name)}" maxlength="80" aria-label="主題名稱">
+        <div class="tcard-b">`
+        +(si>0?`<button type="button" class="btn plain" data-act="tmove" data-dir="-1" aria-label="移到${esc(TLBL[TSTATES[si-1]])}">◀</button>`:'')
+        +(si<2?`<button type="button" class="btn plain" data-act="tmove" data-dir="1" aria-label="移到${esc(TLBL[TSTATES[si+1]])}">▶</button>`:'')
+        +'<span class="sp"></span>'
         +(tDelAsk===t.id
           ?`<span class="jr-ask">確定刪除？</span><button class="btn danger" data-act="tdelok">確定</button><button class="btn plain" data-act="tdelno">取消</button>`
           :`<button class="btn plain" data-act="tdel">刪除</button>`)
-        +'</div>';
+        +'</div></div>';
     });
+    h+=`<div class="tcol-add"><input class="inp" data-f="tnew" data-s="${esc(st)}" value="${esc(TNEW[it.id+'|'+st]||'')}" maxlength="80" placeholder="新增主題" aria-label="新增主題到${esc(TLBL[st])}">
+      <button class="btn" data-act="tadd" data-s="${esc(st)}">新增</button></div></div>`;
   });
-  return h;
+  return h+'</div>';
 }
 function itemHtml(it,k){
   const letter=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');
@@ -596,30 +582,31 @@ function itemHtml(it,k){
     </div>
     <div class="it-lbl">主題清單（${it.topics.length}）</div>
     ${topicsHtml(it)}
-    <button class="jtog" data-act="jtoggle" aria-expanded="${JOPEN.has(it.id)}">學習紀錄（選填，${it.journal.length} 筆）${JOPEN.has(it.id)?'▾':'▸'}</button>
-    ${JOPEN.has(it.id)?journalHtml(it):''}
   </div>`;
+}
+function tagBarHtml(c){
+  const pool=SUG_TAGS.slice();
+  DB.cards.forEach(x=>x.tags.forEach(t=>{if(pool.indexOf(t)<0)pool.push(t);}));
+  const sug=pool.filter(t=>c.tags.indexOf(t)<0);
+  return`<div class="mc-tagbar">${c.tags.map(t=>`<span class="chip">#${esc(t)}<button data-act="tagdel" data-tag="${esc(t)}" aria-label="移除標籤">×</button></span>`).join('')}
+    <input class="inp tgi" data-f="tagnew" maxlength="20" placeholder="＋標籤，按 Enter" aria-label="新增標籤">
+    ${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`;
 }
 function mcHtml(c){
   const open=OPEN.has(c.id),n=c.items.length;
-  let h=`<div class="mc${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
+  let h=`<div class="mc${c.id===selCard?' sel-on':''}${c.id===focusId?' focus-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
     <div class="mc-head" data-toggle="1">
       ${pickBtn(c)}
       <span class="mc-tg">${open?'▾':'▸'}</span>
       <input class="mc-title mc-title-inp" data-f="title" value="${esc(c.title)}" maxlength="80" placeholder="方向名稱" aria-label="方向名稱">
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
-      ${c.tags.length?`<span class="mc-tags">${c.tags.map(t=>`<span class="pill" data-nofilter="1">#${esc(t)}</span>`).join('')}</span>`:''}
       <span class="mc-avg">${n} 項</span>
       ${moveSelHtml(c)}
+      ${tagBarHtml(c)}
     </div>`;
   if(open){
-    const sug=SUG_TAGS.filter(t=>c.tags.indexOf(t)<0);
     h+=`<div class="mc-body">
       <div class="fld"><label>說明</label><textarea class="ta" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
-      <div class="fld"><label>標籤</label>
-        <div class="chips">${c.tags.map(t=>`<span class="chip">#${esc(t)}<button data-act="tagdel" data-tag="${esc(t)}" aria-label="移除標籤">×</button></span>`).join('')}</div>
-        <input class="inp" data-f="tagnew" maxlength="20" placeholder="輸入標籤後按 Enter 新增">
-        ${sug.length?`<div class="sug">${sug.map(t=>`<span class="pill" data-act="tagsug" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}</div>
       <div class="sec-lbl">能力細項（${n}）</div>
       <div class="tree">${c.items.map(itemHtml).join('')||'<div class="q-empty">尚無細項</div>'}</div>
       <div style="margin-top:10px"><button class="btn" data-act="iadd">＋ 新增細項</button></div>
@@ -682,34 +669,14 @@ function onMaintChange(e){
   const row=t.closest('.it');
   const it=row&&c.items.find(i=>i.id===row.dataset.iid);
   if(!it)return;
-  // 學習紀錄：不寫 log（規格 8 節）
-  if(f==='jnewdate'||f==='jnewtext'){
-    const d=JDRAFT[it.id]||(JDRAFT[it.id]={date:today(),text:''});
-    if(f==='jnewtext')d.text=str(t.value,500);
-    return;
-  }
-  if(f==='tnew'){TNEW[it.id]=str(t.value,80);return;}
-  if(f==='tname'||f==='tdate'){
-    const tr=t.closest('.tp'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);
+  if(f==='tnew'){TNEW[it.id+'|'+(t.dataset.s||'')]=str(t.value,80);return;}
+  if(f==='tname'){
+    const tr=t.closest('.tcard'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);
     if(!tp)return;
-    if(f==='tdate'){
-      if(document.activeElement===t)return; // 仍在輸入中：離開欄位再驗證
-      commitTDate(t,c,tp);return;
-    }
     const v=str(t.value,80).trim();
     if(!v){render();return;} // 不允許清成空白（要刪請用刪除）
+    if(v===tp.name)return;
     tp.name=v;touch(c);save();render();return;
-  }
-  if(f==='jdate'||f==='jtext'){
-    const jr=t.closest('.jr'),j=jr&&it.journal.find(x=>x.id===jr.dataset.jid);
-    if(!j)return;
-    if(f==='jdate'){
-      if(document.activeElement===t)return; // 仍在輸入中：離開欄位再驗證
-      commitJDate(t,it,j);return;
-    }
-    const v=str(t.value,500);
-    if(!v.trim()){render();return;} // 不允許清成空白（要刪請用刪除）
-    j.text=v;touch(c);save();render();return;
   }
   if(f==='iname'){it.name=str(t.value,80).trim();}
   else if(f==='istatus'){
@@ -720,61 +687,21 @@ function onMaintChange(e){
 }
 function onMaintInput(e){
   const t=e.target,f=t.dataset&&t.dataset.f;
-  if(f==='tnew'){const row=t.closest('.it');if(row)TNEW[row.dataset.iid]=str(t.value,80);return;}
-  // 新增紀錄草稿即時記下，重繪時才不會被清掉
-  if(f==='jnewtext'||f==='jnewdate'){
-    const row=t.closest('.it');if(!row)return;
-    const d=JDRAFT[row.dataset.iid]||(JDRAFT[row.dataset.iid]={date:today(),text:''});
-    if(f==='jnewtext')d.text=str(t.value,500);
-    else if(validDate(t.value))d.date=t.value;
-  }
+  if(f==='tnew'){const row=t.closest('.it');if(row)TNEW[row.dataset.iid+'|'+(t.dataset.s||'')]=str(t.value,80);}
 }
-// 日期欄離開焦點後才驗證／存檔（比照 finance-planner commitDate）：未完成輸入或超出範圍不 toast、不寫入，僅還原顯示
-function commitJDate(t,it,j){
-  const v=t.value;
-  if(v===j.date)return;
-  if(!validDate(v)||(t.validity&&t.validity.badInput)){render();return;}
-  const c=DB.cards.find(x=>x.items.indexOf(it)>=0);
-  j.date=v;if(c)touch(c);save();render();
-}
-function commitTDate(t,c,tp){
-  const v=t.value;
-  if(v===tp.learnedAt)return;
-  if(!validDate(v)||(t.validity&&t.validity.badInput)){render();return;}
-  tp.learnedAt=v;touch(c);save();render();
-}
-function addTopic(c,it,row){
-  const te=row.querySelector('[data-f="tnew"]');
-  const name=str(te?te.value:(TNEW[it.id]||''),80).trim();
+function addTopic(c,it,col){
+  const te=col.querySelector('[data-f="tnew"]'),st=col.dataset.col;
+  if(TSTATES.indexOf(st)<0)return;
+  const name=str(te?te.value:'',80).trim();
   if(!name)return; // 空白不新增
   if(it.topics.length>=TOPIC_MAX){toast('主題已達 '+TOPIC_MAX+' 個上限');return;}
-  it.topics.push({id:uid('t'),name,state:'待學',learnedAt:'',createdAt:today()});
-  TNEW[it.id]='';
+  it.topics.push({id:uid('t'),name,state:st,learnedAt:'',createdAt:today()}); // v1.7 不再寫 learnedAt
+  TNEW[it.id+'|'+st]='';
   touch(c);save();render();
-  const ne=document.querySelector('#maint .it[data-iid="'+it.id+'"] [data-f="tnew"]');
-  if(ne)ne.focus();
-}
-function commitJNewDate(t,it){
-  const d=JDRAFT[it.id]||(JDRAFT[it.id]={date:today(),text:''});
-  if(validDate(t.value))d.date=t.value;
-  render();
-}
-function addJournal(c,it,row){
-  const d=JDRAFT[it.id]||(JDRAFT[it.id]={date:today(),text:''});
-  const te=row.querySelector('[data-f="jnewtext"]'),de=row.querySelector('[data-f="jnewdate"]');
-  const text=str(te?te.value:d.text,500),date=de?de.value:d.date;
-  if(!text.trim())return; // 空白不新增
-  if(!validDate(date)){toast('日期格式不正確');return;}
-  it.journal.push({id:uid('j'),date,text});
-  if(it.journal.length>JOURNAL_MAX){
-    const idx=it.journal.map((j,i)=>[j,i]).sort((a,b)=>a[0].date<b[0].date?-1:a[0].date>b[0].date?1:a[1]-b[1]);
-    const drop=new Set(idx.slice(0,it.journal.length-JOURNAL_MAX).map(x=>x[0].id));
-    it.journal=it.journal.filter(j=>!drop.has(j.id));
+  for(const el of document.querySelectorAll('#maint .it [data-f="tnew"]')){
+    const r=el.closest('.it');
+    if(r&&r.dataset.iid===it.id&&el.dataset.s===st){el.focus();break;}
   }
-  JDRAFT[it.id]={date,text:''}; // 保留所選日期，方便連續補記同一天
-  touch(c);save();render();
-  const ne=document.querySelector('#maint .it[data-iid="'+it.id+'"] [data-f="jnewtext"]');
-  if(ne)ne.focus();
 }
 function onMaintClick(e){
   const t=e.target;
@@ -793,30 +720,18 @@ function onMaintClick(e){
       const names=$('mc-'+c.id).querySelectorAll('[data-f="iname"]');
       if(names.length)names[names.length-1].focus();
     }
-    else if(act==='tadd'||act==='tstate'||act==='tdel'||act==='tdelok'||act==='tdelno'||act==='jtoggle'){
+    else if(act==='tadd'||act==='tmove'||act==='tdel'||act==='tdelok'||act==='tdelno'){
       const row=b.closest('.it'),it=row&&c.items.find(i=>i.id===row.dataset.iid);
       if(!it)return;
-      if(act==='jtoggle'){if(JOPEN.has(it.id))JOPEN.delete(it.id);else JOPEN.add(it.id);render();return;}
-      if(act==='tadd'){addTopic(c,it,b.closest('.tn'));return;}
-      const tr=b.closest('.tp'),tid=tr&&tr.dataset.tid,tp=it.topics.find(x=>x.id===tid);
+      if(act==='tadd'){const col=b.closest('.tcol');if(col)addTopic(c,it,col);return;}
+      const tr=b.closest('.tcard'),tid=tr&&tr.dataset.tid,tp=it.topics.find(x=>x.id===tid);
       if(!tp)return;
       if(act==='tdel'){tDelAsk=tid;render();return;}
       if(act==='tdelno'){tDelAsk='';render();return;}
       if(act==='tdelok'){it.topics=it.topics.filter(x=>x.id!==tid);tDelAsk='';touch(c);save();render();return;}
-      const ns=b.dataset.s;
-      if(TSTATES.indexOf(ns)<0||ns===tp.state)return;
-      tp.state=ns;tp.learnedAt=(ns==='已學')?today():''; // 已學自動帶今天；離開已學則清空
-      touch(c);save();render();
-    }
-    else if(act==='jadd'||act==='jmore'||act==='jdel'||act==='jdelok'||act==='jdelno'){
-      const row=b.closest('.it'),it=row&&c.items.find(i=>i.id===row.dataset.iid);
-      if(!it)return;
-      if(act==='jadd'){addJournal(c,it,b.closest('.jn'));return;}
-      if(act==='jmore'){if(JALL.has(it.id))JALL.delete(it.id);else JALL.add(it.id);render();return;}
-      const jr=b.closest('.jr'),jid=jr&&jr.dataset.jid;
-      if(act==='jdel'){jDelAsk=jid;render();return;}
-      if(act==='jdelno'){jDelAsk='';render();return;}
-      it.journal=it.journal.filter(j=>j.id!==jid);jDelAsk='';
+      const ns=TSTATES[TSTATES.indexOf(tp.state)+Number(b.dataset.dir)];
+      if(!ns)return;
+      tp.state=ns; // 換欄只改 state；不寫也不清 learnedAt（規格 10 節）
       touch(c);save();render();
     }
     else if(act==='idel'){
@@ -852,26 +767,20 @@ function onMaintKey(e){
   if(t.dataset&&t.dataset.f==='tagnew'){e.preventDefault();const c=cardOf(t);if(c)addTag(c,t.value,t);}
   else if(t.dataset&&t.dataset.f==='tnew'){
     e.preventDefault();
-    const row=t.closest('.tn'),ir=t.closest('.it'),c=cardOf(t);
+    const col=t.closest('.tcol'),ir=t.closest('.it'),c=cardOf(t);
     const it=c&&ir&&c.items.find(i=>i.id===ir.dataset.iid);
-    if(it&&row)addTopic(c,it,row);
-  }
-  else if(t.dataset&&t.dataset.f==='jnewtext'){
-    e.preventDefault();
-    const row=t.closest('.jn'),ir=t.closest('.it'),c=cardOf(t);
-    const it=c&&ir&&c.items.find(i=>i.id===ir.dataset.iid);
-    if(it&&row)addJournal(c,it,row);
+    if(it&&col)addTopic(c,it,col);
   }
   else if(t.tagName==='INPUT'){t.blur();}
 }
 
 /* ───────── 事件綁定（全為委派，無 inline handler） ───────── */
 function scrollToCard(id){
-  OPEN.add(id);render();
+  focusId=id;OPEN.add(id);render();
   const el=$('mc-'+id);
   if(el){
     if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
-    el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1400);
+    el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1900);
   }
 }
 $('board').addEventListener('click',e=>{
@@ -899,19 +808,6 @@ $('maint').addEventListener('change',e=>setTimeout(()=>onMaintChange(e),0));
 $('maint').addEventListener('input',onMaintInput);
 $('maint').addEventListener('click',onMaintClick);
 $('maint').addEventListener('keydown',onMaintKey);
-$('maint').addEventListener('focusout',e=>{
-  const t=e.target,f=t.dataset&&t.dataset.f;
-  if(f!=='jdate'&&f!=='jnewdate'&&f!=='tdate')return;
-  setTimeout(()=>{ // 等焦點落到下一欄後再驗證，render 才能還原焦點
-    if(document.activeElement===t||!t.isConnected)return;
-    const c=cardOf(t),ir=t.closest('.it'),it=c&&ir&&c.items.find(i=>i.id===ir.dataset.iid);
-    if(!it)return;
-    if(f==='tdate'){const tr=t.closest('.tp'),tp=tr&&it.topics.find(x=>x.id===tr.dataset.tid);if(tp)commitTDate(t,c,tp);return;}
-    if(f==='jnewdate'){commitJNewDate(t,it);return;}
-    const jr=t.closest('.jr'),j=jr&&it.journal.find(x=>x.id===jr.dataset.jid);
-    if(j)commitJDate(t,it,j);
-  },0);
-});
 $('new-btn').addEventListener('click',addCard);
 $('new-title').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCard();}});
 
