@@ -1003,78 +1003,19 @@ async function syncDownload(){
   const gid=(localStorage.getItem('gist_id')||'').replace(/\s/g,'');
   if(!pat||!gid){showSyncMsg('請先在 API 設定填入 PAT 和 Gist ID',true);hideSyncMsg(3000);openSettings('api');return;}
   if(!/^[a-f0-9]{20,}$/i.test(gid)){showSyncMsg('Gist ID 格式錯誤（'+gid.slice(0,8)+'…），請重新貼上',true);hideSyncMsg(4000);return;}
+  // v3（spec 3.3a）：讀取與還原改用 cc_autosync.js 共用核心（規則同 v2：白名單、憑證掃描、排除 cc_wp_v1 與裝置本地 key、分塊、truncated raw_url）
+  const core=window.ccSyncCore;
+  if(!core||typeof core.fetchCloud!=='function'||typeof core.applySnapshot!=='function'){showSyncMsg('✗ cc_autosync.js 未載入，無法同步',true);hideSyncMsg(3500);return;}
   const btn=document.getElementById('sync-dn');
   if(btn)btn.textContent='…';
   showSyncMsg('連線 Gist 中…');
   try{
-    let r;
-    try{r=await fetch('https://api.github.com/gists/'+gid,{headers:{'Authorization':'Bearer '+pat}});}
-    catch(fe){throw new Error('網路錯誤 '+fe.message);}
-    if(!r.ok)throw new Error('GitHub '+r.status+(r.status===401?' (PAT無效)':r.status===404?' (Gist ID錯誤)':''));
-    const j=await r.json();
-    const fileData=j.files?.['cc_sync.json'];
-    if(!fileData)throw new Error('Gist 內找不到 cc_sync.json');
+    const cloud=await core.fetchCloud(true);
     showSyncMsg('還原資料中…');
-    let content=fileData.content;
-    if(fileData.truncated){
-      let rawR;
-      try{rawR=await fetch(fileData.raw_url);}
-      catch(fe){throw new Error('讀取完整內容失敗 '+fe.message);}
-      if(!rawR.ok)throw new Error('raw 內容取得失敗 '+rawR.status);
-      content=await rawR.text();
-    }
-    let snap;
-    try{snap=JSON.parse(content);}catch(e){throw new Error('資料格式錯誤：'+e.message);}
-    if(!snap||typeof snap!=='object'||Array.isArray(snap))throw new Error('資料結構錯誤，請重新 Upload');
-    const MANIFEST_KEY='__cc_manifest';
-    const skipped=[];
-    const IDB_KEYS=window.CC_IDB_IMAGE_KEYS||[];
-    // 已遷移到 IndexedDB 的圖片類 key：還原時寫回 IndexedDB 而非 localStorage
-    async function restoreOne(k,v){
-      if(IDB_KEYS.includes(k)&&window.ccStore){
-        try{ await ccStore.put(k,v); localStorage.removeItem(k); localStorage.setItem(k+'__idb','1'); return true; }
-        catch(e){ console.warn('[Sync] 還原到 IndexedDB 失敗，改存 localStorage：',k,e); }
-      }
-      try{ localStorage.setItem(k,v); return true; }
-      catch(e){ if(e.name==='QuotaExceededError'){ return false; } throw e; }
-    }
-    for(const[k,v] of Object.entries(snap)){
-      // cc_wp_v1（桌布）刻意排除還原：各裝置桌布各自獨立，不隨同步覆蓋（2026-07-21起）
-      if(v==null||k===MANIFEST_KEY||k==='cc_wp_v1')continue;
-      // 白名單防護：Gist 內容若混入非白名單 key（例如憑證類），還原時不寫回 localStorage
-      // 08-19修正：isSafeKey之前沒從cc_autosync.js的window.ccSyncCore export出來，
-      // 直接引用undeclared identifier，typeof恆為'undefined'，這個檢查形同虛設從未生效過
-      if(typeof window.ccSyncCore?.isSafeKey==='function'&&!window.ccSyncCore.isSafeKey(k))continue;
-      // 第二道：值必須是字串，且不得夾帶憑證（sink 端已 escape，此為縱深防護）
-      if(typeof v!=='string'||/(ghp_|github_pat_|gho_|gsk_)[A-Za-z0-9_]{20,}/.test(v))continue;
-      const ok=await restoreOne(k,v);
-      if(!ok)skipped.push(k);
-    }
-    // 大型 key 分塊還原（cc_big__ 檔案，由 __cc_manifest 索引）
-    const incomplete=[];let bigRestored=0;
-    let manifest={};
-    try{manifest=JSON.parse(snap[MANIFEST_KEY]||'{}');}catch(e){manifest={};}
-    for(const[bk,info] of Object.entries(manifest)){
-      // 08-19修正：這條大型key分塊還原路徑原本完全沒有白名單檢查，比小型key那條漏得更徹底
-      if(typeof window.ccSyncCore?.isSafeKey==='function'&&!window.ccSyncCore.isSafeKey(bk))continue;
-      if(!info||!Array.isArray(info.names)){incomplete.push(bk);continue;}
-      showSyncMsg('還原大型資料 '+bk+' 中…');
-      let val='',ok=true;
-      for(const name of info.names){
-        const f=j.files?.[name];
-        if(!f){ok=false;break;}
-        let c=f.content;
-        if(f.truncated){
-          try{const rr=await fetch(f.raw_url);if(!rr.ok)throw 0;c=await rr.text();}
-          catch(e){ok=false;break;}
-        }
-        val+=c;
-      }
-      if(!ok){incomplete.push(bk);continue;}
-      const saved=await restoreOne(bk,val);
-      if(saved)bigRestored++; else skipped.push(bk);
-    }
-    if(bigRestored)try{localStorage.setItem('cc_big_manifest',snap[MANIFEST_KEY]||'{}');}catch(e){}
+    const res=await core.applySnapshot(cloud.j,cloud.snap,function(bk){showSyncMsg('還原大型資料 '+bk+' 中…');});
+    const skipped=res.skipped,incomplete=res.incomplete;
+    // 完成後同步更新 cc_sync_rev 與 cc_auto_hash，之後不被誤判為有未上傳修改
+    if(typeof core.markDownloaded==='function')core.markDownloaded(cloud.meta);
     if(btn)btn.textContent='✓';
     if(skipped.length||incomplete.length){
       let warn='下載完成。';
