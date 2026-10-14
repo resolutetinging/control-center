@@ -4,6 +4,27 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "任務庫對應改成點選選單：下拉選單把任務名擠到換行，改成點象限標籤再跳出選項，版面恢復寬鬆。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
+      "project": "Control Center",
+      "file": "cc_autosync.js",
+      "summary": "同步名單加入體感評分：讓睡眠頁的體感評分也能備份到Gist，驗證過兩台裝置的日常流程不會出現假衝突才上線。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3_live.html",
+      "summary": "可能體感加實際體感評分：推測下方多一條5格評分，1是不接近、5是最接近，並記下當晚觸發的推測規則，日後可統計哪些推測對自己不準。趨勢線改成亮橘色並加粗。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v3_live.html",
       "summary": "睡眠週期圖加顏色圖例：圖表上方標示清醒、REM、核心、深度四種顏色，順序對應圖中高度。",
