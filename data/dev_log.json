@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Sleep Dashboard",
+      "file": "v2_v3_migration_report_20260930.md",
+      "summary": "10-14睡眠三方比對：v3與iPhone最大誤差2.5分鐘，不含清醒的睡眠時數只差1.5分鐘。監控期14晚中有9晚誤差在3分鐘內，其餘都已查明不是計算錯誤。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-14",
       "project": "Daily Optimizer",
       "file": "daily_optimizer_v3.html",
       "summary": "任務庫對應四象限：每個任務可以對應Career的方向或細項，並顯示象限標籤，象限跟著方向走。另有套用建議對應的按鈕，勾選確認後才寫入。",
