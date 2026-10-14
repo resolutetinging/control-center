@@ -200,6 +200,7 @@
     ['wellness_v4', '💛 Mental Dashboard', '舊版資料（v5 已接手）'],
     ['wellness_*', '💛 Mental Dashboard', '資料'],
     ['es_*', '🎯 English Sandbox', '其他'],
+    ['sleep_feel_v1', '🌙 Sleep Dashboard', '實際體感回饋（可能體感 1–5 評分）'],
     ['sleep_*', '🌙 SAS Hub', '睡眠資料'],
   ];
 

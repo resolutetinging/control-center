@@ -48,6 +48,8 @@
     'sas_endurance', 'sas_dta', 'sas_pipe_review', 'sas_settings',
     'sas_weekly_recap', 'cc_energy_weights', 'sas_risk_flags',
     'sas_combat_date', 'sas_combat_weekday',
+    // 10-14：Sleep Dashboard 實際體感回饋（可能體感 1–5 評分）
+    'sleep_feel_v1',
     // 08-04：sas_overload_log（配速燈近14筆過載記錄）原本漏排，換裝置/清storage會靜默歸零
     'sas_overload_log',
     // 08-05：sas_week_flags/sas_pace_flags（近7天燈/配速燈接Guard用）比照sas_risk_flags排入白名單，
