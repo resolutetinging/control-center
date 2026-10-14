@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Control Center",
+      "file": "dev_log.json",
+      "summary": "分級與熱點決定：Scratchpad歸為輔助級。熱點過去的次數不重算，從今天起每筆自動加一。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-14",
       "project": "Sleep Dashboard",
       "file": "sleep_dashboard_v3_live.html",
       "summary": "體感評分字級對齊內文：評分格的數字和兩端標示改成跟可能體感內文同字型、同大小。",
@@ -4079,6 +4086,12 @@
     },
     {
       "project": "Control Center",
+      "file": "dev_log.json",
+      "count": 2,
+      "top_reason": "maintain"
+    },
+    {
+      "project": "Control Center",
       "file": "cc_autosync.js",
       "count": 1,
       "top_reason": "debug"
@@ -4100,12 +4113,6 @@
       "file": "renewable_tracker.html",
       "count": 1,
       "top_reason": "spec_change"
-    },
-    {
-      "project": "Control Center",
-      "file": "dev_log.json",
-      "count": 1,
-      "top_reason": "maintain"
     }
   ],
   "reason_labels": {
