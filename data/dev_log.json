@@ -4,6 +4,20 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Control Center",
+      "file": "career-matrix.html",
+      "summary": "四象限顯示近7天執行次數：每個方向和細項顯示近7天在Optimizer做了幾次、完成幾次，只讀覆盤紀錄、不寫入。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
+      "project": "Daily Optimizer",
+      "file": "daily_optimizer_v3.html",
+      "summary": "覆盤記下當時的四象限對應：存今天的覆盤時，順便記下每個任務當時對應的方向與象限，過去的紀錄不會被改。覆盤多一行象限分布。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
       "project": "Sleep Dashboard",
       "file": "v2_v3_migration_report_20260930.md",
       "summary": "10-14睡眠三方比對：v3與iPhone最大誤差2.5分鐘，不含清醒的睡眠時數只差1.5分鐘。監控期14晚中有9晚誤差在3分鐘內，其餘都已查明不是計算錯誤。",
