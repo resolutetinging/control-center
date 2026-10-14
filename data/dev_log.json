@@ -1,7 +1,21 @@
 {
-  "generated_through": "2026-10-13",
+  "generated_through": "2026-10-14",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-14",
+      "project": "AI Tracker",
+      "file": "data/run_stats.json",
+      "summary": "改動後首次排程檢查：排程正常，今天沒有重複新聞。數字比對標了一張疑似補寫，查原文是誤報，正式啟用前還要多觀察。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-14",
+      "project": "Control Center",
+      "file": "Spec/career-optimizer-integration-plan.md",
+      "summary": "四象限與Optimizer盤點草表：對照任務庫20項與四象限9個方向，11項建議對應，9項請使用者判斷。",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-10-13",
       "project": "Control Center",
