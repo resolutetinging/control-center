@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Control Center",
+      "file": "Control_Center_架構總覽.txt",
+      "summary": "整理家族架構總覽：寫成一份文件放在桌面，涵蓋各dashboard用途、彼此的資料串接、預期效益，以及使用者與Claude的合作模式。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
       "project": "AI Tracker",
       "file": "data/run_stats.json",
       "summary": "改動後首次排程檢查：排程正常，今天沒有重複新聞。數字比對標了一張疑似補寫，查原文是誤報，正式啟用前還要多觀察。",
