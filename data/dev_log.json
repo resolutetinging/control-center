@@ -87,6 +87,13 @@
       "reason": "spec_change"
     },
     {
+      "date": "2026-10-14",
+      "project": "Control Center",
+      "file": "dev_log.json",
+      "summary": "開發流程治理：Dashboard分成核心、輔助、實驗、備援四級，各級驗證強度不同，所有改動都要驗證通過才上線。dev log與規格同步改用固定腳本寫入，熱點計數也會跟著更新。",
+      "reason": "maintain"
+    },
+    {
       "date": "2026-10-13",
       "project": "Control Center",
       "file": "Spec/career-optimizer-integration-plan.md",
@@ -4093,6 +4100,12 @@
       "file": "renewable_tracker.html",
       "count": 1,
       "top_reason": "spec_change"
+    },
+    {
+      "project": "Control Center",
+      "file": "dev_log.json",
+      "count": 1,
+      "top_reason": "maintain"
     }
   ],
   "reason_labels": {
