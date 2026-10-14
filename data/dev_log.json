@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3_live.html",
+      "summary": "睡眠週期圖加顏色圖例：圖表上方標示清醒、REM、核心、深度四種顏色，順序對應圖中高度。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
       "project": "Control Center",
       "file": "career-matrix.html",
       "summary": "四象限顯示近7天執行次數：每個方向和細項顯示近7天在Optimizer做了幾次、完成幾次，只讀覆盤紀錄、不寫入。",
