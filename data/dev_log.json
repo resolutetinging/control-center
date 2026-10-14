@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-14",
+      "project": "Sleep Dashboard",
+      "file": "sleep_dashboard_v3_live.html",
+      "summary": "體感評分字級對齊內文：評分格的數字和兩端標示改成跟可能體感內文同字型、同大小。",
+      "reason": "user_request"
+    },
+    {
+      "date": "2026-10-14",
       "project": "Daily Optimizer",
       "file": "daily_optimizer_v3.html",
       "summary": "任務庫對應改成點選選單：下拉選單把任務名擠到換行，改成點象限標籤再跳出選項，版面恢復寬鬆。",
