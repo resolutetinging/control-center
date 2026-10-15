@@ -69,8 +69,6 @@
     'cc_career_v1',
     // 動態財務規劃（finance-planner.html）
     'cc_finance_v1',
-    // External Me（life_tracker_v1）
-    'lto_matrix',
     // WordVault 成人版＋Kids
     'wordvault_v1', 'wordvault_v1-kids', 'wvk_kids_profiles',
     'wordvault_reminder_days', 'wvk_parent_pwd',

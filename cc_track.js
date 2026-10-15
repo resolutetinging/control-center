@@ -149,7 +149,6 @@
     ['sas_weekly_recap', '🌙 SAS Hub', '週回顧'],
     ['sas_*', '🌙 SAS Hub', '睡眠/戰力衍生數值'],
     ['cc_energy_weights', '🌙 SAS Hub', '個人化能量權重'],
-    ['lto_matrix', '🌳 External Me', '人生矩陣（含頭像圖片）'],
     ['wellness_v5', '💛 Mental Dashboard', '主資料（紀錄/人際圈）'],
     ['mental_custom_emotions', '💛 Mental Dashboard', '自訂情緒標籤'],
     ['md_*', '💛 Mental Dashboard', '介面狀態'],
