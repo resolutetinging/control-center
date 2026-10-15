@@ -1284,9 +1284,47 @@ function renderDevDashboard(){
   const subEl=document.getElementById('dev-panel-sub');
   const bodyEl=document.getElementById('dev-panel-body');
   if(!bodyEl)return;
+  // 開發紀錄存放在私人 Gist；Gist ID 為各裝置自己設定（localStorage cc_devlog_gist），不寫死、不進 autosync 白名單
+  const GID_RE=/^[0-9a-f]{20,40}$/;
+  let devGid='';
+  try{devGid=(localStorage.getItem('cc_devlog_gist')||'').trim();}catch(e){}
+  if(!GID_RE.test(devGid)){
+    bodyEl.innerHTML=`<div class="dev-section">
+      <div id="dev-empty" style="margin-bottom:10px;">開發紀錄存放在私人 Gist，請先輸入這台裝置要讀取的 Gist ID（只需設定一次）。</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="s-inp" id="dev-gid-inp" placeholder="貼上 Gist ID" style="font-family:monospace;font-size:12px;flex:1;margin-bottom:0;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        <button class="btn-pr" id="dev-gid-save" style="width:auto;padding:6px 14px;font-size:13px;">儲存</button>
+      </div>
+      <div id="dev-gid-err" style="font-size:12px;color:var(--faint);margin-top:6px;"></div>
+    </div>`;
+    const saveBtn=document.getElementById('dev-gid-save');
+    if(saveBtn)saveBtn.addEventListener('click',()=>{
+      const v=(document.getElementById('dev-gid-inp').value||'').trim();
+      if(!GID_RE.test(v)){document.getElementById('dev-gid-err').textContent='格式不正確（應為 20–40 碼小寫十六進位字元）';return;}
+      try{localStorage.setItem('cc_devlog_gist',v);}catch(e){}
+      renderDevDashboard();
+    });
+    return;
+  }
   bodyEl.innerHTML='<div id="dev-empty">讀取中…</div>';
-  fetch('data/dev_log.json?v='+Date.now())
-    .then(r=>{if(!r.ok)throw new Error('讀取失敗');return r.json();})
+  fetch('https://api.github.com/gists/'+devGid)
+    .then(r=>{
+      if(r.status===404){const er=new Error('Gist 不存在或 ID 錯誤');er.resetId=true;throw er;}
+      if(r.status===403){throw new Error('GitHub 讀取額度用完，稍後再試');}
+      if(!r.ok)throw new Error('讀取失敗');
+      return r.json();
+    })
+    .then(g=>{
+      const f=g&&g.files&&g.files['dev_log.json'];
+      if(!f)throw new Error('Gist 內找不到 dev_log.json');
+      if(f.truncated===true||!f.content){
+        const ru=String(f.raw_url||'');
+        if(ru.indexOf('https://gist.githubusercontent.com/')!==0)throw new Error('讀取失敗（來源網址不符）');
+        return fetch(ru).then(r=>{if(!r.ok)throw new Error('讀取失敗');return r.text();});
+      }
+      return f.content;
+    })
+    .then(txt=>JSON.parse(txt))
     .then(d=>{
       const tl=d.timeline||[];
       const hs=d.hotspots||[];
@@ -1395,7 +1433,10 @@ function renderDevDashboard(){
         </div>`;
     })
     .catch(e=>{
-      bodyEl.innerHTML='<div id="dev-empty">讀取失敗：'+esc(e.message)+'</div>';
+      bodyEl.innerHTML='<div id="dev-empty">'+(e&&e.resetId?'':'讀取失敗：')+esc(e&&e.message)+'</div>'
+        +(e&&e.resetId?'<div style="margin-top:10px;"><button class="btn-pr" id="dev-gid-reset" style="width:auto;padding:6px 14px;font-size:13px;">重設 Gist ID</button></div>':'');
+      const rb=document.getElementById('dev-gid-reset');
+      if(rb)rb.addEventListener('click',()=>{try{localStorage.removeItem('cc_devlog_gist');}catch(x){}renderDevDashboard();});
     });
 }
 </script>
