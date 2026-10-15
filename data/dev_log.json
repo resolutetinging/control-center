@@ -4,6 +4,13 @@
   "timeline": [
     {
       "date": "2026-10-15",
+      "project": "Sleep Dashboard",
+      "file": "v2_v3_migration_report_20260930.md",
+      "summary": "10-15睡眠三方比對：v3與iPhone最大誤差1.5分鐘，不含清醒的睡眠時數只差2分鐘。v2數字也一致，入睡時間仍錯位一天。",
+      "reason": "maintain"
+    },
+    {
+      "date": "2026-10-15",
       "project": "Control Center",
       "file": "index.html",
       "summary": "資料維護提醒加稍後提醒：彈窗改成兩顆按鈕，可以選兩小時後再提醒，或今天不再提醒。首頁開著時，時間到了且資料還沒補齊會再跳出來。",
@@ -4127,6 +4134,12 @@
       "file": "renewable_tracker.html",
       "count": 1,
       "top_reason": "spec_change"
+    },
+    {
+      "project": "Sleep Dashboard",
+      "file": "v2_v3_migration_report_20260930.md",
+      "count": 1,
+      "top_reason": "maintain"
     }
   ],
   "reason_labels": {
