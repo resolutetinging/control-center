@@ -177,13 +177,16 @@
   </div>
 </div>
 
-<!-- 資料維護提醒彈窗（B1）：每天最多一次，cc_data_nudge_date 為單裝置設定，不入同步白名單 -->
-<div id="nudge-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDataNudge()">
+<!-- 資料維護提醒彈窗（B1）：「今天不再提醒」寫 cc_data_nudge_date、「稍後提醒」寫 cc_data_nudge_snooze（2 小時），皆單裝置設定，不入同步白名單 -->
+<div id="nudge-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDataNudge('later')">
   <div style="background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:18px 20px;width:min(86vw,340px);box-shadow:0 8px 30px rgba(40,38,32,.15);">
     <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:4px;">資料維護提醒</div>
     <div style="font-size:.66rem;color:var(--faint);margin-bottom:12px;">補齊這些資料，之後的睡眠因素分析才準</div>
     <div id="nudge-list"></div>
-    <button id="nudge-ok-btn" onclick="closeDataNudge()" style="margin-top:14px;width:100%;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">知道了</button>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="nudge-later-btn" onclick="closeDataNudge('later')" style="flex:1;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">稍後提醒（2 小時）</button>
+      <button id="nudge-ok-btn" onclick="closeDataNudge('today')" style="flex:1;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">今天不再提醒</button>
+    </div>
   </div>
 </div>
 
@@ -1081,6 +1084,8 @@ applyNexusLinks();
 // ── 資料維護提醒（B1）──
 // 規則須與 SAS Hub 一致：睡眠沿用 checkDataFreshness() 判準（最新一晚比今天早 >=2 天）
 const NUDGE_KEY='cc_data_nudge_date';
+const NUDGE_SNOOZE_KEY='cc_data_nudge_snooze'; // 10-15：稍後提醒到期時間（ms），單裝置設定
+const NUDGE_SNOOZE_MS=2*60*60*1000;
 function collectDataGaps(){
   const gaps=[];const links=getLinks();
   const yKey=_localDateKey(new Date(Date.now()-86400000));
@@ -1117,7 +1122,13 @@ function collectDataGaps(){
   return gaps;
 }
 function checkDataNudge(){
-  try{if(localStorage.getItem(NUDGE_KEY)===TODAY)return;}catch{}
+  try{
+    if(localStorage.getItem(NUDGE_KEY)===TODAY)return;
+    const until=+localStorage.getItem(NUDGE_SNOOZE_KEY)||0;
+    if(until>Date.now())return;
+  }catch{}
+  const _ov=document.getElementById('nudge-overlay');
+  if(_ov&&_ov.style.display==='flex')return; // 已顯示中不重繪
   const gaps=collectDataGaps();
   if(!gaps.length)return;
   const list=document.getElementById('nudge-list');
@@ -1130,11 +1141,15 @@ function checkDataNudge(){
   }).join('');
   ov.style.display='flex';
 }
-function closeDataNudge(){
+function closeDataNudge(mode){
   const ov=document.getElementById('nudge-overlay');
   if(ov)ov.style.display='none';
-  try{localStorage.setItem(NUDGE_KEY,TODAY);}catch{}
+  try{
+    if(mode==='today')localStorage.setItem(NUDGE_KEY,TODAY);
+    else localStorage.setItem(NUDGE_SNOOZE_KEY,String(Date.now()+NUDGE_SNOOZE_MS));
+  }catch{}
 }
+setInterval(checkDataNudge,5*60*1000); // 首頁開著時，稍後提醒到期也能再跳
 
 // ── INIT ──
 loadWP();
