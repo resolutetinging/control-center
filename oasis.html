@@ -296,8 +296,8 @@ function buildCard(c){
   const searchQ=encodeURIComponent(`"${c.title||''}" ${c.author||''}`);
   const olSafe=/^https?:\/\//i.test(String(c.olUrl||'').trim())?String(c.olUrl).trim():'';
   const verifyHtml=olSafe
-    ?`<div style="margin-top:8px;"><a href="${esc(olSafe)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">📖 Open Library</a></div>`
-    :`<div style="margin-top:8px;"><a href="https://www.google.com/search?q=${searchQ}" target="_blank" rel="noopener" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">🔍 查核來源</a></div>`;
+    ?`<div style="margin-top:8px;"><a href="${esc(olSafe)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">📖 Open Library</a></div>`
+    :`<div style="margin-top:8px;"><a href="https://www.google.com/search?q=${searchQ}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--faint);text-decoration:none;opacity:.7;">🔍 查核來源</a></div>`;
 
   return `<div class="card">
     <button class="save-btn${isSaved?' saved':''}" onclick="toggleSave(${jsAttr(c.id)})"

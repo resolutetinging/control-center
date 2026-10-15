@@ -121,7 +121,8 @@
   }
 
   // 保險層：即使某個 key 意外混入白名單，值中若含憑證格式字串也阻擋
-  const PAT_RE = /ghp_[A-Za-z0-9]{10,}|ghs_[A-Za-z0-9]{10,}|github_pat_[A-Za-z0-9_]{10,}|gsk_[A-Za-z0-9]{10,}/;
+  const CRED_RE = /(?:ghp_|gho_|ghu_|ghs_|ghr_|github_pat_|gsk_)[A-Za-z0-9_]{10,}|(?:^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{10,}/;
+  const PAT_RE = CRED_RE; // 舊名保留給上傳路徑使用
 
   function creds() {
     const pat = (localStorage.getItem('gh_pat') || '').trim();
@@ -550,7 +551,7 @@
       // 白名單防護（含裝置本地 key 排除）
       if (!isSafeKey(k)) continue;
       // 第二道：值必須是字串，且不得夾帶憑證
-      if (typeof v !== 'string' || /(ghp_|github_pat_|gho_|gsk_)[A-Za-z0-9_]{20,}/.test(v)) continue;
+      if (typeof v !== 'string' || CRED_RE.test(v)) continue;
       if (TS_STRIP_KEYS.has(k) && localTsNewer(k, v)) continue; // 本機計算較新的狀態旗標：保留本機（Guard 24 小時視窗靠 ts）
       const ok = await restoreOne(k, v);
       if (!ok) skipped.push(k);
@@ -570,13 +571,13 @@
         if (!f) { ok = false; break; }
         let c = f.content;
         if (f.truncated) {
-          try { const rr = await fetch(f.raw_url); if (!rr.ok) throw 0; c = await rr.text(); }
+          try { if (typeof f.raw_url !== 'string' || !/^https:\/\/gist\.githubusercontent\.com\//.test(f.raw_url)) throw 0; const rr = await fetch(f.raw_url); if (!rr.ok) throw 0; c = await rr.text(); }
           catch (e) { ok = false; break; }
         }
         val += c;
       }
       if (!ok) { incomplete.push(bk); continue; }
-      if (typeof val !== 'string' || /(ghp_|github_pat_|gho_|gsk_)[A-Za-z0-9_]{20,}/.test(val)) continue;
+      if (typeof val !== 'string' || CRED_RE.test(val)) continue;
       const saved = await restoreOne(bk, val);
       if (saved) bigRestored++; else skipped.push(bk);
     }

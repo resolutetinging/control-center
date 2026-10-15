@@ -496,7 +496,7 @@ function dClick(el,id){
   if(!url){openSettings('links');return;}
   const safe=ccSafeUrl(url);
   if(!safe){openSettings('links');return;}
-  window.open(safe,'_blank');
+  window.open(safe,'_blank','noopener,noreferrer');
 }
 // Mark dock icons whose link is not set
 function updateUnsetFlags(){
