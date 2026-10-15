@@ -1,7 +1,14 @@
 {
-  "generated_through": "2026-10-14",
+  "generated_through": "2026-10-15",
   "note": "每完成一項修改即直接寫入本檔案（不再事後解析文字日誌），session 結束時 commit push",
   "timeline": [
+    {
+      "date": "2026-10-15",
+      "project": "Control Center",
+      "file": "index.html",
+      "summary": "資料維護提醒加稍後提醒：彈窗改成兩顆按鈕，可以選兩小時後再提醒，或今天不再提醒。首頁開著時，時間到了且資料還沒補齊會再跳出來。",
+      "reason": "spec_change"
+    },
     {
       "date": "2026-10-14",
       "project": "Control Center",
@@ -4028,7 +4035,7 @@
     {
       "project": "Control Center",
       "file": "index.html",
-      "count": 17,
+      "count": 18,
       "top_reason": "spec_change"
     },
     {
