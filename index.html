@@ -38,6 +38,7 @@
   <a class="lto-row lto-lens" data-lens="creative" href="https://nexus-portal-epq.pages.dev/?lens=creative" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◈</span>Creative</a>
   <a class="lto-row lto-lens" data-lens="astrology" href="https://nexus-portal-epq.pages.dev/?lens=astrology" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">◆</span>Astrology</a>
   <a class="lto-row lto-lens" data-lens="engineering" href="https://nexus-portal-epq.pages.dev/?lens=engineering" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">≡</span>Engineering</a>
+  <a id="lto-decks-row" class="lto-row" href="https://nexus-portal-epq.pages.dev/#decks" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">▶</span>簡報（唯讀）</a>
   <div id="lto-edit-sep" class="lto-sep"></div>
   <a id="lto-edit-row" class="lto-row" href="https://nexus-portal-epq.pages.dev/" target="_blank" rel="noopener noreferrer"><span class="lto-row-ic">✎</span>Edit Mode</a>
 </div>
@@ -1076,6 +1077,8 @@ function applyNexusLinks(){
     var lens=a.getAttribute('data-lens');
     if(lens)a.href=NP_BASE+'?lens='+lens+hashPart;
   });
+  var decksRow=document.getElementById('lto-decks-row');
+  if(decksRow)decksRow.href=NP_BASE+(key?('#decks&access='+encodeURIComponent(key)):'#decks');
   var editRow=document.getElementById('lto-edit-row');
   if(editRow)editRow.href=key?(NP_BASE+'?lens=myself'+'#access='+encodeURIComponent(key)):NP_BASE;
 }
