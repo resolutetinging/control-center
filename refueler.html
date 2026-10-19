@@ -494,6 +494,8 @@ function _cleanEntry(e,strict){
   if(o.photo!=null&&!(typeof o.photo==='string'&&_imgSrc(o.photo)))o.photo=null;
   return o;
 }
+// 已刪除 id 清單（tombstone）：只留非空字串、去重
+function _cleanDeleted(a){return Array.isArray(a)?[...new Set(a.filter(x=>typeof x==='string'&&x))]:[];}
 function loadRF(){try{const d=JSON.parse(localStorage.getItem(RF_KEY));if(!d||typeof d!=='object'||!Array.isArray(d.entries))return{entries:[]};return{...d,entries:d.entries.map(x=>_cleanEntry(x,false)).filter(Boolean)};}catch{return{entries:[]};}}
 function saveRF(d){
   try{
@@ -567,6 +569,7 @@ async function loadFromGist(){
   const gist=localStorage.getItem('gist_id')||'';
   if(!pat||!gist){setSyncStatus('idle','☁ 未設定');return;}
   setSyncStatus('ing','↓ 載入中');
+  let needPush=false;
   try{
     const r=await fetch('https://api.github.com/gists/'+gist,{
       headers:{'Authorization':'Bearer '+pat}
@@ -581,21 +584,29 @@ async function loadFromGist(){
       const local=loadRF();
       const seen=new Set();
       const remoteEntries=Array.isArray(remote.entries)?remote.entries.map(x=>_cleanEntry(x,true)).filter(Boolean):[];
+      // 兩邊的已刪除 id 取聯集，合併時排除，避免已刪記錄復活
+      const remoteDel=_cleanDeleted(remote.deleted);
+      const deleted=_cleanDeleted([...remoteDel,..._cleanDeleted(local.deleted)]);
+      const delSet=new Set(deleted);
       const merged=[...remoteEntries,...(local.entries||[])].filter(e=>{
-        if(seen.has(e.id))return false;
+        if(delSet.has(e.id)||seen.has(e.id))return false;
         seen.add(e.id);
         return true;
       });
-      const mergedData=JSON.stringify({entries:merged});
+      // 雲端仍含已刪記錄、缺本機 tombstone 或缺本機新增記錄時，合併後推回 Gist
+      const remoteIds=new Set(remoteEntries.map(e=>e.id));
+      needPush=remoteEntries.some(e=>delSet.has(e.id))||deleted.length!==remoteDel.length||merged.some(e=>e.id&&!remoteIds.has(e.id));
+      const mergedData=JSON.stringify({entries:merged,deleted});
       try{
         localStorage.setItem(RF_KEY,mergedData);
       }catch(qe){
         // 超額：剔除照片後再試
         const noPhoto=merged.map(en=>({...en,photo:null}));
-        localStorage.setItem(RF_KEY,JSON.stringify({entries:noPhoto}));
+        localStorage.setItem(RF_KEY,JSON.stringify({entries:noPhoto,deleted}));
       }
     }
     setSyncStatus('ok','☁ 已同步');
+    if(needPush)await syncToGist(loadRF());
   }catch(e){
     if(e instanceof SyntaxError){
       // Gist JSON 損壞：自動用本機資料覆蓋修復
@@ -676,7 +687,11 @@ document.getElementById('pw-250').classList.add('sel');
 // ── DELETE ──
 function delEntry(id){
   if(!confirm('刪除這筆記錄？'))return;
-  const d=loadRF();d.entries=(d.entries||[]).filter(e=>e.id!==id);saveRF(d);refresh();
+  const d=loadRF();d.entries=(d.entries||[]).filter(e=>e.id!==id);
+  // 記錄已刪除 id（tombstone），避免 Gist 聯集合併時從雲端或他裝置復活
+  const del=_cleanDeleted(d.deleted);if(!del.includes(id))del.push(id);d.deleted=del;
+  saveRF(d);refresh();
+  if(document.getElementById('day-detail').style.display==='flex'&&!document.getElementById('dd-panel').classList.contains('dd-panel-wide')&&_ddKey&&_ddType==='water')showDayDetail(_ddKey,'water');
 }
 
 // ── RENDER LOGS ──
@@ -959,7 +974,7 @@ function showDayDetail(key,type,editId=null){
     rows=`<div style="font-size:20px;font-weight:300;color:var(--water);margin-bottom:12px;">${total} <span style="font-size:13px;">ml 總計</span></div>`;
     rows+=es.map(e=>{
       const t=new Date(e.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-      return`<div class="dd-entry">${t} — ${e.amount||250} ml</div>`;
+      return`<div class="dd-entry" style="display:flex;align-items:center;gap:8px;"><span style="flex:1;">${t} — ${e.amount||250} ml</span><button class="log-del" onclick="delEntry(${_ja(e.id)})">🗑</button></div>`;
     }).join('');
   }
   document.getElementById('dd-panel').innerHTML=`
