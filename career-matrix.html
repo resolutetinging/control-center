@@ -213,6 +213,14 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#38342e;color:#f4f0e8;font-size:var(--fs3);padding:7px 16px;border-radius:20px;z-index:9999;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none}
 #toast.show{opacity:1}
+.to-opt{font-family:inherit;font-size:var(--fs4);padding:2px 8px;border-radius:10px;border:.5px solid var(--ac-tint2);background:var(--ac-tint);color:var(--ac);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.to-opt:hover{background:var(--ac-tint2)}
+.to-opt.done{background:none;border-color:var(--border);color:var(--faint);cursor:default}
+.cd-meta .to-opt{margin-left:auto}
+#opt-undo{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#38342e;color:#f4f0e8;font-size:var(--fs3);padding:7px 10px 7px 16px;border-radius:20px;z-index:10000;display:none;align-items:center;gap:10px;max-width:calc(100vw - 32px)}
+#opt-undo.show{display:flex}
+#opt-undo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#opt-undo button{font-family:inherit;font-size:var(--fs3);background:none;border:.5px solid rgba(244,240,232,.5);color:#f4f0e8;border-radius:12px;padding:2px 10px;cursor:pointer;flex-shrink:0}
 .foot{text-align:center;font-size:var(--fs4);color:var(--faint);margin-top:22px}
 
 /* ── 手機：單欄依 1→4 堆疊 ── */
@@ -267,6 +275,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 </div>
 
 <div id="toast"></div>
+<div id="opt-undo"><span id="opt-undo-msg"></span><button type="button" id="opt-undo-btn">復原</button></div>
 
 <script>
 const KEY='cc_career_v1';
@@ -557,7 +566,7 @@ function pickQuad(q){
   render();
 }
 function render(){
-  CSTAT=loadCstat();
+  CSTAT=loadCstat();OPT_REFS=loadOptRefs();
   if(selCard&&!getCard(selCard))selCard='';
   const fk=_focusKey(document.activeElement);
   const all=[];
@@ -621,8 +630,8 @@ function cardHtml(c){
   return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
     <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div>${CSTAT.card[c.id]?`<span class="cd-wk">${esc(wkTxt(CSTAT.card[c.id]))}</span>`:''}</div>
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
-    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
-    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span></div>${tkHtml(it)}`;}).join('')}</div>`:''}
+    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}${optBtn(c.id,null)}</div>
+    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${optBtn(c.id,it.id)}</div>${tkHtml(it)}`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -733,6 +742,65 @@ function addTag(c,raw,inp){
   if(c.tags.length>=TAG_MAX){toast('每個方向最多 '+TAG_MAX+' 個標籤');return;}
   c.tags.push(n);touch(c);save();render();
   const el=$('mc-'+c.id);const i2=el&&el.querySelector('[data-f="tagnew"]');if(i2)i2.focus();
+}
+
+/* ── 階段 2b：Career → Optimizer 複製轉入（不搬走）；寫 tina_tasks_v3 的「Career 轉入」分類（ondemand，不自動排程）── */
+const OPT_TASKS_KEY='tina_tasks_v3',OPT_CAT='career_inbox',OPT_CAT_LABEL='Career 轉入',OPT_NAME_MAX=60;
+let OPT_REFS=new Set(); // 已在任務庫的對應：'cardId' 或 'cardId|itemId'（每次 render 重讀）
+function loadOptTasks(){try{const td=JSON.parse(localStorage.getItem(OPT_TASKS_KEY)||'null');return(td&&typeof td==='object'&&Array.isArray(td.tasks)&&Array.isArray(td.categories))?td:null;}catch(e){return null;}}
+function optRefKey(cardId,itemId){return itemId?cardId+'|'+itemId:cardId;}
+function loadOptRefs(){
+  const out=new Set(),td=loadOptTasks();
+  if(td)td.tasks.forEach(t=>{const r=t&&t.careerRef;if(r&&typeof r==='object'&&typeof r.cardId==='string'&&r.cardId)out.add(optRefKey(r.cardId,(typeof r.itemId==='string'&&r.itemId)?r.itemId:null));});
+  return out;
+}
+function optBtn(cardId,itemId){
+  const k=optRefKey(cardId,itemId);
+  return OPT_REFS.has(k)
+    ?'<button type="button" class="to-opt done" data-opt="'+esc(cardId)+'"'+(itemId?' data-opt-item="'+esc(itemId)+'"':'')+' title="任務庫已有對應這裡的任務">已在任務庫</button>'
+    :'<button type="button" class="to-opt" data-opt="'+esc(cardId)+'"'+(itemId?' data-opt-item="'+esc(itemId)+'"':'')+' title="複製成 Optimizer 任務（Career 轉入，需要時才加入）">→ Optimizer</button>';
+}
+function optName(c,it){
+  const clean=v=>String(v||'').replace(/\s+/g,' ').trim();
+  const t=clean(c.title),n=it?clean(it.name):'';
+  if(!t||(it&&!n))return'';
+  const full=it?t+'・'+n:t;
+  return full.length>OPT_NAME_MAX?full.slice(0,OPT_NAME_MAX-1)+'…':full;
+}
+let _optUndo=null,_optUndoT=null;
+function toOptimizer(cardId,itemId){
+  const c=getCard(cardId);if(!c)return;
+  const it=itemId?c.items.find(x=>x.id===itemId):null;
+  if(itemId&&!it)return;
+  const name=optName(c,it);
+  if(!name){toast(itemId?'細項沒有名稱，無法轉入':'方向沒有名稱，無法轉入');return;}
+  if(!localStorage.getItem(OPT_TASKS_KEY)){toast('找不到 Optimizer 任務庫，請先在此裝置開一次 Optimizer');return;}
+  const td=loadOptTasks();
+  if(!td){toast('Optimizer 任務庫資料異常，未轉入');return;}
+  if(window.ccSyncCore&&typeof window.ccSyncCore.isStaleTab==='function'&&window.ccSyncCore.isStaleTab()){toast('未轉入：資料已在其他分頁更新，請重新整理');return;}
+  const k=optRefKey(cardId,itemId);
+  if(loadOptRefs().has(k)){toast('任務庫已有對應這裡的任務');render();return;}
+  if(td.tasks.some(t=>t&&typeof t.text==='string'&&t.text.trim()===name)){toast('任務庫已有同名任務，未轉入');return;}
+  if(!td.categories.some(x=>x&&x.key===OPT_CAT))td.categories.push({key:OPT_CAT,label:OPT_CAT_LABEL,freq:'ondemand'});
+  const nid=Math.max(9,...td.tasks.map(t=>Number(t&&t.id)||0))+1;
+  const task={id:nid,text:name,catKey:OPT_CAT,freq:'ondemand',energy:'mid',careerRef:itemId?{cardId,itemId}:{cardId}};
+  td.tasks.push(task);
+  try{localStorage.setItem(OPT_TASKS_KEY,JSON.stringify(td));}catch(e){toast('儲存空間不足，未轉入');return;}
+  render();
+  _optUndo=nid;
+  $('opt-undo-msg').textContent='已轉入 Optimizer：'+name;
+  $('opt-undo').classList.add('show');
+  clearTimeout(_optUndoT);_optUndoT=setTimeout(()=>{$('opt-undo').classList.remove('show');_optUndo=null;},6000);
+}
+function undoOptimizer(){
+  if(_optUndo==null)return;
+  const id=_optUndo;_optUndo=null;clearTimeout(_optUndoT);$('opt-undo').classList.remove('show');
+  const td=loadOptTasks();if(!td)return;
+  const before=td.tasks.length;
+  td.tasks=td.tasks.filter(t=>!(t&&t.id===id&&t.catKey===OPT_CAT));
+  if(td.tasks.length===before)return;
+  try{localStorage.setItem(OPT_TASKS_KEY,JSON.stringify(td));}catch(e){toast('復原失敗');return;}
+  render();toast('已復原');
 }
 
 let _tt=null;
@@ -959,6 +1027,8 @@ function scrollToCard(id){
   }
 }
 $('board').addEventListener('click',e=>{
+  const op=e.target.closest('[data-opt]');
+  if(op){if(!op.classList.contains('done'))toOptimizer(op.dataset.opt,op.dataset.optItem||null);return;}
   const pk=e.target.closest('[data-pick]');
   if(pk){pickCard(pk.dataset.pick);return;}
   const tag=e.target.closest('[data-tag]');
@@ -992,6 +1062,7 @@ $('maint').addEventListener('input',onMaintInput);
 $('maint').addEventListener('click',onMaintClick);
 $('maint').addEventListener('keydown',onMaintKey);
 $('new-btn').addEventListener('click',addCard);
+$('opt-undo-btn').addEventListener('click',undoOptimizer);
 $('new-title').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCard();}});
 
 load();
