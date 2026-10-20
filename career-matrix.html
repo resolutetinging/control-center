@@ -75,7 +75,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .cd-it-st{font-size:var(--fs3);flex-shrink:0;color:var(--faint)}
 .cd-it-st.st1{color:var(--warn)}.cd-it-st.st2{color:var(--ac)}.cd-it-st.st3{color:var(--ok)}
 .cd-dist{color:var(--sub)}
-.cd-wk{font-size:var(--fs3);color:var(--faint);white-space:nowrap}
+.cd-wk{font-size:var(--fs3);color:var(--faint);white-space:nowrap;margin-left:auto;align-self:flex-start;flex-shrink:0}
 .cd-it-wk{font-size:var(--fs4);color:var(--faint);flex-shrink:0;white-space:nowrap}
 
 
@@ -619,9 +619,9 @@ const BOARD_OPEN=new Set(); // 看板卡片細項展開狀態：僅頁面變數�
 function cardHtml(c){
   const n=c.items.length,dist=distOf(c),bo=n>0&&BOARD_OPEN.has(c.id);
   return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
-    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div></div>
+    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div>${CSTAT.card[c.id]?`<span class="cd-wk">${esc(wkTxt(CSTAT.card[c.id]))}</span>`:''}</div>
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
-    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}${CSTAT.card[c.id]?`<span class="cd-wk">${esc(wkTxt(CSTAT.card[c.id]))}</span>`:''}</div>
+    <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}</div>
     ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span></div>${tkHtml(it)}`;}).join('')}</div>`:''}
   </div>`;
 }
