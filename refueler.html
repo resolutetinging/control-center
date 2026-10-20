@@ -278,10 +278,11 @@ body{
 </div>
 
 <!-- Date selector bar -->
-<div style="display:flex;align-items:center;gap:10px;padding:10px 24px 4px;">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 24px 4px;">
   <label class="f-lbl" style="margin:0;white-space:nowrap;">記錄日期</label>
-  <input type="date" id="rf-date" class="f-inp" style="width:auto;flex:1;max-width:180px;" onchange="onRFDateChange()"/>
+  <input type="date" id="rf-date" class="f-inp" style="width:auto;flex:1;max-width:180px;" onfocus="_rfSetMax()" onchange="onRFDateChange()"/>
   <button onclick="setRFDate(new Date())" style="font-size:11px;padding:5px 12px;border-radius:var(--rsm);border:.5px solid var(--border);background:var(--bg2);color:var(--sub);cursor:pointer;white-space:nowrap;">今天</button>
+  <span id="rf-date-warn" style="display:none;font-size:11px;color:var(--danger);"></span>
 </div>
 
 <!-- Main 2-Column Grid (4 direct children → auto-aligned rows) -->
@@ -524,10 +525,19 @@ function todayEntries(){const d=loadRF();return(d.entries||[]).filter(e=>new Dat
 // ── SELECTED DATE ──
 function isoDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function setRFDate(d){const el=document.getElementById('rf-date');if(el)el.value=isoDate(d);onRFDateChange();}
+// 防呆：日期選單上限為今天（每次聚焦重設，頁面跨午夜也正確）
+function _rfSetMax(){const el=document.getElementById('rf-date');if(el)el.max=isoDate(new Date());}
+let _rfWarnTimer=null;
+function _rfWarn(msg){const w=document.getElementById('rf-date-warn');if(!w)return;w.textContent=msg;w.style.display='inline';clearTimeout(_rfWarnTimer);_rfWarnTimer=setTimeout(()=>{w.style.display='none';},4000);}
+// 新增記錄前檢查：時間在未來就擋下並提示
+function _rfFuture(ts){if(ts.getTime()<=Date.now())return false;_rfWarn('⚠ 不能記錄未來的時間');return true;}
 function getRFDate(){const v=document.getElementById('rf-date')?.value;return v?new Date(v+'T12:00:00'):new Date();}
 function getRFDateStr(){return getRFDate().toDateString();}
 function isToday(){return getRFDateStr()===todayStr();}
 function onRFDateChange(){
+  _rfSetMax();
+  const el=document.getElementById('rf-date');
+  if(el&&el.value&&el.value>isoDate(new Date())){el.value=isoDate(new Date());_rfWarn('⚠ 不能選未來日期，已改回今天');}
   const lbl=isToday()?'今日記錄':getRFDate().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})+'記錄';
   ['coffee-log-lbl','water-log-lbl'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
   renderCoffeeLog();renderWaterLog();
@@ -649,6 +659,7 @@ function addCoffee(){
   const dessertPrice=parseFloat(document.getElementById('c-dprice').value)||0;
   const d=loadRF();
   const ts=getRFDate();ts.setHours(new Date().getHours(),new Date().getMinutes(),0,0);
+  if(_rfFuture(ts))return;
   d.entries.push({id:'rf_'+Date.now(),type:'coffee',cafe,item,dessert,coffeePrice,dessertPrice,photo:pendingPhoto||null,timestamp:ts.toISOString()});
   saveRF(d);
   ['c-cafe','c-item','c-dessert','c-price','c-dprice'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -676,6 +687,7 @@ function addWater(){
   if(!amount||amount<1){return;}
   const d=loadRF();
   const tsW=getRFDate();tsW.setHours(new Date().getHours(),new Date().getMinutes(),0,0);
+  if(_rfFuture(tsW))return;
   d.entries.push({id:'rf_'+Date.now(),type:'water',amount,timestamp:tsW.toISOString()});
   saveRF(d);
   refresh();
