@@ -182,8 +182,10 @@
 <div id="nudge-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(40,38,32,.25);backdrop-filter:blur(12px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDataNudge('later')">
   <div style="background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:18px 20px;width:min(86vw,340px);box-shadow:0 8px 30px rgba(40,38,32,.15);">
     <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:4px;">資料維護提醒</div>
-    <div style="font-size:.66rem;color:var(--faint);margin-bottom:12px;">補齊這些資料，之後的睡眠因素分析才準</div>
+    <div id="nudge-gap-sub" style="font-size:.66rem;color:var(--faint);margin-bottom:12px;">補齊這些資料，之後的睡眠因素分析才準</div>
     <div id="nudge-list"></div>
+    <div id="nudge-cp-sub" style="display:none;font-size:.66rem;color:var(--faint);margin:10px 0 8px;">待維護項目（找 Claude 處理）</div>
+    <div id="nudge-cp-list"></div>
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button id="nudge-later-btn" onclick="closeDataNudge('later')" style="flex:1;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">稍後提醒（2 小時）</button>
       <button id="nudge-ok-btn" onclick="closeDataNudge('today')" style="flex:1;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">今天不再提醒</button>
@@ -1124,19 +1126,59 @@ function collectDataGaps(){
   }catch{}
   return gaps;
 }
-function checkDataNudge(){
+// 待維護 checkpoint：由 checkpoints.json 載入（網路檔案視為不可信，清洗後才用）
+let _cpItems=[];
+function sanitizeCheckpoints(j){
+  const arr=(j&&Array.isArray(j.items))?j.items:[];
+  const out=[];
+  arr.forEach(it=>{
+    if(!it||typeof it!=='object'||it.done===true)return;
+    if(typeof it.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(it.date))return;
+    if(typeof it.title!=='string'||!it.title.trim())return;
+    const h=typeof it.href==='string'&&/^https?:\/\//.test(it.href)?it.href:'';
+    out.push({date:it.date,title:it.title.slice(0,80),href:h});
+  });
+  return out;
+}
+function collectCheckpoints(){
+  const dayDiff=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);
+  return _cpItems.map(c=>({c,n:dayDiff(TODAY,c.date)})).filter(x=>!isNaN(x.n)&&x.n<=3)
+    .sort((a,b)=>a.c.date<b.c.date?-1:a.c.date>b.c.date?1:0)
+    .map(x=>{
+      const n=x.n;
+      const tag=n===0?'已到期':n<0?'已過 '+(-n)+' 天':n+' 天後';
+      return {icon:'🗓',text:x.c.title,href:x.c.href,tag:tag};
+    });
+}
+function loadCheckpoints(){
+  try{
+    fetch('checkpoints.json?v='+Date.now()).then(r=>r.ok?r.json():null).then(j=>{_cpItems=sanitizeCheckpoints(j);}).catch(()=>{_cpItems=[];}).then(()=>{checkDataNudge(true);});
+  }catch{checkDataNudge(true);}
+}
+function checkDataNudge(force){
   try{
     if(localStorage.getItem(NUDGE_KEY)===TODAY)return;
     const until=+localStorage.getItem(NUDGE_SNOOZE_KEY)||0;
     if(until>Date.now())return;
   }catch{}
   const _ov=document.getElementById('nudge-overlay');
-  if(_ov&&_ov.style.display==='flex')return; // 已顯示中不重繪
+  if(_ov&&_ov.style.display==='flex'&&force!==true)return; // 已顯示中不重繪（checkpoint 載入完成時 force 重繪）
   const gaps=collectDataGaps();
-  if(!gaps.length)return;
+  const cps=collectCheckpoints();
+  if(!gaps.length&&!cps.length)return;
   const list=document.getElementById('nudge-list');
   const ov=document.getElementById('nudge-overlay');
   if(!list||!ov)return;
+  const gsub=document.getElementById('nudge-gap-sub');
+  if(gsub)gsub.style.display=gaps.length?'':'none';
+  const csub=document.getElementById('nudge-cp-sub');
+  if(csub)csub.style.display=cps.length?'':'none';
+  const cpl=document.getElementById('nudge-cp-list');
+  if(cpl)cpl.innerHTML=cps.map(c=>{
+    const st='display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border-radius:10px;background:var(--bg2);border:.5px solid var(--border);font-size:.72rem;color:var(--ink);text-decoration:none;';
+    const inner='<span>'+esc(c.icon)+'</span><span style="flex:1">'+esc(c.text)+'</span><span style="color:var(--faint)">'+esc(c.tag)+'</span>';
+    return c.href?'<a class="nudge-row" href="'+esc(c.href)+'" target="_blank" rel="noopener noreferrer" style="'+st+'">'+inner+'</a>':'<div class="nudge-row" style="'+st+'">'+inner+'</div>';
+  }).join('');
   list.innerHTML=gaps.map(g=>{
     const h=String(g.href||'');
     const safe=/^(https?:\/\/|\.\/)/.test(h)?h:'#';
@@ -1162,6 +1204,7 @@ checkGitHistoryReview();
 updateUnsetFlags();
 initLiveData();
 checkDataNudge();
+loadCheckpoints();
 updateSyncTime();
 updateBackupHealth();
 document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});
