@@ -857,6 +857,11 @@ function loadTaskView(){
   return out;
 }
 function sortTasks(list){const o={on:0,idle:1,closed:2};return list.slice().sort((a,b)=>o[a.st]-o[b.st]);}
+// 焦點細項的對應任務（未結案）：先看細項層，沒有才退回方向層（無 itemId）任務；口徑同 Optimizer isFocusTask
+function focusTasksOf(c,it){
+  const own=(TV.byRef[c.id+'|'+it.id]||[]).filter(t=>t.st!=='closed');
+  return own.length?own:(TV.byRef[c.id]||[]).filter(t=>t.st!=='closed');
+}
 function tasksOf(cid,iid){return sortTasks(TV.byRef[optRefKey(cid,iid)]||[]);}
 // 任務 N（進行中 M）：N＝未結案（方向層＋現存細項），已結案不計
 function taskCount(c){
@@ -906,11 +911,11 @@ function buildAttention(){
       if(on)rows.push({cid:c.id,lbl:'已決定不進行',dq:true,rk:5,d:-1,txt:title+' 已決定不進行，仍有 '+on+' 個任務開著'});
       return;
     }
-    // 規則 6（階段 5）：焦點細項沒有進行中任務；不限象限；口徑同 Optimizer 焦點小標＝只看對應到細項的任務（方向層任務不算）
+    // 規則 6（階段 5）：焦點細項沒有進行中任務；不限象限；口徑同 Optimizer isFocusTask：細項層無未結案任務時退回看方向層任務（focusTasksOf）
     const f6=new Set();
     c.items.forEach(it=>{
       if(it.focus!==cw)return;
-      const ts=(TV.byRef[c.id+'|'+it.id]||[]).filter(t=>t.st!=='closed');
+      const ts=focusTasksOf(c,it);
       if(ts.some(t=>t.st==='on'))return;
       f6.add(it.id);
       rows.push({cid:c.id,lbl:qLabel(c.quadrant),rk:Q_RANK[c.quadrant],d:-1,txt:title+' › '+(it.name||'（未命名）')+' 是本週焦點，但'+(ts.length?'對應任務都在待命':'沒有對應任務')});
@@ -1445,7 +1450,7 @@ function onMaintClick(e){
       if(it.focus===cw){delete it.focus;save();render();focusIBtn(iid,'ifocus');toast('已取消本週焦點');return;}
       if(focusList(cw).length>=FOCUS_MAX){toast('本週焦點最多 '+FOCUS_MAX+' 項，請先取消一項');return;}
       it.focus=cw;save();render();focusIBtn(iid,'ifocus');
-      const ts=(TV.byRef[c.id+'|'+it.id]||[]).filter(t=>t.st!=='closed'); // 口徑同規則 6：只看對應到細項的任務
+      const ts=focusTasksOf(c,it); // 口徑同規則 6：細項層無任務時看方向層任務
       toast(!ts.length?'這個細項沒有對應任務，可按 → Optimizer':ts.some(t=>t.st==='on')?'已設為本週焦點':'對應任務都在待命，請到 Optimizer 打開');
       return;
     }
