@@ -280,6 +280,33 @@ button.att-row:hover,button.att-row:focus-visible{background:var(--ac-tint)}
 .drop-reason{font-size:var(--fs3);color:var(--sub);padding:0 12px 10px 12px;word-break:break-word}
 .mc-head .btn.wp-open{padding:5px 10px}
 
+/* ── 階段 5（10-27）：時間分配／本週焦點 ── */
+:root{--k1:#3f5f80;--k2:#6f97bd;--k3:#3d7a5a;--k4:#8a5a20;--k0:#a8a39b;--ku:#cfcac1;--kcal:#7a8a96}
+.alc{background:var(--card);border:.5px solid var(--bstr);border-left:3px solid var(--ac);border-radius:12px;padding:12px 14px;margin-bottom:12px;box-shadow:var(--shadow);min-width:0}
+.alc-h{font-size:var(--fs3);font-weight:700;color:var(--ac);margin-bottom:6px}
+.alc-row{margin:6px 0 8px;min-width:0}
+.alc-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:var(--fs2);color:var(--ink)}
+.alc-w{font-size:var(--fs4);font-weight:700;color:var(--ac);background:var(--ac-tint2);padding:1px 8px;border-radius:9px;white-space:nowrap}
+.alc-row.prev .alc-w{color:var(--sub);background:var(--bg)}
+.alc-row.prev .alc-top{color:var(--sub)}
+.alc-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg);margin:6px 0 5px}
+.alc-seg{height:100%}
+.alc-seg.k1,.alc-dot.k1{background:var(--k1)}.alc-seg.k2,.alc-dot.k2{background:var(--k2)}.alc-seg.k3,.alc-dot.k3{background:var(--k3)}.alc-seg.k4,.alc-dot.k4{background:var(--k4)}
+.alc-seg.k0,.alc-dot.k0{background:var(--k0)}.alc-seg.ku,.alc-dot.ku{background:var(--ku)}.alc-seg.kcal,.alc-dot.kcal{background:var(--kcal)}
+.alc-cs{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:var(--fs3);color:var(--sub)}
+.alc-c{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.alc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alc-none{font-size:var(--fs3);color:var(--faint)}
+.alc-fc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px;padding-top:8px;border-top:.5px dashed var(--bstr);font-size:var(--fs2);color:var(--ink);line-height:1.5}
+.alc-fl{font-size:var(--fs4);font-weight:700;color:var(--ac);background:var(--ac-tint2);padding:1px 8px;border-radius:9px;white-space:nowrap}
+.alc-fn{min-width:0;word-break:break-word}
+.alc-hint{font-size:var(--fs3);color:var(--faint)}
+.foc-pill{display:inline-block;font-size:var(--fs4);font-weight:700;color:var(--ac);background:var(--ac-tint2);padding:1px 7px;border-radius:9px;white-space:nowrap;flex-shrink:0;vertical-align:middle}
+.cd-title .foc-pill{margin-left:8px}
+.st-ic.foc-ic{color:var(--sub);font-size:16px}
+.st-ic.foc-ic.on{color:#fff;background:var(--ac);border-color:var(--ac)}
+.st-ic.foc-ic:hover,.st-ic.foc-ic:focus-visible{border-color:var(--ac)}
+
 /* ── 手機：單欄依 1→4 堆疊 ── */
 @media(max-width:699px){
   .wrap{padding:16px 16px 110px}
@@ -301,6 +328,7 @@ button.att-row:hover,button.att-row:focus-visible{background:var(--ac-tint)}
 </div>
 
 <div class="wrap">
+  <div class="alc" id="alloc" role="region" aria-label="時間分配與本週焦點" hidden></div>
   <div class="att" id="att" role="region" aria-label="需要注意" hidden></div>
   <div class="filter-bar" id="filter-bar"></div>
 
@@ -427,6 +455,21 @@ function normDropped(d){
   return{date:d.date,reason:str(d.reason,200)};
 }
 function isDropped(c){return !!(c&&c.dropped);}
+// 本週焦點（階段 5，10-27 裁決：週一到週日 ISO 週）：items[].focus＝'YYYY-Www'，只用於判斷是否仍有效，任何畫面都不顯示
+// 下面兩行（FOCUS_RE／careerFocusWeek）與 Optimizer v3 逐字一致（規劃書 11.2、E-9）
+const FOCUS_RE=/^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])$/;
+function careerFocusWeek(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dow=t.getUTCDay()||7;
+  t.setUTCDate(t.getUTCDate()+4-dow);
+  const y=t.getUTCFullYear();
+  const wk=Math.ceil(((t-Date.UTC(y,0,1))/86400000+1)/7);
+  return y+'-W'+String(wk).padStart(2,'0');
+}
+const FOCUS_MAX=3;
+function curFW(){return careerFocusWeek(new Date());} // 以真實今天為準
+function prevFW(){const n=new Date();return careerFocusWeek(new Date(n.getFullYear(),n.getMonth(),n.getDate()-7));}
+function focusList(fw){const w=fw||curFW(),out=[];DB.cards.forEach(c=>{if(isDropped(c))return;c.items.forEach(it=>{if(it.focus===w)out.push({c,it});});});return out;}
 // 讀取驗證（規格 2 節）：匯入／Gist 還原資料不可信，欄位逐一檢查，不合格丟棄或給預設
 function normalize(raw){
   const out={version:1,cards:[],log:[]};
@@ -459,6 +502,7 @@ function normalize(raw){
         updatedAt:TS_RE.test(it.updatedAt)?it.updatedAt:nowStr(),
         topics:normTopics(it)
       });
+      if(typeof it.focus==='string'&&FOCUS_RE.test(it.focus))card.items[card.items.length-1].focus=it.focus; // 焦點週代號：格式合格才建欄位（舊資料 diff 不變）
     });
     out.cards.push(card);
   });
@@ -649,6 +693,7 @@ function render(){
   if(selCard&&(!getCard(selCard)||isDropped(getCard(selCard))))selCard='';
   if(PANEL_ID&&!getCard(PANEL_ID))PANEL_ID='';
   ATT=buildAttention();
+  ALC={cur:calcAlloc(weekDays(0)),prev:calcAlloc(weekDays(1))};
   const fk=_focusKey(document.activeElement);
   const all=[];
   DB.cards.forEach(c=>{if(!isDropped(c))c.tags.forEach(t=>{if(all.indexOf(t)<0)all.push(t);});});
@@ -665,6 +710,7 @@ function render(){
       <div class="q-desc">${esc(QDEF[q].desc)}</div>
       <div class="q-list">${cards.length?cards.map(cardHtml).join(''):'<div class="q-empty">'+(filterTag?'沒有符合標籤的方向':'尚無方向，從下方維護區選取方向後點這裡')+'</div>'}</div>`;
   }
+  renderAlloc();
   renderAtt();
   renderMaint();
   renderPanel();
@@ -715,18 +761,49 @@ let REV_CACHE=null; // 最近 60 天覆盤 {day,list}；換日或切回分頁時
 function dayStr(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function dayNum(s){return Math.round(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/86400000);}
 function normName(s){return String(s==null?'':s).normalize('NFKC').replace(/\s+/g,'');}
+// 階段 5：同一次 60 天掃描另收休假日（restMode===true）與每日 pipes／pipeAssignments（各自驗證，不合格整筆略過）
+const TM_RE=/^\d{1,2}:\d{2}$/;
+function tmMin(s){const h=+s.slice(0,s.indexOf(':')),m=+s.slice(s.indexOf(':')+1);return(h<=24&&m<60)?h*60+m:NaN;}
+function normPipes(p){
+  if(!Array.isArray(p)||p.length>48)return null;
+  const out=[];
+  for(const x of p){
+    if(!x||typeof x!=='object'||typeof x.start!=='string'||typeof x.end!=='string'||!TM_RE.test(x.start)||!TM_RE.test(x.end))return null;
+    const s=tmMin(x.start),e=tmMin(x.end);
+    if(!Number.isFinite(s)||!Number.isFinite(e))return null;
+    out.push({dur:e-s,cal:typeof x.hint==='string'&&x.hint.indexOf('📅')===0}); // 只留分鐘數與是否行程時段，原文不保留、不渲染
+  }
+  return out;
+}
+function normAssign(a){
+  if(a===undefined||a===null)return{};
+  if(typeof a!=='object'||Array.isArray(a))return null;
+  const out={};
+  for(const k of Object.keys(a)){
+    const v=a[k];
+    if(!/^\d{1,3}$/.test(k)||!Array.isArray(v)||v.length>50||v.some(n=>typeof n!=='string'||n.length>120))return null;
+    out[k]=v.slice();
+  }
+  return out;
+}
 function loadReviews(){
   const td=today();
   if(REV_CACHE&&REV_CACHE.day===td)return REV_CACHE.list;
-  const list=[],now=new Date();
+  const list=[],rest=new Set(),byDay={},now=new Date();
   for(let i=0;i<60;i++){
     const ds=dayStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()-i));
     let d=null;try{d=JSON.parse(localStorage.getItem('review_'+ds)||'null');}catch(e){d=null;}
-    if(d&&typeof d==='object'&&Array.isArray(d.items))list.push({date:ds,ago:i,items:d.items});
+    if(!d||typeof d!=='object'||Array.isArray(d))continue;
+    const isRest=d.restMode===true,items=Array.isArray(d.items)?d.items:null;
+    if(isRest)rest.add(ds);
+    const pipes=normPipes(d.pipes),pa=pipes?normAssign(d.pipeAssignments):null;
+    byDay[ds]={items:items||[],rest:isRest,pipes,pa};
+    if(items)list.push({date:ds,ago:i,items});
   }
-  REV_CACHE={day:td,list};
+  REV_CACHE={day:td,list,rest,byDay};
   return list;
 }
+function revInfo(){loadReviews();return REV_CACHE;}
 // 與 Optimizer getEffectiveTasks 同一條規則（唯讀版，規劃書 10.6）
 function taskState(t,cats,js){
   if(validDate(t.doneAt))return'closed';
@@ -748,7 +825,8 @@ function loadTaskView(){
     const st=taskState(t,td.categories,js);
     const text=typeof t.text==='string'?t.text.slice(0,120):'';
     const tk={id:(Number.isInteger(t.id)&&t.id>0)?t.id:null,text,nk:normName(text),cardId:r.cardId,itemId,st,
-      onAt:(validDate(t.onAt)&&t.onAt<=tday)?t.onAt:'',n30:0,last:''};
+      onAt:(validDate(t.onAt)&&t.onAt<=tday)?t.onAt:'',n30:0,last:'',
+      due:validDate(t.due)?t.due:''}; // 期限（Optimizer 唯一寫入端，唯讀；壞資料視為沒有）
     out.tasks.push(tk);
     const k=optRefKey(r.cardId,itemId);
     (st==='closed'?out.refs.closed:out.refs.open).add(k);
@@ -790,19 +868,32 @@ function taskRowsHtml(list){
   return list.map(t=>`<div class="tk-row"><span class="tk-name">${esc(t.text)||'（未命名任務）'}</span><span class="tk-pill ${t.st}">${esc(TK_ST[t.st])}</span><span class="tk-n">${t.n30?'近 30 天 '+t.n30+' 次':'近 30 天未做'}</span></div>`).join('');
 }
 // 「N 天沒做」起算點＝max(最近一次做, onAt)；都沒有回 null（近 60 天沒有紀錄）
+// 階段 5（規劃書 11.6）：扣掉 base 之後到今天（含今天）的休假日（review.restMode===true）；base 當天不扣；沒有 review 的日子不算休假
 function idleDays(tk){
   const b=[tk.last,tk.onAt].filter(Boolean).sort().pop();
-  return b?dayNum(today())-dayNum(b):null;
+  if(!b)return null;
+  const td=today();let n=dayNum(td)-dayNum(b);
+  revInfo().rest.forEach(d=>{if(d>b&&d<=td)n--;});
+  return Math.max(0,n);
 }
 const Q_RANK={1:0,2:1,3:2,4:3,0:4};
 // 頁首需要注意（規劃書 10.8 規則 1–5、10.7）；唯一可以出現天數的地方
 function buildAttention(){
   const rows=[],unclosed=k=>(TV.byRef[k]||[]).some(t=>t.st!=='closed');
+  const cw=curFW(),hasFocus=focusList(cw).length>0,tdn=dayNum(today());
   let orphan=0;
   TV.tasks.forEach(t=>{
     if(t.st!=='on')return;
     const c=getCard(t.cardId);
     if(!c||(t.itemId&&!c.items.some(i=>i.id===t.itemId)))orphan++;
+  });
+  // 規則 7（階段 5）：期限剩 ≤3 天／今天／已過期；全部象限與未放置；決定不進行與孤兒任務不提醒；只寫天數不寫日期；排最前
+  TV.tasks.forEach(t=>{
+    if(t.st==='closed'||!t.due)return;
+    const c=getCard(t.cardId);
+    if(!c||isDropped(c)||(t.itemId&&!c.items.some(i=>i.id===t.itemId)))return;
+    const left=dayNum(t.due)-tdn;if(left>3)return;
+    rows.push({cid:c.id,lbl:qLabel(c.quadrant),rk:-1,d:-left,txt:(c.title||'（未命名）')+'：「'+(t.text||'未命名任務')+'」'+(left<0?'已過期 '+(-left)+' 天':left===0?'今天到期':'期限剩 '+left+' 天')+(t.st==='idle'?'（任務在待命）':'')});
   });
   DB.cards.forEach(c=>{
     const title=c.title||'（未命名）';
@@ -812,10 +903,20 @@ function buildAttention(){
       if(on)rows.push({cid:c.id,lbl:'已決定不進行',dq:true,rk:5,d:-1,txt:title+' 已決定不進行，仍有 '+on+' 個任務開著'});
       return;
     }
+    // 規則 6（階段 5）：焦點細項沒有進行中任務；不限象限；口徑同 Optimizer 焦點小標＝只看對應到細項的任務（方向層任務不算）
+    const f6=new Set();
+    c.items.forEach(it=>{
+      if(it.focus!==cw)return;
+      const ts=(TV.byRef[c.id+'|'+it.id]||[]).filter(t=>t.st!=='closed');
+      if(ts.some(t=>t.st==='on'))return;
+      f6.add(it.id);
+      rows.push({cid:c.id,lbl:qLabel(c.quadrant),rk:Q_RANK[c.quadrant],d:-1,txt:title+' › '+(it.name||'（未命名）')+' 是本週焦點，但'+(ts.length?'對應任務都在待命':'沒有對應任務')});
+    });
     if(c.quadrant!==1&&c.quadrant!==2)return;
     const lbl='第'+QN[c.quadrant]+'象限',rk=Q_RANK[c.quadrant];
     const cardHas=unclosed(c.id); // Q1 裁決：方向層有未結案任務＝各細項都有任務
-    c.items.forEach(it=>{ // 規則 1：缺任務
+    c.items.forEach(it=>{ // 規則 1：缺任務（焦點細項由規則 6 提醒，不重複）
+      if(it.focus===cw)return;
       if(it.status!=='需強化'&&it.status!=='未評估')return;
       if(cardHas||unclosed(c.id+'|'+it.id))return;
       rows.push({cid:c.id,lbl,rk,d:-1,txt:title+' › '+(it.name||'（未命名）')+'：'+it.status+'，但沒有對應任務'});
@@ -827,16 +928,20 @@ function buildAttention(){
       if(n===null)rows.push({cid:c.id,lbl,rk,d:9999,txt:title+'：'+nm+'近 60 天沒有紀錄'});
       else if(n>=th)rows.push({cid:c.id,lbl,rk,d:n,txt:title+'：'+nm+'已 '+n+' 天沒做'});
     });
-    const idle=mine.filter(t=>{ // 規則 3：被關掉（待命），按方向合併
+    // 規則 3：被關掉（待命），按方向合併；10-27 裁決：本週有設焦點時只看焦點細項（已由規則 6 提醒的細項不重複）
+    const ok3=i=>i.status!=='已精通'&&(!hasFocus||(i.focus===cw&&!f6.has(i.id)));
+    const idle=mine.filter(t=>{
       if(t.st!=='idle')return false;
-      if(t.itemId){const it=c.items.find(i=>i.id===t.itemId);return !!it&&it.status!=='已精通';}
-      return c.items.some(i=>i.status!=='已精通');
+      if(t.itemId){const it=c.items.find(i=>i.id===t.itemId);return !!it&&ok3(it);}
+      return c.items.some(ok3);
     }).length;
     if(idle){
       const un=mine.filter(t=>t.st!=='closed').length;
-      rows.push({cid:c.id,lbl,rk,d:-1,txt:title+' 還有未精通細項，對應任務 '+idle+' 個'+(idle===un?'都':'')+'在待命'});
+      rows.push({cid:c.id,lbl,rk,d:-1,txt:title+(hasFocus?' 的本週焦點細項還沒精通':' 還有未精通細項')+'，對應任務 '+idle+' 個'+(idle===un?'都':'')+'在待命'});
     }
   });
+  const nr=unreviewedDays(); // 11.3＋10-27 裁決：本週已過天數中有 ≥2 天沒覆盤
+  if(nr>=2)rows.push({cid:'',lbl:'',rk:8,d:-1,txt:'本週已過的天數中有 '+nr+' 天沒覆盤，時間分配會偏低'});
   rows.sort((a,b)=>a.rk-b.rk||b.d-a.d);
   if(orphan)rows.push({cid:'',lbl:'',rk:9,d:-1,txt:orphan+' 個進行中任務對應的方向或細項已刪除，請到 Optimizer 重新對應'}); // 規則 5
   return rows;
@@ -853,15 +958,102 @@ function renderAtt(){
   el.innerHTML='<div class="att-h">需要注意</div>'+show.map(attRowHtml).join('')
     +(ATT.length>5?`<button type="button" class="att-more" data-att-more="1" aria-expanded="${ATT_MORE}">${ATT_MORE?'收合':'還有 '+(ATT.length-5)+' 項'}</button>`:'');
 }
+/* ───────── 階段 5：象限時間分配（規劃書 11.3＋10-27 裁決；只讀 review_*，估算值，畫面一律寫「約」、不顯示日期） ───────── */
+const REST_BRICKS=['💤 午休蓄能','🌿 傍晚充能','🔋 快充小憩']; // 與 Optimizer v3 REST_BRICKS、SAS Hub 同一份，三處要同步
+const ALC_KEYS=[1,2,3,4,0,'u','cal'];
+const ALC_LBL={1:'第一',2:'第二',3:'第三',4:'第四',0:'未放置',u:'未對應',cal:'行程'};
+let ALC=null;
+// off 0＝本週（週一至今天）；1＝上週（週一至週日）
+function weekDays(off){
+  const n=new Date(),wd=(n.getDay()+6)%7,cnt=off===0?wd+1:7,out=[];
+  for(let i=0;i<cnt;i++)out.push(dayStr(new Date(n.getFullYear(),n.getMonth(),n.getDate()-wd-7*off+i)));
+  return out;
+}
+// 本週已過的天數（週一至昨天）中沒覆盤的天數：沒有 review，或 items 全無 status；休假日不算
+function unreviewedDays(){
+  const R=revInfo().byDay,td=today();
+  return weekDays(0).filter(ds=>{
+    if(ds>=td)return false;
+    const rv=R[ds];
+    if(rv&&rv.rest)return false;
+    return !rv||!rv.items.some(it=>it&&typeof it==='object'&&typeof it.status==='string'&&it.status);
+  }).length;
+}
+function calcAlloc(days){
+  const R=revInfo().byDay,res={b:{},card:{},tot:0,any:false};
+  ALC_KEYS.forEach(k=>{res.b[k]={a:0,s:0};});
+  const byId=new Map(),byName=new Map();
+  TV.tasks.forEach(tk=>{if(tk.id!==null&&!byId.has(tk.id))byId.set(tk.id,tk);if(tk.nk&&!byName.has(tk.nk))byName.set(tk.nk,tk);});
+  days.forEach(ds=>{
+    const rv=R[ds];if(!rv||!rv.pipes||!rv.pa)return;
+    let tot=0;rv.pipes.forEach(p=>{if(p.dur>0)tot+=p.dur;});
+    if(tot>1440)return; // 單日上限 24 小時，超過視為壞資料整天略過
+    const itBy=new Map();
+    rv.items.forEach(it=>{if(it&&typeof it==='object'&&typeof it.name==='string'&&!itBy.has(it.name))itBy.set(it.name,it);});
+    rv.pipes.forEach((p,i)=>{
+      if(p.dur<=0)return;
+      const bricks=rv.pa[String(i)]||[];
+      if(!bricks.length){if(p.cal){res.b.cal.a+=p.dur;res.b.cal.s+=p.dur;}return;} // 行程時段（📅、無積木）視為已發生
+      const per=p.dur/bricks.length;
+      bricks.forEach(nm=>{
+        if(REST_BRICKS.indexOf(nm)>=0)return; // 休息積木佔一份但不計入任何桶
+        const it=itBy.get(nm)||null;
+        const w=it&&it.status==='done'?1:it&&it.status==='part'?0.5:0;
+        let ref=null;
+        if(!(it&&it.crefCleared===true)){
+          const c=it&&it.cref,cq=c&&typeof c==='object'?Number(c.q):NaN;
+          if(c&&typeof c==='object'&&typeof c.cardId==='string'&&c.cardId&&cq>=0&&cq<=4)ref={cid:c.cardId,q:Math.floor(cq)}; // cref 快照優先（歷史不回推）
+          else{ // 沒有 cref：tid（無 tid 用名稱）→ 任務 careerRef → Career 現值象限
+            let tk=null;
+            if(it&&it.tid!==undefined&&it.tid!==null){if(Number.isInteger(it.tid)&&it.tid>0)tk=byId.get(it.tid)||null;}
+            else tk=byName.get(normName(nm))||null;
+            const cc=tk&&getCard(tk.cardId);
+            if(cc)ref={cid:cc.id,q:cc.quadrant};
+          }
+        }
+        const k=ref?ref.q:'u';
+        res.b[k].a+=per*w;res.b[k].s+=per;
+        if(ref){const x=res.card[ref.cid]||(res.card[ref.cid]={a:0,s:0});x.a+=per*w;x.s+=per;}
+      });
+    });
+  });
+  ALC_KEYS.forEach(k=>{res.tot+=res.b[k].a;if(res.b[k].a>0||res.b[k].s>0)res.any=true;});
+  return res;
+}
+const hrs=m=>(Math.round(m/6)/10).toFixed(1);
+function alcRowHtml(lbl,r,prev){
+  const imp=r.b[1].a+r.b[2].a,pct=r.tot>0?Math.round(imp/r.tot*100):0;
+  if(!r.any)return`<div class="alc-row${prev?' prev':''}"><div class="alc-top"><span class="alc-w">${esc(lbl)}</span><span class="alc-none">還沒有可估算的時段</span></div></div>`;
+  const segs=r.tot>0?ALC_KEYS.filter(k=>r.b[k].a>0).map(k=>`<span class="alc-seg k${k}" style="width:${(r.b[k].a/r.tot*100).toFixed(2)}%"></span>`).join(''):'';
+  const chips=ALC_KEYS.map(k=>{const b=r.b[k];return`<span class="alc-c"><span class="alc-dot k${k}"></span>${esc(ALC_LBL[k])} 約 ${hrs(b.a)}${k===1||k===2?' 小時（排定 '+hrs(b.s)+'）':''}</span>`;}).join('');
+  return`<div class="alc-row${prev?' prev':''}"><div class="alc-top"><span class="alc-w">${esc(lbl)}</span><span>約 ${hrs(r.tot)} 小時・重要（一＋二）約佔 ${pct}%</span></div><div class="alc-bar" aria-hidden="true">${segs}</div><div class="alc-cs">${chips}</div></div>`;
+}
+function renderAlloc(){
+  const el=$('alloc');let h='';
+  if(ALC&&(ALC.cur.any||ALC.prev.any))h+='<div class="alc-h">時間分配（依時段與覆盤估算）</div>'+alcRowHtml('本週',ALC.cur,false)+alcRowHtml('上週',ALC.prev,true);
+  const cur=focusList();
+  if(cur.length)h+=`<div class="alc-fc"><span class="alc-fl">本週焦點</span><span class="alc-fn">${cur.map(x=>esc(x.c.title||'（未命名）')+' › '+esc(x.it.name||'（未命名）')).join('、')}</span></div>`;
+  else if(focusList(prevFW()).length)h+=`<div class="alc-fc"><span class="alc-fl">本週焦點</span><span class="alc-hint">本週還沒有焦點</span><button type="button" class="btn" data-act="fcarry">沿用上週焦點</button></div>`;
+  else if(DB.cards.some(c=>!isDropped(c)&&c.items.length))h+=`<div class="alc-fc"><span class="alc-fl">本週焦點</span><span class="alc-hint">還沒有焦點，可在工作面板的細項點 ☆ 設定（最多 ${FOCUS_MAX} 項）</span></div>`;
+  el.innerHTML=h;el.hidden=!h;
+}
+function carryFocus(){
+  const cw=curFW();
+  if(focusList(cw).length)return;
+  const pv=focusList(prevFW()).slice(0,FOCUS_MAX);
+  if(!pv.length)return;
+  pv.forEach(x=>{x.it.focus=cw;});
+  save();render();toast('已沿用上週焦點 '+pv.length+' 項');
+}
 const BOARD_OPEN=new Set(); // 看板卡片細項展開狀態：僅頁面變數，不存 localStorage
 function cardHtml(c){
   const n=c.items.length,dist=distOf(c),bo=n>0&&BOARD_OPEN.has(c.id),tc=taskCount(c),ws=CSTAT.card[c.id];
   const ct=bo?tasksOf(c.id,null):[];
   return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}" tabindex="0" aria-label="${esc(c.title||'未命名')}：開啟工作面板">
-    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div>${ws||tc.n?`<span class="cd-side">${ws?`<span class="cd-wk">${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span class="cd-tc">${esc(tcTxt(tc))}</span>`:''}</span>`:''}</div>
+    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${(()=>{const fn=c.items.filter(i=>i.focus===curFW()).length;return fn?'<span class="foc-pill">焦點 '+fn+'</span>':'';})()}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div>${ws||tc.n?`<span class="cd-side">${ws?`<span class="cd-wk">${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span class="cd-tc">${esc(tcTxt(tc))}</span>`:''}</span>`:''}</div>
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}${optBtn(c.id,null)}</div>
-    ${bo?`<div class="cd-items">${ct.length?`<div class="tk-lbl">方向層任務</div><div class="tk-list">${taskRowsHtml(ct)}</div>`:''}${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');const it_t=tasksOf(c.id,it.id);return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${optBtn(c.id,it.id)}</div>${it_t.length?`<div class="tk-list">${taskRowsHtml(it_t)}</div>`:''}${tkHtml(it)}`;}).join('')}</div>`:''}
+    ${bo?`<div class="cd-items">${ct.length?`<div class="tk-lbl">方向層任務</div><div class="tk-list">${taskRowsHtml(ct)}</div>`:''}${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');const it_t=tasksOf(c.id,it.id);return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span>${it.focus===curFW()?'<span class="foc-pill">焦點</span>':''}<span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${optBtn(c.id,it.id)}</div>${it_t.length?`<div class="tk-list">${taskRowsHtml(it_t)}</div>`:''}${tkHtml(it)}`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -899,6 +1091,7 @@ function itemHtml(it,k,arr,c){
     <div class="it-top"><span class="it-no">${esc(letter)}.</span>
       <input class="inp" data-f="iname" value="${esc(it.name)}" maxlength="80" placeholder="細項名稱（例如：英文簡報能力）" aria-label="細項名稱">
       ${ordCid&&arr?`${k>0?'<button type="button" class="st-ic mv-ic" data-act="imove" data-dir="up" aria-label="上移" title="上移">↑</button>':''}${k<arr.length-1?'<button type="button" class="st-ic mv-ic" data-act="imove" data-dir="down" aria-label="下移" title="下移">↓</button>':''}`:''}
+      ${isDropped(c)?'':`<button type="button" class="st-ic foc-ic${it.focus===curFW()?' on':''}" data-act="ifocus" aria-pressed="${it.focus===curFW()}" aria-label="${it.focus===curFW()?'取消本週焦點':'設為本週焦點'}" title="${it.focus===curFW()?'本週焦點（點一下取消）':'設為本週焦點'}">${it.focus===curFW()?'★':'☆'}</button>`}
       <button type="button" class="st-ic st${si}" data-act="istate" aria-haspopup="menu" aria-expanded="${iMenu===it.id}" aria-label="細項狀態：${esc(it.status)}，點擊變更" title="${esc(it.status)}">${ICON_S[si]}</button>
       <button type="button" class="st-ic tr-ic" data-act="idel" aria-label="刪除細項" title="刪除">${TRASH}</button></div>
     ${iMenu===it.id?`<div class="tmenu imenu" role="menu" aria-label="選擇細項狀態">${STATUSES.map((x,xi)=>`<button type="button" role="menuitemradio" aria-checked="${x===it.status}" data-act="iset" data-s="${esc(x)}"><span class="ck">${x===it.status?'✓':''}</span><span>${ICON_S[xi]} ${esc(x)}</span></button>`).join('')}</div>`:''}
@@ -982,7 +1175,7 @@ function panelHtml(c){
   const dropped=isDropped(c),tc=taskCount(c),ws=CSTAT.card[c.id],n=c.items.length;
   const ct=tasksOf(c.id,null),my=ATT.filter(a=>a.cid===c.id),ob=optBtn(c.id,null);
   return`<div class="wp-in" data-card="${esc(c.id)}">
-    <div class="wp-meta"><span class="mc-badge q${dropped?0:c.quadrant}">${esc(dropped?'已決定不進行':qLabel(c.quadrant))}</span>${ws?`<span>${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span>${esc(tcTxt(tc))}</span>`:''}</div>
+    <div class="wp-meta"><span class="mc-badge q${dropped?0:c.quadrant}">${esc(dropped?'已決定不進行':qLabel(c.quadrant))}</span>${ws?`<span>${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span>${esc(tcTxt(tc))}</span>`:''}${(()=>{const a=ALC&&ALC.cur.card[c.id],p=ALC&&ALC.prev.card[c.id];return(a&&a.a>0)||(p&&p.a>0)?`<span>本週約 ${hrs(a?a.a:0)} 小時（上週 ${hrs(p?p.a:0)}）</span>`:'';})()}</div>
     ${my.length?`<div class="wp-att"><div class="sec-lbl">需要注意</div>${my.map(a=>`<div class="wp-att-r">${esc(a.txt)}</div>`).join('')}</div>`:''}
     <div class="fld"><label for="wp-desc">說明</label><textarea class="ta" id="wp-desc" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
     <div class="sec-row"><div class="sec-lbl">方向層任務（${ct.length}）</div>${ob}</div>
@@ -1224,6 +1417,7 @@ function onMaintClick(e){
       if(isDropped(c))return;
       const ta=$('wp-dropdraft'),reason=str(ta?ta.value:DROP_DRAFT,200).trim();
       c.dropped={date:today(),reason}; // 不改 quadrant（規劃書 10.7）
+      c.items.forEach(i=>{delete i.focus;}); // 階段 5：決定不進行時一併清除該方向所有細項的焦點
       logChange(c.id,null,'dropped','',reason||'（未填理由）');
       if(selCard===c.id)clearSel();
       DROP_ASK=false;DROP_DRAFT='';RESTORE_Q=-1;touch(c);save();render();toast('已標記為決定不進行');
@@ -1239,6 +1433,18 @@ function onMaintClick(e){
       if(q!==c.quadrant){const fq=c.quadrant;c.quadrant=q;logChange(c.id,null,'quadrant',fq,q);}
       RESTORE_Q=-1;touch(c);save();render();toast('已恢復到'+qLabel(q));
       const x=document.querySelector('#wp-body [data-act="dropask"]');if(x)x.focus();return;
+    }
+    if(act==='ifocus'){ // 階段 5：本週焦點切換（不寫 log、不動 updatedAt）
+      const row=b.closest('.it'),iid=row&&row.dataset.iid,it=c.items.find(i=>i.id===iid);
+      if(!it)return;
+      if(isDropped(c)){toast('此方向已決定不進行，請先恢復');return;}
+      const cw=curFW();
+      if(it.focus===cw){delete it.focus;save();render();focusIBtn(iid,'ifocus');toast('已取消本週焦點');return;}
+      if(focusList(cw).length>=FOCUS_MAX){toast('本週焦點最多 '+FOCUS_MAX+' 項，請先取消一項');return;}
+      it.focus=cw;save();render();focusIBtn(iid,'ifocus');
+      const ts=(TV.byRef[c.id+'|'+it.id]||[]).filter(t=>t.st!=='closed'); // 口徑同規則 6：只看對應到細項的任務
+      toast(!ts.length?'這個細項沒有對應任務，可按 → Optimizer':ts.some(t=>t.st==='on')?'已設為本週焦點':'對應任務都在待命，請到 Optimizer 打開');
+      return;
     }
     if(act==='tagdel'){c.tags=c.tags.filter(x=>x!==b.dataset.tag);touch(c);save();render();}
     else if(act==='tagsug'){addTag(c,b.dataset.tag,null);}
@@ -1393,6 +1599,9 @@ document.addEventListener('click',e=>{
 });
 $('board').addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('cd')){e.preventDefault();openPanel(e.target.dataset.card,{sel:'#board .cd',id:e.target.dataset.card});}
+});
+$('alloc').addEventListener('click',e=>{
+  if(e.target.closest('[data-act="fcarry"]'))carryFocus();
 });
 $('att').addEventListener('click',e=>{
   const m=e.target.closest('[data-att-more]');
