@@ -789,18 +789,20 @@ function normAssign(a){
 function loadReviews(){
   const td=today();
   if(REV_CACHE&&REV_CACHE.day===td)return REV_CACHE.list;
-  const list=[],rest=new Set(),byDay={},now=new Date();
+  const list=[],rest=new Set(),off=new Set(),byDay={},now=new Date();
   for(let i=0;i<60;i++){
     const ds=dayStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()-i));
     let d=null;try{d=JSON.parse(localStorage.getItem('review_'+ds)||'null');}catch(e){d=null;}
-    if(!d||typeof d!=='object'||Array.isArray(d))continue;
+    if(!d||typeof d!=='object'||Array.isArray(d)){off.add(ds);continue;} // 10-27 使用者裁決：沒有 review＝休假日（國定假日亦同）
     const isRest=d.restMode===true,items=Array.isArray(d.items)?d.items:null;
+    const hasPipes=Array.isArray(d.pipes)&&d.pipes.length>0;
     if(isRest)rest.add(ds);
+    if(isRest||!hasPipes)off.add(ds); // restMode，或當天沒在 Optimizer 產生行程（無 pipes／空陣列）＝休假日
     const pipes=normPipes(d.pipes),pa=pipes?normAssign(d.pipeAssignments):null;
-    byDay[ds]={items:items||[],rest:isRest,pipes,pa};
+    byDay[ds]={items:items||[],rest:isRest,hasPipes,pipes,pa};
     if(items)list.push({date:ds,ago:i,items});
   }
-  REV_CACHE={day:td,list,rest,byDay};
+  REV_CACHE={day:td,list,rest,off,byDay};
   return list;
 }
 function revInfo(){loadReviews();return REV_CACHE;}
@@ -868,12 +870,13 @@ function taskRowsHtml(list){
   return list.map(t=>`<div class="tk-row"><span class="tk-name">${esc(t.text)||'（未命名任務）'}</span><span class="tk-pill ${t.st}">${esc(TK_ST[t.st])}</span><span class="tk-n">${t.n30?'近 30 天 '+t.n30+' 次':'近 30 天未做'}</span></div>`).join('');
 }
 // 「N 天沒做」起算點＝max(最近一次做, onAt)；都沒有回 null（近 60 天沒有紀錄）
-// 階段 5（規劃書 11.6）：扣掉 base 之後到今天（含今天）的休假日（review.restMode===true）；base 當天不扣；沒有 review 的日子不算休假
+// 階段 5（規劃書 11.6＋10-27 使用者裁決）：扣掉 base 之後到今天（含今天）的休假日；base 當天不扣
+// 休假日＝restMode、沒有 review、或 review 沒有 pipes（當天沒在 Optimizer 產生行程），比照 CC collectDataGaps；只扣得到 60 天掃描窗內的日子
 function idleDays(tk){
   const b=[tk.last,tk.onAt].filter(Boolean).sort().pop();
   if(!b)return null;
   const td=today();let n=dayNum(td)-dayNum(b);
-  revInfo().rest.forEach(d=>{if(d>b&&d<=td)n--;});
+  revInfo().off.forEach(d=>{if(d>b&&d<=td)n--;});
   return Math.max(0,n);
 }
 const Q_RANK={1:0,2:1,3:2,4:3,0:4};
@@ -969,14 +972,14 @@ function weekDays(off){
   for(let i=0;i<cnt;i++)out.push(dayStr(new Date(n.getFullYear(),n.getMonth(),n.getDate()-wd-7*off+i)));
   return out;
 }
-// 本週已過的天數（週一至昨天）中沒覆盤的天數：沒有 review，或 items 全無 status；休假日不算
+// 本週已過的天數（週一至昨天）中沒覆盤的天數（10-27 裁決，同 CC 首頁「昨天的覆盤還沒填」）：review 存在、非 restMode、有 pipes，但 items 全無 status
 function unreviewedDays(){
   const R=revInfo().byDay,td=today();
   return weekDays(0).filter(ds=>{
     if(ds>=td)return false;
     const rv=R[ds];
-    if(rv&&rv.rest)return false;
-    return !rv||!rv.items.some(it=>it&&typeof it==='object'&&typeof it.status==='string'&&it.status);
+    if(!rv||rv.rest||!rv.hasPipes)return false;
+    return !rv.items.some(it=>it&&typeof it==='object'&&typeof it.status==='string'&&it.status);
   }).length;
 }
 function calcAlloc(days){
