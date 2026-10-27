@@ -200,8 +200,11 @@ function buildTT(id){
     case 'career':{
       // 未來發展四象限（cc_career_v1）：各象限卡片數、第二象限狀態分布與主題分布；資料不可信，數值一律轉數字、文字 esc
       let cm=null;try{cm=JSON.parse(localStorage.getItem('cc_career_v1')||'null');}catch{}
-      const cards=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
-      if(!cards.length)return h('🪜 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
+      const all=(cm&&Array.isArray(cm.cards))?cm.cards.filter(c=>c&&typeof c==='object'):[];
+      // 階段 4（10-27）：dropped（決定不進行）的方向不計入四象限／未放置／第二象限分布，另列一行；只判斷有無
+      const isDrop=c=>!!(c.dropped&&typeof c.dropped==='object');
+      const cards=all.filter(c=>!isDrop(c)),dropN=all.length-cards.length;
+      if(!all.length)return h('🪜 Career')+`<div style="font-size:11px;color:var(--faint);padding:4px 0;">尚無方向，點擊新增</div>`;
       const cnt=[0,0,0,0];
       cards.forEach(c=>{const q=Number(c.quadrant);if(q>=1&&q<=4)cnt[q-1]++;});
       const nm=['第一象限 重要又緊急','第二象限 重要但不緊急','第三象限 不重要也不緊急','第四象限 不重要但緊急'];
@@ -211,6 +214,7 @@ function buildTT(id){
       cards.filter(c=>Number(c.quadrant)===2).forEach(c=>{(Array.isArray(c.items)?c.items:[]).forEach(it=>{const k=stN.indexOf(it&&it.status);if(k>=0)stC[k]++;});});
       const unpl=cards.filter(c=>{const q=Number(c.quadrant);return !(q>=1&&q<=4);}).length;
       out+=row('未放置',unpl+' 張');
+      if(dropN)out+=row('已決定不進行',dropN+' 張');
       out+=hr();
       const dist=stN.map((n,k)=>stC[k]?n+' '+stC[k]:'').filter(Boolean).join('・');
       out+=row('第二象限狀態',dist?esc(dist):'—','g');

@@ -223,6 +223,63 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 #opt-undo button{font-family:inherit;font-size:var(--fs3);background:none;border:.5px solid rgba(244,240,232,.5);color:#f4f0e8;border-radius:12px;padding:2px 10px;cursor:pointer;flex-shrink:0}
 .foot{text-align:center;font-size:var(--fs4);color:var(--faint);margin-top:22px}
 
+/* ── 階段 4（10-27）：需要注意／任務總覽／方向工作面板 ── */
+.att{background:var(--card);border:.5px solid var(--bstr);border-left:3px solid var(--warn);border-radius:12px;padding:12px 14px;margin-bottom:16px;box-shadow:var(--shadow)}
+.att-h{font-size:var(--fs3);font-weight:700;color:var(--warn);margin-bottom:6px}
+.att-row{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;background:none;border:none;border-radius:7px;padding:5px 6px;font-size:var(--fs2);color:var(--ink);line-height:1.5;font-family:inherit}
+button.att-row{cursor:pointer}
+button.att-row:hover,button.att-row:focus-visible{background:var(--ac-tint)}
+.att-q{flex-shrink:0;font-size:var(--fs4);font-weight:700;color:var(--ac);background:var(--ac-tint2);padding:1px 7px;border-radius:9px;white-space:nowrap}
+.att-q.dq{color:var(--faint);background:var(--bg)}
+.att-t{min-width:0;word-break:break-word}
+.att-more{margin-top:4px;font-family:inherit;font-size:var(--fs3);background:none;border:none;color:var(--ac);cursor:pointer;padding:4px 6px}
+.cd-side{display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;align-self:flex-start;flex-shrink:0}
+.cd-side .cd-wk{margin-left:0}
+.cd-tc{font-size:var(--fs3);color:var(--sub);white-space:nowrap}
+.cd:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.tk-list{display:flex;flex-direction:column;gap:3px;margin:2px 0 6px 18px}
+.tk-row{display:flex;align-items:center;gap:6px;font-size:var(--fs3);color:var(--sub);min-width:0;flex-wrap:wrap}
+.tk-name{flex:1 1 120px;min-width:0;word-break:break-word;color:var(--ink)}
+.tk-pill{font-size:var(--fs4);padding:1px 7px;border-radius:9px;white-space:nowrap;flex-shrink:0}
+.tk-pill.on{color:var(--ok);background:var(--ok-bg)}
+.tk-pill.idle{color:var(--sub);background:var(--bg)}
+.tk-pill.closed{color:var(--faint);border:.5px solid var(--bstr)}
+.tk-n{font-size:var(--fs4);color:var(--faint);white-space:nowrap;flex-shrink:0}
+.tk-lbl{font-size:var(--fs4);font-weight:600;color:var(--faint);margin:6px 0 3px 18px}
+.wp{position:fixed;z-index:95;background:var(--bg2);display:flex;flex-direction:column;visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s;box-shadow:-6px 0 24px rgba(40,38,32,.14)}
+.wp.open{visibility:visible;transform:none;transition:transform .22s ease}
+@media(min-width:900px){
+  .wp{top:var(--navh,46px);right:0;bottom:0;width:min(600px,46vw);border-left:1px solid var(--bstr);transform:translateX(100%)}
+  body.wp-on .wrap{padding-right:calc(min(600px,46vw) + 16px)}
+}
+@media(max-width:899px){
+  .wp{top:0;left:0;right:0;bottom:0;z-index:150;transform:translateY(100%)}
+  body.wp-on{overflow:hidden}
+}
+.wp.open{transform:none}
+@media (prefers-reduced-motion:reduce){.wp,.wp.open{transition:none}}
+.wp-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bstr);background:var(--card)}
+.wp-title{flex:1;min-width:0;font-size:var(--fs1);font-weight:700;word-break:break-word}
+.wp-x{font-size:15px;color:var(--sub)}
+.wp-body{flex:1;overflow-y:auto;padding:12px 14px 48px;overscroll-behavior:contain}
+.wp-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:var(--fs3);color:var(--sub)}
+.wp-att{margin-top:12px;padding:8px 10px;border-radius:10px;background:var(--warn-bg)}
+.wp-att .sec-lbl{color:var(--warn);margin:0 0 4px}
+.wp-att-r{font-size:var(--fs3);color:var(--ink);line-height:1.55;word-break:break-word}
+.wp-body .tree{margin-left:0;padding-left:10px}
+.wp-body .tcard-t{flex-wrap:wrap}.wp-body .tcard-t .inp.tpn{flex:1 1 100%} /* 面板較窄：主題名稱獨佔一列，icon 換到下一列，保留三欄分布 */
+.it-tasks{margin:0 0 10px}
+.it-tasks .tk-list{margin-left:0}
+.it-tasks-h{display:flex;align-items:center;gap:8px;margin:0 0 4px}
+.it-tasks-h .it-lbl{margin:0}
+.drop-d{font-size:var(--fs3);color:var(--sub);margin-bottom:4px}
+.drop-rs{display:flex;gap:8px;align-items:center}
+.drop-rs .sel{flex:1;min-width:0}
+.drop-tg{margin:0 0 8px 4px}
+.drop-row .mc-head{cursor:pointer}
+.drop-reason{font-size:var(--fs3);color:var(--sub);padding:0 12px 10px 12px;word-break:break-word}
+.mc-head .btn.wp-open{padding:5px 10px}
+
 /* ── 手機：單欄依 1→4 堆疊 ── */
 @media(max-width:699px){
   .wrap{padding:16px 16px 110px}
@@ -244,6 +301,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 </div>
 
 <div class="wrap">
+  <div class="att" id="att" role="region" aria-label="需要注意" hidden></div>
   <div class="filter-bar" id="filter-bar"></div>
 
   <div class="pick-hint" id="pick-hint" role="status"></div>
@@ -264,7 +322,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 
   <div class="maint" id="maint-wrap">
     <div class="m-head">維護區</div>
-    <div class="m-sub">在這裡新增方向，按方向列的「選取」鈕，再點上方象限放入（也可先點象限、再按「選取」；或用每列的「移到」選單）。方向隨時間改變時，重新選取再點新象限即可；點開方向可維護底下的能力細項。</div>
+    <div class="m-sub">在這裡新增方向，按方向列的「選取」鈕，再點上方象限放入（也可先點象限、再按「選取」；或用每列的「移到」選單）。方向隨時間改變時，重新選取再點新象限即可。說明、能力細項與主題請點上方卡片或方向列的「工作面板」，在工作面板裡維護。</div>
     <div class="m-add">
       <input class="inp" id="new-title" maxlength="80" placeholder="新方向名稱，按 Enter 或右側按鈕新增">
       <button class="btn" id="new-btn">＋ 新增方向</button>
@@ -274,13 +332,18 @@ button,input,select,textarea{font-family:inherit;color:inherit}
   <div class="foot" id="usage"></div>
 </div>
 
+<aside class="wp" id="wp" role="dialog" aria-labelledby="wp-title" aria-hidden="true">
+  <div class="wp-head"><div class="wp-title" id="wp-title"></div><button type="button" class="st-ic wp-x" id="wp-x" aria-label="關閉工作面板" title="關閉（Esc）">✕</button></div>
+  <div class="wp-body" id="wp-body"></div>
+</aside>
+
 <div id="toast"></div>
 <div id="opt-undo"><span id="opt-undo-msg"></span><button type="button" id="opt-undo-btn">復原</button></div>
 
 <script>
 const KEY='cc_career_v1';
 const STATUSES=['未評估','需強化','掌握中','已精通'];
-const FIELDS=['progress','status','milestone','note','quadrant'];
+const FIELDS=['progress','status','milestone','note','quadrant','dropped']; // dropped：方向決定不進行／恢復（階段 4，itemId=null）
 const QN=['','一','二','三','四'];
 const QDEF={
   1:{name:'重要又緊急',desc:'工作上的任務，需花最多精力處理的事（計畫書、研討會、實驗等）'},
@@ -358,6 +421,12 @@ function normTopics(it){
   });
   return out;
 }
+// 決定不進行（階段 4，10-27）：{date 有效日期, reason ≤200}；不合格整個丟棄（視為未決定）；標記時不改 quadrant
+function normDropped(d){
+  if(!d||typeof d!=='object'||Array.isArray(d)||!validDate(d.date))return null;
+  return{date:d.date,reason:str(d.reason,200)};
+}
+function isDropped(c){return !!(c&&c.dropped);}
 // 讀取驗證（規格 2 節）：匯入／Gist 還原資料不可信，欄位逐一檢查，不合格丟棄或給預設
 function normalize(raw){
   const out={version:1,cards:[],log:[]};
@@ -374,6 +443,7 @@ function normalize(raw){
       createdAt:TS_RE.test(c.createdAt)?c.createdAt:nowStr(),
       updatedAt:TS_RE.test(c.updatedAt)?c.updatedAt:nowStr()
     };
+    const dr=normDropped(c.dropped);if(dr)card.dropped=dr; // 沒有或不合格就不建欄位（舊資料存檔後 diff 不變）
     (Array.isArray(c.tags)?c.tags:[]).forEach(t=>{const n=normTag(t);if(n&&card.tags.indexOf(n)<0&&card.tags.length<TAG_MAX)card.tags.push(n);});
     (Array.isArray(c.items)?c.items:[]).slice(0,ITEM_MAX).forEach(it=>{
       if(!it||typeof it!=='object')return;
@@ -399,6 +469,8 @@ function normalize(raw){
     let from,to,itemId=null;
     if(l.field==='quadrant'){
       from=normQ(l.from);to=normQ(l.to);
+    }else if(l.field==='dropped'){
+      from=str(l.from,200);to=str(l.to,200); // 標記：''→理由；恢復：理由→''
     }else{
       if(!card.items.some(i=>i.id===l.itemId))return;
       itemId=l.itemId;
@@ -491,6 +563,7 @@ function distOf(c){
 function qLabel(q){return q===0?'未放置':'第'+QN[q]+'象限';}
 
 function moveCard(c,q){
+  if(isDropped(c)){toast('此方向已決定不進行，請先在工作面板恢復');return;}
   q=normQ(q);
   if(c.quadrant===q)return;
   const from=c.quadrant;
@@ -502,7 +575,10 @@ function moveCard(c,q){
 
 /* ───────── 看板 ───────── */
 let filterTag='';
-let focusId='';           // 點看板卡片後要維護的方向：維護區粗外框標示，直到點另一張卡片
+let PANEL_ID='';          // 工作面板目前開啟的方向 id（僅頁面變數，不存 localStorage）
+let PANEL_RET=null;       // 關閉面板後焦點要回去的位置 {sel,id}
+let DROP_ASK=false,DROP_DRAFT='',RESTORE_Q=-1,DROP_OPEN=false; // 決定不進行表單／恢復目標象限／維護區「已決定不進行」組展開（皆頁面變數）
+let ATT=[],ATT_MORE=false; // 頁首需要注意（每次 render 重算）
 let selCard='',selQ=0;   // 點選放置的選取狀態（僅頁面變數，不存 localStorage）
 const OPEN=new Set();   // 維護區展開狀態（僅頁面變數）
 let delAskId='';
@@ -525,13 +601,15 @@ function tkHtml(it){
   }).join('')+'</div>';
 }
 function _focusKey(el){
-  if(!el||!el.dataset||!el.closest||!el.closest('#maint'))return null;
+  if(!el||!el.dataset||!el.closest)return null;
+  const root=el.closest('#maint')?'m':el.closest('#wp-body')?'p':null;
+  if(!root)return null;
   const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:el.dataset.pick?'p:pick':null;
   if(!f)return null;
-  const m=el.closest('.mc'),r=el.closest('.it'),tp=el.closest('.tcard');
+  const m=el.closest('[data-card]'),r=el.closest('.it'),tp=el.closest('.tcard');
   let ss=null,se=null;
   try{ss=el.selectionStart;se=el.selectionEnd;}catch(x){ss=null;se=null;}
-  return{f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,tid:tp&&tp.dataset.tid||null,tag:el.dataset.tag||el.dataset.s||el.dataset.dir||null,ss,se};
+  return{root,f,cid:m&&m.dataset.card||null,iid:r&&r.dataset.iid||null,tid:tp&&tp.dataset.tid||null,tag:el.dataset.tag||el.dataset.s||el.dataset.dir||null,ss,se};
 }
 function pickBtn(c){
   const on=c.id===selCard;
@@ -556,6 +634,7 @@ function placeSel(c,q){
 }
 function pickCard(id){
   const c=getCard(id);if(!c)return;
+  if(isDropped(c)){toast('此方向已決定不進行，請先在工作面板恢復');return;}
   if(selQ){placeSel(c,selQ);return;}
   selCard=(selCard===id)?'':id;
   render();
@@ -566,17 +645,19 @@ function pickQuad(q){
   render();
 }
 function render(){
-  CSTAT=loadCstat();OPT_REFS=loadOptRefs();
-  if(selCard&&!getCard(selCard))selCard='';
+  CSTAT=loadCstat();TV=loadTaskView();OPT_REFS=TV.refs;
+  if(selCard&&(!getCard(selCard)||isDropped(getCard(selCard))))selCard='';
+  if(PANEL_ID&&!getCard(PANEL_ID))PANEL_ID='';
+  ATT=buildAttention();
   const fk=_focusKey(document.activeElement);
   const all=[];
-  DB.cards.forEach(c=>c.tags.forEach(t=>{if(all.indexOf(t)<0)all.push(t);}));
+  DB.cards.forEach(c=>{if(!isDropped(c))c.tags.forEach(t=>{if(all.indexOf(t)<0)all.push(t);});});
   if(filterTag&&all.indexOf(filterTag)<0)filterTag='';
   $('filter-bar').innerHTML=all.length
     ?'<span class="filter-lbl">標籤篩選</span>'+all.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')
     :'<span class="filter-lbl">為方向加上標籤後，可在這裡篩選</span>';
   for(let q=1;q<=4;q++){
-    const cards=DB.cards.filter(c=>c.quadrant===q&&(!filterTag||c.tags.indexOf(filterTag)>=0));
+    const cards=DB.cards.filter(c=>c.quadrant===q&&!isDropped(c)&&(!filterTag||c.tags.indexOf(filterTag)>=0));
     $('q'+q).classList.toggle('sel-on',selQ===q);
     $('q'+q).innerHTML=`
       <div class="q-head"><span class="q-no">第${QN[q]}象限</span><span class="q-name">${esc(QDEF[q].name)}</span></div>
@@ -584,15 +665,17 @@ function render(){
       <div class="q-desc">${esc(QDEF[q].desc)}</div>
       <div class="q-list">${cards.length?cards.map(cardHtml).join(''):'<div class="q-empty">'+(filterTag?'沒有符合標籤的方向':'尚無方向，從下方維護區選取方向後點這裡')+'</div>'}</div>`;
   }
+  renderAtt();
   renderMaint();
+  renderPanel();
   updatePickHint();
   const bytes=(localStorage.getItem(KEY)||'').length*2;
   $('usage').textContent=`cc_career_v1 佔用 ${(bytes/1024).toFixed(1)} KB・推進紀錄 ${DB.log.length} 筆`;
   if(fk){
     // 重繪會換掉整批 input，依欄位種類＋所屬方向／細項 id 找回同一欄並還原游標（比對字串，不組 selector）
-    for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act],#maint [data-pick]')){
+    for(const el of document.querySelectorAll('#maint [data-f],#maint [data-act],#maint [data-pick],#wp-body [data-f],#wp-body [data-act]')){
       const k=_focusKey(el);
-      if(k&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.tid===fk.tid&&k.tag===fk.tag){
+      if(k&&k.root===fk.root&&k.f===fk.f&&k.cid===fk.cid&&k.iid===fk.iid&&k.tid===fk.tid&&k.tag===fk.tag){
         el.focus();
         if(fk.ss!==null&&fk.se!==null){try{el.setSelectionRange(fk.ss,fk.se);}catch(x){}}
         break;
@@ -624,14 +707,161 @@ function loadCstat(){
   return out;
 }
 const wkTxt=s=>'近 7 天：做 '+s.n+'・完成 '+s.d;
+
+/* ───────── 階段 4：任務總覽（只讀 tina_tasks_v3、optimizer_jobsearch_mode、review_*，不寫） ───────── */
+const TK_ST={on:'進行中',idle:'待命',closed:'已結案'};
+let TV={tasks:[],byRef:{},refs:{open:new Set(),closed:new Set()}};
+let REV_CACHE=null; // 最近 60 天覆盤 {day,list}；換日或切回分頁時重讀
+function dayStr(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function dayNum(s){return Math.round(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/86400000);}
+function normName(s){return String(s==null?'':s).normalize('NFKC').replace(/\s+/g,'');}
+function loadReviews(){
+  const td=today();
+  if(REV_CACHE&&REV_CACHE.day===td)return REV_CACHE.list;
+  const list=[],now=new Date();
+  for(let i=0;i<60;i++){
+    const ds=dayStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()-i));
+    let d=null;try{d=JSON.parse(localStorage.getItem('review_'+ds)||'null');}catch(e){d=null;}
+    if(d&&typeof d==='object'&&Array.isArray(d.items))list.push({date:ds,ago:i,items:d.items});
+  }
+  REV_CACHE={day:td,list};
+  return list;
+}
+// 與 Optimizer getEffectiveTasks 同一條規則（唯讀版，規劃書 10.6）
+function taskState(t,cats,js){
+  if(validDate(t.doneAt))return'closed';
+  const cat=cats.find(x=>x&&typeof x==='object'&&x.key===t.catKey);
+  if(!cat)return'idle';
+  const f=t.freq||cat.freq;
+  return(f==='daily'||(f==='mode_jobsearch'&&js))?'on':'idle';
+}
+function loadTaskView(){
+  const out={tasks:[],byRef:{},refs:{open:new Set(),closed:new Set()}};
+  const td=loadOptTasks();if(!td)return out;
+  let js=false;try{js=localStorage.getItem('optimizer_jobsearch_mode')==='1';}catch(e){}
+  const tday=today();
+  td.tasks.forEach(t=>{
+    if(!t||typeof t!=='object')return;
+    const r=t.careerRef; // 驗證比照 Optimizer taskCareerRef：cardId 非空字串、itemId 選填
+    if(!r||typeof r!=='object'||typeof r.cardId!=='string'||!r.cardId)return;
+    const itemId=(typeof r.itemId==='string'&&r.itemId)?r.itemId:null;
+    const st=taskState(t,td.categories,js);
+    const text=typeof t.text==='string'?t.text.slice(0,120):'';
+    const tk={id:(Number.isInteger(t.id)&&t.id>0)?t.id:null,text,nk:normName(text),cardId:r.cardId,itemId,st,
+      onAt:(validDate(t.onAt)&&t.onAt<=tday)?t.onAt:'',n30:0,last:''};
+    out.tasks.push(tk);
+    const k=optRefKey(r.cardId,itemId);
+    (st==='closed'?out.refs.closed:out.refs.open).add(k);
+    (out.byRef[k]||(out.byRef[k]=[])).push(tk);
+  });
+  if(!out.tasks.length)return out;
+  // 次數與最近一次（規劃書 10.5）：item.tid 優先；沒有 tid 的舊資料用名稱（NFKC＋去空白）比對；做＝done 或 part；同一天同任務只算一次
+  const byId=new Map(),byName=new Map();
+  out.tasks.forEach(tk=>{
+    if(tk.id!==null&&!byId.has(tk.id))byId.set(tk.id,tk);
+    if(tk.nk){if(!byName.has(tk.nk))byName.set(tk.nk,[]);byName.get(tk.nk).push(tk);}
+  });
+  loadReviews().forEach(rv=>{
+    const hit=new Set();
+    rv.items.forEach(it=>{
+      if(!it||typeof it!=='object'||(it.status!=='done'&&it.status!=='part'))return;
+      if(it.tid!==undefined&&it.tid!==null){
+        if(Number.isInteger(it.tid)&&it.tid>0){const tk=byId.get(it.tid);if(tk)hit.add(tk);}
+        return; // 有 tid 就以 tid 為準（對不到＝任務已刪除，不再用名稱猜）
+      }
+      if(typeof it.name!=='string')return;
+      (byName.get(normName(it.name))||[]).forEach(tk=>hit.add(tk));
+    });
+    hit.forEach(tk=>{if(rv.ago<30)tk.n30++;if(!tk.last||rv.date>tk.last)tk.last=rv.date;});
+  });
+  return out;
+}
+function sortTasks(list){const o={on:0,idle:1,closed:2};return list.slice().sort((a,b)=>o[a.st]-o[b.st]);}
+function tasksOf(cid,iid){return sortTasks(TV.byRef[optRefKey(cid,iid)]||[]);}
+// 任務 N（進行中 M）：N＝未結案（方向層＋現存細項），已結案不計
+function taskCount(c){
+  let n=0,m=0;
+  [c.id].concat(c.items.map(i=>c.id+'|'+i.id)).forEach(k=>(TV.byRef[k]||[]).forEach(t=>{if(t.st!=='closed'){n++;if(t.st==='on')m++;}}));
+  return{n,m};
+}
+const tcTxt=x=>'任務 '+x.n+'（進行中 '+x.m+'）';
+// 細項底下的任務列：名稱＋狀態膠囊＋近 30 天次數；不顯示任何日期（拍板 2）
+function taskRowsHtml(list){
+  return list.map(t=>`<div class="tk-row"><span class="tk-name">${esc(t.text)||'（未命名任務）'}</span><span class="tk-pill ${t.st}">${esc(TK_ST[t.st])}</span><span class="tk-n">${t.n30?'近 30 天 '+t.n30+' 次':'近 30 天未做'}</span></div>`).join('');
+}
+// 「N 天沒做」起算點＝max(最近一次做, onAt)；都沒有回 null（近 60 天沒有紀錄）
+function idleDays(tk){
+  const b=[tk.last,tk.onAt].filter(Boolean).sort().pop();
+  return b?dayNum(today())-dayNum(b):null;
+}
+const Q_RANK={1:0,2:1,3:2,4:3,0:4};
+// 頁首需要注意（規劃書 10.8 規則 1–5、10.7）；唯一可以出現天數的地方
+function buildAttention(){
+  const rows=[],unclosed=k=>(TV.byRef[k]||[]).some(t=>t.st!=='closed');
+  let orphan=0;
+  TV.tasks.forEach(t=>{
+    if(t.st!=='on')return;
+    const c=getCard(t.cardId);
+    if(!c||(t.itemId&&!c.items.some(i=>i.id===t.itemId)))orphan++;
+  });
+  DB.cards.forEach(c=>{
+    const title=c.title||'（未命名）';
+    const mine=TV.tasks.filter(t=>t.cardId===c.id&&(!t.itemId||c.items.some(i=>i.id===t.itemId)));
+    if(isDropped(c)){ // 規則 4：不參與 1–3
+      const on=mine.filter(t=>t.st==='on').length;
+      if(on)rows.push({cid:c.id,lbl:'已決定不進行',dq:true,rk:5,d:-1,txt:title+' 已決定不進行，仍有 '+on+' 個任務開著'});
+      return;
+    }
+    if(c.quadrant!==1&&c.quadrant!==2)return;
+    const lbl='第'+QN[c.quadrant]+'象限',rk=Q_RANK[c.quadrant];
+    const cardHas=unclosed(c.id); // Q1 裁決：方向層有未結案任務＝各細項都有任務
+    c.items.forEach(it=>{ // 規則 1：缺任務
+      if(it.status!=='需強化'&&it.status!=='未評估')return;
+      if(cardHas||unclosed(c.id+'|'+it.id))return;
+      rows.push({cid:c.id,lbl,rk,d:-1,txt:title+' › '+(it.name||'（未命名）')+'：'+it.status+'，但沒有對應任務'});
+    });
+    const th=c.quadrant===1?3:7; // 規則 2：久沒做（第一象限 ≥3 天、第二象限 ≥7 天）
+    mine.forEach(t=>{
+      if(t.st!=='on')return;
+      const n=idleDays(t),nm='「'+(t.text||'未命名任務')+'」';
+      if(n===null)rows.push({cid:c.id,lbl,rk,d:9999,txt:title+'：'+nm+'近 60 天沒有紀錄'});
+      else if(n>=th)rows.push({cid:c.id,lbl,rk,d:n,txt:title+'：'+nm+'已 '+n+' 天沒做'});
+    });
+    const idle=mine.filter(t=>{ // 規則 3：被關掉（待命），按方向合併
+      if(t.st!=='idle')return false;
+      if(t.itemId){const it=c.items.find(i=>i.id===t.itemId);return !!it&&it.status!=='已精通';}
+      return c.items.some(i=>i.status!=='已精通');
+    }).length;
+    if(idle){
+      const un=mine.filter(t=>t.st!=='closed').length;
+      rows.push({cid:c.id,lbl,rk,d:-1,txt:title+' 還有未精通細項，對應任務 '+idle+' 個'+(idle===un?'都':'')+'在待命'});
+    }
+  });
+  rows.sort((a,b)=>a.rk-b.rk||b.d-a.d);
+  if(orphan)rows.push({cid:'',lbl:'',rk:9,d:-1,txt:orphan+' 個進行中任務對應的方向或細項已刪除，請到 Optimizer 重新對應'}); // 規則 5
+  return rows;
+}
+function attRowHtml(a){
+  const inner=(a.lbl?`<span class="att-q${a.dq?' dq':''}">${esc(a.lbl)}</span>`:'')+`<span class="att-t">${esc(a.txt)}</span>`;
+  return(a.cid&&ID_RE.test(a.cid))?`<button type="button" class="att-row" data-att="${esc(a.cid)}" title="開啟這個方向的工作面板">${inner}</button>`:`<div class="att-row">${inner}</div>`;
+}
+function renderAtt(){
+  const el=$('att');
+  if(!ATT.length){el.innerHTML='';el.hidden=true;return;}
+  el.hidden=false;
+  const show=ATT_MORE?ATT:ATT.slice(0,5);
+  el.innerHTML='<div class="att-h">需要注意</div>'+show.map(attRowHtml).join('')
+    +(ATT.length>5?`<button type="button" class="att-more" data-att-more="1" aria-expanded="${ATT_MORE}">${ATT_MORE?'收合':'還有 '+(ATT.length-5)+' 項'}</button>`:'');
+}
 const BOARD_OPEN=new Set(); // 看板卡片細項展開狀態：僅頁面變數，不存 localStorage
 function cardHtml(c){
-  const n=c.items.length,dist=distOf(c),bo=n>0&&BOARD_OPEN.has(c.id);
-  return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}">
-    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div>${CSTAT.card[c.id]?`<span class="cd-wk">${esc(wkTxt(CSTAT.card[c.id]))}</span>`:''}</div>
+  const n=c.items.length,dist=distOf(c),bo=n>0&&BOARD_OPEN.has(c.id),tc=taskCount(c),ws=CSTAT.card[c.id];
+  const ct=bo?tasksOf(c.id,null):[];
+  return`<div class="cd${c.id===selCard?' sel-on':''}" data-card="${esc(c.id)}" tabindex="0" aria-label="${esc(c.title||'未命名')}：開啟工作面板">
+    <div class="cd-top">${pickBtn(c)}<div class="cd-title">${esc(c.title)||'（未命名）'}${c.desc?`<span class="cd-desc-in">${esc(c.desc)}</span>`:''}</div>${ws||tc.n?`<span class="cd-side">${ws?`<span class="cd-wk">${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span class="cd-tc">${esc(tcTxt(tc))}</span>`:''}</span>`:''}</div>
     ${c.tags.length?`<div class="cd-tags">${c.tags.map(t=>`<span class="pill${t===filterTag?' on':''}" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="cd-meta${n?' cd-tg':''}"${n?` data-bt="${esc(c.id)}" role="button" aria-expanded="${bo}"`:''}>${n?`<span class="mc-tg${bo?' open':''}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}<span>${n} 個細項</span>${n&&dist?`<span class="cd-dist">${esc(dist)}</span>`:''}${optBtn(c.id,null)}</div>
-    ${bo?`<div class="cd-items">${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${optBtn(c.id,it.id)}</div>${tkHtml(it)}`;}).join('')}</div>`:''}
+    ${bo?`<div class="cd-items">${ct.length?`<div class="tk-lbl">方向層任務</div><div class="tk-list">${taskRowsHtml(ct)}</div>`:''}${c.items.map((it,k)=>{const L=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');const it_t=tasksOf(c.id,it.id);return`<div class="cd-it"><span class="cd-it-n">${esc(L)}.</span><span class="cd-it-name">${esc(it.name)||'（未命名）'}</span>${CSTAT.item[c.id+'|'+it.id]?`<span class="cd-it-wk">${esc(wkTxt(CSTAT.item[c.id+'|'+it.id]))}</span>`:''}<span class="cd-it-st st${STATUSES.indexOf(it.status)}">${esc(it.status)}</span>${optBtn(c.id,it.id)}</div>${it_t.length?`<div class="tk-list">${taskRowsHtml(it_t)}</div>`:''}${tkHtml(it)}`;}).join('')}</div>`:''}
   </div>`;
 }
 
@@ -662,7 +892,7 @@ function topicsHtml(it){
   });
   return h+'</div>';
 }
-function itemHtml(it,k,arr){
+function itemHtml(it,k,arr,c){
   const letter=String.fromCharCode(97+k%26)+(k>=26?String(Math.floor(k/26)):'');
   const si=Math.max(0,STATUSES.indexOf(it.status));
   return`<div class="it" data-iid="${esc(it.id)}">
@@ -672,7 +902,8 @@ function itemHtml(it,k,arr){
       <button type="button" class="st-ic st${si}" data-act="istate" aria-haspopup="menu" aria-expanded="${iMenu===it.id}" aria-label="細項狀態：${esc(it.status)}，點擊變更" title="${esc(it.status)}">${ICON_S[si]}</button>
       <button type="button" class="st-ic tr-ic" data-act="idel" aria-label="刪除細項" title="刪除">${TRASH}</button></div>
     ${iMenu===it.id?`<div class="tmenu imenu" role="menu" aria-label="選擇細項狀態">${STATUSES.map((x,xi)=>`<button type="button" role="menuitemradio" aria-checked="${x===it.status}" data-act="iset" data-s="${esc(x)}"><span class="ck">${x===it.status?'✓':''}</span><span>${ICON_S[xi]} ${esc(x)}</span></button>`).join('')}</div>`:''}
-    ${iDelAsk===it.id?`<div class="tcard-b it-ask"><span class="jr-ask">確定刪除此細項？其推進紀錄會一併刪除。</span><button type="button" class="btn danger" data-act="idelok">確定</button><button type="button" class="btn plain" data-act="idelno">取消</button></div>`:''}
+    ${iDelAsk===it.id?`<div class="tcard-b it-ask"><span class="jr-ask">確定刪除此細項？其推進紀錄會一併刪除。${(()=>{const m=(TV.byRef[c.id+'|'+it.id]||[]).length;return m?'有 '+m+' 個任務對應這裡（不會連帶修改任務庫）。':'';})()}</span><button type="button" class="btn danger" data-act="idelok">確定</button><button type="button" class="btn plain" data-act="idelno">取消</button></div>`:''}
+    ${(()=>{const tl=tasksOf(c.id,it.id),ob=optBtn(c.id,it.id);return(tl.length||ob)?`<div class="it-tasks"><div class="it-tasks-h"><div class="it-lbl">對應任務（${tl.length}）</div>${ob}</div>${tl.length?`<div class="tk-list">${taskRowsHtml(tl)}</div>`:''}</div>`:'';})()}
     <div class="it-lbl">主題清單（${it.topics.length}）</div>
     ${topicsHtml(it)}
   </div>`;
@@ -687,7 +918,7 @@ function tagBarHtml(c){
 }
 function mcHtml(c,gk,grp){
   const open=OPEN.has(c.id),n=c.items.length;
-  let h=`<div class="mc${c.id===selCard?' sel-on':''}${c.id===focusId?' focus-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
+  let h=`<div class="mc${c.id===selCard?' sel-on':''}${c.id===PANEL_ID?' focus-on':''}" data-card="${esc(c.id)}" id="mc-${esc(c.id)}">
     <div class="mc-head" data-toggle="1">
       ${pickBtn(c)}
       <span class="mc-tg${open?' open':''}" title="${open?'收合':'展開'}" aria-label="${open?'收合':'展開'}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -695,35 +926,114 @@ function mcHtml(c,gk,grp){
       ${ordQ===c.quadrant&&grp?`${gk>0?'<button type="button" class="st-ic mv-ic" data-act="cmove" data-dir="up" aria-label="上移方向" title="上移方向">↑</button>':''}${gk<grp.length-1?'<button type="button" class="st-ic mv-ic" data-act="cmove" data-dir="down" aria-label="下移方向" title="下移方向">↓</button>':''}`:''}
       <span class="mc-badge q${c.quadrant}">${esc(qLabel(c.quadrant))}</span>
       <span class="mc-avg">${n} 項</span>
+      <button type="button" class="btn plain wp-open" data-act="panel">工作面板</button>
       ${moveSelHtml(c)}
       ${tagBarHtml(c)}
     </div>`;
   if(open){
     h+=`<div class="mc-body">
-      <div class="fld"><label>說明</label><textarea class="ta" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
-      <div class="sec-row"><div class="sec-lbl">能力細項（${n}）</div>${n>1?`<button type="button" class="ord-btn${ordCid===c.id?' on':''}" data-act="iord" aria-pressed="${ordCid===c.id}">${ordCid===c.id?'完成':'調整順序'}</button>`:''}</div>
-      <div class="tree">${c.items.map((it,k,arr)=>itemHtml(it,k,ordCid===c.id?arr:null)).join('')||'<div class="q-empty">尚無細項</div>'}</div>
-      <div style="margin-top:10px"><button class="btn" data-act="iadd">＋ 新增細項</button></div>
-      <div class="del-zone">${delAskId===c.id
-        ?`<div class="del-ask">確定刪除「${esc(c.title)||'未命名'}」？此方向的細項與推進紀錄會一併刪除，無法復原。</div><div><button class="btn danger" data-act="delok">確定刪除</button><button class="btn plain" data-act="delno">取消</button></div>`
-        :`<button class="btn danger" data-act="delask">刪除此方向</button>`}</div>
+      <div class="m-sub" style="margin:12px 0 0">說明、能力細項與主題請按上方「工作面板」維護。</div>
+      <div class="del-zone">${delAskHtml(c,'刪除此方向')}</div>
     </div>`;
   }
   return h+'</div>';
 }
+function delAskHtml(c,lbl){
+  if(delAskId!==c.id)return`<button class="btn danger" data-act="delask">${esc(lbl)}</button>`;
+  const m=TV.tasks.filter(t=>t.cardId===c.id).length;
+  return`<div class="del-ask">確定刪除「${esc(c.title)||'未命名'}」？此方向的細項與推進紀錄會一併刪除，無法復原。${m?'有 '+m+' 個任務對應這裡（不會連帶修改任務庫）。':''}</div><div><button class="btn danger" data-act="delok">確定刪除</button><button class="btn plain" data-act="delno">取消</button></div>`;
+}
+// 「已決定不進行」組（維護區最下方、預設收合）：點列＝開工作面板；理由編輯與恢復在面板內
+function dropRowHtml(c){
+  return`<div class="mc drop-row" data-card="${esc(c.id)}" data-dpanel="1">
+    <div class="mc-head"><span class="mc-title">${esc(c.title)||'（未命名）'}</span><span class="mc-badge q0">${esc(c.dropped.date)} 決定不進行</span><span class="mc-avg">原${esc(qLabel(c.quadrant))}</span><button type="button" class="btn plain wp-open" data-act="panel">工作面板</button></div>
+    ${c.dropped.reason?`<div class="drop-reason">理由：${esc(c.dropped.reason)}</div>`:''}
+    <div class="drop-reason">${delAskHtml(c,'刪除此方向')}</div>
+  </div>`;
+}
 function renderMaint(){
   let h='';
   for(let q=0;q<=4;q++){
-    const cards=DB.cards.filter(c=>c.quadrant===q);
+    const cards=DB.cards.filter(c=>c.quadrant===q&&!isDropped(c));
     const lbl=q===0?'未放置':'第'+QN[q]+'象限';
     const sub=q===0?'新增後先放這裡，按「選取」再點上方象限即放置':QDEF[q].name;
     h+=`<div class="grp" data-drop="${q}"><div class="grp-lbl"><span>${esc(lbl)}</span><span>${esc(sub)}・${cards.length}</span>${cards.length>1?`<button type="button" class="ord-btn${ordQ===q?' on':''}" data-act="cord" data-q="${q}" aria-pressed="${ordQ===q}">${ordQ===q?'完成':'調整順序'}</button>`:''}</div>`
       +(cards.length?cards.map((c,k,a)=>mcHtml(c,k,a)).join(''):`<div class="grp-empty">${q===0?'沒有未放置的方向':'此象限沒有方向'}</div>`)
       +'</div>';
   }
+  const dl=DB.cards.filter(isDropped);
+  if(dl.length)h+=`<div class="grp grp-drop"><button type="button" class="ord-btn drop-tg" data-act="droptg" aria-expanded="${DROP_OPEN}">已決定不進行・${dl.length}（${DROP_OPEN?'收合':'展開'}）</button>${DROP_OPEN?dl.map(dropRowHtml).join(''):''}</div>`;
   $('maint').innerHTML=h;
-  document.querySelectorAll('#maint .tmemo').forEach(growNote);
 }
+
+/* ───────── 方向工作面板（10.14）：寬螢幕右側抽屜、窄螢幕全螢幕；細項與主題只在這裡編輯 ───────── */
+function dropZoneHtml(c){
+  if(isDropped(c)){
+    const d=c.dropped,rq=RESTORE_Q>=0?RESTORE_Q:c.quadrant;
+    return`<div class="del-zone"><div class="sec-lbl" style="margin-top:0">已決定不進行</div><div class="drop-d">決定日期：${esc(d.date)}</div>
+      <div class="fld"><label for="wp-dreason">理由</label><textarea class="ta" id="wp-dreason" data-f="dreason" maxlength="200" placeholder="為什麼決定不進行（可空）">${esc(d.reason)}</textarea></div>
+      <div class="drop-rs"><select class="sel" data-f="restoreq" aria-label="恢復到哪裡">${[0,1,2,3,4].map(q=>`<option value="${q}"${q===rq?' selected':''}>恢復到：${esc(qLabel(q))}${q===c.quadrant?'（原位置）':''}</option>`).join('')}</select><button type="button" class="btn" data-act="restore">恢復</button></div></div>`;
+  }
+  if(DROP_ASK)return`<div class="del-zone"><div class="fld" style="margin-top:0"><label for="wp-dropdraft">決定不進行的理由（可空，最多 200 字）</label><textarea class="ta" id="wp-dropdraft" data-f="dropdraft" maxlength="200" placeholder="例如：評估後投入報酬不划算">${esc(DROP_DRAFT)}</textarea></div>
+    <div style="display:flex;gap:8px"><button type="button" class="btn" data-act="dropok">確定不進行</button><button type="button" class="btn plain" data-act="dropno">取消</button></div></div>`;
+  return`<div class="del-zone"><button type="button" class="btn plain" data-act="dropask">決定不進行</button><div class="m-sub" style="margin:6px 0 0">方向會離開四象限、移到維護區最下方「已決定不進行」，資料不刪除，之後可恢復。</div></div>`;
+}
+function panelHtml(c){
+  const dropped=isDropped(c),tc=taskCount(c),ws=CSTAT.card[c.id],n=c.items.length;
+  const ct=tasksOf(c.id,null),my=ATT.filter(a=>a.cid===c.id),ob=optBtn(c.id,null);
+  return`<div class="wp-in" data-card="${esc(c.id)}">
+    <div class="wp-meta"><span class="mc-badge q${dropped?0:c.quadrant}">${esc(dropped?'已決定不進行':qLabel(c.quadrant))}</span>${ws?`<span>${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span>${esc(tcTxt(tc))}</span>`:''}</div>
+    ${my.length?`<div class="wp-att"><div class="sec-lbl">需要注意</div>${my.map(a=>`<div class="wp-att-r">${esc(a.txt)}</div>`).join('')}</div>`:''}
+    <div class="fld"><label for="wp-desc">說明</label><textarea class="ta" id="wp-desc" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
+    <div class="sec-row"><div class="sec-lbl">方向層任務（${ct.length}）</div>${ob}</div>
+    ${ct.length?`<div class="tk-list" style="margin-left:0">${taskRowsHtml(ct)}</div>`:'<div class="q-empty">沒有直接對應這個方向的任務</div>'}
+    <div class="sec-row"><div class="sec-lbl">能力細項（${n}）</div>${n>1?`<button type="button" class="ord-btn${ordCid===c.id?' on':''}" data-act="iord" aria-pressed="${ordCid===c.id}">${ordCid===c.id?'完成':'調整順序'}</button>`:''}</div>
+    <div class="tree">${c.items.map((it,k,arr)=>itemHtml(it,k,ordCid===c.id?arr:null,c)).join('')||'<div class="q-empty">尚無細項</div>'}</div>
+    <div style="margin-top:10px"><button type="button" class="btn" data-act="iadd">＋ 新增細項</button></div>
+    ${dropZoneHtml(c)}
+  </div>`;
+}
+function renderPanel(){
+  const wp=$('wp'),body=$('wp-body'),c=PANEL_ID?getCard(PANEL_ID):null;
+  document.body.classList.toggle('wp-on',!!c);
+  if(!c){
+    if(wp.classList.contains('open')){wp.classList.remove('open');wp.setAttribute('aria-hidden','true');}
+    body.innerHTML='';$('wp-title').textContent='';return;
+  }
+  const nav=document.querySelector('.nav');
+  if(nav)document.documentElement.style.setProperty('--navh',nav.offsetHeight+'px');
+  const st=body.scrollTop;
+  $('wp-title').textContent=c.title||'（未命名）';
+  body.innerHTML=panelHtml(c);
+  body.scrollTop=st; // 重繪不跳回頂端
+  wp.classList.add('open');wp.removeAttribute('aria-hidden');
+  body.querySelectorAll('.tmemo').forEach(growNote);
+}
+function openPanel(id,ret){
+  if(typeof id!=='string'||!ID_RE.test(id)||!getCard(id))return;
+  if(PANEL_ID!==id){DROP_ASK=false;DROP_DRAFT='';RESTORE_Q=-1;iMenu='';tMenu='';iDelAsk='';tDelAsk='';ordCid='';$('wp-body').scrollTop=0;}
+  PANEL_ID=id;PANEL_RET=ret||null;
+  render();
+  $('wp-x').focus();
+}
+function _closePanelNow(){
+  if(!PANEL_ID)return;
+  const ret=PANEL_RET;
+  PANEL_ID='';PANEL_RET=null;DROP_ASK=false;DROP_DRAFT='';RESTORE_Q=-1;iMenu='';tMenu='';iDelAsk='';tDelAsk='';ordCid='';
+  render();
+  if(ret){ // 焦點回到開啟面板的位置（比對字串，不組 selector）
+    for(const el of document.querySelectorAll(ret.sel)){
+      const k=el.dataset.att||((el.closest('[data-card]')||{dataset:{}}).dataset.card);
+      if(k===ret.id){el.focus();return;}
+    }
+  }
+}
+function closePanel(){
+  const a=document.activeElement;
+  if(a&&$('wp-body').contains(a)&&a.dataset&&a.dataset.f&&typeof a.blur==='function'){a.blur();setTimeout(_closePanelNow,30);return;} // 先讓正在編輯的欄位觸發 change 存檔
+  _closePanelNow();
+}
+
 
 function addCard(){
   if(DB.cards.length>=CARD_MAX){toast('方向已達 '+CARD_MAX+' 個上限');return;}
@@ -746,19 +1056,21 @@ function addTag(c,raw,inp){
 
 /* ── 階段 2b：Career → Optimizer 複製轉入（不搬走）；寫 tina_tasks_v3 的「Career 轉入」分類（ondemand，不自動排程）── */
 const OPT_TASKS_KEY='tina_tasks_v3',OPT_CAT='career_inbox',OPT_CAT_LABEL='Career 轉入',OPT_NAME_MAX=60;
-let OPT_REFS=new Set(); // 已在任務庫的對應：'cardId' 或 'cardId|itemId'（每次 render 重讀）
+let OPT_REFS={open:new Set(),closed:new Set()}; // 任務庫對應：'cardId' 或 'cardId|itemId'，依有無 doneAt 分未結案／已結案（每次 render 重讀）
 function loadOptTasks(){try{const td=JSON.parse(localStorage.getItem(OPT_TASKS_KEY)||'null');return(td&&typeof td==='object'&&Array.isArray(td.tasks)&&Array.isArray(td.categories))?td:null;}catch(e){return null;}}
 function optRefKey(cardId,itemId){return itemId?cardId+'|'+itemId:cardId;}
 function loadOptRefs(){
-  const out=new Set(),td=loadOptTasks();
-  if(td)td.tasks.forEach(t=>{const r=t&&t.careerRef;if(r&&typeof r==='object'&&typeof r.cardId==='string'&&r.cardId)out.add(optRefKey(r.cardId,(typeof r.itemId==='string'&&r.itemId)?r.itemId:null));});
+  const out={open:new Set(),closed:new Set()},td=loadOptTasks();
+  if(td)td.tasks.forEach(t=>{const r=t&&t.careerRef;if(r&&typeof r==='object'&&typeof r.cardId==='string'&&r.cardId)(validDate(t.doneAt)?out.closed:out.open).add(optRefKey(r.cardId,(typeof r.itemId==='string'&&r.itemId)?r.itemId:null));});
   return out;
 }
+// 三態：有未結案對應任務→已在任務庫；只有已結案→已結案（不可點）；沒有→→ Optimizer。決定不進行的方向不顯示
 function optBtn(cardId,itemId){
-  const k=optRefKey(cardId,itemId);
-  return OPT_REFS.has(k)
-    ?'<button type="button" class="to-opt done" data-opt="'+esc(cardId)+'"'+(itemId?' data-opt-item="'+esc(itemId)+'"':'')+' title="任務庫已有對應這裡的任務">已在任務庫</button>'
-    :'<button type="button" class="to-opt" data-opt="'+esc(cardId)+'"'+(itemId?' data-opt-item="'+esc(itemId)+'"':'')+' title="複製成 Optimizer 任務（Career 轉入，需要時才加入）">→ Optimizer</button>';
+  const c=getCard(cardId);if(!c||isDropped(c))return'';
+  const k=optRefKey(cardId,itemId),a=' data-opt="'+esc(cardId)+'"'+(itemId?' data-opt-item="'+esc(itemId)+'"':'');
+  if(OPT_REFS.open.has(k))return'<button type="button" class="to-opt done"'+a+' aria-disabled="true" title="任務庫已有對應這裡的任務">已在任務庫</button>';
+  if(OPT_REFS.closed.has(k))return'<button type="button" class="to-opt done"'+a+' aria-disabled="true" title="對應這裡的任務已結案；要再做請到 Optimizer 任務庫的「已結案」區還原">已結案</button>';
+  return'<button type="button" class="to-opt"'+a+' title="複製成 Optimizer 任務（Career 轉入，需要時才加入）">→ Optimizer</button>';
 }
 function optName(c,it){
   const clean=v=>String(v||'').replace(/\s+/g,' ').trim();
@@ -770,6 +1082,7 @@ function optName(c,it){
 let _optUndo=null,_optUndoT=null;
 function toOptimizer(cardId,itemId){
   const c=getCard(cardId);if(!c)return;
+  if(isDropped(c)){toast('此方向已決定不進行，未轉入');return;}
   const it=itemId?c.items.find(x=>x.id===itemId):null;
   if(itemId&&!it)return;
   const name=optName(c,it);
@@ -779,7 +1092,9 @@ function toOptimizer(cardId,itemId){
   if(!td){toast('Optimizer 任務庫資料異常，未轉入');return;}
   if(window.ccSyncCore&&typeof window.ccSyncCore.isStaleTab==='function'&&window.ccSyncCore.isStaleTab()){toast('未轉入：資料已在其他分頁更新，請重新整理');return;}
   const k=optRefKey(cardId,itemId);
-  if(loadOptRefs().has(k)){toast('任務庫已有對應這裡的任務');render();return;}
+  const refs=loadOptRefs();
+  if(refs.open.has(k)){toast('任務庫已有對應這裡的任務');render();return;}
+  if(refs.closed.has(k)){toast('對應這裡的任務已結案，請到 Optimizer 已結案區還原');render();return;}
   if(td.tasks.some(t=>t&&typeof t.text==='string'&&t.text.trim()===name)){toast('任務庫已有同名任務，未轉入');return;}
   if(!td.categories.some(x=>x&&x.key===OPT_CAT))td.categories.push({key:OPT_CAT,label:OPT_CAT_LABEL,freq:'ondemand'});
   const nid=Math.max(9,...td.tasks.map(t=>Number(t&&t.id)||0))+1;
@@ -810,7 +1125,7 @@ function toast(msg){
 }
 
 /* ───────── 維護區事件（委派） ───────── */
-function cardOf(el){const m=el.closest('.mc');return m?getCard(m.dataset.card):null;}
+function cardOf(el){const m=el.closest('[data-card]');return m?getCard(m.dataset.card):null;} // 維護區 .mc 或工作面板 .wp-in
 function onMaintChange(e){
   const t=e.target,f=t.dataset&&t.dataset.f;
   if(!f||!t.isConnected)return; // 事件延後處理期間欄位可能已被重繪換掉，舊欄位的值不可再寫入
@@ -819,6 +1134,14 @@ function onMaintChange(e){
   if(f==='move'){moveCard(c,t.value);return;}
   if(f==='title'){c.title=str(t.value,80).trim();touch(c);save();render();return;}
   if(f==='desc'){c.desc=str(t.value,300).trim();touch(c);save();render();return;}
+  if(f==='restoreq'){RESTORE_Q=normQ(t.value);return;}
+  if(f==='dropdraft'){DROP_DRAFT=str(t.value,200);return;}
+  if(f==='dreason'){ // 改理由不寫 log
+    if(!isDropped(c))return;
+    const v=str(t.value,200).trim();
+    if(v===c.dropped.reason)return;
+    c.dropped.reason=v;touch(c);save();render();return;
+  }
   if(f==='tagnew'){addTag(c,t.value,t);return;}
   const row=t.closest('.it');
   const it=row&&c.items.find(i=>i.id===row.dataset.iid);
@@ -847,6 +1170,7 @@ function growNote(t){if(t.scrollHeight>0){t.style.height='auto';t.style.height=t
 function onMaintInput(e){
   const t=e.target,f=t.dataset&&t.dataset.f;
   if(f==='tmemo')growNote(t);
+  if(f==='dropdraft')DROP_DRAFT=str(t.value,200);
   if(f==='tnew'){const row=t.closest('.it');if(row)TNEW[row.dataset.iid+'|'+(t.dataset.s||'')]=str(t.value,80);}
 }
 function addTopic(c,it,col){
@@ -858,16 +1182,16 @@ function addTopic(c,it,col){
   it.topics.push({id:uid('t'),name,state:st,learnedAt:st==='已學'?today():'',createdAt:today(),memo:''}); // 掌握較多欄新增：背景記推進日（不顯示）
   TNEW[it.id+'|'+st]='';
   touch(c);save();render();
-  for(const el of document.querySelectorAll('#maint .it [data-f="tnew"]')){
+  for(const el of document.querySelectorAll('#wp-body .it [data-f="tnew"]')){
     const r=el.closest('.it');
     if(r&&r.dataset.iid===it.id&&el.dataset.s===st){el.focus();break;}
   }
 }
 function focusTBtn(tid){
-  for(const el of document.querySelectorAll('#maint .st-ic')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+  for(const el of document.querySelectorAll('#wp-body .st-ic')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
 }
 function focusIBtn(iid,act){
-  for(const el of document.querySelectorAll('#maint .it-top [data-act="'+act+'"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid){el.focus();break;}}
+  for(const el of document.querySelectorAll('#wp-body .it-top [data-act="'+act+'"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid){el.focus();break;}}
 }
 function closeIMenu(refocus){
   const id=iMenu;if(!id)return false;
@@ -883,13 +1207,39 @@ function closeTMenu(refocus){
 }
 function onMaintClick(e){
   const t=e.target;
+  const op=t.closest('[data-opt]');
+  if(op){if(!op.classList.contains('done'))toOptimizer(op.dataset.opt,op.dataset.optItem||null);return;}
   const pk=t.closest('[data-pick]');
   if(pk){pickCard(pk.dataset.pick);return;}
   const b=t.closest('[data-act]');
   if(b){
     const act=b.dataset.act;
     if(act==='cord'){const q=parseInt(b.dataset.q,10);ordQ=(ordQ===q||!(q>=0&&q<=4))?-1:q;render();return;}
+    if(act==='droptg'){DROP_OPEN=!DROP_OPEN;render();const x=document.querySelector('#maint [data-act="droptg"]');if(x)x.focus();return;}
     const c=cardOf(b);if(!c)return;
+    if(act==='panel'){openPanel(c.id,{sel:isDropped(c)?'#maint .drop-row [data-act="panel"]':'#maint .mc-head [data-act="panel"]',id:c.id});return;}
+    if(act==='dropask'){DROP_ASK=true;DROP_DRAFT='';render();const x=$('wp-dropdraft');if(x)x.focus();return;}
+    if(act==='dropno'){DROP_ASK=false;DROP_DRAFT='';render();const x=document.querySelector('#wp-body [data-act="dropask"]');if(x)x.focus();return;}
+    if(act==='dropok'){
+      if(isDropped(c))return;
+      const ta=$('wp-dropdraft'),reason=str(ta?ta.value:DROP_DRAFT,200).trim();
+      c.dropped={date:today(),reason}; // 不改 quadrant（規劃書 10.7）
+      logChange(c.id,null,'dropped','',reason||'（未填理由）');
+      if(selCard===c.id)clearSel();
+      DROP_ASK=false;DROP_DRAFT='';RESTORE_Q=-1;touch(c);save();render();toast('已標記為決定不進行');
+      const x=$('wp-dreason');if(x)x.focus();return;
+    }
+    if(act==='restore'){
+      if(!isDropped(c))return;
+      const sl=b.closest('.drop-rs'),se=sl&&sl.querySelector('[data-f="restoreq"]');
+      const q=normQ(se?se.value:(RESTORE_Q>=0?RESTORE_Q:c.quadrant));
+      const from=c.dropped.reason||'（未填理由）';
+      delete c.dropped;
+      logChange(c.id,null,'dropped',from,'');
+      if(q!==c.quadrant){const fq=c.quadrant;c.quadrant=q;logChange(c.id,null,'quadrant',fq,q);}
+      RESTORE_Q=-1;touch(c);save();render();toast('已恢復到'+qLabel(q));
+      const x=document.querySelector('#wp-body [data-act="dropask"]');if(x)x.focus();return;
+    }
     if(act==='tagdel'){c.tags=c.tags.filter(x=>x!==b.dataset.tag);touch(c);save();render();}
     else if(act==='tagsug'){addTag(c,b.dataset.tag,null);}
     else if(act==='cmove'){
@@ -910,15 +1260,15 @@ function onMaintClick(e){
       const tmp=c.items[i];c.items[i]=c.items[j];c.items[j]=tmp;
       save();render();
       let ok=false;
-      for(const el of document.querySelectorAll('#maint .it-top [data-act="imove"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid&&el.dataset.dir===dir){ok=true;break;}}
+      for(const el of document.querySelectorAll('#wp-body .it-top [data-act="imove"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid&&el.dataset.dir===dir){ok=true;break;}}
       if(!ok){const od=dir==='up'?'down':'up';
-        for(const el of document.querySelectorAll('#maint .it-top [data-act="imove"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid&&el.dataset.dir===od){el.focus();break;}}}
+        for(const el of document.querySelectorAll('#wp-body .it-top [data-act="imove"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid&&el.dataset.dir===od){el.focus();break;}}}
     }
     else if(act==='iadd'){
       if(c.items.length>=ITEM_MAX){toast('細項已達 '+ITEM_MAX+' 個上限');return;}
       c.items.push({id:uid('i'),name:'',status:'未評估',progress:0,milestone:'',note:'',journal:[],updatedAt:nowStr(),topics:[]});
       touch(c);save();render();
-      const names=$('mc-'+c.id).querySelectorAll('[data-f="iname"]');
+      const names=$('wp-body').querySelectorAll('[data-f="iname"]');
       if(names.length)names[names.length-1].focus();
     }
     else if(act==='tadd'||act==='tmemoopen'||act==='tdel'||act==='tdelok'||act==='tdelno'||act==='tstate'||act==='tset'){
@@ -929,7 +1279,7 @@ function onMaintClick(e){
       if(!tp)return;
       if(act==='tstate'){
         tMenu=(tMenu===tid)?'':tid;render();
-        if(tMenu===tid){const o=document.querySelector('#maint .tmenu [aria-checked="true"]');if(o)o.focus();}
+        if(tMenu===tid){const o=document.querySelector('#wp-body .tmenu [aria-checked="true"]');if(o)o.focus();}
         else focusTBtn(tid);
         return;
       }
@@ -941,17 +1291,17 @@ function onMaintClick(e){
       }
       if(act==='tmemoopen'){
         MEMO_OPEN.add(tid);render();
-        for(const el of document.querySelectorAll('#maint .tmemo')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+        for(const el of document.querySelectorAll('#wp-body .tmemo')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
         return;
       }
       if(act==='tdel'){
         tDelAsk=tid;iDelAsk='';render();
-        for(const el of document.querySelectorAll('#maint .tcard-b [data-act="tdelno"]')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+        for(const el of document.querySelectorAll('#wp-body .tcard-b [data-act="tdelno"]')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
         return;
       }
       if(act==='tdelno'){
         tDelAsk='';render();
-        for(const el of document.querySelectorAll('#maint .tcard-t [data-act="tdel"]')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
+        for(const el of document.querySelectorAll('#wp-body .tcard-t [data-act="tdel"]')){const q=el.closest('.tcard');if(q&&q.dataset.tid===tid){el.focus();break;}}
         return;
       }
       if(act==='tdelok'){it.topics=it.topics.filter(x=>x.id!==tid);tDelAsk='';touch(c);save();render();return;}
@@ -961,7 +1311,7 @@ function onMaintClick(e){
       if(!it)return;
       if(act==='istate'){
         iMenu=(iMenu===iid)?'':iid;iDelAsk='';tMenu='';render();
-        if(iMenu===iid){const o=document.querySelector('#maint .imenu [aria-checked="true"]');if(o)o.focus();}
+        if(iMenu===iid){const o=document.querySelector('#wp-body .imenu [aria-checked="true"]');if(o)o.focus();}
         else focusIBtn(iid,'istate');
         return;
       }
@@ -974,7 +1324,7 @@ function onMaintClick(e){
         render();focusIBtn(iid,'istate');return;
       }
       if(act==='idel'){iDelAsk=iid;iMenu='';tDelAsk='';render();focusIBtn(iid,'idel');
-        for(const el of document.querySelectorAll('#maint .it-ask [data-act="idelno"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid){el.focus();break;}}
+        for(const el of document.querySelectorAll('#wp-body .it-ask [data-act="idelno"]')){const r=el.closest('.it');if(r&&r.dataset.iid===iid){el.focus();break;}}
         return;}
       if(act==='idelno'){iDelAsk='';render();focusIBtn(iid,'idel');return;}
       if(act==='idelok'){
@@ -988,11 +1338,13 @@ function onMaintClick(e){
     else if(act==='delok'){
       DB.cards=DB.cards.filter(x=>x.id!==c.id);
       DB.log=DB.log.filter(l=>l.cardId!==c.id); // 刪卡片連帶刪 log
-      OPEN.delete(c.id);delAskId='';if(selCard===c.id)selCard='';save();render();toast('已刪除');
+      OPEN.delete(c.id);delAskId='';if(selCard===c.id)selCard='';if(PANEL_ID===c.id)PANEL_ID='';save();render();toast('已刪除');
     }
     return;
   }
   if(t.closest('select,input,textarea,button,.pill'))return;
+  const dr=t.closest('[data-dpanel]');
+  if(dr){openPanel(dr.dataset.card,{sel:'#maint .drop-row [data-act="panel"]',id:dr.dataset.card});return;}
   if(selCard){
     const g=t.closest('.grp');
     if(g&&g.dataset.drop==='0'){const sc=getCard(selCard);if(sc){placeSel(sc,0);return;}}
@@ -1018,14 +1370,6 @@ function onMaintKey(e){
 }
 
 /* ───────── 事件綁定（全為委派，無 inline handler） ───────── */
-function scrollToCard(id){
-  focusId=id;OPEN.add(id);render();
-  const el=$('mc-'+id);
-  if(el){
-    if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
-    el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1900);
-  }
-}
 $('board').addEventListener('click',e=>{
   const op=e.target.closest('[data-opt]');
   if(op){if(!op.classList.contains('done'))toOptimizer(op.dataset.opt,op.dataset.optItem||null);return;}
@@ -1038,7 +1382,7 @@ $('board').addEventListener('click',e=>{
   const qz=e.target.closest('.q[data-q]');
   if(selCard){if(qz)pickQuad(Number(qz.dataset.q));return;}
   const cd=e.target.closest('[data-card]');
-  if(cd){scrollToCard(cd.dataset.card);return;}
+  if(cd){openPanel(cd.dataset.card,{sel:'#board .cd',id:cd.dataset.card});return;}
   if(qz)pickQuad(Number(qz.dataset.q));
 });
 document.addEventListener('click',e=>{
@@ -1047,9 +1391,19 @@ document.addEventListener('click',e=>{
   if(e.target.closest('.tmenu,[data-act="tstate"],[data-act="tset"]'))return;
   closeTMenu(false);
 });
+$('board').addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('cd')){e.preventDefault();openPanel(e.target.dataset.card,{sel:'#board .cd',id:e.target.dataset.card});}
+});
+$('att').addEventListener('click',e=>{
+  const m=e.target.closest('[data-att-more]');
+  if(m){ATT_MORE=!ATT_MORE;renderAtt();const x=document.querySelector('#att [data-att-more]');if(x)x.focus();return;}
+  const r=e.target.closest('[data-att]');
+  if(r)openPanel(r.dataset.att,{sel:'#att [data-att]',id:r.dataset.att});
+});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&iMenu){e.preventDefault();closeIMenu(true);return;}
   if(e.key==='Escape'&&tMenu){e.preventDefault();closeTMenu(true);return;}
+  if(e.key==='Escape'&&PANEL_ID){e.preventDefault();closePanel();return;}
   if(e.key==='Escape'&&(selCard||selQ)){clearSel();render();}
 });
 $('filter-bar').addEventListener('click',e=>{
@@ -1061,6 +1415,14 @@ $('maint').addEventListener('change',e=>setTimeout(()=>onMaintChange(e),0));
 $('maint').addEventListener('input',onMaintInput);
 $('maint').addEventListener('click',onMaintClick);
 $('maint').addEventListener('keydown',onMaintKey);
+// 工作面板沿用同一組委派處理（cardOf 以 [data-card] 找方向）
+$('wp-body').addEventListener('change',e=>setTimeout(()=>onMaintChange(e),0));
+$('wp-body').addEventListener('input',onMaintInput);
+$('wp-body').addEventListener('click',onMaintClick);
+$('wp-body').addEventListener('keydown',onMaintKey);
+$('wp-x').addEventListener('click',closePanel);
+// 其他分頁（Optimizer）可能剛結案／存覆盤：切回本頁時讓下次重繪重讀覆盤（只讀）
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')REV_CACHE=null;});
 $('new-btn').addEventListener('click',addCard);
 $('opt-undo-btn').addEventListener('click',undoOptimizer);
 $('new-title').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCard();}});
