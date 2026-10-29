@@ -1077,11 +1077,11 @@ ${BALL_RUBRIC}
 
 fb_content: 用繁體中文說明接球狀況，根據 verdict 調整語氣：
 - caught → 第一句說哪裡做得好（具體指出接球動作）；第二句給一個可讓對話更自然的升級英文例句。CRITICAL: 若學習者已使用問句或行動提案，升級例句必須是比他們說的更進一步的版本，絕不能建議他們去做他們已經做了的事。
-- partial → 第一句說哪裡有接到但不夠完整；第二句給一個補足缺口的英文例句。CRITICAL: 絕對不能建議學習者加一個他們在原句中已經加了的問句或內容。
+- partial → 第一句說做到了哪一半、缺了哪一半（有回應但沒往前推，或沒先回應對方就直接轉向）；第二句給一個補足缺口的英文例句（沒先回應的，示範先接一句對方的話再問）。CRITICAL: 絕對不能建議學習者加一個他們在原句中已經加了的問句或內容。
 - missed → 第一句說什麼沒有被接住；第二句給一個完整示範的英文例句。
 不准只說大方向，一定要有具體英文例句（不得使用 prompt 中的舉例）。限80字。
 
-fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
+fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節；若回覆沒先回應對方的話，優先建議先接一句回應）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
 
 Output ONLY valid JSON:
 {
@@ -1290,11 +1290,11 @@ function _sanitizePlainText(text){
   // 造成「mountain‑climbing」變「mountainclimbing」、「great—what’s」變「greatwhats」
   return String(text||'')
     .replace(/[\u2010\u2011\u2012\u2013]/g, '-')
-    .replace(/[\u2014\u2015]/g, ' - ')
+    .replace(/[\u2014\u2015]+/g, ' - ')
     .replace(/[\u2018\u2019\u2032]/g, "'")
     .replace(/[\u201C\u201D\u2033]/g, '"')
     .replace(/\u2026/g, '...')
-    .replace(/[^一-鿿　-〿a-zA-Z0-9\s.,!?'"()\-:：；、。，！？「」『』（）%]/g, '');
+    .replace(/[^一-鿿　-〿a-zA-Z0-9\s.,!?'"()\-:：；、。，！？「」『』（）%/&;+=$→]/g, ''); // 10-29 補 / & ; + = $ →（and/or、R&D 不再被黏住）；顯示走 textContent
 }
 // 08-07：logId參數化，讓文法追問(gr-chat-log)跟拆彈追問(idiom-chat-log)共用同一套顯示邏輯，
 // 不重複寫一份；不傳時維持原本行為(gr-chat-log)，呼叫端不用跟著改
@@ -1364,11 +1364,11 @@ Learner's question: "${q}"
 
 Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously, using exactly this standard (接住了=caught, 勉強接到=partial, 沒接到=missed):
 ${BALL_RUBRIC}
- Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. End with your verdict in Chinese (接住了／勉強接到／沒接到), and say whether it changed from the earlier judgment. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
+ Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Do not reuse the standard's example sentences as your example. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. End with your verdict in Chinese (接住了／勉強接到／沒接到), and say whether it changed from the earlier judgment. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
-    const raw = await callGroq(prompt, 800, sys, false);
+    const raw = await callGroq(prompt, 1200, sys, false); // 10-29：800→1200，prompt 含完整 BALL_RUBRIC、重新判斷推理較多
     const ans = _sanitizePlainText(s2t((raw||'').trim()));
     if(ballContext===ctx){
       ctx.history.push({ q, a: ans });
@@ -1535,14 +1535,26 @@ async function backfillComboZh(){
       const batch = missing.slice(i, i+CHUNK);
       const prompt = `Translate each English sentence into a casual Traditional Chinese (Taiwan) explanation of what it means and what tone/emotion it carries, like explaining to a friend. Each ≤45 characters. Return ONLY a JSON array of strings in the same order, no extra text.\n\n`
         + batch.map((it,idx)=>`${idx+1}. "${it.opener}"`).join('\n');
-      const raw = await callGroq(prompt, 900, '', false);
+      const raw = await callGroq(prompt, 1400, '', false); // 10-29：900→1400，15 句譯文本身約千顆 token
       const m = raw.match(/\[[\s\S]*\]/);
       if(!m) continue;
       let arr; try{ arr = JSON.parse(m[0]); }catch{ continue; }
       const zhArr = (typeof s2tDeep==='function') ? s2tDeep(arr) : arr;
       batch.forEach((it,idx)=>{ if(zhArr[idx]) it.opener_zh = String(zhArr[idx]).trim(); });
     }
-    localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+    // 10-29：翻譯期間使用者可能已畫螢光筆／刪除／加星號，寫回前重讀最新資料，
+    // 只把譯文補進仍缺中文的同一筆（ts＋opener 比對），不用舊快照整份覆蓋（避免已刪項目復活）
+    const zhMap = new Map(missing.filter(it=>it.opener_zh).map(it=>[it.ts+'\u0000'+it.opener, it.opener_zh]));
+    if(!zhMap.size) return;
+    const latest = JSON.parse(localStorage.getItem(SAVED_KEY)||'[]');
+    let filled = 0;
+    latest.forEach(it=>{
+      if(!it || typeof it!=='object' || it.opener_zh) return;
+      const zh = zhMap.get(it.ts+'\u0000'+it.opener);
+      if(zh){ it.opener_zh = zh; filled++; }
+    });
+    if(!filled) return;
+    localStorage.setItem(SAVED_KEY, JSON.stringify(latest));
     renderCombos();
   }catch(e){ /* 背景補齊失敗不打擾使用者，下次進頁面前面 getKey/missing 判斷會再略過已補好的部分 */ }
 }
@@ -1598,7 +1610,8 @@ const _HL_LIBS = {
 function renderGrHl(text, ranges, idx, field, lib){
   text = text || '';
   if(!ranges || !ranges.length) return esc(text);
-  const sorted = [...ranges].sort((a,b)=>a[0]-b[0]);
+  if(!Array.isArray(ranges)) return esc(text);
+  const sorted = ranges.filter(r=>Array.isArray(r)).sort((a,b)=>a[0]-b[0]); // 10-29：同步來的壞資料（如 [null]）略過，不讓整頁渲染中斷
   let out = '', pos = 0;
   sorted.forEach(([s,e])=>{
     if(!Number.isInteger(s) || !Number.isInteger(e) || s < pos || e <= s || e > text.length) return; // 防重疊/區間錯亂的舊資料，略過不炸頁面
