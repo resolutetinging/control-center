@@ -245,7 +245,8 @@ button.att-row:hover,button.att-row:focus-visible{background:var(--ac-tint)}
 .tk-pill.idle{color:var(--sub);background:var(--bg)}
 .tk-pill.closed{color:var(--faint);border:.5px solid var(--bstr)}
 .tk-n{font-size:var(--fs4);color:var(--faint);white-space:nowrap;flex-shrink:0}
-.tk-lbl{font-size:var(--fs4);font-weight:600;color:var(--faint);margin:6px 0 3px 18px}
+.tk-lbl{font-size:var(--fs2);font-weight:700;color:var(--ink);margin:6px 0 3px 0}
+.sec-lbl.sub{font-size:var(--fs2);letter-spacing:0;color:var(--ink)}
 .wp{position:fixed;z-index:95;background:var(--bg2);display:flex;flex-direction:column;visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s;box-shadow:-6px 0 24px rgba(40,38,32,.14)}
 .wp.open{visibility:visible;transform:none;transition:transform .22s ease}
 @media(min-width:900px){
@@ -296,6 +297,8 @@ button.att-row:hover,button.att-row:focus-visible{background:var(--ac-tint)}
 .alc-cs{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:var(--fs3);color:var(--sub)}
 .alc-c{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .alc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alc-lg{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:var(--fs3);color:var(--sub);margin-top:6px;padding-top:6px;border-top:.5px dashed var(--bstr)}
+.alc-dot.sq{border-radius:2px}
 .alc-none{font-size:var(--fs3);color:var(--faint)}
 .alc-fc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px;padding-top:8px;border-top:.5px dashed var(--bstr);font-size:var(--fs2);color:var(--ink);line-height:1.5}
 .alc-fl{font-size:var(--fs4);font-weight:700;color:var(--ac);background:var(--ac-tint2);padding:1px 8px;border-radius:9px;white-space:nowrap}
@@ -945,7 +948,7 @@ function buildAttention(){
     }).length;
     if(idle){
       const un=mine.filter(t=>t.st!=='closed').length;
-      rows.push({cid:c.id,lbl,rk,d:-1,txt:title+(hasFocus?' 的本週焦點細項還沒精通':' 還有未精通細項')+'，對應任務 '+idle+' 個'+(idle===un?'都':'')+'在待命'});
+      rows.push({cid:c.id,lbl,rk,d:-1,txt:title+(hasFocus?' 的本週焦點細項':' 還有進行中的細項')+'，對應任務 '+idle+' 個'+(idle===un?'都':'')+'在待命'});
     }
   });
   const nr=unreviewedDays(); // 11.3＋10-27 裁決：本週已過天數中有 ≥2 天沒覆盤
@@ -1033,12 +1036,13 @@ function alcRowHtml(lbl,r,prev){
   const imp=r.b[1].a+r.b[2].a,pct=r.tot>0?Math.round(imp/r.tot*100):0;
   if(!r.any)return`<div class="alc-row${prev?' prev':''}"><div class="alc-top"><span class="alc-w">${esc(lbl)}</span><span class="alc-none">還沒有可估算的時段</span></div></div>`;
   const segs=r.tot>0?ALC_KEYS.filter(k=>r.b[k].a>0).map(k=>`<span class="alc-seg k${k}" style="width:${(r.b[k].a/r.tot*100).toFixed(2)}%"></span>`).join(''):'';
-  const chips=ALC_KEYS.map(k=>{const b=r.b[k];return`<span class="alc-c"><span class="alc-dot k${k}"></span>${esc(ALC_LBL[k])} 約 ${hrs(b.a)}${k===1||k===2?' 小時（排定 '+hrs(b.s)+'）':''}</span>`;}).join('');
+  const chips=ALC_KEYS.map(k=>{const b=r.b[k];return`<span class="alc-c">${esc(ALC_LBL[k])} 約 ${hrs(b.a)}${k===1||k===2?' 小時（排定 '+hrs(b.s)+'）':''}</span>`;}).join('');
   return`<div class="alc-row${prev?' prev':''}"><div class="alc-top"><span class="alc-w">${esc(lbl)}</span><span>約 ${hrs(r.tot)} 小時・重要（一＋二）約佔 ${pct}%</span></div><div class="alc-bar" aria-hidden="true">${segs}</div><div class="alc-cs">${chips}</div></div>`;
 }
+function alcLegend(){return'<div class="alc-lg" aria-label="圖例">'+ALC_KEYS.map(k=>`<span class="alc-c"><span class="alc-dot sq k${k}"></span>${esc(ALC_LBL[k])}</span>`).join('')+'</div>';}
 function renderAlloc(){
   const el=$('alloc');let h='';
-  if(ALC&&(ALC.cur.any||ALC.prev.any))h+='<div class="alc-h">時間分配（依時段與覆盤估算）</div>'+alcRowHtml('本週',ALC.cur,false)+alcRowHtml('上週',ALC.prev,true);
+  if(ALC&&(ALC.cur.any||ALC.prev.any))h+='<div class="alc-h">時間分配（依時段與覆盤估算）</div>'+alcRowHtml('本週',ALC.cur,false)+alcRowHtml('上週',ALC.prev,true)+alcLegend();
   const cur=focusList();
   if(cur.length)h+=`<div class="alc-fc"><span class="alc-fl">本週焦點</span><span class="alc-fn">${cur.map(x=>esc(x.c.title||'（未命名）')+' › '+esc(x.it.name||'（未命名）')).join('、')}</span></div>`;
   else if(focusList(prevFW()).length)h+=`<div class="alc-fc"><span class="alc-fl">本週焦點</span><span class="alc-hint">本週還沒有焦點</span><button type="button" class="btn" data-act="fcarry">沿用上週焦點</button></div>`;
@@ -1186,9 +1190,9 @@ function panelHtml(c){
     <div class="wp-meta"><span class="mc-badge q${dropped?0:c.quadrant}">${esc(dropped?'已決定不進行':qLabel(c.quadrant))}</span>${ws?`<span>${esc(wkTxt(ws))}</span>`:''}${tc.n?`<span>${esc(tcTxt(tc))}</span>`:''}${(()=>{const a=ALC&&ALC.cur.card[c.id],p=ALC&&ALC.prev.card[c.id];return(a&&a.a>0)||(p&&p.a>0)?`<span>本週約 ${hrs(a?a.a:0)} 小時（上週 ${hrs(p?p.a:0)}）</span>`:'';})()}</div>
     ${my.length?`<div class="wp-att"><div class="sec-lbl">需要注意</div>${my.map(a=>`<div class="wp-att-r">${esc(a.txt)}</div>`).join('')}</div>`:''}
     <div class="fld"><label for="wp-desc">說明</label><textarea class="ta" id="wp-desc" data-f="desc" maxlength="300" placeholder="一句話說明（可空）">${esc(c.desc)}</textarea></div>
-    <div class="sec-row"><div class="sec-lbl">方向層任務（${ct.length}）</div>${ob}</div>
+    <div class="sec-row"><div class="sec-lbl sub">方向層任務（${ct.length}）</div>${ob}</div>
     ${ct.length?`<div class="tk-list" style="margin-left:0">${taskRowsHtml(ct)}</div>`:'<div class="q-empty">沒有直接對應這個方向的任務</div>'}
-    <div class="sec-row"><div class="sec-lbl">能力細項（${n}）</div>${n>1?`<button type="button" class="ord-btn${ordCid===c.id?' on':''}" data-act="iord" aria-pressed="${ordCid===c.id}">${ordCid===c.id?'完成':'調整順序'}</button>`:''}</div>
+    <div class="sec-row"><div class="sec-lbl sub">能力細項（${n}）</div>${n>1?`<button type="button" class="ord-btn${ordCid===c.id?' on':''}" data-act="iord" aria-pressed="${ordCid===c.id}">${ordCid===c.id?'完成':'調整順序'}</button>`:''}</div>
     <div class="tree">${c.items.map((it,k,arr)=>itemHtml(it,k,ordCid===c.id?arr:null,c)).join('')||'<div class="q-empty">尚無細項</div>'}</div>
     <div style="margin-top:10px"><button type="button" class="btn" data-act="iadd">＋ 新增細項</button></div>
     ${dropZoneHtml(c)}
