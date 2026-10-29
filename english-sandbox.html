@@ -1186,21 +1186,7 @@ Output ONLY valid JSON:
       $('fb-content-block').style.display = results.fb_content ? 'block' : 'none';
       // verdict badge
       const verdict = (results.fb_ball_verdict||'').trim().toLowerCase();
-      const verdictEl = $('fb-ball-verdict');
-      const verdictMap = {
-        caught:  { cls:'v-caught',  text:'✅ 接住了！' },
-        partial: { cls:'v-partial', text:'⚠️ 勉強接到' },
-        missed:  { cls:'v-missed',  text:'❌ 沒接到' }
-      };
-      if(verdictMap[verdict]){
-        const vm = verdictMap[verdict];
-        verdictEl.innerHTML = `<span class="ball-verdict ${vm.cls}">${vm.text}</span>`;
-        const block = $('fb-content-block');
-        block.classList.remove('fb-issue','fb-caught','fb-partial');
-        block.classList.add(verdict==='caught' ? 'fb-caught' : verdict==='partial' ? 'fb-partial' : 'fb-issue');
-      } else {
-        verdictEl.innerHTML='';
-      }
+      setBallVerdict(verdict, false);
       $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
       ballContext = results.fb_content ? { sit: SITS[curSit]?.en||'', opener: curOpener, reply: inp, verdict, content: results.fb_content||'', tone: results.fb_tone||'', add: results.fb_add||'', history: [] } : null;
@@ -1258,11 +1244,13 @@ Output ONLY valid JSON:
     ['safe','pro','ball','fb_content'].forEach(t=>{ const b=$('save-'+t); if(b){ b.textContent='⭐ 收藏'; b.classList.remove('saved'); } });
     // 記錄本輪至 sessionLog
     if(inp){
-      sessionLog.push({
+      const logEntry = {
         sit: SITS[curSit]?.label||'', opener: curOpener, reply: inp,
         verdict: (results.fb_ball_verdict||'').trim().toLowerCase(),
         fbTone: results.fb_tone||'', fbAdd: results.fb_add||''
-      });
+      };
+      sessionLog.push(logEntry);
+      if(ballContext) ballContext.logRef = logEntry; // 追問改判時同步更新這一輪
       if(sessionLog.length>=2) $('overall-btn').style.display='inline-flex';
       updateRoundCounter();
     }
@@ -1337,6 +1325,37 @@ Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markd
   btn.disabled = false; inp.disabled = false; btn.textContent = '問';
 }
 
+// 10-29：判定標籤共用（第一輪結果與追問改判）；revised=true 時標示「追問後改判」
+const BALL_VERDICT_ZH = {caught:'接住了', partial:'勉強接到', missed:'沒接到'};
+function setBallVerdict(verdict, revised){
+  const verdictEl = $('fb-ball-verdict');
+  const verdictMap = {
+    caught:  { cls:'v-caught',  text:'✅ 接住了！' },
+    partial: { cls:'v-partial', text:'⚠️ 勉強接到' },
+    missed:  { cls:'v-missed',  text:'❌ 沒接到' }
+  };
+  if(!verdictEl) return;
+  if(verdictMap[verdict]){
+    const vm = verdictMap[verdict];
+    verdictEl.innerHTML = `<span class="ball-verdict ${vm.cls}">${vm.text}${revised?' · 追問後改判':''}</span>`;
+    const block = $('fb-content-block');
+    block.classList.remove('fb-issue','fb-caught','fb-partial');
+    block.classList.add(verdict==='caught' ? 'fb-caught' : verdict==='partial' ? 'fb-partial' : 'fb-issue');
+  } else {
+    verdictEl.innerHTML='';
+  }
+}
+// 追問回答最後一行「判定：…」與目前判定不同時，同步更新標籤、ballContext 與本輪 sessionLog（綜合分析的接住率）
+function _applyRevisedVerdict(ctx, ans){
+  const all = [...String(ans).matchAll(/判定\s*[:：]\s*(接住了|勉強接到|沒接到)/g)];
+  if(!all.length) return;
+  const zh = all[all.length-1][1];
+  const v = Object.keys(BALL_VERDICT_ZH).find(k=>BALL_VERDICT_ZH[k]===zh);
+  if(!v || v===ctx.verdict) return;
+  ctx.verdict = v;
+  if(ctx.logRef) ctx.logRef.verdict = v;
+  setBallVerdict(v, true);
+}
 async function askBallWhy(){
   if(!ballContext) return;
   const inp = $('ball-ask-input');
@@ -1348,7 +1367,7 @@ async function askBallWhy(){
   appendGrChat('user', q, 'ball-chat-log');
   inp.value='';
   try{
-    const verdictZh = {caught:'接住了', partial:'勉強接到', missed:'沒接到'}[ctx.verdict] || '未判定';
+    const verdictZh = BALL_VERDICT_ZH[ctx.verdict] || '未判定';
     const hist = ctx.history.slice(-4).map(h=>`Learner: ${h.q}\nYou: ${h.a}`).join('\n');
     // 10-29：原本把先前判斷當「Your verdict」並要求「成立就解釋」，AI 會拿自己的分析去對問題、替判斷辯護；
     // 改成以學習者實際回的那句話＋學習者說明的原意重新判斷，先前判斷只當參考
@@ -1364,7 +1383,7 @@ Learner's question: "${q}"
 
 Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously, using exactly this standard (接住了=caught, 勉強接到=partial, 沒接到=missed):
 ${BALL_RUBRIC}
- Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Do not reuse the standard's example sentences as your example. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. End with your verdict in Chinese (接住了／勉強接到／沒接到), and say whether it changed from the earlier judgment. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
+ Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Do not reuse the standard's example sentences as your example. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. Say whether your verdict changed from the earlier judgment, and make the LAST line exactly one of: 判定：接住了 / 判定：勉強接到 / 判定：沒接到. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
@@ -1373,6 +1392,7 @@ Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markd
     if(ballContext===ctx){
       ctx.history.push({ q, a: ans });
       appendGrChat('ai', ans, 'ball-chat-log');
+      _applyRevisedVerdict(ctx, ans);
     }
   }catch(e){
     if(ballContext===ctx) appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。', 'ball-chat-log');
