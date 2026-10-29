@@ -1492,13 +1492,13 @@ function renderCombos(){
         <div class="combo-turn combo-a">
           <span class="combo-who">A</span>
           <div style="flex:1;min-width:0;">
-            <span class="combo-txt">"${esc(item.opener||'—')}"</span>
-            ${item.opener_zh ? `<div class="combo-txt-zh">${esc(item.opener_zh)}</div>` : ''}
+            <span class="combo-txt">"<span data-lib="combo" data-idx="${origIdx}" data-field="opener">${item.opener ? renderGrHl(item.opener, item.hl && item.hl.opener, origIdx, 'opener', 'combo') : '—'}</span>"</span>
+            ${item.opener_zh ? `<div class="combo-txt-zh" data-lib="combo" data-idx="${origIdx}" data-field="opener_zh">${renderGrHl(item.opener_zh, item.hl && item.hl.opener_zh, origIdx, 'opener_zh', 'combo')}</div>` : ''}
           </div>
         </div>
         <div class="combo-turn combo-b">
           <span class="combo-who">B</span>
-          <span class="combo-txt">"${esc(item.text)}"</span>
+          <span class="combo-txt">"<span data-lib="combo" data-idx="${origIdx}" data-field="text">${renderGrHl(item.text, item.hl && item.hl.text, origIdx, 'text', 'combo')}</span>"</span>
         </div>
         <div class="combo-foot">
           <span class="combo-foot-meta">${esc(item.type)} · ${esc(item.sit)} · ${new Date(item.ts).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})}</span>
@@ -1583,7 +1583,12 @@ function setGrCat(cat){ curGrCat=cat; renderGrammarLib(); }
 // 字串本身，另存item.hl={orig:[[s,e],...],note:[...],fixed:[...]}字元區間，
 // 渲染時才依區間包<mark>；區間永遠依plain text算，跟esc()跳脫或既有<mark>
 // 巢狀標籤都無關（_rangeOffsetWithin用Range.toString()量測，天生只算文字）。
-function renderGrHl(text, ranges, idx, field){
+// 10-29：收藏組合也共用這套螢光筆（lib='combo'，存在 es_saved_phrases 每筆的 hl）；lib 只會是程式內常數
+const _HL_LIBS = {
+  gr:    { key: ()=>GRAMMAR_KEY, fields: ['orig','note','fixed'],         render: ()=>renderGrammarLib() },
+  combo: { key: ()=>SAVED_KEY,   fields: ['opener','opener_zh','text'], render: ()=>renderCombos() },
+};
+function renderGrHl(text, ranges, idx, field, lib){
   text = text || '';
   if(!ranges || !ranges.length) return esc(text);
   const sorted = [...ranges].sort((a,b)=>a[0]-b[0]);
@@ -1591,31 +1596,35 @@ function renderGrHl(text, ranges, idx, field){
   sorted.forEach(([s,e])=>{
     if(!Number.isInteger(s) || !Number.isInteger(e) || s < pos || e <= s || e > text.length) return; // 防重疊/區間錯亂的舊資料，略過不炸頁面
     out += esc(text.slice(pos, s));
-    out += `<mark class="gr-hl" onclick="removeGrHighlight(${Number(idx)},${jsAttr(field)},${s},${e})" title="點擊移除標記">${esc(text.slice(s, e))}</mark>`;
+    out += `<mark class="gr-hl" onclick="removeGrHighlight(${Number(idx)},${jsAttr(field)},${s},${e},${jsAttr(lib||'gr')})" title="點擊移除標記">${esc(text.slice(s, e))}</mark>`;
     pos = e;
   });
   out += esc(text.slice(pos));
   return out;
 }
-function applyGrHighlight(idx, field, s, e){
-  const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+function applyGrHighlight(idx, field, s, e, libName){
+  const L = _HL_LIBS[libName||'gr'];
+  if(!L || !L.fields.includes(field)) return;
+  const lib = JSON.parse(localStorage.getItem(L.key())||'[]');
   const item = lib[idx];
-  if(!item) return;
+  if(!item || typeof item!=='object') return;
   if(!item.hl) item.hl = {};
   if(!item.hl[field]) item.hl[field] = [];
   // 新區間跟既有區間重疊就先移除重疊的舊區間，避免<mark>巢狀壞掉
   item.hl[field] = item.hl[field].filter(([os,oe]) => e<=os || s>=oe);
   item.hl[field].push([s,e]);
-  localStorage.setItem(GRAMMAR_KEY, JSON.stringify(lib));
-  renderGrammarLib();
+  localStorage.setItem(L.key(), JSON.stringify(lib));
+  L.render();
 }
-function removeGrHighlight(idx, field, s, e){
-  const lib = JSON.parse(localStorage.getItem(GRAMMAR_KEY)||'[]');
+function removeGrHighlight(idx, field, s, e, libName){
+  const L = _HL_LIBS[libName||'gr'];
+  if(!L) return;
+  const lib = JSON.parse(localStorage.getItem(L.key())||'[]');
   const item = lib[idx];
   if(!item || !item.hl || !item.hl[field]) return;
   item.hl[field] = item.hl[field].filter(([os,oe]) => !(os===s && oe===e));
-  localStorage.setItem(GRAMMAR_KEY, JSON.stringify(lib));
-  renderGrammarLib();
+  localStorage.setItem(L.key(), JSON.stringify(lib));
+  L.render();
 }
 // 選字畫螢光筆：mouseup時若選取範圍落在文法追蹤卡片的[data-field]文字塊內，
 // 就在選取範圍旁浮一顆「🖍 標記」按鈕；點擊才真正寫入，單純點擊空白處或
@@ -1640,7 +1649,7 @@ document.addEventListener('mouseup', (ev)=>{
   el = el.nodeType===3 ? el.parentElement : el;
   while(el && !(el.dataset && el.dataset.field)) el = el.parentElement;
   if(!el) return; // 選取範圍不在文法追蹤的標註目標內，忽略
-  const idx = el.dataset.idx, field = el.dataset.field;
+  const idx = el.dataset.idx, field = el.dataset.field, libName = el.dataset.lib || 'gr';
   const s = _rangeOffsetWithin(el, range.startContainer, range.startOffset);
   const e = _rangeOffsetWithin(el, range.endContainer, range.endOffset);
   if(e<=s) return;
@@ -1651,7 +1660,7 @@ document.addEventListener('mouseup', (ev)=>{
   btn.textContent = '🖍 標記';
   btn.style.left = Math.max(4, rect.left) + 'px';
   btn.style.top = Math.max(4, rect.top - 30) + 'px';
-  btn.onclick = ()=>{ applyGrHighlight(idx, field, s, e); _dismissGrHlBtn(); };
+  btn.onclick = ()=>{ applyGrHighlight(idx, field, s, e, libName); _dismissGrHlBtn(); };
   document.body.appendChild(btn);
 });
 function renderGrammarLib(){
