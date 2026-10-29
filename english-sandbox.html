@@ -654,6 +654,13 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 // ── Constants ──
 const SAVED_KEY = 'es_saved_phrases';
 const GRAMMAR_KEY = 'es_grammar_lib';
+// 10-29：接球三級標準（使用者核可），第一輪判斷與追問共用，避免兩邊各說各話。
+// 取代原本「回覆含任何問句一律 caught」的鐵律：換話題的問句最多算 partial
+const BALL_RUBRIC = `Core test: would the other person feel that the learner actually heard what they said?
+- "caught": the learner FIRST responds to the opener's content or feeling, THEN moves it forward — a follow-up question, a personal detail, or a proposal. The forward move may shift to a RELATED topic. Short reply + return question to a yes/no or "how's it going" opener counts as caught. Examples: (a) "how's your week?" → "pretty tough, how about you?" → caught. (b) "Looks like we're all set to start on time." → "yes, how about starting from the agenda?" → caught. (c) "Lots of meetings today?" → "same here, tough meetings. how's your plan for the rest of the day?" → caught.
+- "partial": only half done — EITHER responds but adds nothing to move forward ("Haha, yeah." / "It's fine."), OR skips responding and jumps to a new question/topic that still has some link to the opener's mood or situation. Example: opener about being so bored they're counting pretzel bags → "Do you wanna try some sleeping candy?" → partial (links to feeling sleepy, but skips the boredom they mentioned).
+- "missed": no response AND no link — a completely unrelated topic, an answer to a different question, or a reply built on misunderstanding the opener that would confuse the other person. A question alone does NOT make a reply caught.
+If the learner misunderstood the opener, judge by how the reply would land for the other person: still fits → partial; does not fit → missed.`;
 const AUTO_SPEAK_KEY = 'es_auto_speak'; // 預設不自動撥音，使用者自行勾選才開啟
 function isAutoSpeakOn(){ return localStorage.getItem(AUTO_SPEAK_KEY)==='1'; }
 const GR_CATS = ['拼字','斷句','時態','結構','冠詞','單複數','介系詞','詞性'];
@@ -1066,9 +1073,7 @@ opener_zh: 用繁體中文白話解釋：(1)對方這句話的字面意思是什
 fb_tone: 用繁體中文分析這句回覆的語氣——偏正式還是偏隨便？是否符合「${sit.en}」這個場合的語氣要求？如果合適就說「語氣符合場合」並給一句具體理由；如果不合適，說清楚是哪種語氣偏差、為什麼在這個場合不好用。限40字。
 
 fb_ball_verdict: Evaluate whether the learner's reply kept the conversation going. Use EXACTLY one of these three words:
-- "caught": learner acknowledged the opener AND added forward momentum — a follow-up question, personal detail, new thread, OR an action proposal / redirecting suggestion. IMPORTANT: "yes + a redirecting question or action suggestion" fully qualifies as caught — the follow-up does NOT need to loop back to the opener's exact topic. Examples: (a) opener: "how's your week?" → "pretty tough, how about you?" → caught. (b) opener: "Looks like we're all set to start on time." → "yes, how about starting from the agenda?" → caught. (c) opener: "Lots of meetings today?" → "same here, tough meetings. how's your plan for the rest of the day?" → caught (empathy + follow-up question). IRON RULE: If the reply contains ANY question directed at the other person — no matter how simple — verdict MUST be "caught". Lack of personal details does NOT override this rule.
-- "partial": learner responded but left the conversation at a dead end — no question, no new info, no proposal. Example: "It's fine." or "yes." with nothing else. IRON RULE: If the reply contains a question of any kind, "partial" is FORBIDDEN.
-- "missed": learner ignored the opener entirely or the reply is unrelated.
+${BALL_RUBRIC}
 
 fb_content: 用繁體中文說明接球狀況，根據 verdict 調整語氣：
 - caught → 第一句說哪裡做得好（具體指出接球動作）；第二句給一個可讓對話更自然的升級英文例句。CRITICAL: 若學習者已使用問句或行動提案，升級例句必須是比他們說的更進一步的版本，絕不能建議他們去做他們已經做了的事。
@@ -1357,7 +1362,9 @@ Learner's question: "${q}"
 
 (For reference only — an earlier automatic judgment, which may be wrong: verdict ${verdictZh}; analysis "${ctx.content}")
 
-Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously. Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, use that: a reply built on a misunderstanding of the opener did not truly catch the ball even if it happens to reuse the opener's words — say what the opener actually meant and how the learner's understanding differed. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. End with your verdict in Chinese (接住了／勉強接到／沒接到), and say whether it changed from the earlier judgment. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
+Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously, using exactly this standard (接住了=caught, 勉強接到=partial, 沒接到=missed):
+${BALL_RUBRIC}
+ Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. End with your verdict in Chinese (接住了／勉強接到／沒接到), and say whether it changed from the earlier judgment. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
