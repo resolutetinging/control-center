@@ -1280,7 +1280,15 @@ Output ONLY valid JSON:
 // prompt已明示「plain text only, no markdown, ≤120字」，回應理論上只該有繁中/英文/數字/常見標點，
 // 任何不在白名單內的字元直接濾掉，避免顯示出破碎字元。
 function _sanitizePlainText(text){
-  return String(text||'').replace(/[^一-鿿　-〿a-zA-Z0-9\s.,!?'"()\-:：；、。，！？「」『』（）%]/g, '');
+  // 10-29：先把 AI 常輸出的 Unicode 連字號／破折號／彎引號轉成 ASCII，否則下方白名單會整個刪掉，
+  // 造成「mountain‑climbing」變「mountainclimbing」、「great—what’s」變「greatwhats」
+  return String(text||'')
+    .replace(/[\u2010\u2011\u2012\u2013]/g, '-')
+    .replace(/[\u2014\u2015]/g, ' - ')
+    .replace(/[\u2018\u2019\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u2033]/g, '"')
+    .replace(/\u2026/g, '...')
+    .replace(/[^一-鿿　-〿a-zA-Z0-9\s.,!?'"()\-:：；、。，！？「」『』（）%]/g, '');
 }
 // 08-07：logId參數化，讓文法追問(gr-chat-log)跟拆彈追問(idiom-chat-log)共用同一套顯示邏輯，
 // 不重複寫一份；不傳時維持原本行為(gr-chat-log)，呼叫端不用跟著改
@@ -1336,19 +1344,19 @@ async function askBallWhy(){
   try{
     const verdictZh = {caught:'接住了', partial:'勉強接到', missed:'沒接到'}[ctx.verdict] || '未判定';
     const hist = ctx.history.slice(-4).map(h=>`Learner: ${h.q}\nYou: ${h.a}`).join('\n');
-    const prompt = `You are a small-talk conversation coach. You just judged whether a business English learner "caught the ball" in a small-talk exchange — i.e. whether their reply actually responded to what the other person said and kept the conversation going. The learner now wants to discuss your judgment.
+    // 10-29：原本把先前判斷當「Your verdict」並要求「成立就解釋」，AI 會拿自己的分析去對問題、替判斷辯護；
+    // 改成以學習者實際回的那句話＋學習者說明的原意重新判斷，先前判斷只當參考
+    const prompt = `You are a small-talk conversation coach. A business English learner wants to discuss whether their reply "caught the ball" — i.e. whether it actually responded to what the other person said and kept the conversation going.
 
 Situation: ${ctx.sit}
 The other person said: "${ctx.opener}"
-Learner replied: "${ctx.reply}"
-Your verdict: ${verdictZh}
-Your ball-catching analysis: "${ctx.content}"
-Your tone analysis: "${ctx.tone}"
-Your "what to add" suggestion: "${ctx.add}"
+Learner's actual reply: "${ctx.reply}"
 ${hist ? `Earlier in this discussion:\n${hist}\n` : ''}
 Learner's question: "${q}"
 
-Answer ONLY this question about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. If the learner's reasoning shows your verdict was too harsh or too lenient, say so honestly and state the revised verdict; if your verdict still stands, explain why concretely. If useful, give one short English example line.
+(For reference only — an earlier automatic judgment, which may be wrong: verdict ${verdictZh}; analysis "${ctx.content}")
+
+Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously. Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, use that: a reply built on a misunderstanding of the opener did not truly catch the ball even if it happens to reuse the opener's words — say what the opener actually meant and how the learner's understanding differed. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. End with your verdict in Chinese (接住了／勉強接到／沒接到), and say whether it changed from the earlier judgment. If useful, give one short English example line the learner could have said, written in Chinese context (e.g. 可以這樣說：…), not with English labels like "Revised verdict" or "English example".
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
