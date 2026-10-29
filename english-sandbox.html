@@ -697,6 +697,7 @@ let timerSec = 30;
 let timerMode = 30;
 let results = {};
 let usedOpeners = []; // 追蹤已出現的 opener，避免重複
+let lastStyleIdx = -1; // 上一次抽到的 opener 風格，避免連續同風格
 let sessionLog = [];  // 本次 Small Talk 練習記錄，供綜合分析使用
 // 08-25：使用者要求可設定「今天要練習幾題」，練到設定數字自動跳出綜合分析，
 // 過程中即時顯示「3/10」進度。目標題數本身用localStorage記住（跨session維持
@@ -871,12 +872,29 @@ async function genOpener(){
       'a compliment or positive observation',
       'an open-ended question to invite the other person in',
     ];
-    const style = styles[usedOpeners.length % styles.length];
+    // 10-29：改隨機抽（避開上一次的風格）＋隨機說話者狀態。原本用 usedOpeners.length 輪替，
+    // 重新整理後清單歸零，每次開頁第一句的 prompt 完全相同，AI 一直產出同一句
+    let si = Math.floor(Math.random()*styles.length);
+    if(si === lastStyleIdx) si = (si + 1 + Math.floor(Math.random()*(styles.length-1))) % styles.length;
+    lastStyleIdx = si;
+    const style = styles[si];
+    const moods = [
+      'in a good mood and a bit chatty',
+      'slightly tired but friendly',
+      'in a hurry but still polite',
+      'relaxed and easygoing',
+      'curious and a little nosy',
+      'mildly stressed about something unrelated',
+      'cheerful after some small good news',
+      'a bit awkward and trying to break the ice',
+    ];
+    const mood = moods[Math.floor(Math.random()*moods.length)];
     const prompt = `You are creating realistic small talk for English conversation practice.
 
 Situation: Two people are ${sit.en}.
 
 Generate ONE natural opening line using this style: ${style}.
+The speaker is ${mood}. Pick a specific, concrete detail of this situation rather than the most obvious or generic opener.
 
 Rules:
 - Under 18 words
