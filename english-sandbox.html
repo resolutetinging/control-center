@@ -903,7 +903,8 @@ Rules:
 - Fits naturally in the exact situation described
 - The line is spoken TO the learner BY the other person in the scene — never phrase it as something the learner themselves would say. If the situation names a specific role for the learner (e.g. job candidate, host greeting a visitor), the opener must come from the other role's perspective (e.g. the interviewer speaking to the candidate, the visitor speaking to the host)
 - Output ONLY the single sentence, no quotes or explanations${avoidClause}`;
-    const raw = await callGroq(prompt, 120);
+    // 10-29：120→400。prompt 加 mood／具體細節後隱藏推理變多，120 常被推理吃光回空字串（使用者連續看到「AI 回應為空」）
+    const raw = await callGroq(prompt, 400);
     curOpener = raw.replace(/^["'`]|["'`]$/g,'').trim();
     // 08-24：callGroq()內部已自動重試一次空回應，這裡再補一道保底——萬一兩次都
     // 空（極端情況），拋錯讓下方catch顯示alert，不要讓空白卡片悄悄顯示出來
