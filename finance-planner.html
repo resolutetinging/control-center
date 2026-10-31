@@ -675,7 +675,8 @@ function chartHtml(W){
     const last=done[done.length-1],gap=last.cumBudget-last.cumActual,gx=xx(last.p.idx+1);
     const y1=yy(last.cumBudget),y2=yy(last.cumActual);
     if(Math.abs(y1-y2)>=10)s+=`<line x1="${gx+7}" x2="${gx+7}" y1="${y1}" y2="${y2}" stroke="rgba(40,38,32,.45)" stroke-width="1"/>`;
-    s+=`<text class="tx" x="${gx+11}" y="${(y1+y2)/2+3}">${gap>=0?'累計有剩 ':'累計超支 '}${kfmt(Math.abs(gap))}</text>`;
+    // 累積線只會往右上走，標籤放在兩點中較低者的右下方，不壓線
+    s+=`<text class="tx" x="${gx+10}" y="${Math.min(top+H1-4,Math.max(y1,y2)+16)}">${gap>=0?'累計有剩 ':'累計超支 '}${kfmt(Math.abs(gap))}</text>`;
   }
   if(live){
     const lx=xx(live.p.idx+1),prevY=done.length?yy(done[done.length-1].cumActual):yy(0),prevX=done.length?xx(done[done.length-1].p.idx+1):xx(0);
