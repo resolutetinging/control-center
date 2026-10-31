@@ -105,7 +105,23 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 /* 趨勢圖 */
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--sub);margin-bottom:8px}
 .legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-.chart-box{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-box{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
+.chart-box svg{outline:none}
+.chart-box svg:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:6px}
+.legend b.lk{height:2px;width:14px;border-radius:1px;vertical-align:3px}
+.legend b.lk-o{width:8px;height:8px;border-radius:50%;border:2px solid;background:#faf8f4;vertical-align:-1px}
+.ctip{display:none;position:absolute;top:6px;z-index:2;background:#fff;border:.5px solid var(--bstr);border-radius:8px;box-shadow:var(--shadow);padding:7px 10px;font-size:11.5px;color:var(--sub);pointer-events:none;white-space:nowrap}
+.ctip-h{color:var(--faint);margin-bottom:3px}
+.ctip-r{display:flex;align-items:center;gap:6px;line-height:1.7}
+.ctip-r b{color:var(--ink);font-weight:700}
+.ctip-k{display:inline-block;width:12px;height:2px;border-radius:1px}
+.ctab{margin-top:8px;font-size:12px;color:var(--sub)}
+.ctab summary{cursor:pointer;color:var(--ac);font-size:12px}
+.ctab-w{overflow-x:auto;margin-top:6px}
+.ctab table{border-collapse:collapse;width:100%;min-width:520px}
+.ctab th,.ctab td{padding:4px 8px;border-bottom:.5px solid var(--border);text-align:right;white-space:nowrap}
+.ctab th:first-child,.ctab td:first-child{text-align:left}
+.ctab th{color:var(--faint);font-weight:600}
 .chart-box svg{display:block}
 .tx{fill:var(--sub);font-size:10px}
 .tx.f{fill:var(--faint)}
@@ -605,60 +621,127 @@ function updatePrev(key){
 
 /* ───────── 4. 趨勢圖 ───────── */
 function kfmt(v){const a=Math.abs(v);return(v<0?'-':'')+(a>=1000?(a/1000).toFixed(a>=10000?0:1)+'k':String(Math.round(a)));}
-function chartHtml(){
-  const ps=CP.periods,n=ps.length,gw=76,pl=44,pr=14,W=pl+pr+gw*n;
-  const top=20,H1=150,ax=46,H2=84,H=top+H1+ax+H2+18;
-  let mx=1;
-  ps.forEach(p=>{mx=Math.max(mx,p.suggest,p.actualVar||0);});
+// 11-01：趨勢圖改為累積折線——累積預算（原始分配：基礎可支配＋固定＋預計，終點＝總額度）vs 累積實際總支出；
+// 兩線差距＝累計偏差（carry）。實際線只畫從第 1 個月起連續已結算的月份；緊接的進行中月份以空心點表示「到目前」（已花＋當月固定與預計全額）
+const C_PLAN='#3b6ea5',C_ACT='#b0682a';
+function chartData(){
+  const ps=CP.periods;let cb=0,ca=0,prefix=true;
+  const rows=ps.map(p=>{
+    const budget=p.base+p.fixed+p.plannedPay;cb+=budget;
+    const r={p,budget,cumBudget:cb,actual:null,cumActual:null,live:false};
+    if(prefix&&p.closed){ca+=p.actualTotal;r.actual=p.actualTotal;r.cumActual=ca;}
+    else{
+      if(prefix&&p.status==='current'){const sp=p.spentToDate||0;r.actual=sp+p.fixed+p.plannedPay;r.cumActual=ca+r.actual;r.live=true;}
+      prefix=false;
+    }
+    return r;
+  });
+  return rows;
+}
+function chartHtml(W){
+  const rows=chartData(),n=rows.length;
+  const pl=48,pr=64,top=18,H1=200,bot=40,H=top+H1+bot;
+  const pw=Math.max(60,W-pl-pr);
+  const xx=i=>pl+pw*i/n; // i＝第 i 個月「結束」的位置（0＝規劃開始）
+  let mx=1;rows.forEach(r=>{mx=Math.max(mx,r.cumBudget,r.cumActual||0);});
   const step=Math.pow(10,Math.floor(Math.log10(mx)));
   const yMax=Math.ceil(mx/step*2)/2*step||1;
   const yy=v=>top+H1-Math.max(0,v)/yMax*H1;
-  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="各月建議額度與實際變動支出趨勢圖">`;
+  let s=`<svg width="${W}" height="${H}" role="img" aria-label="累積預算與累積實際總支出趨勢圖">`;
   for(let k=0;k<=4;k++){
     const v=yMax*k/4,y=yy(v);
-    s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="rgba(40,38,32,.1)"/><text class="tx f" x="${pl-6}" y="${y+3}" text-anchor="end">${kfmt(v)}</text>`;
+    s+=`<line x1="${pl}" x2="${pl+pw}" y1="${y}" y2="${y}" stroke="rgba(40,38,32,${k?'.08':'.25'})"/><text class="tx f" x="${pl-6}" y="${y+3}" text-anchor="end">${kfmt(v)}</text>`;
   }
-  const bw=24;
-  ps.forEach((p,i)=>{
-    const cx=pl+gw*i+gw/2,x1=cx-bw-2,x2=cx+2;
-    const hs=Math.max(0,p.suggest)/yMax*H1;
-    if(p.closed){
-      s+=`<rect x="${x1}" y="${yy(p.suggest)}" width="${bw}" height="${hs}" fill="var(--ac)" rx="2"><title>第 ${p.idx+1} 個月原建議額度 ${esc(money(p.suggest))}</title></rect>`;
-      const ha=Math.max(0,p.actualVar)/yMax*H1;
-      s+=`<rect x="${x2}" y="${yy(p.actualVar)}" width="${bw}" height="${ha}" fill="var(--warn)" rx="2"><title>第 ${p.idx+1} 個月實際變動支出 ${esc(money(p.actualVar))}</title></rect>`;
-      s+=`<text class="tx" x="${x2+bw/2}" y="${yy(p.actualVar)-3}" text-anchor="middle">${kfmt(p.actualVar)}</text>`;
-    }else{
-      s+=`<rect x="${x1}" y="${yy(p.suggest)}" width="${bw}" height="${hs}" fill="var(--ac-tint)" stroke="var(--ac)" stroke-dasharray="3 2" rx="2"><title>第 ${p.idx+1} 個月預估建議額度 ${esc(money(p.suggest))}</title></rect>`;
-    }
-    s+=`<text class="tx" x="${x1+bw/2}" y="${yy(p.suggest)-3}" text-anchor="middle">${kfmt(p.suggest)}</text>`;
-    s+=`<text class="tx" x="${cx}" y="${top+H1+14}" text-anchor="middle">第${p.idx+1}月</text><text class="tx f" x="${cx}" y="${top+H1+27}" text-anchor="middle">${esc(sd(p.start))}</text>`;
+  const lab=Math.max(1,Math.ceil(n*46/pw));
+  s+=`<text class="tx f" x="${xx(0)}" y="${top+H1+14}" text-anchor="middle">${esc(sd(rows[0].p.start))}</text>`;
+  rows.forEach((r,i)=>{
+    if((i+1)%lab&&i!==n-1)return;
+    s+=`<text class="tx" x="${xx(i+1)}" y="${top+H1+14}" text-anchor="middle">第${i+1}月</text><text class="tx f" x="${xx(i+1)}" y="${top+H1+27}" text-anchor="middle">${esc(sd(r.p.end))}</text>`;
   });
-  // 累計偏差折線（獨立刻度，零線置中）
-  const y0=top+H1+ax+H2/2;
-  let cum=0;const pts=[];
-  ps.forEach((p,i)=>{if(p.closed){cum+=p.dev;pts.push({i,v:cum});}});
-  const am=Math.max(1,...pts.map(q=>Math.abs(q.v)));
-  s+=`<text class="tx f" x="${pl-6}" y="${top+H1+ax+10}" text-anchor="end">累計</text><text class="tx f" x="${pl-6}" y="${top+H1+ax+22}" text-anchor="end">偏差</text>`;
-  s+=`<line x1="${pl}" x2="${W-pr}" y1="${y0}" y2="${y0}" stroke="rgba(40,38,32,.25)" stroke-dasharray="4 3"/><text class="tx f" x="${pl-6}" y="${y0+3}" text-anchor="end">0</text>`;
-  if(!pts.length)s+=`<text class="tx f" x="${pl+8}" y="${y0-8}">尚無已結算月份</text>`;
-  else{
-    const py=v=>y0-v/am*(H2/2-10);
-    s+=`<polyline fill="none" stroke="var(--ok)" stroke-width="2" points="${pts.map(q=>(pl+gw*q.i+gw/2)+','+py(q.v)).join(' ')}"/>`;
-    pts.forEach(q=>{
-      const x=pl+gw*q.i+gw/2;
-      s+=`<circle cx="${x}" cy="${py(q.v)}" r="3.5" fill="var(--ok)"><title>累計偏差 ${esc((q.v>=0?'+':'')+money(q.v))}</title></circle><text class="tx" x="${x}" y="${py(q.v)+(q.v>=0?-8:15)}" text-anchor="middle">${q.v>=0?'+':''}${kfmt(q.v)}</text>`;
-    });
+  // 累積預算：已過去（含進行中月份）實線、未來虛線
+  const cutI=(()=>{let k=0;rows.forEach((r,i)=>{if(r.p.status!=='upcoming')k=i+1;});return k;})();
+  const bp=[[xx(0),yy(0)]].concat(rows.map((r,i)=>[xx(i+1),yy(r.cumBudget)]));
+  const pts=a=>a.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+  if(cutI>0)s+=`<polyline fill="none" stroke="${C_PLAN}" stroke-width="2" stroke-linejoin="round" points="${pts(bp.slice(0,cutI+1))}"/>`;
+  if(cutI<n)s+=`<polyline fill="none" stroke="${C_PLAN}" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round" points="${pts(bp.slice(cutI))}"/>`;
+  s+=`<circle cx="${xx(n)}" cy="${yy(rows[n-1].cumBudget)}" r="4" fill="${C_PLAN}" stroke="#faf8f4" stroke-width="2"/>`;
+  s+=`<text class="tx" x="${xx(n)+8}" y="${yy(rows[n-1].cumBudget)+3}">總額度</text><text class="tx f" x="${xx(n)+8}" y="${yy(rows[n-1].cumBudget)+15}">${kfmt(rows[n-1].cumBudget)}</text>`;
+  // 累積實際總支出
+  const done=rows.filter(r=>r.cumActual!==null&&!r.live),live=rows.find(r=>r.live);
+  if(done.length){
+    const ap=[[xx(0),yy(0)]].concat(done.map(r=>[xx(r.p.idx+1),yy(r.cumActual)]));
+    s+=`<polyline fill="none" stroke="${C_ACT}" stroke-width="2" stroke-linejoin="round" points="${pts(ap)}"/>`;
+    done.forEach(r=>{s+=`<circle cx="${xx(r.p.idx+1)}" cy="${yy(r.cumActual)}" r="4" fill="${C_ACT}" stroke="#faf8f4" stroke-width="2"/>`;});
+    const last=done[done.length-1],gap=last.cumBudget-last.cumActual,gx=xx(last.p.idx+1);
+    const y1=yy(last.cumBudget),y2=yy(last.cumActual);
+    if(Math.abs(y1-y2)>=10)s+=`<line x1="${gx+7}" x2="${gx+7}" y1="${y1}" y2="${y2}" stroke="rgba(40,38,32,.45)" stroke-width="1"/>`;
+    s+=`<text class="tx" x="${gx+11}" y="${(y1+y2)/2+3}">${gap>=0?'累計有剩 ':'累計超支 '}${kfmt(Math.abs(gap))}</text>`;
   }
+  if(live){
+    const lx=xx(live.p.idx+1),prevY=done.length?yy(done[done.length-1].cumActual):yy(0),prevX=done.length?xx(done[done.length-1].p.idx+1):xx(0);
+    s+=`<line x1="${prevX}" y1="${prevY}" x2="${lx}" y2="${yy(live.cumActual)}" stroke="${C_ACT}" stroke-width="2" stroke-dasharray="3 3"/>`;
+    s+=`<circle cx="${lx}" cy="${yy(live.cumActual)}" r="4.5" fill="#faf8f4" stroke="${C_ACT}" stroke-width="2"/>`;
+  }
+  if(!done.length&&!live)s+=`<text class="tx f" x="${pl+8}" y="${top+14}">尚無已結算月份</text>`;
+  s+=`<line class="xh" x1="0" x2="0" y1="${top}" y2="${top+H1}" stroke="rgba(40,38,32,.35)" stroke-width="1" visibility="hidden"/>`;
+  s+=`<rect class="hit" x="${pl}" y="${top}" width="${pw+pr/2}" height="${H1}" fill="transparent"/>`;
   return s+'</svg>';
+}
+function chartTableHtml(){
+  const rows=chartData();
+  return`<details class="ctab"><summary>數字表</summary><div class="ctab-w"><table><thead><tr><th>月份</th><th>當月預算</th><th>實際總支出</th><th>累積預算</th><th>累積實際</th><th>累計差額</th></tr></thead><tbody>`
+    +rows.map(r=>`<tr><td>第 ${r.p.idx+1} 個月</td><td>${money(r.budget)}</td><td>${r.actual===null?'—':money(r.actual)+(r.live?'（到目前）':'')}</td><td>${money(r.cumBudget)}</td><td>${r.cumActual===null?'—':money(r.cumActual)}</td><td>${r.cumActual===null||r.live?'—':(r.cumBudget-r.cumActual>=0?'+':'')+money(r.cumBudget-r.cumActual)}</td></tr>`).join('')
+    +`</tbody></table></div></details>`;
+}
+// 十字線＋提示框：對齊最近的月底位置，列出該點所有數字（文字一律 textContent）
+function bindChartHover(box){
+  const svg=box.querySelector('svg'),tip=box.querySelector('.ctip');
+  if(!svg||!tip)return;
+  const rows=chartData(),n=rows.length,W=+svg.getAttribute('width'),pl=48,pw=Math.max(60,W-pl-64);
+  const xh=svg.querySelector('.xh');
+  function show(i){
+    const r=rows[i],x=pl+pw*(i+1)/n;
+    xh.setAttribute('x1',x);xh.setAttribute('x2',x);xh.setAttribute('visibility','visible');
+    tip.textContent='';
+    const h=document.createElement('div');h.className='ctip-h';h.textContent='第 '+(i+1)+' 個月・'+rng(r.p.start,r.p.end);tip.appendChild(h);
+    const line=(c,label,val)=>{const d=document.createElement('div');d.className='ctip-r';const k=document.createElement('span');k.className='ctip-k';k.style.background=c;const v=document.createElement('b');v.textContent=val;const l=document.createElement('span');l.textContent=label;d.append(k,v,l);tip.appendChild(d);};
+    line(C_PLAN,'累積預算',money(r.cumBudget));
+    if(r.cumActual!==null)line(C_ACT,r.live?'累積實際（本月到目前）':'累積實際',money(r.cumActual));
+    if(r.cumActual!==null&&!r.live){const g=r.cumBudget-r.cumActual;line('transparent',g>=0?'累計有剩':'累計超支',money(Math.abs(g)));}
+    tip.style.display='block';
+    const bw=box.clientWidth,tw=tip.offsetWidth,sl=box.scrollLeft;
+    tip.style.left=Math.max(sl+4,Math.min(x+12,sl+bw-tw-4))+'px';
+  }
+  function hide(){xh.setAttribute('visibility','hidden');tip.style.display='none';}
+  let cur=-1;
+  svg.addEventListener('pointermove',e=>{
+    const rc=svg.getBoundingClientRect(),x=e.clientX-rc.left;
+    cur=Math.max(0,Math.min(n-1,Math.round((x-pl)/pw*n)-1));show(cur);
+  });
+  svg.addEventListener('pointerleave',hide);
+  svg.setAttribute('tabindex','0');
+  svg.addEventListener('focus',()=>{cur=cur<0?0:cur;show(cur);});
+  svg.addEventListener('blur',hide);
+  svg.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'){cur=Math.min(n-1,cur+1);show(cur);e.preventDefault();}
+    else if(e.key==='ArrowLeft'){cur=Math.max(0,cur-1);show(cur);e.preventDefault();}
+  });
 }
 function renderChart(){
   const el=$('s-chart');
   let h='<div class="sec-t">趨勢圖</div>';
   if(!CP.valid){el.innerHTML=h+'<div class="muted">設定規劃區間後會顯示趨勢圖。</div>';return;}
-  h+=`<div class="legend"><span><b style="background:var(--ac)"></b>建議額度（已結算月份為原建議）</span><span><b style="background:var(--warn)"></b>實際變動支出</span><span><b style="background:var(--ac-tint);border:1px dashed var(--ac)"></b>預估（未結算）</span><span><b style="background:var(--ok)"></b>累計偏差（正＝有剩）</span></div>`;
-  h+=`<div class="chart-box">${chartHtml()}</div>`;
+  h+=`<div class="legend"><span><b class="lk" style="background:${C_PLAN}"></b>累積預算（虛線＝未來）</span><span><b class="lk" style="background:${C_ACT}"></b>累積實際總支出（含固定與預計）</span><span><b class="lk lk-o" style="border-color:${C_ACT}"></b>本月到目前</span></div>`;
+  h+=`<div class="chart-box"><div class="ctip" role="status"></div></div>`+chartTableHtml();
+  h+=`<div class="muted" style="margin-top:6px">兩線差距＝累計有剩或超支，會平均攤到後面還沒結算的月份。本月到目前＝已花＋當月固定與預計花費全額。</div>`;
   el.innerHTML=h;
+  const box=el.querySelector('.chart-box');
+  const W=Math.max(320,box.clientWidth||600);
+  box.insertAdjacentHTML('afterbegin',chartHtml(W));
+  bindChartHover(box);
 }
+let _chartRW=0;
+window.addEventListener('resize',()=>{clearTimeout(_chartRW);_chartRW=setTimeout(()=>{if(CP&&CP.valid)renderChart();},150);});
 
 /* ───────── 事件（全為委派，無 inline handler） ───────── */
 function periodKey(t){const b=t.closest('[data-key]');return b?b.dataset.key:'';}
