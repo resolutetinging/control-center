@@ -76,6 +76,11 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 /* 各期列表 */
 .pd{border:.5px solid var(--bstr);border-radius:12px;background:#faf8f4;padding:12px 14px;margin-bottom:10px}
 .pd.cur{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac-tint2)}
+.pd.closed{background:#efece6} /* 10-31：已結算底色加深一階 */
+.set-t{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;margin-bottom:0}
+.set-t .car{font-size:11px;color:var(--faint)}
+.set-sum{font-size:12.5px;color:var(--sub);margin-top:8px;line-height:1.6}
+.set-body{margin-top:12px}
 .pd-h{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:10px}
 .pd-t{font-size:13.5px;font-weight:700}
 .pd-r{font-size:11.5px;color:var(--faint)}
@@ -89,6 +94,13 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .pos{color:var(--ok);font-weight:700}.neg{color:var(--warn);font-weight:700}
 .form{border-top:1px dashed var(--bstr);margin-top:10px;padding-top:12px}
 .prev{font-size:12px;color:var(--sub);margin-bottom:10px;min-height:18px}
+.ov-settle{border:.5px solid var(--bstr);border-radius:12px;padding:10px 14px;margin-bottom:12px;background:#faf8f4}
+.ov-settle-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--sub)}
+.ov-settle-h b{color:var(--ink)}
+.trial{border:1px solid var(--ac-tint2);background:var(--ac-tint);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.trial-t{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.trial-t .btn{margin-left:auto}
+.pd-ana{white-space:pre-wrap;word-break:break-word}
 
 /* 趨勢圖 */
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--sub);margin-bottom:8px}
@@ -134,7 +146,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 <script>
 /*CALC-START*/
 // ── 純函式區：不讀 DOM、不讀 localStorage、不呼叫 new Date() 取今天（今天由呼叫端以 todayStr 傳入） ──
-const MAX_PERIODS=60,FIXED_MAX=50,PLANNED_MAX=50,MONTHS_MAX=240,STR_MAX=200,AMT_MAX=1e9;
+const MAX_PERIODS=60,FIXED_MAX=50,PLANNED_MAX=50,MONTHS_MAX=240,STR_MAX=200,AMT_MAX=1e9,ANALYSIS_MAX=1000; // 10-31：月度整體分析上限
 const ID_RE=/^[A-Za-z0-9_-]{1,60}$/;
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 let _uc=0;
@@ -215,7 +227,8 @@ function normalize(raw){
       closed:m.closed===true&&actualTotal!==null,
       actualTotal,
       saved:cleanAmt(m.saved),
-      note:cleanStr(m.note,STR_MAX)
+      note:cleanStr(m.note,STR_MAX),
+      analysis:cleanStr(m.analysis,ANALYSIS_MAX) // 10-31
     };
   });
   // 舊資料遷移（version 1 → 2）：沒有 total 時，把各期收入（覆寫值或 defaultIncome）加總成總額度
@@ -273,7 +286,7 @@ function computePlan(data,todayStr){
     else if(todayStr<=p.end)status='current';
     else status='pending';
     const r={idx:p.idx,key:p.key,start:p.start,end:p.end,status,closed,days,fixed,base,
-      plannedPay,share:share[i],actualTotal,saved:cleanAmt(m.saved),note:cleanStr(m.note,STR_MAX),
+      plannedPay,share:share[i],actualTotal,saved:cleanAmt(m.saved),note:cleanStr(m.note,STR_MAX),analysis:cleanStr(m.analysis,ANALYSIS_MAX),
       spentToDate:cleanAmt(m.spentToDate),spentUpdatedAt:parseYMD(m.spentUpdatedAt)?m.spentUpdatedAt:null,
       actualVar:null,dev:null,suggest:base};
     if(closed){r.actualVar=actualTotal-fixed-plannedPay;r.dev=base-r.actualVar;}
@@ -370,11 +383,13 @@ function fmtAmt(v){ // 金額欄位顯示：$ 前綴＋千分位；空值維持�
   return Number.isFinite(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:2}):'';
 }
 function getM(key){
-  if(!DB.months[key])DB.months[key]={income:null,spentToDate:null,spentUpdatedAt:null,closed:false,actualTotal:null,saved:null,note:''};
+  if(!DB.months[key])DB.months[key]={income:null,spentToDate:null,spentUpdatedAt:null,closed:false,actualTotal:null,saved:null,note:'',analysis:''};
   return DB.months[key];
 }
 
-let CP=null,openKey='',delFid='',delPid='';
+let CP=null,openKey='',openAt='',delFid='',delPid='';
+let setOpen=null; // 10-31：設定卡收合；null＝預設（規劃有效就收合、未設定就展開），只存記憶體
+let lastTrial=null; // 10-31：剛結算後的下月試算 {idx, before}（只存記憶體，重新整理即消失）
 function _focusKey(el){
   if(!el||!el.dataset)return null;
   const f=el.dataset.f?'f:'+el.dataset.f:el.dataset.act?'a:'+el.dataset.act:null;
@@ -400,11 +415,37 @@ function render(){
 /* ───────── 1. 本期概況 ───────── */
 function bannersHtml(){
   let h='';
-  if(CP.pending.length)h+=`<div class="banner">請回填 ${CP.pending.length} 個月的月終數字：${CP.pending.map(i=>'第 '+(i+1)+' 個月').join('、')}（到下方各月列表按「月終結算」）</div>`;
+  if(CP.pending.length)h+=`<div class="banner">請回填 ${CP.pending.length} 個月的月終數字：${CP.pending.map(i=>'第 '+(i+1)+' 個月').join('、')}（按下方的「已結算」）</div>`;
   if(CP.outsideCount>0)h+=`<div class="banner">有 ${CP.outsideCount} 個月的資料在規劃區間外（已保留，不參與計算與顯示）</div>`;
   if(CP.truncated)h+=`<div class="banner">規劃區間超過 ${MAX_PERIODS} 個月，只計算前 ${MAX_PERIODS} 個月</div>`;
   return h;
 }
+// 10-31：本月概況的「已結算」入口——待回填的月份，加上進行中且剩 7 天內的本月
+function settleTargets(){
+  return CP.periods.filter(p=>p.status==='pending'||(p.status==='current'&&diffDays(CP.today,p.end)<=6));
+}
+function settleBlockHtml(){
+  return settleTargets().map(p=>{
+    const open=openKey===p.key&&openAt==='ov';
+    return`<div class="ov-settle" data-key="${esc(p.key)}"><div class="ov-settle-h"><span><b>第 ${p.idx+1} 個月</b>・${esc(rng(p.start,p.end))}・${p.status==='pending'?'已結束，待結算':'月底將至'}</span>`
+      +(open?'':`<button class="btn sm" data-act="fopen" data-at="ov">已結算</button>`)+`</div>${open?formHtml(p):''}</div>`;
+  }).join('');
+}
+// 10-31：下個月試算卡；before＝結算前的建議額度（null 則不顯示比較）
+function trialHtml(idx,before){
+  const n=CP.periods[idx];
+  if(!n)return idx>0?`<div class="trial"><div class="trial-t">下個月試算</div><div class="muted">這是規劃區間最後一個月，沒有下個月可以試算。</div></div>`:'';
+  const d=before===null||before===undefined?null:n.suggest-before;
+  return`<div class="trial"><div class="trial-t">下個月試算・第 ${n.idx+1} 個月（${esc(rng(n.start,n.end))}）${before!==null&&before!==undefined?'<button class="btn sm plain" data-act="trialx">收合</button>':''}</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-l">建議額度（不含固定與預計花費）</div><div class="stat-v">${money(n.suggest)}</div></div>
+      <div class="stat"><div class="stat-l">${d===null?'平均每日上限':'與結算前相比'}</div><div class="stat-v">${d===null?money(n.suggest/n.days):(d>=0?'+':'')+money(d)}</div></div>
+      ${d===null?'':`<div class="stat"><div class="stat-l">平均每日上限</div><div class="stat-v">${money(n.suggest/n.days)}</div></div>`}
+      <div class="stat"><div class="stat-l">固定花費${n.plannedPay>0?'＋預計花費':''}</div><div class="stat-v">${money(n.fixed)}${n.plannedPay>0?'＋'+money(n.plannedPay):''}</div></div>
+    </div>
+    <div class="muted" style="margin-top:6px">${n.days} 天。開始後的每日上限會依當月已花自動調整。</div></div>`;
+}
+function lastTrialHtml(){return lastTrial?trialHtml(lastTrial.idx,lastTrial.before):'';}
 function renderOv(){
   const el=$('s-ov');
   let h='<div class="sec-t">本月概況</div>';
@@ -413,6 +454,8 @@ function renderOv(){
     return;
   }
   h+=bannersHtml();
+  h+=settleBlockHtml();
+  h+=lastTrialHtml();
   const cur=CP.current;
   if(!cur){
     const first=CP.periods[0],last=CP.periods[CP.periods.length-1];
@@ -423,6 +466,7 @@ function renderOv(){
   h+=`<div class="ov-range">第 ${p.idx+1} / ${CP.periods.length} 個月・${esc(rng(p.start,p.end))}・<span class="st ${p.status}">${STL[p.status]}</span></div>`;
   if(p.closed){
     h+=`<div class="muted">本月已結算（實際總支出 ${money(p.actualTotal)}，偏差 ${p.dev>=0?'+':''}${money(p.dev)}）。如需修改請到下方各月列表重新編輯。</div>`;
+    if(!lastTrial||lastTrial.idx!==p.idx+1)h+=trialHtml(p.idx+1,null); // 10-31：本月已結算時固定顯示下月試算
     el.innerHTML=h;return;
   }
   h+=`<div class="big"><div class="big-l">今天起每日建議上限（含今天）</div><div class="big-v${cur.daily<=0?' zero':''}">${money(cur.daily)}</div>`
@@ -468,7 +512,13 @@ function plannedHtml(){
 }
 function renderSet(){
   const pl=DB.plan;
-  let h='<div class="sec-t">設定</div><div class="grid2">'
+  const open=setOpen===null?!(CP&&CP.valid):setOpen;
+  let h=`<div class="sec-t set-t" data-act="settoggle" role="button" tabindex="0" aria-expanded="${open}"><span class="car">${open?'▾':'▸'}</span>設定</div>`;
+  if(!open){
+    h+=`<div class="set-sum">${CP&&CP.valid?esc(rng(pl.start,pl.end))+'・總額度 '+money(CP.total)+'・每月固定 '+money(CP.fixedTotal)+'（'+pl.fixed.length+' 筆）・預計消費 '+pl.planned.length+' 筆':'尚未設定規劃區間'}</div>`;
+    $('s-set').innerHTML=h;return;
+  }
+  h+='<div class="set-body"><div class="grid2">'
     +`<div class="fld"><label>規劃開始日</label><input class="inp" type="date" data-f="pstart" value="${esc(pl.start)}"></div>`
     +`<div class="fld"><label>規劃結束日</label><input class="inp" type="date" data-f="pend" value="${esc(pl.end)}"></div></div>`
     +`<div class="fld"><label>規劃區間總額度（整段區間可用、含固定花費）</label><input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="ptotal" value="${esc(fmtAmt(pl.total))}"><div class="muted" id="tot-note" style="margin-top:4px">${totNote()}</div></div>`
@@ -486,6 +536,7 @@ function renderSet(){
   h+=plannedHtml();
   if(CP&&CP.valid)h+=`<div class="muted">每月固定花費合計 ${money(CP.fixedTotal)}・共 ${CP.periods.length} 個月・${CP.D} 天</div>`;
   else h+=`<div class="muted">請填入開始日與結束日（結束日不可早於開始日）。</div>`;
+  h+='</div>';
   $('s-set').innerHTML=h;
 }
 
@@ -497,6 +548,7 @@ function formHtml(p){
       <div class="fld"><label>當月實際儲蓄（只記錄，不參與計算）</label><input class="inp" type="text" inputmode="decimal" autocomplete="off" data-f="saved" value="${esc(fmtAmt(p.saved))}"></div>
     </div>
     <div class="fld"><label>備註</label><textarea class="ta" data-f="note" maxlength="${STR_MAX}">${esc(p.note)}</textarea></div>
+    <div class="fld"><label>本月整體分析（選填，上限 ${ANALYSIS_MAX} 字）</label><textarea class="ta" data-f="analysis" rows="5" maxlength="${ANALYSIS_MAX}" placeholder="例如：哪些花費超出預期、下個月要調整什麼">${esc(p.analysis)}</textarea></div>
     <div class="prev" data-prev></div>
     <div class="btns"><button class="btn" data-act="settle">${p.closed?'更新結算':'完成結算'}</button>
       ${p.closed?'<button class="btn plain" data-act="unsettle">改回未結算</button>':''}
@@ -511,10 +563,11 @@ function renderList(){
     const isCur=CP.current&&CP.current.idx===p.idx;
     let body='';
     if(p.closed){
-      body=`<div class="pd-dev">實際變動支出 ${money(p.actualVar)}・偏差 <span class="${p.dev>=0?'pos':'neg'}">${p.dev>=0?'+':''}${money(p.dev)}（${p.dev>=0?'有剩':'超支'}）</span>${p.saved!==null?'・儲蓄 '+money(p.saved):''}${p.note?'<br>備註：'+esc(p.note):''}</div>`;
+      body=`<div class="pd-dev">實際變動支出 ${money(p.actualVar)}・偏差 <span class="${p.dev>=0?'pos':'neg'}">${p.dev>=0?'+':''}${money(p.dev)}（${p.dev>=0?'有剩':'超支'}）</span>${p.saved!==null?'・儲蓄 '+money(p.saved):''}${p.note?'<br>備註：'+esc(p.note):''}</div>${p.analysis?`<div class="pd-dev pd-ana">本月整體分析：
+${esc(p.analysis)}</div>`:''}`;
     }
     const canSettle=p.status!=='upcoming';
-    return`<div class="pd${isCur?' cur':''}" data-key="${esc(p.key)}">
+    return`<div class="pd${isCur?' cur':''}${p.closed?' closed':''}" data-key="${esc(p.key)}">
       <div class="pd-h"><span class="pd-t">第 ${p.idx+1} 個月</span><span class="pd-r">${esc(rng(p.start,p.end))}</span><span class="st ${p.status}">${STL[p.status]}</span></div>
       <div class="pd-g">
         <div class="stat"><div class="stat-l">天數</div><div class="stat-v">${p.days} 天</div></div>
@@ -523,8 +576,8 @@ function renderList(){
         <div class="stat"><div class="stat-l">基礎可支配</div><div class="stat-v">${money(p.base)}</div></div>
         <div class="stat"><div class="stat-l">${p.closed?'原建議額度':'建議額度'}</div><div class="stat-v">${money(p.suggest)}</div></div>
       </div>${body}
-      ${canSettle&&openKey!==p.key?`<button class="btn sm" data-act="fopen">${p.closed?'重新編輯':'月終結算'}</button>`:''}
-      ${openKey===p.key?formHtml(p):''}
+      ${canSettle&&!(openKey===p.key&&openAt==='list')?`<button class="btn sm" data-act="fopen" data-at="list">${p.closed?'重新編輯':'月終結算'}</button>`:''}
+      ${openKey===p.key&&openAt==='list'?formHtml(p):''}
     </div>`;
   }).join('');
   el.innerHTML=h;
@@ -538,7 +591,16 @@ function updatePrev(key){
   const el=f.querySelector('[data-prev]');
   if(typeof v!=='number'){el.textContent='填入實際總支出後，這裡會顯示偏差。';return;}
   const dev=p.base-(v-p.fixed-p.plannedPay);
-  el.textContent='實際變動支出 '+money(v-p.fixed-p.plannedPay)+'・偏差 '+(dev>=0?'+':'')+money(dev)+(dev>=0?'（有剩）':'（超支）');
+  let t='實際變動支出 '+money(v-p.fixed-p.plannedPay)+'・偏差 '+(dev>=0?'+':'')+money(dev)+(dev>=0?'（有剩）':'（超支）');
+  // 10-31：用輸入值試算下個月建議額度（複製一份資料，不寫入）
+  const nx=CP.periods[p.idx+1];
+  if(nx){
+    const d=JSON.parse(JSON.stringify(DB));
+    d.months[key]=Object.assign({},d.months[key]||{},{closed:true,actualTotal:v});
+    const n2=computePlan(d,today()).periods[p.idx+1];
+    if(n2){const df=n2.suggest-nx.suggest;t+='；下個月建議額度試算 '+money(n2.suggest)+'（目前 '+money(nx.suggest)+'，'+(df>=0?'+':'')+money(df)+'）';}
+  }
+  el.textContent=t;
 }
 
 /* ───────── 4. 趨勢圖 ───────── */
@@ -718,11 +780,13 @@ function onClick(e){
     const r=b.closest('[data-fid]'),id=r&&r.dataset.fid;
     DB.plan.fixed=DB.plan.fixed.filter(x=>x.id!==id);delFid='';save();render();toast('已刪除');return;
   }
+  if(act==='trialx'){lastTrial=null;render();return;} // 10-31
+  if(act==='settoggle'){const o=setOpen===null?!(CP&&CP.valid):setOpen;setOpen=!o;render();return;} // 10-31
   const key=periodKey(b);
   const p=CP.periods.find(x=>x.key===key);
   if(!p)return;
-  if(act==='fopen'){openKey=key;render();return;}
-  if(act==='fcancel'){openKey='';render();return;}
+  if(act==='fopen'){openKey=key;openAt=b.dataset.at==='ov'?'ov':'list';render();return;}
+  if(act==='fcancel'){openKey='';openAt='';render();return;}
   const form=b.closest('.form');
   if(act==='settle'&&form){
     const at=parseAmtInput(form.querySelector('[data-f="atotal"]').value);
@@ -731,10 +795,14 @@ function onClick(e){
     if(sv===undefined){toast('儲蓄請輸入大於或等於 0 的數字');return;}
     const m=getM(key);
     m.actualTotal=at;m.saved=sv;m.note=cleanStr(form.querySelector('[data-f="note"]').value,STR_MAX).trim();m.closed=true;
-    openKey='';save();render();toast('已結算，後面月份的建議額度已更新');return;
+    m.analysis=cleanStr(form.querySelector('[data-f="analysis"]').value,ANALYSIS_MAX).trim(); // 10-31
+    const nx=CP.periods[p.idx+1]; // 10-31：記下結算前的下月建議額度，結算後在本月概況顯示試算比較
+    lastTrial=nx?{idx:nx.idx,before:nx.suggest}:{idx:p.idx+1,before:null};
+    openKey='';openAt='';save();render();toast('已結算，下個月已重新試算');
+    $('s-ov').scrollIntoView({behavior:'smooth',block:'start'});return;
   }
   if(act==='unsettle'){
-    getM(key).closed=false;openKey='';save();render();toast('已改回未結算');return;
+    getM(key).closed=false;openKey='';openAt='';lastTrial=null;save();render();toast('已改回未結算');return;
   }
 }
 // 延到焦點移到下一欄之後才處理，render() 才能把焦點還原到使用者 Tab 過去的欄位
@@ -756,7 +824,8 @@ $('app').addEventListener('focusout',e=>{
   setTimeout(()=>{if(document.activeElement!==t)commitDate(t);},0); // 等焦點落到下一欄後再重繪，render 才能還原焦點
 });
 $('app').addEventListener('click',onClick);
-$('app').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')e.target.blur();});
+$('app').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')e.target.blur();
+  if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.act==='settoggle'){e.preventDefault();e.target.click();}});
 
 load();
 render();
