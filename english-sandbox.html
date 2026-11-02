@@ -668,7 +668,7 @@ let curGrCat = 'all';
 const SITS = {
   coffee:   { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
   meeting:  { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
-  lunch:    { label: '🍱 等外送', en: 'waiting for a food delivery order with a client' },
+  lunch:    { label: '🍱 等外送', en: 'waiting for a food delivery order with a client, keeping the chat polite and professional since the other person is a client' },
   event:    { label: '🤝 業界活動', en: 'at a professional networking event or conference' },
   elevator: { label: '🛗 電梯巧遇', en: 'sharing an elevator with a coworker or acquaintance for a brief ride' },
   firstday: { label: '🆕 新人第一天', en: 'at the office on the learner\'s very first day at a new job, where the learner is the new employee and the other person is a senior colleague who has worked there for years, welcoming them with some small talk',
@@ -687,7 +687,7 @@ const SITS = {
       'cheerful and helpful',
     ] },
   weekend:  { label: '🌤 週一回來後', en: 'chatting with a coworker on Monday morning, catching up after the weekend' },
-  remote:   { label: '💻 視訊等待', en: 'waiting for other participants to join a video call, filling the silence with a coworker already on the call' },
+  remote:   { label: '💻 視訊等待', en: 'waiting for other participants to join a video call, filling the silence with a coworker already on the call — each person is in their own location and they only see each other through the screen' },
   // 11-02：面試官與資深同事的開場風格／心情另列（styles／moods），通用那套的抱怨、八卦、自嘲不適合這兩個角色；
   // 面試只練正式提問前的寒暄（使用者選定），不出「介紹一下你自己」「為何想做這職位」等正題過渡
   interview: { label: '🎤 面試前暖場', en: 'meeting in the interviewer\'s office, where the learner is the job candidate visiting for the first time, and the interviewer makes friendly warm-up small talk to put the candidate at ease before the formal interview questions start — no interview questions yet (nothing like "tell me about yourself" or questions about the role, the company, or the candidate\'s experience)',
@@ -707,7 +707,7 @@ const SITS = {
       'cheerful and welcoming',
     ] },
   party:    { label: '🎉 歡送歡迎會', en: 'mingling at an office farewell or welcome party, chatting with a coworker you don\'t know very well' },
-  reception: { label: '🛎 訪客接待', en: 'in the office lobby, where the learner works at the company and is greeting a visiting client, chatting while they wait for someone else to arrive' },
+  reception: { label: '🛎 訪客接待', en: 'in the office lobby, where the learner works at the company and is greeting a visiting client, chatting while they wait for someone else to arrive, keeping it polite and professional' },
   airport:  { label: '✈️ 出差候機', en: 'waiting at the airport gate on a business trip, chatting with a coworker or fellow traveler' },
   printer:  { label: '🖨️ 影印機前排隊', en: 'waiting in a short line at the office printer, a brief and low-stakes moment' },
   parking:  { label: '🚗 停車場巧遇', en: 'running into a coworker in the office parking lot, both arriving or leaving around the same time' },
@@ -716,14 +716,14 @@ const SITS = {
   breakroom: { label: '🍵 茶水間問候', en: 'running into a coworker in the break room, a quick friendly greeting during a short break' },
   checkin:  { label: '🙋 近況問候', en: 'running into a coworker you haven\'t talked to in a while, catching up briefly on how things have been going' },
   mailroom: { label: '📦 收發室拿包裹', en: 'waiting at the office mailroom to pick up a package, chatting with a coworker doing the same' },
-  grocery:  { label: '🛒 超市排隊結帳', en: 'standing in a checkout line at the grocery store, chatting with the person next in line' },
+  grocery:  { label: '🛒 超市排隊結帳', en: 'standing in a checkout line at the grocery store, chatting with the person next in line — they are strangers, so keep it light and impersonal, with no personal questions' },
   neighbor: { label: '🏙️ 社區巧遇鄰居', en: 'sharing an elevator or building lobby with a neighbor in your apartment building, a brief friendly chat' },
   hobbyclass: { label: '🧘 興趣班前閒聊', en: 'chatting with another student before a hobby class (like yoga or a workshop) starts' },
-  flight:   { label: '✈️ 長途交通鄰座', en: 'sitting next to a stranger on a long flight or train ride, making light conversation to pass the time' },
+  flight:   { label: '✈️ 長途交通鄰座', en: 'sitting next to a stranger on a long flight or train ride, making light conversation to pass the time — they are strangers, so keep it light and impersonal, with no personal questions' },
   park:     { label: '🚶 公園偶遇熟人', en: 'running into an acquaintance while taking a walk in the park, stopping for a brief chat' },
-  restaurant: { label: '🍽️ 餐廳等位', en: 'waiting for a table at a busy restaurant, chatting with a stranger also waiting nearby' },
+  restaurant: { label: '🍽️ 餐廳等位', en: 'waiting for a table at a busy restaurant, chatting with a stranger also waiting nearby — they are strangers, so keep it light and impersonal, with no personal questions' },
   dogwalk:  { label: '🐕 遛狗巧遇鄰居', en: 'walking your dog and running into a neighbor also walking their dog, chatting while the dogs sniff around' },
-  coffeeshop: { label: '☕ 咖啡廳排隊', en: 'waiting in line at a coffee shop, making brief small talk with the stranger next in line' },
+  coffeeshop: { label: '☕ 咖啡廳排隊', en: 'waiting in line at a coffee shop, making brief small talk with the stranger next in line — they are strangers, so keep it light and impersonal, with no personal questions' },
 };
 
 // ── State ──
@@ -930,9 +930,9 @@ async function genOpener(){
     ];
     const moods = (Array.isArray(sit.moods) && sit.moods.length) ? sit.moods : baseMoods;
     const mood = moods[Math.floor(Math.random()*moods.length)];
-    // 專屬角色情境優先練最典型的那句；通用情境才要求挑冷門細節（10-29 為避免重複而加）
+    // 專屬角色情境練最典型的那句；通用情境要求換角度避免重複（11-02 由「挑冷門細節」改，原寫法把開場推離情境）
     const detailRule = (styles === baseStyles)
-      ? 'Pick a specific, concrete detail of this situation rather than the most obvious or generic opener.'
+      ? 'Say something a real person would naturally say in this exact situation, but come at it from a different aspect of the moment than the usual first line — natural, never contrived.'
       : 'Say the most typical, natural thing a real person in this role would say at this moment.';
     const prompt = `You are creating realistic small talk for English conversation practice.
 
@@ -942,6 +942,8 @@ Generate ONE natural opening line using this style: ${style}.
 The speaker is ${mood}. ${detailRule}
 
 Rules:
+- The mood only colors HOW the speaker talks (tone and energy); the content must be about this situation — never mention whatever caused the mood
+- If the style above does not suit this situation or the relationship between the two people (e.g. strangers, a client, coworkers on a video call), use the closest natural alternative instead of forcing it
 - Under 18 words
 - ONE simple clause only — do not bolt on a second clause with an em dash, semicolon, or a "guess/I bet/must be" hedge. Say the single most natural thing a real person would blurt out, then stop.
 - Sound genuinely casual and spontaneous — NOT textbook English
