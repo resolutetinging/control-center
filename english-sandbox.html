@@ -671,10 +671,41 @@ const SITS = {
   lunch:    { label: '🍱 等外送', en: 'waiting for a food delivery order with a client' },
   event:    { label: '🤝 業界活動', en: 'at a professional networking event or conference' },
   elevator: { label: '🛗 電梯巧遇', en: 'sharing an elevator with a coworker or acquaintance for a brief ride' },
-  firstday: { label: '🆕 新人第一天', en: 'at the office on the learner\'s very first day at a new job, where the learner is the new employee and the other person is a senior colleague who has worked there for years, welcoming them with some small talk' },
+  firstday: { label: '🆕 新人第一天', en: 'at the office on the learner\'s very first day at a new job, where the learner is the new employee and the other person is a senior colleague who has worked there for years, welcoming them with some small talk',
+    styles: [
+      'a welcoming remark to the new colleague',
+      'asking how the commute or the first morning has been',
+      'pointing out something useful about the office (kitchen, coffee, lunch spots)',
+      'offering to introduce them to people or show them around',
+      'a friendly question about where they are based or what they did before joining',
+      'a light, reassuring comment about first-day nerves',
+    ],
+    moods: [
+      'friendly and welcoming',
+      'relaxed and easygoing',
+      'a bit busy but still kind',
+      'cheerful and helpful',
+    ] },
   weekend:  { label: '🌤 週一回來後', en: 'chatting with a coworker on Monday morning, catching up after the weekend' },
   remote:   { label: '💻 視訊等待', en: 'waiting for other participants to join a video call, filling the silence with a coworker already on the call' },
-  interview: { label: '🎤 面試前暖場', en: 'meeting in the interviewer\'s office, where the learner is the job candidate visiting for the first time, chatting briefly before the formal interview questions start — keep it light, not about the job itself' },
+  // 11-02：面試官與資深同事的開場風格／心情另列（styles／moods），通用那套的抱怨、八卦、自嘲不適合這兩個角色；
+  // 面試只練正式提問前的寒暄（使用者選定），不出「介紹一下你自己」「為何想做這職位」等正題過渡
+  interview: { label: '🎤 面試前暖場', en: 'meeting in the interviewer\'s office, where the learner is the job candidate visiting for the first time, and the interviewer makes friendly warm-up small talk to put the candidate at ease before the formal interview questions start — no interview questions yet (nothing like "tell me about yourself" or questions about the role, the company, or the candidate\'s experience)',
+    styles: [
+      'checking how the trip or commute here went',
+      'asking whether the candidate found the office or building easily',
+      'offering something to drink or a seat',
+      'a light question about the weather or the time of day',
+      'a friendly question about the neighborhood or whether they have been to this area before',
+      'a light personal question such as how their week or weekend has been',
+      'a short welcoming remark that puts the candidate at ease',
+    ],
+    moods: [
+      'warm and professional',
+      'relaxed and friendly, wanting the candidate to feel comfortable',
+      'a little busy but polite and attentive',
+      'cheerful and welcoming',
+    ] },
   party:    { label: '🎉 歡送歡迎會', en: 'mingling at an office farewell or welcome party, chatting with a coworker you don\'t know very well' },
   reception: { label: '🛎 訪客接待', en: 'in the office lobby, where the learner works at the company and is greeting a visiting client, chatting while they wait for someone else to arrive' },
   airport:  { label: '✈️ 出差候機', en: 'waiting at the airport gate on a business trip, chatting with a coworker or fellow traveler' },
@@ -869,7 +900,7 @@ async function genOpener(){
       ? `\n\nAVOID — do NOT generate these or close variations:\n${recent.map(s=>`- "${s}"`).join('\n')}`
       : '';
     // Cycle through different opener styles to ensure variety
-    const styles = [
+    const baseStyles = [
       'a casual observation or comment about the immediate environment',
       'a light complaint or mild frustration about something relatable',
       'a question that shows genuine curiosity about the other person',
@@ -881,11 +912,13 @@ async function genOpener(){
     ];
     // 10-29：改隨機抽（避開上一次的風格）＋隨機說話者狀態。原本用 usedOpeners.length 輪替，
     // 重新整理後清單歸零，每次開頁第一句的 prompt 完全相同，AI 一直產出同一句
+    // 11-02：情境自帶 styles／moods（面試、新人第一天）時用專屬清單，其餘情境沿用通用清單
+    const styles = (Array.isArray(sit.styles) && sit.styles.length) ? sit.styles : baseStyles;
     let si = Math.floor(Math.random()*styles.length);
     if(si === lastStyleIdx) si = (si + 1 + Math.floor(Math.random()*(styles.length-1))) % styles.length;
     lastStyleIdx = si;
     const style = styles[si];
-    const moods = [
+    const baseMoods = [
       'in a good mood and a bit chatty',
       'slightly tired but friendly',
       'in a hurry but still polite',
@@ -895,13 +928,18 @@ async function genOpener(){
       'cheerful after some small good news',
       'a bit awkward and trying to break the ice',
     ];
+    const moods = (Array.isArray(sit.moods) && sit.moods.length) ? sit.moods : baseMoods;
     const mood = moods[Math.floor(Math.random()*moods.length)];
+    // 專屬角色情境優先練最典型的那句；通用情境才要求挑冷門細節（10-29 為避免重複而加）
+    const detailRule = (styles === baseStyles)
+      ? 'Pick a specific, concrete detail of this situation rather than the most obvious or generic opener.'
+      : 'Say the most typical, natural thing a real person in this role would say at this moment.';
     const prompt = `You are creating realistic small talk for English conversation practice.
 
 Situation: Two people are ${sit.en}.
 
 Generate ONE natural opening line using this style: ${style}.
-The speaker is ${mood}. Pick a specific, concrete detail of this situation rather than the most obvious or generic opener.
+The speaker is ${mood}. ${detailRule}
 
 Rules:
 - Under 18 words
