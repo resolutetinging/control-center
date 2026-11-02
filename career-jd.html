@@ -286,7 +286,7 @@ function onJdInput(){
   const v = document.getElementById('jd').value;
   const n = v.length;
   const h = document.getElementById('jd-hint');
-  const kept = truncJd(v, jdBudget()).length;
+  const kept = truncJd(v.trim(), jdBudget()).length;
   if(kept < n){ h.className='hint warn'; h.textContent = '僅分析前 '+kept+' 字（目前 '+n+' 字）'; }
   else { h.className='hint'; h.textContent = n ? '目前 '+n+' 字' : ''; }
 }
@@ -372,9 +372,12 @@ function sortedPrefs(){
   const m = loadPrefs();
   return Object.keys(m).map(k=>m[k]).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
 }
-function prefPromptBlock(){
-  const list = sortedPrefs().slice(0,60);
-  if(!list.length) return '（使用者尚未標記任何偏好）';
+function prefPromptBlock(matchText){
+  const all = sortedPrefs();
+  if(!all.length) return '（使用者尚未標記任何偏好）';
+  const hay = normTerm(matchText);
+  const list = all.filter(p=>hay.indexOf(normTerm(p.term)) >= 0).slice(0,30);
+  if(!list.length) return '（這份 JD 未出現你已標記的關鍵）';
   return list.map(p=>p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
 }
 function makePv(term, cat, cur){
@@ -538,9 +541,9 @@ function renderZh(raw){
 }
 
 const SYS_ANALYZE = '你是資深求職顧問。只輸出一個合法 JSON 物件，不要任何其他文字。所有中文欄位一律使用台灣繁體中文與台灣用語。';
-function analyzePrompt(opp, jd){
+function analyzePrompt(opp, jd, rawJd){
   return '請依下列履歷與職缺 JD，做 Go／No-go 初判。\n\n'
-  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者興趣偏好】\n'+prefPromptBlock()+'\n\n【JD】\n'+jd+'\n\n'
+  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者興趣偏好】\n'+prefPromptBlock(rawJd==null?jd:rawJd)+'\n\n【JD】\n'+jd+'\n\n'
   +'只回 JSON，格式：\n'
   +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
   +'"keywords":[{"term":"關鍵名稱","cat":"軟體工具|系統平台|產業別|職能領域|其他"}],'
@@ -555,12 +558,13 @@ function analyzePrompt(opp, jd){
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
   +'8. 全部中文欄位使用台灣繁體中文。';
 }
-function jdBudget(){
-  const opp = (document.getElementById('opp')||{}).value || '';
-  const fixed = estTokens(analyzePrompt(opp.trim(), '') + SYS_ANALYZE);
+function jdBudget(opp, rawJd){
+  if(opp == null) opp = ((document.getElementById('opp')||{}).value || '').trim();
+  if(rawJd == null) rawJd = ((document.getElementById('jd')||{}).value || '').trim();
+  const fixed = estTokens(analyzePrompt(opp, '', rawJd) + SYS_ANALYZE);
   return Math.max(800, TPM_SAFE - ANALYZE_MAX - fixed);
 }
-let lastGroqAt = 0, curOpp = '', curJd = '';
+let lastGroqAt = 0, curOpp = '', curJd = '', curJdRaw = '';
 async function gcall(prompt, max, sys, jsonMode){
   try{ return await callGroq(prompt, max, sys, jsonMode); }
   finally{ lastGroqAt = Date.now(); }
@@ -570,8 +574,8 @@ async function waitQuota(st){
     st.textContent = '距上次 AI 呼叫未滿 65 秒，'+s+' 秒後送出'; await sleep(1000);
   }
 }
-async function doAnalyze(opp, jd){
-  const raw = await gcall(analyzePrompt(opp, jd), ANALYZE_MAX, SYS_ANALYZE, true);
+async function doAnalyze(opp, jd, rawJd){
+  const raw = await gcall(analyzePrompt(opp, jd, rawJd), ANALYZE_MAX, SYS_ANALYZE, true);
   const a = safeParseJson(raw);
   const vd = String(a.verdict||'').trim().toLowerCase();
   if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
@@ -585,13 +589,13 @@ async function runAnalysis(){
   if(!opp || !jdRaw){ st.textContent = 'Opportunity name 與 JD content 都必填'; return; }
   if(!resumeText){ st.textContent = '履歷尚未讀取成功'; return; }
   if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
-  const jd = truncJd(jdRaw, jdBudget());
+  const jd = truncJd(jdRaw, jdBudget(opp, jdRaw));
   busy = true; updateBtn(); st.textContent = '分析中…';
   try{
     await waitQuota(st);
     st.textContent = '分析中…';
-    const a = await doAnalyze(opp, jd);
-    curOpp = opp; curJd = jd;
+    const a = await doAnalyze(opp, jd, jdRaw);
+    curOpp = opp; curJd = jd; curJdRaw = jdRaw;
     renderResult(a, opp);
     ensureZhCard(true);
     if(isChineseJd(jd)){
@@ -638,7 +642,8 @@ async function rerunAnalysis(){
   try{
     await waitQuota(st);
     st.textContent = '依你的興趣重新分析中…';
-    const a = await doAnalyze(curOpp, curJd);
+    const jd2 = truncJd(curJdRaw, jdBudget(curOpp, curJdRaw));
+    const a = await doAnalyze(curOpp, jd2, curJdRaw);
     renderResult(a, curOpp);
     st.textContent = '已依最新興趣偏好重新判斷';
   }catch(e){
