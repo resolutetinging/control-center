@@ -57,6 +57,12 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
 .pvb.on.dislike{background:var(--bad);border-color:var(--bad);color:#fff}
 .pref-sum{cursor:pointer;font-size:var(--fs1);font-weight:700}
 #pref-panel details{margin-top:0}
+.kw-row.hl{background:var(--ac-tint2);border-radius:6px}
+.mtag{font-size:var(--fs4);color:var(--faint);margin-left:4px}
+.add-kw{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}
+.add-kw input[type=text]{flex:1;min-width:140px;width:auto;padding:6px 9px}
+.add-kw select{font-size:var(--fs2);background:var(--bg2);border:1px solid var(--bstr);border-radius:8px;padding:6px 8px}
+.add-kw .btn-sm{margin-left:0}
 .sub-h{font-size:var(--fs3);font-weight:700;color:var(--sub);margin:10px 0 3px}
 .note{font-size:var(--fs4);color:var(--faint);margin-top:6px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -336,7 +342,9 @@ function parsePrefs(str){
     if(!term || term.length > 30) return;
     if(PREF_CATS.indexOf(e.cat) < 0 || PREF_VS.indexOf(e.v) < 0) return;
     if(!validDate(e.at)) return;
-    out[normTerm(term)] = {term, cat:e.cat, v:e.v, at:e.at};
+    const it = {term, cat:e.cat, v:e.v, at:e.at};
+    if(e.src === 'manual') it.src = 'manual';
+    out[normTerm(term)] = it;
     n++;
   });
   return out;
@@ -356,12 +364,16 @@ function localToday(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-function setPref(term, cat, v){
+function setPref(term, cat, v, src){
   const key = normTerm(term);
   if(!key) return;
   const m = loadPrefs();
   if(m[key] && m[key].v === v) delete m[key];
-  else m[key] = {term: String(term).trim().slice(0,30), cat: PREF_CATS.indexOf(cat)>=0?cat:'其他', v, at: localToday()};
+  else{
+    const it = {term: String(term).trim().slice(0,30), cat: PREF_CATS.indexOf(cat)>=0?cat:'其他', v, at: localToday()};
+    if(src === 'manual' || (m[key] && m[key].src === 'manual')) it.src = 'manual';
+    m[key] = it;
+  }
   savePrefs(m);
   refreshPrefUi();
 }
@@ -376,20 +388,50 @@ function prefPromptBlock(matchText){
   const all = sortedPrefs();
   if(!all.length) return '（使用者尚未標記任何偏好）';
   const hay = normTerm(matchText);
-  const list = all.filter(p=>hay.indexOf(normTerm(p.term)) >= 0).slice(0,30);
+  const man = all.filter(p=>p.src === 'manual');
+  const hit = all.filter(p=>p.src !== 'manual' && hay.indexOf(normTerm(p.term)) >= 0);
+  const list = man.concat(hit).slice(0,30).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
   if(!list.length) return '（這份 JD 未出現你已標記的關鍵）';
   return list.map(p=>p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
 }
-function makePv(term, cat, cur){
+function makePv(term, cat, cur, src){
   const box = mk('span','pv');
   PREF_VS.forEach(v=>{
     const b = mk('button','pvb '+v+(cur===v?' on':''), PREF_SYM[v]);
     b.type = 'button';
     b.setAttribute('aria-label', PREF_LABEL[v]);
     b.setAttribute('aria-pressed', cur===v ? 'true' : 'false');
-    b.onclick = ()=>setPref(term, cat, v);
+    b.onclick = ()=>setPref(term, cat, v, src);
     box.appendChild(b);
   });
+  return box;
+}
+function hlRows(key){
+  document.querySelectorAll('.kw-row').forEach(r=>{
+    if(r.dataset.key === key){ r.classList.add('hl'); try{ r.scrollIntoView({block:'nearest'}); }catch(_e){} setTimeout(()=>r.classList.remove('hl'), 1600); }
+  });
+}
+function makeAddKwRow(onAdded){
+  const box = mk('div','add-kw');
+  const inp = mk('input'); inp.type = 'text'; inp.maxLength = 30; inp.placeholder = '新增關鍵，例如：S&OP'; inp.setAttribute('aria-label','新增關鍵');
+  const sel = mk('select'); sel.setAttribute('aria-label','分類');
+  PREF_CATS.forEach(c=>{ const o = mk('option',null,c); o.value = c; if(c==='職能領域') o.selected = true; sel.appendChild(o); });
+  const btn = mk('button','btn-sm','新增'); btn.type = 'button';
+  const hint = mk('span','note'); hint.style.margin = '0';
+  const submit = ()=>{
+    const term = t2(inp.value).replace(/\s+/g,' ').trim();
+    const key = normTerm(term);
+    if(!key){ hint.textContent = '請輸入關鍵'; return; }
+    if(term.length > 30){ hint.textContent = '最多 30 字'; return; }
+    const m = loadPrefs();
+    if(m[key] || curKw.some(k=>normTerm(k.term) === key)){ hint.textContent = '已在清單中'; hlRows(key); return; }
+    hint.textContent = '';
+    inp.value = '';
+    onAdded(term, sel.value);
+  };
+  btn.onclick = submit;
+  inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); submit(); } });
+  box.appendChild(inp); box.appendChild(sel); box.appendChild(btn); box.appendChild(hint);
   return box;
 }
 let curKw = [];
@@ -413,10 +455,10 @@ function renderKwRows(){
   if(!curKw.length){ box.appendChild(mk('div','note','AI 這次沒有抓出關鍵項目')); return; }
   curKw.forEach(k=>{
     const cur = m[normTerm(k.term)];
-    const row = mk('div','kw-row');
+    const row = mk('div','kw-row'); row.dataset.key = normTerm(k.term);
     row.appendChild(mk('span','pill',k.cat));
     row.appendChild(mk('span','kw-term',k.term));
-    row.appendChild(makePv(k.term, k.cat, cur?cur.v:''));
+    row.appendChild(makePv(k.term, k.cat, cur?cur.v:'', k.manual?'manual':undefined));
     box.appendChild(row);
   });
 }
@@ -429,6 +471,11 @@ function renderPrefPanel(){
   const det = mk('details','card');
   if(wasOpen) det.open = true;
   det.appendChild(mk('summary','pref-sum','我的興趣偏好（'+list.length+'）'));
+  det.appendChild(makeAddKwRow((term, cat)=>{
+    const m = loadPrefs();
+    m[normTerm(term)] = {term, cat, v:'neutral', at:localToday(), src:'manual'};
+    savePrefs(m); refreshPrefUi();
+  }));
   if(!list.length){
     det.appendChild(mk('div','note','還沒有偏好。分析後在「關鍵與我的興趣」卡按 V／-／X 就會記住。'));
   }else{
@@ -437,9 +484,11 @@ function renderPrefPanel(){
       if(!items.length) return;
       det.appendChild(mk('div','sub-h',cat));
       items.forEach(p=>{
-        const row = mk('div','kw-row');
-        row.appendChild(mk('span','kw-term',t2(p.term)));
-        row.appendChild(makePv(p.term, p.cat, p.v));
+        const row = mk('div','kw-row'); row.dataset.key = normTerm(p.term);
+        const tm = mk('span','kw-term',t2(p.term));
+        if(p.src === 'manual') tm.appendChild(mk('span','mtag','手動'));
+        row.appendChild(tm);
+        row.appendChild(makePv(p.term, p.cat, p.v, p.src));
         const del = mk('button','btn-sm','刪除'); del.type='button'; del.onclick = ()=>delPref(p.term);
         row.appendChild(del);
         det.appendChild(row);
@@ -477,6 +526,12 @@ function renderAnalysis(a, opp){
   const ck = mk('div','card'); ck.appendChild(mk('h2',null,'關鍵與我的興趣'));
   ck.appendChild(mk('div','note','V＝有興趣、-＝普通、X＝沒興趣（再點一次取消）；AI 之後每次判斷都會參考'));
   const rows = mk('div','kw-rows'); rows.id = 'kw-rows'; ck.appendChild(rows);
+  ck.appendChild(makeAddKwRow((term, cat)=>{
+    curKw.push({term, cat, manual:true});
+    const m = loadPrefs();
+    m[normTerm(term)] = {term, cat, v:'neutral', at:localToday(), src:'manual'};
+    savePrefs(m); refreshPrefUi();
+  }));
   const rb = mk('button','btn','依我的興趣重新判斷'); rb.type='button'; rb.id='rerun-btn'; rb.style.marginTop='12px';
   rb.disabled = busy; rb.onclick = rerunAnalysis;
   ck.appendChild(rb);
@@ -553,7 +608,7 @@ function analyzePrompt(opp, jd, rawJd){
   +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
   +'3. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
   +'4. 興趣偏好：JD 的核心工作若落在使用者「沒興趣」的項目，必須在 reasons 明確指出並影響 verdict；落在「有興趣」的項目列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。\n'
-  +'5. keywords 5 到 10 個，從 JD 抽出值得使用者表態的關鍵（軟體工具、ERP 等系統平台、產業別、職能領域），term 用 JD 原文或通用名稱、不超過 30 字，cat 只能是 軟體工具／系統平台／產業別／職能領域／其他。\n'
+  +'5. keywords 5 到 10 個，從 JD 抽出值得使用者表態的關鍵（軟體工具、ERP 等系統平台、產業別、職能領域），term 用 JD 原文或通用名稱、不超過 30 字，cat 只能是 軟體工具／系統平台／產業別／職能領域／其他；盡量歸入前四類，只有真的無法歸類才用「其他」（例如庫存準確率、流程自動化屬職能領域）。\n'
   +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
   +'8. 全部中文欄位使用台灣繁體中文。';
