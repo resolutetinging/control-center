@@ -67,6 +67,7 @@
     'cc_scratch_v1',
     // 未來發展四象限（career-matrix.html）
     'cc_career_v1',
+    'cc_career_jd_prefs_v1',
     // 動態財務規劃（finance-planner.html）
     'cc_finance_v1',
     // WordVault 成人版＋Kids

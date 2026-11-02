@@ -42,20 +42,27 @@ textarea{min-height:calc(1.5em * 16 + 20px);line-height:1.5;resize:vertical}
 .hint.warn{color:var(--warn)}
 .keybox{display:none;margin-top:12px;background:var(--warn-bg);border-radius:8px;padding:10px 12px;font-size:var(--fs3);color:var(--warn)}
 .keybox .row{display:flex;gap:6px;margin-top:6px}
-.verdict{display:inline-block;font-size:26px;font-weight:800;letter-spacing:.04em;padding:6px 16px;border-radius:10px}
-.verdict.go{color:var(--ok);background:var(--ok-bg)}
-.verdict.nogo{color:var(--bad);background:var(--bad-bg)}
 .lv{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px}
-.lv span{font-size:var(--fs3);font-weight:600;color:var(--ac);background:var(--ac-tint);border-radius:100px;padding:3px 11px}
-.sum{font-size:var(--fs1);line-height:1.6;margin-top:6px}
-ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1.6}
+.pill{display:inline-block;font-size:var(--fs3);font-weight:600;color:var(--ac);background:var(--ac-tint);border-radius:100px;padding:3px 11px}
+.pill.go{color:var(--ok);background:var(--ok-bg)}
+.pill.nogo{color:var(--bad);background:var(--bad-bg)}
+ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1.6;font-size:var(--fs2)}
+.kw-rows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.kw-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--fs2)}
+.kw-term{flex:1;min-width:80px;word-break:break-word}
+.pv{display:inline-flex;gap:4px}
+.pvb{font-size:var(--fs3);font-weight:700;min-width:32px;padding:4px 8px;border-radius:6px;border:1px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer}
+.pvb.on.like{background:var(--ok);border-color:var(--ok);color:#fff}
+.pvb.on.neutral{background:var(--ac);border-color:var(--ac);color:#fff}
+.pvb.on.dislike{background:var(--bad);border-color:var(--bad);color:#fff}
+.pref-sum{cursor:pointer;font-size:var(--fs1);font-weight:700}
+#pref-panel details{margin-top:0}
 .sub-h{font-size:var(--fs3);font-weight:700;color:var(--sub);margin:10px 0 3px}
-.txt{line-height:1.7;color:var(--ink)}
 .note{font-size:var(--fs4);color:var(--faint);margin-top:6px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .links a{font-size:var(--fs3);color:var(--ac);background:var(--ac-tint);border:1px solid var(--ac-tint2);border-radius:6px;padding:4px 10px;text-decoration:none}
 .links a:hover{background:var(--ac-tint2)}
-.jdzh{white-space:pre-wrap;line-height:1.7;word-break:break-word}
+.jdzh{line-height:1.7;word-break:break-word;font-size:var(--fs2)}
 </style>
 </head>
 <body>
@@ -82,17 +89,44 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
       <span class="st" id="run-st" role="status" aria-live="polite" style="margin-left:10px"></span></div>
   </div>
   <div id="out" style="display:none;flex-direction:column;gap:14px"></div>
+  <div id="pref-panel"></div>
 </div>
 <script>
 'use strict';
 const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
 const RESUME_LIMIT = 4500;
+const JD_TOKEN_BUDGET = 2100; // 分析用 JD 的估算 token 上限（中文 JD 6000 字約 4800 token，會超過免費 TPM）
 const JD_LIMIT = 6000; // Groq 免費檔 gpt-oss-120b 約 8K TPM：履歷約 4400 字＋JD＋輸出須壓在一分鐘額度內
 let resumeText = '';
 let resumeStat = null;
 let resumeLoading = false;
 let busy = false;
 
+//JD_FN_START
+const CJK_RE = /[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uff00-\uffef]/;
+function estTokens(s){
+  let cjk = 0, other = 0;
+  for(const ch of String(s==null?'':s)){ if(CJK_RE.test(ch)) cjk++; else other++; }
+  return Math.ceil(cjk*0.85 + other*0.25);
+}
+function truncJd(s){
+  s = String(s==null?'':s).slice(0, JD_LIMIT);
+  let acc = 0, i = 0;
+  for(const ch of s){
+    acc += CJK_RE.test(ch) ? 0.85 : 0.25;
+    if(Math.ceil(acc) > JD_TOKEN_BUDGET) break;
+    i += ch.length;
+  }
+  return s.slice(0, i);
+}
+function isChineseJd(s){
+  const t = String(s==null?'':s).replace(/\s+/g,'');
+  if(!t) return false;
+  let c = 0, n = 0;
+  for(const ch of t){ n++; if(CJK_RE.test(ch)) c++; }
+  return c/n >= 0.5;
+}
+//JD_FN_END
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function t2(s){ s = String(s==null?'':s); return (typeof s2t==='function') ? s2t(s) : s; }
 
@@ -242,11 +276,14 @@ function safeParseJson(raw){
 // ── UI ──
 function updateBtn(){
   document.getElementById('go-btn').disabled = busy || !resumeText;
+  const rb = document.getElementById('rerun-btn'); if(rb) rb.disabled = busy;
 }
 function onJdInput(){
-  const n = document.getElementById('jd').value.length;
+  const v = document.getElementById('jd').value;
+  const n = v.length;
   const h = document.getElementById('jd-hint');
-  if(n > JD_LIMIT){ h.className='hint warn'; h.textContent = '僅分析前 '+JD_LIMIT+' 字（目前 '+n+' 字）'; }
+  const kept = truncJd(v).length;
+  if(kept < n){ h.className='hint warn'; h.textContent = '僅分析前 '+kept+' 字（目前 '+n+' 字）'; }
   else { h.className='hint'; h.textContent = n ? '目前 '+n+' 字' : ''; }
 }
 function mk(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
@@ -263,51 +300,266 @@ function searchLinks(name){
     ['Google 評價','https://www.google.com/search?q='+encodeURIComponent(name+' 評價')]
   ];
 }
-function renderResult(a, opp){
-  const out = document.getElementById('out');
-  out.textContent = '';
-  out.style.display = 'flex';
+// ── 關鍵興趣偏好（key 可能經 Gist 同步進來，視為不可信；顯示一律 textContent）──
+//PREF_FN_START
+const PREF_KEY = 'cc_career_jd_prefs_v1';
+const PREF_CATS = ['軟體工具','系統平台','產業別','職能領域','其他'];
+const PREF_VS = ['like','neutral','dislike'];
+const PREF_LABEL = {like:'有興趣', neutral:'普通', dislike:'沒興趣'};
+const PREF_SYM = {like:'V', neutral:'-', dislike:'X'};
+function normTerm(s){ return String(s==null?'':s).trim().toLowerCase().replace(/\s+/g,' '); }
+function parsePrefs(str){
+  const out = Object.create(null);
+  let o;
+  try{ o = JSON.parse(str); }catch(_e){ return out; }
+  if(!o || typeof o !== 'object' || Array.isArray(o) || o.version !== 1) return out;
+  const p = o.prefs;
+  if(!p || typeof p !== 'object' || Array.isArray(p)) return out;
+  let n = 0;
+  Object.keys(p).forEach(k=>{
+    if(n >= 500) return;
+    const e = p[k];
+    if(!e || typeof e !== 'object' || Array.isArray(e)) return;
+    if(typeof e.term !== 'string') return;
+    const term = e.term.trim();
+    if(!term || term.length > 30) return;
+    if(PREF_CATS.indexOf(e.cat) < 0 || PREF_VS.indexOf(e.v) < 0) return;
+    if(typeof e.at !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.at)) return;
+    out[normTerm(term)] = {term, cat:e.cat, v:e.v, at:e.at};
+    n++;
+  });
+  return out;
+}
+//PREF_FN_END
+function loadPrefs(){
+  let s = null;
+  try{ s = localStorage.getItem(PREF_KEY); }catch(_e){}
+  return s ? parsePrefs(s) : Object.create(null);
+}
+function savePrefs(m){
+  const prefs = {};
+  Object.keys(m).forEach(k=>{ prefs[k] = m[k]; });
+  try{ localStorage.setItem(PREF_KEY, JSON.stringify({version:1, prefs})); }catch(_e){}
+}
+function localToday(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function setPref(term, cat, v){
+  const key = normTerm(term);
+  if(!key) return;
+  const m = loadPrefs();
+  if(m[key] && m[key].v === v) delete m[key];
+  else m[key] = {term: String(term).trim().slice(0,30), cat: PREF_CATS.indexOf(cat)>=0?cat:'其他', v, at: localToday()};
+  savePrefs(m);
+  refreshPrefUi();
+}
+function delPref(term){
+  const m = loadPrefs(); delete m[normTerm(term)]; savePrefs(m); refreshPrefUi();
+}
+function sortedPrefs(){
+  const m = loadPrefs();
+  return Object.keys(m).map(k=>m[k]).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
+}
+function prefPromptBlock(){
+  const list = sortedPrefs().slice(0,60);
+  if(!list.length) return '（使用者尚未標記任何偏好）';
+  return list.map(p=>p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
+}
+function makePv(term, cat, cur){
+  const box = mk('span','pv');
+  PREF_VS.forEach(v=>{
+    const b = mk('button','pvb '+v+(cur===v?' on':''), PREF_SYM[v]);
+    b.type = 'button';
+    b.setAttribute('aria-label', PREF_LABEL[v]);
+    b.setAttribute('aria-pressed', cur===v ? 'true' : 'false');
+    b.onclick = ()=>setPref(term, cat, v);
+    box.appendChild(b);
+  });
+  return box;
+}
+let curKw = [];
+function sanitizeKeywords(arr){
+  const seen = Object.create(null), out = [];
+  (Array.isArray(arr)?arr:[]).forEach(k=>{
+    if(!k || typeof k !== 'object' || out.length >= 10) return;
+    const term = t2(String(k.term==null?'':k.term)).replace(/\s+/g,' ').trim().slice(0,30);
+    const key = normTerm(term);
+    if(!key || seen[key]) return;
+    seen[key] = 1;
+    out.push({term, cat: PREF_CATS.indexOf(k.cat)>=0 ? k.cat : '其他'});
+  });
+  return out;
+}
+function renderKwRows(){
+  const box = document.getElementById('kw-rows');
+  if(!box) return;
+  box.textContent = '';
+  const m = loadPrefs();
+  if(!curKw.length){ box.appendChild(mk('div','note','AI 這次沒有抓出關鍵項目')); return; }
+  curKw.forEach(k=>{
+    const cur = m[normTerm(k.term)];
+    const row = mk('div','kw-row');
+    row.appendChild(mk('span','pill',k.cat));
+    row.appendChild(mk('span','kw-term',k.term));
+    row.appendChild(makePv(k.term, k.cat, cur?cur.v:''));
+    box.appendChild(row);
+  });
+}
+function renderPrefPanel(){
+  const host = document.getElementById('pref-panel');
+  if(!host) return;
+  const wasOpen = !!host.querySelector('details[open]');
+  host.textContent = '';
+  const list = sortedPrefs();
+  const det = mk('details','card');
+  if(wasOpen) det.open = true;
+  det.appendChild(mk('summary','pref-sum','我的興趣偏好（'+list.length+'）'));
+  if(!list.length){
+    det.appendChild(mk('div','note','還沒有偏好。分析後在「關鍵與我的興趣」卡按 V／-／X 就會記住。'));
+  }else{
+    PREF_CATS.forEach(cat=>{
+      const items = list.filter(p=>p.cat===cat);
+      if(!items.length) return;
+      det.appendChild(mk('div','sub-h',cat));
+      items.forEach(p=>{
+        const row = mk('div','kw-row');
+        row.appendChild(mk('span','kw-term',t2(p.term)));
+        row.appendChild(makePv(p.term, p.cat, p.v));
+        const del = mk('button','btn-sm','刪除'); del.type='button'; del.onclick = ()=>delPref(p.term);
+        row.appendChild(del);
+        det.appendChild(row);
+      });
+    });
+  }
+  host.appendChild(det);
+}
+function refreshPrefUi(){ renderKwRows(); renderPrefPanel(); }
+
+// ── 結果渲染 ──
+function addUl(parent, arr, cls){
+  const ul = mk('ul', cls||'rs');
+  (Array.isArray(arr)?arr:[]).forEach(x=>{ if(x!=null && String(x).trim()) ul.appendChild(mk('li',null,t2(String(x)))); });
+  parent.appendChild(ul);
+  return ul;
+}
+function renderAnalysis(a, opp){
+  const top = document.getElementById('res-top');
+  top.textContent = '';
   const go = String(a.verdict||'').trim().toLowerCase() === 'go';
   // a) 結論
-  const c1 = mk('div','card');
-  c1.appendChild(mk('div','verdict '+(go?'go':'nogo'), go?'Go':'No-go'));
-  const lv = mk('div','lv'); lv.appendChild(mk('span',null,'符合度：'+lvOk(a.fit_level))); lv.appendChild(mk('span',null,'發展性：'+lvOk(a.growth_level)));
+  const c1 = mk('div','card'); c1.appendChild(mk('h2',null,'初判結論'));
+  const lv = mk('div','lv');
+  lv.appendChild(mk('span','pill '+(go?'go':'nogo'), '判定：'+(go?'Go':'No-go')));
+  lv.appendChild(mk('span','pill','符合度：'+lvOk(a.fit_level)));
+  lv.appendChild(mk('span','pill','發展性：'+lvOk(a.growth_level)));
   c1.appendChild(lv);
-  c1.appendChild(mk('div','sum', t2(a.summary)));
-  out.appendChild(c1);
+  let pts = Array.isArray(a.summary_points) ? a.summary_points : [];
+  if(!pts.length && a.summary) pts = [a.summary];
+  addUl(c1, pts.slice(0,3));
+  top.appendChild(c1);
+  // 關鍵與我的興趣
+  curKw = sanitizeKeywords(a.keywords);
+  const ck = mk('div','card'); ck.appendChild(mk('h2',null,'關鍵與我的興趣'));
+  ck.appendChild(mk('div','note','V＝有興趣、-＝普通、X＝沒興趣（再點一次取消）；AI 之後每次判斷都會參考'));
+  const rows = mk('div','kw-rows'); rows.id = 'kw-rows'; ck.appendChild(rows);
+  const rb = mk('button','btn','依我的興趣重新判斷'); rb.type='button'; rb.id='rerun-btn'; rb.style.marginTop='12px';
+  rb.disabled = busy; rb.onclick = rerunAnalysis;
+  ck.appendChild(rb);
+  top.appendChild(ck);
+  renderKwRows();
   // b) 理由
   const c2 = mk('div','card'); c2.appendChild(mk('h2',null,'判斷理由'));
-  const ul = mk('ul','rs');
-  (Array.isArray(a.reasons)?a.reasons:[]).forEach(r=>ul.appendChild(mk('li',null,t2(r))));
-  c2.appendChild(ul); out.appendChild(c2);
+  addUl(c2, a.reasons); top.appendChild(c2);
   // c) 公司評價
   const c3 = mk('div','card'); c3.appendChild(mk('h2',null,'公司評價'));
-  c3.appendChild(mk('div','sub-h','業界評價')); c3.appendChild(mk('div','txt',t2(a.industry_reputation)));
-  c3.appendChild(mk('div','sub-h','員工評價')); c3.appendChild(mk('div','txt',t2(a.employee_reviews)));
-  c3.appendChild(mk('div','note','依 AI 既有知識整理，可能過時'));
+  c3.appendChild(mk('div','sub-h','公司在業界的地位')); addUl(c3, a.industry_position);
+  c3.appendChild(mk('div','sub-h','業界對它的看法')); addUl(c3, a.industry_view);
+  c3.appendChild(mk('div','note', a.company_basis==='jd_inferred' ? '依 JD 內容推斷，非公司公開資訊' : '依 AI 既有知識整理，可能過時'));
   const cname = (a.company_name && String(a.company_name).trim()) || opp;
   const links = mk('div','links');
   searchLinks(cname).forEach(p=>{
     const el = mk('a',null,p[0]); el.href = p[1]; el.target='_blank'; el.rel='noopener noreferrer'; links.appendChild(el);
   });
-  c3.appendChild(links); out.appendChild(c3);
-  // d) 翻譯
-  const c4 = mk('div','card'); c4.appendChild(mk('h2',null,'JD 中文翻譯'));
-  const zh = mk('div','jdzh','翻譯中…'); zh.id='jd-zh'; c4.appendChild(zh); out.appendChild(c4);
+  c3.appendChild(links); top.appendChild(c3);
+}
+function ensureZhCard(reset){
+  const out = document.getElementById('out');
+  let c = document.getElementById('zh-card');
+  if(c && reset){ c.remove(); c = null; }
+  if(!c){
+    c = mk('div','card'); c.id = 'zh-card'; c.appendChild(mk('h2',null,'JD 中文翻譯'));
+    const zh = mk('div','jdzh','翻譯中…'); zh.id='jd-zh'; c.appendChild(zh); out.appendChild(c);
+  }
+}
+function renderResult(a, opp){
+  const out = document.getElementById('out');
+  out.style.display = 'flex';
+  if(!document.getElementById('res-top')){ const t = mk('div'); t.id='res-top'; t.style.cssText='display:flex;flex-direction:column;gap:14px'; out.insertBefore(t, out.firstChild); }
+  renderAnalysis(a, opp);
+}
+// 翻譯結果：優先解析 sections JSON；失敗退回純文字（去行首符號、統一縮排）
+function plainZh(raw){
+  return String(raw).split('\n').map(l=>{
+    const m = l.match(/^(\s*)[*\-•·]+\s+(.*)$/);
+    return m ? '  '+m[2] : l.replace(/^\s+/,'');
+  }).join('\n').trim();
+}
+function renderZh(raw){
+  const el = document.getElementById('jd-zh');
+  el.textContent = '';
+  let secs = null;
+  try{
+    const o = safeParseJson(raw);
+    if(o && Array.isArray(o.sections) && o.sections.length) secs = o.sections;
+  }catch(_e){}
+  if(secs){
+    secs.forEach(s=>{
+      if(!s || typeof s !== 'object') return;
+      if(s.title && String(s.title).trim()) el.appendChild(mk('div','sub-h',t2(String(s.title))));
+      addUl(el, s.items);
+    });
+    el.style.whiteSpace = 'normal';
+    if(el.childNodes.length) return;
+  }
+  el.style.whiteSpace = 'pre-wrap';
+  el.textContent = t2(plainZh(raw));
 }
 
 const SYS_ANALYZE = '你是資深求職顧問。只輸出一個合法 JSON 物件，不要任何其他文字。所有中文欄位一律使用台灣繁體中文與台灣用語。';
 function analyzePrompt(opp, jd){
   return '請依下列履歷與職缺 JD，做 Go／No-go 初判。\n\n'
-  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【JD】\n'+jd+'\n\n'
+  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者興趣偏好】\n'+prefPromptBlock()+'\n\n【JD】\n'+jd+'\n\n'
   +'只回 JSON，格式：\n'
-  +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary":"一句話綜合結論","reasons":["條列理由"],"company_name":"公司名","company_known":true,"industry_reputation":"業界評價","employee_reviews":"員工評價"}\n\n'
+  +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
+  +'"keywords":[{"term":"關鍵名稱","cat":"軟體工具|系統平台|產業別|職能領域|其他"}],'
+  +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"]}\n\n'
   +'規則：\n'
-  +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」。\n'
-  +'2. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
-  +'3. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
-  +'4. 公司評價只能依你既有知識，且可能過時；不確定或不認識該公司時 company_known=false，industry_reputation 與 employee_reviews 都寫「無可靠資訊，請參考下方搜尋連結」。絕不可編造評分、星等、薪資數字或員工人數。\n'
-  +'5. 全部中文欄位使用台灣繁體中文。';
+  +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者興趣偏好】。\n'
+  +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
+  +'3. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
+  +'4. 興趣偏好：JD 的核心工作若落在使用者「沒興趣」的項目，必須在 reasons 明確指出並影響 verdict；落在「有興趣」的項目列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。\n'
+  +'5. keywords 5 到 10 個，從 JD 抽出值得使用者表態的關鍵（軟體工具、ERP 等系統平台、產業別、職能領域），term 用 JD 原文或通用名稱、不超過 30 字，cat 只能是 軟體工具／系統平台／產業別／職能領域／其他。\n'
+  +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
+  +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
+  +'8. 全部中文欄位使用台灣繁體中文。';
+}
+let lastGroqAt = 0, curOpp = '', curJd = '';
+async function gcall(prompt, max, sys, jsonMode){
+  try{ return await callGroq(prompt, max, sys, jsonMode); }
+  finally{ lastGroqAt = Date.now(); }
+}
+async function waitQuota(st){
+  for(let s=Math.ceil((65000-(Date.now()-lastGroqAt))/1000); s>0; s--){
+    st.textContent = '距上次 AI 呼叫未滿 65 秒，'+s+' 秒後送出'; await sleep(1000);
+  }
+}
+async function doAnalyze(opp, jd){
+  const raw = await gcall(analyzePrompt(opp, jd), 2600, SYS_ANALYZE, true);
+  const a = safeParseJson(raw);
+  const vd = String(a.verdict||'').trim().toLowerCase();
+  if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
+  return a;
 }
 async function runAnalysis(){
   if(busy) return;
@@ -317,14 +569,25 @@ async function runAnalysis(){
   if(!opp || !jdRaw){ st.textContent = 'Opportunity name 與 JD content 都必填'; return; }
   if(!resumeText){ st.textContent = '履歷尚未讀取成功'; return; }
   if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
-  const jd = jdRaw.slice(0, JD_LIMIT);
+  const jd = truncJd(jdRaw);
   busy = true; updateBtn(); st.textContent = '分析中…';
   try{
-    const raw = await callGroq(analyzePrompt(opp, jd), 2000, SYS_ANALYZE, true);
-    const a = safeParseJson(raw);
-    const vd = String(a.verdict||'').trim().toLowerCase();
-    if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
+    const a = await doAnalyze(opp, jd);
+    curOpp = opp; curJd = jd;
     renderResult(a, opp);
+    ensureZhCard(true);
+    if(isChineseJd(jd)){
+      const el = document.getElementById('jd-zh');
+      el.textContent = ''; el.style.whiteSpace = 'normal';
+      el.appendChild(mk('div','note','原文已是中文，不另翻譯'));
+      jd.split(/\n\s*\n/).forEach(par=>{
+        const txt = plainZh(par);
+        if(!txt) return;
+        const d = mk('div',null,t2(txt)); d.style.cssText = 'white-space:pre-wrap;margin-top:8px'; el.appendChild(d);
+      });
+      st.textContent = '完成（原文已是中文，未翻譯）';
+      return;
+    }
     // 與分析同一分鐘再送翻譯會疊加超過免費 TPM，比照家族慣例間隔 65 秒
     for(let s=65; s>0; s--){
       st.textContent = '分析完成，'+s+' 秒後開始翻譯（避開 Groq 每分鐘額度）';
@@ -333,10 +596,10 @@ async function runAnalysis(){
     }
     st.textContent = '翻譯 JD 中…';
     document.getElementById('jd-zh').textContent = '翻譯中…';
-    const max = Math.min(4500, Math.max(1500, Math.round(jd.length*0.9)));
+    const max = Math.min(4500, Math.max(1500, Math.round(jd.length*1.0)));
     try{
-      const zh = await callGroq('請把下列職缺 JD 全文純翻譯成台灣繁體中文。保留原本的段落與條列結構，不加評論、不摘要，只輸出純文字翻譯。\n\n'+jd, max, '你是專業翻譯。只輸出譯文純文字，使用台灣繁體中文與台灣用語。', false);
-      document.getElementById('jd-zh').textContent = t2(zh.trim());
+      const zh = await gcall('請把下列職缺 JD 全文純翻譯成台灣繁體中文。依原 JD 的段落與條列結構切分，不加評論、不摘要。只回 JSON：{"sections":[{"title":"段落標題（翻成中文）","items":["條列內容"]}]}。沒有明確標題的段落，title 給空字串。\n\n'+jd, max, '你是專業翻譯。只輸出一個合法 JSON 物件，使用台灣繁體中文與台灣用語。', true);
+      renderZh(zh);
     }catch(e2){
       document.getElementById('jd-zh').textContent = '翻譯失敗：'+e2.message;
     }
@@ -345,8 +608,25 @@ async function runAnalysis(){
     st.textContent = '失敗：'+e.message;
   }finally{ busy = false; updateBtn(); }
 }
+// 只重跑分析（不重跑翻譯），用最新偏好
+async function rerunAnalysis(){
+  if(busy || !curJd) return;
+  const st = document.getElementById('run-st');
+  if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
+  busy = true; updateBtn();
+  try{
+    await waitQuota(st);
+    st.textContent = '依你的興趣重新分析中…';
+    const a = await doAnalyze(curOpp, curJd);
+    renderResult(a, curOpp);
+    st.textContent = '已依最新興趣偏好重新判斷';
+  }catch(e){
+    st.textContent = '失敗：'+e.message;
+  }finally{ busy = false; updateBtn(); }
+}
 document.getElementById('jd').addEventListener('input', onJdInput);
 checkKey();
+renderPrefPanel();
 loadResume();
 </script>
 <script src="cc_zht.js"></script>
