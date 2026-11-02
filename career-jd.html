@@ -87,7 +87,7 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
 'use strict';
 const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
 const RESUME_LIMIT = 4500;
-const JD_LIMIT = 8000;
+const JD_LIMIT = 6000; // Groq 免費檔 gpt-oss-120b 約 8K TPM：履歷約 4400 字＋JD＋輸出須壓在一分鐘額度內
 let resumeText = '';
 let resumeStat = null;
 let resumeLoading = false;
@@ -224,6 +224,7 @@ function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 async function callGroq(prompt, max, sys, jsonMode){
   try{ return await callGroqRaw(prompt, max, sys, jsonMode); }
   catch(e){
+    if(e.status === 413) throw new Error('請求太大，超過 Groq 免費額度，請縮短 JD 後重試');
     if(e.status !== 429) throw e;
     const st = document.getElementById('run-st');
     for(let s=60; s>0; s--){ st.textContent = 'Groq 額度忙碌，'+s+' 秒後自動重試'; await sleep(1000); }
@@ -255,6 +256,9 @@ function searchLinks(name){
   return [
     ['Glassdoor','https://www.glassdoor.com/Search/results.htm?keyword='+q],
     ['104 公司評價','https://www.104.com.tw/company/search/?keyword='+q],
+    // 11-02：面試趣、GoodJob 無公開 API 且不允許跨站讀取（面試趣條款 5.3.1 禁自動蒐集），只提供 Google 站內搜尋連結讓使用者自行開啟
+    ['面試趣','https://www.google.com/search?q='+encodeURIComponent(name+' site:interview.tw')],
+    ['GoodJob','https://www.google.com/search?q='+encodeURIComponent(name+' site:goodjob.life')],
     ['PTT／Dcard','https://www.google.com/search?q='+encodeURIComponent(name+' (site:ptt.cc OR site:dcard.tw)')],
     ['Google 評價','https://www.google.com/search?q='+encodeURIComponent(name+' 評價')]
   ];
@@ -263,7 +267,7 @@ function renderResult(a, opp){
   const out = document.getElementById('out');
   out.textContent = '';
   out.style.display = 'flex';
-  const go = String(a.verdict).toLowerCase() === 'go';
+  const go = String(a.verdict||'').trim().toLowerCase() === 'go';
   // a) 結論
   const c1 = mk('div','card');
   c1.appendChild(mk('div','verdict '+(go?'go':'nogo'), go?'Go':'No-go'));
@@ -316,11 +320,20 @@ async function runAnalysis(){
   const jd = jdRaw.slice(0, JD_LIMIT);
   busy = true; updateBtn(); st.textContent = '分析中…';
   try{
-    const raw = await callGroq(analyzePrompt(opp, jd), 3000, SYS_ANALYZE, true);
+    const raw = await callGroq(analyzePrompt(opp, jd), 2000, SYS_ANALYZE, true);
     const a = safeParseJson(raw);
+    const vd = String(a.verdict||'').trim().toLowerCase();
+    if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
     renderResult(a, opp);
+    // 與分析同一分鐘再送翻譯會疊加超過免費 TPM，比照家族慣例間隔 65 秒
+    for(let s=65; s>0; s--){
+      st.textContent = '分析完成，'+s+' 秒後開始翻譯（避開 Groq 每分鐘額度）';
+      document.getElementById('jd-zh').textContent = '等待 '+s+' 秒後開始翻譯…';
+      await sleep(1000);
+    }
     st.textContent = '翻譯 JD 中…';
-    const max = Math.min(8000, Math.max(1500, Math.round(jd.length*1.5)));
+    document.getElementById('jd-zh').textContent = '翻譯中…';
+    const max = Math.min(4500, Math.max(1500, Math.round(jd.length*0.9)));
     try{
       const zh = await callGroq('請把下列職缺 JD 全文純翻譯成台灣繁體中文。保留原本的段落與條列結構，不加評論、不摘要，只輸出純文字翻譯。\n\n'+jd, max, '你是專業翻譯。只輸出譯文純文字，使用台灣繁體中文與台灣用語。', false);
       document.getElementById('jd-zh').textContent = t2(zh.trim());
