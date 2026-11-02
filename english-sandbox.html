@@ -931,6 +931,7 @@ async function genOpener(){
     const moods = (Array.isArray(sit.moods) && sit.moods.length) ? sit.moods : baseMoods;
     const mood = moods[Math.floor(Math.random()*moods.length)];
     // 專屬角色情境練最典型的那句；通用情境要求換角度避免重複（11-02 由「挑冷門細節」改，原寫法把開場推離情境）
+    // 11-02 下午：換角度後 AI 會自編對方不知道的事件（走廊的貓），Rules 加「只提雙方此刻看得到、聽得到或情境常識」
     const detailRule = (styles === baseStyles)
       ? 'Say something a real person would naturally say in this exact situation, but come at it from a different aspect of the moment than the usual first line — natural, never contrived.'
       : 'Say the most typical, natural thing a real person in this role would say at this moment.';
@@ -944,6 +945,7 @@ The speaker is ${mood}. ${detailRule}
 Rules:
 - The mood only colors HOW the speaker talks (tone and energy); the content must be about this situation — never mention whatever caused the mood
 - If the style above does not suit this situation or the relationship between the two people (e.g. strangers, a client, coworkers on a video call), use the closest natural alternative instead of forcing it
+- The line must make sense to the learner on its own: only refer to things both people can directly see or hear right now, or that are common knowledge in this situation. Never refer to a specific event, person, animal, or object the learner could not know about without explanation (e.g. "someone finally got the cat out of the hallway")
 - Under 18 words
 - ONE simple clause only — do not bolt on a second clause with an em dash, semicolon, or a "guess/I bet/must be" hedge. Say the single most natural thing a real person would blurt out, then stop.
 - Sound genuinely casual and spontaneous — NOT textbook English
