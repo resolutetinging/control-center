@@ -34,6 +34,7 @@ button,input,select,textarea{font-family:inherit;color:inherit}
 .save-btn:disabled{opacity:.55;cursor:default}
 .nav .back-link{margin-left:auto}
 .save-wrap + .back-link{margin-left:auto}
+.jd-link{text-decoration:none;margin-left:10px;display:inline-block}
 @media(max-width:480px){.nav{padding:0 10px}.save-wrap{margin-left:6px;gap:4px}.save-st{max-width:92px;font-size:var(--fs4);padding:3px 6px}.save-btn{padding:4px 6px;font-size:var(--fs4)}.back-link{padding:5px 4px;font-size:var(--fs4)}}
 .back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
 
@@ -327,6 +328,7 @@ button.att-row:hover,button.att-row:focus-visible{background:var(--ac-tint)}
 <div class="nav">
   <div class="nav-title">🪜 Career</div>
   <div class="save-wrap"><span class="save-st" id="save-st" role="status" aria-live="polite"></span><button type="button" class="save-btn" id="save-btn" onclick="ccSaveClick()">💾 儲存</button></div>
+  <a class="save-btn jd-link" href="./career-jd.html">🔎 JD 初判</a>
   <a class="back-link" href="./index.html">← Control Center</a>
 </div>
 

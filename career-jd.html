@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%220.9em%22 font-size=%2290%22>🔎</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JD 初判</title>
+<style>
+:root{
+  --bg:#e8e4de;--bg2:#ede9e3;--card:#f4f1ec;
+  --ink:#28261f;--sub:#55514a;--faint:#7a7570;
+  --border:rgba(40,38,32,.09);--bstr:rgba(40,38,32,.16);
+  --shadow:0 1px 4px rgba(40,38,32,.07);
+  --ac:#4a6a8a;--ac-l:#5a80a4;--ac-tint:rgba(74,106,138,.08);--ac-tint2:rgba(74,106,138,.16);
+  --fs0:18px;--fs1:15px;--fs2:13px;--fs3:12px;--fs4:11px;
+  --warn:#8a5a20;--warn-bg:rgba(190,120,40,.14);--ok:#3d7a5a;--ok-bg:rgba(61,122,90,.14);
+  --bad:#8a4a30;--bad-bg:rgba(176,96,50,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:var(--fs2);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit;color:inherit}
+.nav{position:sticky;top:0;z-index:100;background:rgba(232,228,222,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--bstr);display:flex;align-items:center;padding:0 16px}
+.nav-title{font-size:var(--fs1);font-weight:700;color:var(--ac);padding:13px 0;letter-spacing:.02em;white-space:nowrap}
+.back-link{margin-left:auto;font-size:var(--fs3);color:var(--faint);text-decoration:none;padding:5px 9px;border-radius:6px;transition:background .15s;white-space:nowrap}
+.back-link:hover{background:rgba(40,38,32,.07);color:var(--ink)}
+.wrap{padding:22px 16px 96px;max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:.5px solid var(--bstr);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.card h2{font-size:var(--fs1);font-weight:700;margin-bottom:8px}
+.st{font-size:var(--fs3);line-height:1.6;color:var(--sub)}
+.st.ok{color:var(--ok)}.st.err{color:var(--bad)}
+.st details{margin-top:6px}
+.st summary{cursor:pointer;color:var(--ac)}
+.st pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:var(--fs3);color:var(--sub);background:var(--bg2);border-radius:8px;padding:10px;margin-top:6px;max-height:320px;overflow:auto}
+.btn{font-size:var(--fs2);font-weight:600;color:#fff;background:var(--ac);border:none;border-radius:8px;padding:9px 18px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn-sm{font-size:var(--fs3);font-weight:600;color:var(--ac);background:var(--ac-tint);border:1px solid var(--ac-tint2);border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:6px}
+label{display:block;font-size:var(--fs3);font-weight:600;color:var(--sub);margin:10px 0 4px}
+input[type=text],input[type=password],textarea{width:100%;font-size:var(--fs2);background:var(--bg2);border:1px solid var(--bstr);border-radius:8px;padding:9px 11px;outline:none}
+input:focus,textarea:focus{border-color:var(--ac)}
+textarea{min-height:calc(1.5em * 16 + 20px);line-height:1.5;resize:vertical}
+.hint{font-size:var(--fs4);color:var(--faint);margin-top:4px}
+.hint.warn{color:var(--warn)}
+.keybox{display:none;margin-top:12px;background:var(--warn-bg);border-radius:8px;padding:10px 12px;font-size:var(--fs3);color:var(--warn)}
+.keybox .row{display:flex;gap:6px;margin-top:6px}
+.verdict{display:inline-block;font-size:26px;font-weight:800;letter-spacing:.04em;padding:6px 16px;border-radius:10px}
+.verdict.go{color:var(--ok);background:var(--ok-bg)}
+.verdict.nogo{color:var(--bad);background:var(--bad-bg)}
+.lv{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px}
+.lv span{font-size:var(--fs3);font-weight:600;color:var(--ac);background:var(--ac-tint);border-radius:100px;padding:3px 11px}
+.sum{font-size:var(--fs1);line-height:1.6;margin-top:6px}
+ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1.6}
+.sub-h{font-size:var(--fs3);font-weight:700;color:var(--sub);margin:10px 0 3px}
+.txt{line-height:1.7;color:var(--ink)}
+.note{font-size:var(--fs4);color:var(--faint);margin-top:6px}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.links a{font-size:var(--fs3);color:var(--ac);background:var(--ac-tint);border:1px solid var(--ac-tint2);border-radius:6px;padding:4px 10px;text-decoration:none}
+.links a:hover{background:var(--ac-tint2)}
+.jdzh{white-space:pre-wrap;line-height:1.7;word-break:break-word}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-title">🔎 JD 初判</div>
+  <a class="back-link" href="./career-matrix.html">← Career</a>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h2>履歷來源</h2>
+    <div class="st" id="resume-st">讀取 NexusPortal 履歷中…</div>
+  </div>
+  <div class="card">
+    <h2>貼上職缺</h2>
+    <label for="opp">Opportunity name</label>
+    <input type="text" id="opp" placeholder="例如：某公司 Supply Chain Manager" autocomplete="off">
+    <label for="jd">JD content</label>
+    <textarea id="jd" placeholder="把職缺說明（JD）整段貼上，中英文皆可，長文也沒問題"></textarea>
+    <div class="hint" id="jd-hint"></div>
+    <div class="keybox" id="key-notice">尚未設定 Groq API key，請輸入後儲存。
+      <div class="row"><input type="password" id="inline-key" placeholder="gsk_..." autocomplete="off"><button type="button" class="btn-sm" onclick="saveInlineKey()">儲存</button></div>
+    </div>
+    <div style="margin-top:14px"><button type="button" class="btn" id="go-btn" onclick="runAnalysis()" disabled>開始初判</button>
+      <span class="st" id="run-st" role="status" aria-live="polite" style="margin-left:10px"></span></div>
+  </div>
+  <div id="out" style="display:none;flex-direction:column;gap:14px"></div>
+</div>
+<script>
+'use strict';
+const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
+const RESUME_LIMIT = 4500;
+const JD_LIMIT = 8000;
+let resumeText = '';
+let resumeStat = null;
+let resumeLoading = false;
+let busy = false;
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function t2(s){ s = String(s==null?'':s); return (typeof s2t==='function') ? s2t(s) : s; }
+
+// ── 履歷擷取與精簡 ──
+//RESUME_FN_START
+function extractNexusData(html){
+  const key = 'var NEXUS_BAKED_DATA = ';
+  const i = html.indexOf(key);
+  if(i < 0) throw new Error('找不到履歷資料');
+  const from = i + key.length;
+  const j = html.indexOf(';\n', from);
+  if(j < 0) throw new Error('履歷資料格式異常');
+  return JSON.parse(html.slice(from, j));
+}
+function cutStr(s, n){ s = String(s==null?'':s).replace(/\s+/g,' ').trim(); return s.length>n ? s.slice(0,n-1)+'…' : s; }
+function buildResume(data, limit){
+  limit = limit || 4500;
+  const nodes = (data.nodes||[]).filter(n=>n && n.track==='engineering')
+    .slice().sort((a,b)=>(Number(a.year)||0)-(Number(b.year)||0) || (Number(a.month)||0)-(Number(b.month)||0));
+  const lens = (data.lensProfiles && data.lensProfiles.engineering) || {};
+  const head = [];
+  if(lens.role) head.push('定位：'+cutStr(lens.role,100));
+  if(lens.description) head.push('簡介：'+cutStr(lens.description,500));
+  const expFull = nodes.map(n=>{
+    const st = n.star||{};
+    let l = n.year+'｜'+cutStr(n.company,60)+'｜'+cutStr(n.title,60)+'：'+cutStr(st.R,160);
+    if(st.A) l += '（A：'+cutStr(st.A,100)+'）';
+    return l;
+  });
+  const expShort = nodes.map(n=>{
+    const st = n.star||{};
+    return n.year+'｜'+cutStr(n.company,60)+'｜'+cutStr(n.title,60)+'：'+cutStr(st.R,120);
+  });
+  const ach = [];
+  (data.engHashtags||[]).forEach(h=>{
+    (h.items||[]).forEach(it=>{
+      if(!it || it.visible===false) return;
+      const co = (it.showCompany===false) ? '' : (it.company ? '['+cutStr(it.company,40)+'] ' : '');
+      ach.push('#'+cutStr(h.tag,30)+'：'+co+cutStr(it.result,220));
+    });
+  });
+  let truncated = false;
+  const assemble = (exp, ac)=>[].concat(head, exp.length?['【經歷】']:[], exp, ac.length?['【成就】']:[], ac).join('\n');
+  let exp = expFull, ac = ach.slice(), text = assemble(exp, ac);
+  if(text.length > limit){
+    truncated = true;
+    while(ac.length && text.length > limit){ ac.pop(); text = assemble(exp, ac); }
+    if(text.length > limit){ exp = expShort; text = assemble(exp, ac); }
+    if(text.length > limit){ text = text.slice(0, limit-1)+'…'; }
+  }
+  if(truncated) text += '\n（已截斷）';
+  return {text, truncated, expCount: nodes.length, achCount: ach.length, achUsed: ac.length};
+}
+//RESUME_FN_END
+
+async function loadResume(){
+  if(resumeLoading) return;
+  resumeLoading = true;
+  const st = document.getElementById('resume-st');
+  st.className = 'st'; st.textContent = '讀取 NexusPortal 履歷中…';
+  document.getElementById('go-btn').disabled = true;
+  const ctl = new AbortController();
+  const tm = setTimeout(()=>ctl.abort(), 15000);
+  try{
+    const r = await fetch(NEXUS_URL, {cache:'no-store', signal: ctl.signal});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const html = await r.text();
+    const res = buildResume(extractNexusData(html), RESUME_LIMIT);
+    resumeText = res.text; resumeStat = res;
+    st.className = 'st ok'; st.textContent = '';
+    const line = document.createElement('div');
+    line.textContent = '已讀取 NexusPortal 履歷：'+res.expCount+' 段經歷、'+res.achCount+' 筆成就'+(res.truncated?'（已截斷）':'');
+    const det = document.createElement('details');
+    const sm = document.createElement('summary'); sm.textContent = '查看送給 AI 的履歷摘要';
+    const pre = document.createElement('pre'); pre.textContent = res.text;
+    det.appendChild(sm); det.appendChild(pre);
+    st.appendChild(line); st.appendChild(det);
+    updateBtn();
+  }catch(e){
+    resumeText = '';
+    st.className = 'st err'; st.textContent = '履歷讀取失敗：'+(e.name==='AbortError'?'逾時（15 秒）':e.message);
+    const b = document.createElement('button'); b.type='button'; b.className='btn-sm'; b.textContent='重試';
+    b.onclick = loadResume; st.appendChild(b);
+  }finally{ clearTimeout(tm); resumeLoading = false; }
+}
+
+// ── Groq ──
+function getKey(){ return localStorage.getItem('groq_key')||localStorage.getItem('tina_groq')||localStorage.getItem('oasis_groq_key')||''; }
+function checkKey(){ document.getElementById('key-notice').style.display = getKey() ? 'none' : 'block'; }
+function saveInlineKey(){
+  const v = document.getElementById('inline-key').value.trim();
+  if(!v) return;
+  localStorage.setItem('groq_key', v);
+  document.getElementById('inline-key').value = '';
+  checkKey();
+}
+const GROQ_PRIMARY_MODEL = 'openai/gpt-oss-120b';
+const GROQ_BACKUP_MODEL = 'openai/gpt-oss-20b';
+async function _groqOnce(model, m, msgs, jsonMode, k){
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
+    body:JSON.stringify({model,messages:msgs,max_tokens:m,temperature: jsonMode ? 0.3 : 0.4,reasoning_effort:'low'})
+  });
+  if(!r.ok){
+    let detail='';
+    try{ const ej=await r.json(); detail=(ej&&ej.error&&ej.error.message)||''; }catch(_e){}
+    const err = new Error('API '+r.status+(detail?'：'+detail:''));
+    err.status = r.status; err.detail = detail;
+    throw err;
+  }
+  const j = await r.json();
+  const ch = j.choices && j.choices[0];
+  return {content: (ch&&ch.message&&ch.message.content)||'', finishReason: ch&&ch.finish_reason};
+}
+function _modelDown(e){ return e.status >= 500 || /decommission|not[ _-]?found|does not exist|invalid model|model_not_active/i.test(e.detail||''); }
+async function callGroqRaw(prompt, max, sys, jsonMode){
+  const k = getKey();
+  if(!k){ checkKey(); throw new Error('尚未設定 Groq API key'); }
+  const msgs = [{role:'system',content:sys},{role:'user',content:prompt}];
+  let model = GROQ_PRIMARY_MODEL, res;
+  try{ res = await _groqOnce(model, max, msgs, jsonMode, k); }
+  catch(e){ if(!_modelDown(e)) throw e; model = GROQ_BACKUP_MODEL; res = await _groqOnce(model, max, msgs, jsonMode, k); }
+  if(res.finishReason === 'length'){ res = await _groqOnce(model, Math.round(max*1.8), msgs, jsonMode, k); }
+  return res.content;
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+// 429：顯示倒數 60 秒後重試一次
+async function callGroq(prompt, max, sys, jsonMode){
+  try{ return await callGroqRaw(prompt, max, sys, jsonMode); }
+  catch(e){
+    if(e.status !== 429) throw e;
+    const st = document.getElementById('run-st');
+    for(let s=60; s>0; s--){ st.textContent = 'Groq 額度忙碌，'+s+' 秒後自動重試'; await sleep(1000); }
+    st.textContent = '重試中…';
+    return await callGroqRaw(prompt, max, sys, jsonMode);
+  }
+}
+function safeParseJson(raw){
+  const cleaned = raw.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g,' ');
+  const m = cleaned.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('格式解析失敗，請重試');
+  return JSON.parse(m[0]);
+}
+
+// ── UI ──
+function updateBtn(){
+  document.getElementById('go-btn').disabled = busy || !resumeText;
+}
+function onJdInput(){
+  const n = document.getElementById('jd').value.length;
+  const h = document.getElementById('jd-hint');
+  if(n > JD_LIMIT){ h.className='hint warn'; h.textContent = '僅分析前 '+JD_LIMIT+' 字（目前 '+n+' 字）'; }
+  else { h.className='hint'; h.textContent = n ? '目前 '+n+' 字' : ''; }
+}
+function mk(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function lvOk(v){ return (v==='高'||v==='中'||v==='低') ? v : '—'; }
+function searchLinks(name){
+  const q = encodeURIComponent(name);
+  return [
+    ['Glassdoor','https://www.glassdoor.com/Search/results.htm?keyword='+q],
+    ['104 公司評價','https://www.104.com.tw/company/search/?keyword='+q],
+    ['PTT／Dcard','https://www.google.com/search?q='+encodeURIComponent(name+' (site:ptt.cc OR site:dcard.tw)')],
+    ['Google 評價','https://www.google.com/search?q='+encodeURIComponent(name+' 評價')]
+  ];
+}
+function renderResult(a, opp){
+  const out = document.getElementById('out');
+  out.textContent = '';
+  out.style.display = 'flex';
+  const go = String(a.verdict).toLowerCase() === 'go';
+  // a) 結論
+  const c1 = mk('div','card');
+  c1.appendChild(mk('div','verdict '+(go?'go':'nogo'), go?'Go':'No-go'));
+  const lv = mk('div','lv'); lv.appendChild(mk('span',null,'符合度：'+lvOk(a.fit_level))); lv.appendChild(mk('span',null,'發展性：'+lvOk(a.growth_level)));
+  c1.appendChild(lv);
+  c1.appendChild(mk('div','sum', t2(a.summary)));
+  out.appendChild(c1);
+  // b) 理由
+  const c2 = mk('div','card'); c2.appendChild(mk('h2',null,'判斷理由'));
+  const ul = mk('ul','rs');
+  (Array.isArray(a.reasons)?a.reasons:[]).forEach(r=>ul.appendChild(mk('li',null,t2(r))));
+  c2.appendChild(ul); out.appendChild(c2);
+  // c) 公司評價
+  const c3 = mk('div','card'); c3.appendChild(mk('h2',null,'公司評價'));
+  c3.appendChild(mk('div','sub-h','業界評價')); c3.appendChild(mk('div','txt',t2(a.industry_reputation)));
+  c3.appendChild(mk('div','sub-h','員工評價')); c3.appendChild(mk('div','txt',t2(a.employee_reviews)));
+  c3.appendChild(mk('div','note','依 AI 既有知識整理，可能過時'));
+  const cname = (a.company_name && String(a.company_name).trim()) || opp;
+  const links = mk('div','links');
+  searchLinks(cname).forEach(p=>{
+    const el = mk('a',null,p[0]); el.href = p[1]; el.target='_blank'; el.rel='noopener noreferrer'; links.appendChild(el);
+  });
+  c3.appendChild(links); out.appendChild(c3);
+  // d) 翻譯
+  const c4 = mk('div','card'); c4.appendChild(mk('h2',null,'JD 中文翻譯'));
+  const zh = mk('div','jdzh','翻譯中…'); zh.id='jd-zh'; c4.appendChild(zh); out.appendChild(c4);
+}
+
+const SYS_ANALYZE = '你是資深求職顧問。只輸出一個合法 JSON 物件，不要任何其他文字。所有中文欄位一律使用台灣繁體中文與台灣用語。';
+function analyzePrompt(opp, jd){
+  return '請依下列履歷與職缺 JD，做 Go／No-go 初判。\n\n'
+  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【JD】\n'+jd+'\n\n'
+  +'只回 JSON，格式：\n'
+  +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary":"一句話綜合結論","reasons":["條列理由"],"company_name":"公司名","company_known":true,"industry_reputation":"業界評價","employee_reviews":"員工評價"}\n\n'
+  +'規則：\n'
+  +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」。\n'
+  +'2. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
+  +'3. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
+  +'4. 公司評價只能依你既有知識，且可能過時；不確定或不認識該公司時 company_known=false，industry_reputation 與 employee_reviews 都寫「無可靠資訊，請參考下方搜尋連結」。絕不可編造評分、星等、薪資數字或員工人數。\n'
+  +'5. 全部中文欄位使用台灣繁體中文。';
+}
+async function runAnalysis(){
+  if(busy) return;
+  const opp = document.getElementById('opp').value.trim();
+  const jdRaw = document.getElementById('jd').value.trim();
+  const st = document.getElementById('run-st');
+  if(!opp || !jdRaw){ st.textContent = 'Opportunity name 與 JD content 都必填'; return; }
+  if(!resumeText){ st.textContent = '履歷尚未讀取成功'; return; }
+  if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
+  const jd = jdRaw.slice(0, JD_LIMIT);
+  busy = true; updateBtn(); st.textContent = '分析中…';
+  try{
+    const raw = await callGroq(analyzePrompt(opp, jd), 3000, SYS_ANALYZE, true);
+    const a = safeParseJson(raw);
+    renderResult(a, opp);
+    st.textContent = '翻譯 JD 中…';
+    const max = Math.min(8000, Math.max(1500, Math.round(jd.length*1.5)));
+    try{
+      const zh = await callGroq('請把下列職缺 JD 全文純翻譯成台灣繁體中文。保留原本的段落與條列結構，不加評論、不摘要，只輸出純文字翻譯。\n\n'+jd, max, '你是專業翻譯。只輸出譯文純文字，使用台灣繁體中文與台灣用語。', false);
+      document.getElementById('jd-zh').textContent = t2(zh.trim());
+    }catch(e2){
+      document.getElementById('jd-zh').textContent = '翻譯失敗：'+e2.message;
+    }
+    st.textContent = '完成';
+  }catch(e){
+    st.textContent = '失敗：'+e.message;
+  }finally{ busy = false; updateBtn(); }
+}
+document.getElementById('jd').addEventListener('input', onJdInput);
+checkKey();
+loadResume();
+</script>
+<script src="cc_zht.js"></script>
+<script src="cc_track.js" data-cc-key="career-jd" data-cc-label="Career JD 初判"></script>
+</body>
+</html>
