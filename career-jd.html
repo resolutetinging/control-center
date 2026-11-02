@@ -95,7 +95,9 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
 'use strict';
 const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
 const RESUME_LIMIT = 4500;
-const JD_TOKEN_BUDGET = 2100; // 分析用 JD 的估算 token 上限（中文 JD 6000 字約 4800 token，會超過免費 TPM）
+const RESUME_TOKEN_LIMIT = 2200; // 履歷估算 token 上限（全中文履歷 4500 字約 4300 token，會擠掉 JD 預算）
+const TPM_SAFE = 7300;   // Groq 免費檔每分鐘 token 安全線（額度約 8K）
+const ANALYZE_MAX = 2600; // 分析輸出 max_tokens
 const JD_LIMIT = 6000; // Groq 免費檔 gpt-oss-120b 約 8K TPM：履歷約 4400 字＋JD＋輸出須壓在一分鐘額度內
 let resumeText = '';
 let resumeStat = null;
@@ -107,14 +109,14 @@ const CJK_RE = /[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uff00-\uffef]/;
 function estTokens(s){
   let cjk = 0, other = 0;
   for(const ch of String(s==null?'':s)){ if(CJK_RE.test(ch)) cjk++; else other++; }
-  return Math.ceil(cjk*0.85 + other*0.25);
+  return Math.ceil(cjk*0.95 + other*0.25);
 }
-function truncJd(s){
+function truncJd(s, budget){
   s = String(s==null?'':s).slice(0, JD_LIMIT);
   let acc = 0, i = 0;
   for(const ch of s){
-    acc += CJK_RE.test(ch) ? 0.85 : 0.25;
-    if(Math.ceil(acc) > JD_TOKEN_BUDGET) break;
+    acc += CJK_RE.test(ch) ? 0.95 : 0.25;
+    if(Math.ceil(acc) > budget) break;
     i += ch.length;
   }
   return s.slice(0, i);
@@ -171,11 +173,13 @@ function buildResume(data, limit){
   let truncated = false;
   const assemble = (exp, ac)=>[].concat(head, exp.length?['【經歷】']:[], exp, ac.length?['【成就】']:[], ac).join('\n');
   let exp = expFull, ac = ach.slice(), text = assemble(exp, ac);
-  if(text.length > limit){
+  const over = t => t.length > limit || estTokens(t) > RESUME_TOKEN_LIMIT - 8; // 預留「已截斷」註記
+  if(over(text)){
     truncated = true;
-    while(ac.length && text.length > limit){ ac.pop(); text = assemble(exp, ac); }
-    if(text.length > limit){ exp = expShort; text = assemble(exp, ac); }
+    while(ac.length && over(text)){ ac.pop(); text = assemble(exp, ac); }
+    if(over(text)){ exp = expShort; text = assemble(exp, ac); }
     if(text.length > limit){ text = text.slice(0, limit-1)+'…'; }
+    while(over(text) && text.length > 20){ text = text.slice(0, Math.floor(text.length*0.95))+'…'; }
   }
   if(truncated) text += '\n（已截斷）';
   return {text, truncated, expCount: nodes.length, achCount: ach.length, achUsed: ac.length};
@@ -204,7 +208,7 @@ async function loadResume(){
     const pre = document.createElement('pre'); pre.textContent = res.text;
     det.appendChild(sm); det.appendChild(pre);
     st.appendChild(line); st.appendChild(det);
-    updateBtn();
+    updateBtn(); onJdInput();
   }catch(e){
     resumeText = '';
     st.className = 'st err'; st.textContent = '履歷讀取失敗：'+(e.name==='AbortError'?'逾時（15 秒）':e.message);
@@ -282,7 +286,7 @@ function onJdInput(){
   const v = document.getElementById('jd').value;
   const n = v.length;
   const h = document.getElementById('jd-hint');
-  const kept = truncJd(v).length;
+  const kept = truncJd(v, jdBudget()).length;
   if(kept < n){ h.className='hint warn'; h.textContent = '僅分析前 '+kept+' 字（目前 '+n+' 字）'; }
   else { h.className='hint'; h.textContent = n ? '目前 '+n+' 字' : ''; }
 }
@@ -308,6 +312,13 @@ const PREF_VS = ['like','neutral','dislike'];
 const PREF_LABEL = {like:'有興趣', neutral:'普通', dislike:'沒興趣'};
 const PREF_SYM = {like:'V', neutral:'-', dislike:'X'};
 function normTerm(s){ return String(s==null?'':s).trim().toLowerCase().replace(/\s+/g,' '); }
+function validDate(x){
+  if(typeof x !== 'string') return false;
+  const m = x.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return false;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  return mo >= 1 && mo <= 12 && d >= 1 && d <= new Date(Date.UTC(y, mo, 0)).getUTCDate();
+}
 function parsePrefs(str){
   const out = Object.create(null);
   let o;
@@ -324,7 +335,7 @@ function parsePrefs(str){
     const term = e.term.trim();
     if(!term || term.length > 30) return;
     if(PREF_CATS.indexOf(e.cat) < 0 || PREF_VS.indexOf(e.v) < 0) return;
-    if(typeof e.at !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.at)) return;
+    if(!validDate(e.at)) return;
     out[normTerm(term)] = {term, cat:e.cat, v:e.v, at:e.at};
     n++;
   });
@@ -337,7 +348,7 @@ function loadPrefs(){
   return s ? parsePrefs(s) : Object.create(null);
 }
 function savePrefs(m){
-  const prefs = {};
+  const prefs = Object.create(null);
   Object.keys(m).forEach(k=>{ prefs[k] = m[k]; });
   try{ localStorage.setItem(PREF_KEY, JSON.stringify({version:1, prefs})); }catch(_e){}
 }
@@ -434,7 +445,7 @@ function renderPrefPanel(){
   }
   host.appendChild(det);
 }
-function refreshPrefUi(){ renderKwRows(); renderPrefPanel(); }
+function refreshPrefUi(){ renderKwRows(); renderPrefPanel(); onJdInput(); }
 
 // ── 結果渲染 ──
 function addUl(parent, arr, cls){
@@ -544,6 +555,11 @@ function analyzePrompt(opp, jd){
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
   +'8. 全部中文欄位使用台灣繁體中文。';
 }
+function jdBudget(){
+  const opp = (document.getElementById('opp')||{}).value || '';
+  const fixed = estTokens(analyzePrompt(opp.trim(), '') + SYS_ANALYZE);
+  return Math.max(800, TPM_SAFE - ANALYZE_MAX - fixed);
+}
 let lastGroqAt = 0, curOpp = '', curJd = '';
 async function gcall(prompt, max, sys, jsonMode){
   try{ return await callGroq(prompt, max, sys, jsonMode); }
@@ -555,7 +571,7 @@ async function waitQuota(st){
   }
 }
 async function doAnalyze(opp, jd){
-  const raw = await gcall(analyzePrompt(opp, jd), 2600, SYS_ANALYZE, true);
+  const raw = await gcall(analyzePrompt(opp, jd), ANALYZE_MAX, SYS_ANALYZE, true);
   const a = safeParseJson(raw);
   const vd = String(a.verdict||'').trim().toLowerCase();
   if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
@@ -569,9 +585,11 @@ async function runAnalysis(){
   if(!opp || !jdRaw){ st.textContent = 'Opportunity name 與 JD content 都必填'; return; }
   if(!resumeText){ st.textContent = '履歷尚未讀取成功'; return; }
   if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
-  const jd = truncJd(jdRaw);
+  const jd = truncJd(jdRaw, jdBudget());
   busy = true; updateBtn(); st.textContent = '分析中…';
   try{
+    await waitQuota(st);
+    st.textContent = '分析中…';
     const a = await doAnalyze(opp, jd);
     curOpp = opp; curJd = jd;
     renderResult(a, opp);
@@ -596,9 +614,12 @@ async function runAnalysis(){
     }
     st.textContent = '翻譯 JD 中…';
     document.getElementById('jd-zh').textContent = '翻譯中…';
-    const max = Math.min(4500, Math.max(1500, Math.round(jd.length*1.0)));
+    const zhPrompt = '請把下列職缺 JD 全文純翻譯成台灣繁體中文。依原 JD 的段落與條列結構切分，不加評論、不摘要。只回 JSON：{"sections":[{"title":"段落標題（翻成中文）","items":["條列內容"]}]}。沒有明確標題的段落，title 給空字串。\n\n'+jd;
+    const zhSys = '你是專業翻譯。只輸出一個合法 JSON 物件，使用台灣繁體中文與台灣用語。';
+    let max = Math.min(4500, Math.max(1500, Math.round(jd.length*1.0)));
+    max = Math.max(1200, Math.min(max, TPM_SAFE - estTokens(zhPrompt + zhSys)));
     try{
-      const zh = await gcall('請把下列職缺 JD 全文純翻譯成台灣繁體中文。依原 JD 的段落與條列結構切分，不加評論、不摘要。只回 JSON：{"sections":[{"title":"段落標題（翻成中文）","items":["條列內容"]}]}。沒有明確標題的段落，title 給空字串。\n\n'+jd, max, '你是專業翻譯。只輸出一個合法 JSON 物件，使用台灣繁體中文與台灣用語。', true);
+      const zh = await gcall(zhPrompt, max, zhSys, true);
       renderZh(zh);
     }catch(e2){
       document.getElementById('jd-zh').textContent = '翻譯失敗：'+e2.message;
@@ -625,11 +646,13 @@ async function rerunAnalysis(){
   }finally{ busy = false; updateBtn(); }
 }
 document.getElementById('jd').addEventListener('input', onJdInput);
+document.getElementById('opp').addEventListener('input', onJdInput);
 checkKey();
 renderPrefPanel();
 loadResume();
 </script>
 <script src="cc_zht.js"></script>
+<script src="cc_autosync.js"></script>
 <script src="cc_track.js" data-cc-key="career-jd" data-cc-label="Career JD 初判"></script>
 </body>
 </html>
