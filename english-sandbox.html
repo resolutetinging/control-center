@@ -656,11 +656,13 @@ const SAVED_KEY = 'es_saved_phrases';
 const GRAMMAR_KEY = 'es_grammar_lib';
 // 10-29：接球三級標準（使用者核可），第一輪判斷與追問共用，避免兩邊各說各話。
 // 取代原本「回覆含任何問句一律 caught」的鐵律：換話題的問句最多算 partial
+// 11-02：加「開場本身不清楚」規則（使用者回報走廊的貓開場指涉不明卻被判勉強接到），誤解規則限定開場清楚時；評分 promptA 與追問 askBallWhy 共用
 const BALL_RUBRIC = `Core test: would the other person feel that the learner actually heard what they said?
 - "caught": the learner FIRST responds to the opener's content or feeling, THEN moves it forward — a follow-up question, a personal detail, or a proposal. The forward move may shift to a RELATED topic. Short reply + return question to a yes/no or "how's it going" opener counts as caught. Examples: (a) "how's your week?" → "pretty tough, how about you?" → caught. (b) "Looks like we're all set to start on time." → "yes, how about starting from the agenda?" → caught. (c) "Lots of meetings today?" → "same here, tough meetings. how's your plan for the rest of the day?" → caught.
 - "partial": only half done — EITHER responds but adds nothing to move forward ("Haha, yeah." / "It's fine."), OR skips responding and jumps to a new question/topic that still has some link to the opener's mood or situation. Example: opener about being so bored they're counting pretzel bags → "Do you wanna try some sleeping candy?" → partial (links to feeling sleepy, but skips the boredom they mentioned).
 - "missed": no response AND no link — a completely unrelated topic, an answer to a different question, or a reply built on misunderstanding the opener that would confuse the other person. A question alone does NOT make a reply caught.
-If the learner misunderstood the opener, judge by how the reply would land for the other person: still fits → partial; does not fit → missed.`;
+If the opener itself is unclear or refers to something the learner could not know (an unexplained event, person, animal, or object), the learner is not at fault: a reply that asks what the other person means, or one that responds to a reasonable interpretation of the opener and then moves forward, counts as caught.
+If the learner misunderstood a CLEAR opener, judge by how the reply would land for the other person: still fits → partial; does not fit → missed.`;
 const AUTO_SPEAK_KEY = 'es_auto_speak'; // 預設不自動撥音，使用者自行勾選才開啟
 function isAutoSpeakOn(){ return localStorage.getItem(AUTO_SPEAK_KEY)==='1'; }
 const GR_CATS = ['拼字','斷句','時態','結構','冠詞','單複數','介系詞','詞性'];
@@ -1193,7 +1195,8 @@ Output ONLY valid JSON:
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
     const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the eight given Traditional Chinese labels (or empty string), never invent a new category name.';
 
-    const callsArr = [callGroq(promptA, 1200, sysA, true), callGroq(promptB, 1200, sysB, true)];
+    // 11-02：promptA 1200→1500（BALL_RUBRIC 加「開場不清楚」需多判斷）；promptB 不變
+    const callsArr = [callGroq(promptA, 1500, sysA, true), callGroq(promptB, 1200, sysB, true)];
     if(inp) callsArr.push(callGroq(promptC, 1200, sysC, true));
     const [rawA, rawB, rawC] = await Promise.all(callsArr);
     results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB), ...(rawC?safeParseJson(rawC):{})});
@@ -1426,11 +1429,11 @@ Learner's question: "${q}"
 
 Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously, using exactly this standard (接住了=caught, 勉強接到=partial, 沒接到=missed):
 ${BALL_RUBRIC}
- Do not defend the earlier judgment. If the learner explains what they meant or how they understood the opener, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Do not reuse the standard's example sentences as your example. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. Say whether your verdict changed from the earlier judgment, and make the LAST line exactly one of: 判定：接住了 / 判定：勉強接到 / 判定：沒接到. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
+ Do not defend the earlier judgment. If the learner says the opener was unclear, or explains how they understood it, first judge honestly whether the opener was clear to someone in the learner's position: if it was not (e.g. it refers to an event, person, animal, or object the learner could not know about), say plainly that the opener itself was unclear and apply the unclear-opener rule above; if it was clear, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Do not reuse the standard's example sentences as your example. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. Say whether your verdict changed from the earlier judgment, and make the LAST line exactly one of: 判定：接住了 / 判定：勉強接到 / 判定：沒接到. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
 
 Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
     const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
-    const raw = await callGroq(prompt, 1200, sys, false); // 10-29：800→1200，prompt 含完整 BALL_RUBRIC、重新判斷推理較多
+    const raw = await callGroq(prompt, 1500, sys, false); // 10-29：800→1200，prompt 含完整 BALL_RUBRIC、重新判斷推理較多；11-02：→1500，加判斷開場是否清楚
     const ans = _sanitizePlainText(s2t((raw||'').trim()));
     if(ballContext===ctx){
       ctx.history.push({ q, a: ans });
