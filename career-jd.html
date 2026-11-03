@@ -69,6 +69,17 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
 .links a{font-size:var(--fs3);color:var(--ac);background:var(--ac-tint);border:1px solid var(--ac-tint2);border-radius:6px;padding:4px 10px;text-decoration:none}
 .links a:hover{background:var(--ac-tint2)}
 .jdzh{line-height:1.7;word-break:break-word;font-size:var(--fs2)}
+.chat-log{display:flex;flex-direction:column;gap:7px;margin:10px 0 8px;max-height:420px;overflow-y:auto}
+.chat-log:empty{display:none}
+.chat-msg{font-size:12.5px;line-height:1.6;padding:7px 11px;border-radius:9px;max-width:92%;white-space:pre-wrap;word-break:break-word}
+.chat-user{align-self:flex-end;background:rgba(40,38,32,.06);color:var(--sub)}
+.chat-ai{align-self:flex-start;background:var(--ac-tint);color:var(--ink)}
+.chat-sys{align-self:center;background:var(--warn-bg);color:var(--warn);font-size:var(--fs3)}
+.chat-row{display:flex;gap:8px;align-items:flex-end;margin-top:8px}
+.chat-in{flex:1;min-height:0;height:58px;resize:vertical;font-size:var(--fs2)}
+.chat-sum{cursor:pointer;font-size:var(--fs3);font-weight:700;color:var(--sub)}
+.chat-hint{margin-top:10px;font-size:var(--fs3);color:var(--warn);background:var(--warn-bg);border-radius:8px;padding:8px 11px}
+#chat-reeval.hot{background:var(--warn);box-shadow:0 0 0 3px var(--warn-bg)}
 </style>
 </head>
 <body>
@@ -253,6 +264,7 @@ async function _groqOnce(model, m, msgs, jsonMode, k){
   return {content: (ch&&ch.message&&ch.message.content)||'', finishReason: ch&&ch.finish_reason};
 }
 function _modelDown(e){ return e.status >= 500 || /decommission|not[ _-]?found|does not exist|invalid model|model_not_active/i.test(e.detail||''); }
+let lastFinish = ''; // 最近一次 Groq 呼叫（含加大重試後）的 finish_reason
 async function callGroqRaw(prompt, max, sys, jsonMode){
   const k = getKey();
   if(!k){ checkKey(); throw new Error('尚未設定 Groq API key'); }
@@ -260,7 +272,8 @@ async function callGroqRaw(prompt, max, sys, jsonMode){
   let model = GROQ_PRIMARY_MODEL, res;
   try{ res = await _groqOnce(model, max, msgs, jsonMode, k); }
   catch(e){ if(!_modelDown(e)) throw e; model = GROQ_BACKUP_MODEL; res = await _groqOnce(model, max, msgs, jsonMode, k); }
-  if(res.finishReason === 'length'){ res = await _groqOnce(model, Math.round(max*1.8), msgs, jsonMode, k); }
+  if(res.finishReason === 'length'){ res = await _groqOnce(model, Math.max(max, Math.min(Math.round(max*1.8), TPM_SAFE - estTokens(sys+prompt))), msgs, jsonMode, k); }
+  lastFinish = res.finishReason || '';
   return res.content;
 }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -283,10 +296,91 @@ function safeParseJson(raw){
   return JSON.parse(m[0]);
 }
 
+// ── 討論聊天：prompt 組裝與回覆解析（純函式，不碰 DOM）──
+//CHAT_FN_START
+const CHAT_MAX = 900;        // 聊天回覆 max_tokens（gpt-oss 隱藏推理會吃預算，至少 900）
+const CHAT_JD_MIN = 400;     // JD 至少保留的估算 token，低於此才開始丟最舊對話
+const CHAT_ROUNDS = 6;       // 最近幾輪（一輪＝使用者＋顧問）
+const CHAT_FACT_MAX = 15, CHAT_FACT_LEN = 80;
+const SYS_CHAT = '你是資深求職顧問，正與使用者討論一份職缺。依【履歷】【JD】【目前初判】回答使用者的提問；使用台灣繁體中文與台灣用語，簡潔條列，reply 不超過 250 字；不得捏造履歷或 JD 沒有的內容。只輸出一個合法 JSON 物件，不要任何其他文字。';
+function chatBrief(a){
+  a = (a && typeof a === 'object') ? a : {};
+  const arr = x => (Array.isArray(x) ? x : []).map(s=>cutStr(s, 80)).filter(Boolean);
+  const vd = String(a.verdict||'').trim().toLowerCase() === 'go' ? 'Go' : 'No-go';
+  const lv = normLevel(a.level) || '—';
+  return '判定：'+vd+'；符合度：'+lvOk(a.fit_level)+'；發展性：'+lvOk(a.growth_level)+'；職級：'+lv
+    +'\n結論要點：'+arr(a.summary_points).slice(0,3).join('；')
+    +'\n理由：'+arr(a.reasons).slice(0,7).join('；');
+}
+function chatBuild(resume, jdRaw, a, prefs, facts, msgs){
+  const budget = TPM_SAFE - CHAT_MAX;
+  const hist = (Array.isArray(msgs)?msgs:[]).slice(-CHAT_ROUNDS*2);
+  const factsTxt = (facts&&facts.length) ? facts.map((f,i)=>(i+1)+'. '+f).join('\n') : '（無）';
+  const brief = chatBrief(a);
+  const pf = String(prefs||'').slice(0,900);
+  let res = truncJd(resume, 1500);
+  const tail = '只回 JSON，格式：\n'
+    +'{"reply":"給使用者的回答","facts":["本輪使用者提供、會影響評估的新事實，一句一條，每條不超過 60 字；沒有就空陣列"],"reeval":true或false,"reeval_reason":"為什麼建議重新評估（一句；reeval 為 false 時給空字串）"}\n'
+    +'規則：\n1. facts 只收使用者本人說出的事實（經歷、偏好、限制、對職位的新資訊），不收你的推測或建議，也不重複【使用者補充】已有的。\n'
+    +'2. 只有當新事實可能改變 Go／No-go、職級、符合度或發展性判斷時，reeval 才給 true。\n3. reply 針對使用者本輪提問直接回答。';
+  const assemble = (jd, h, r) => '【履歷摘要】\n'+r+'\n\n【JD】\n'+jd+'\n\n【目前初判】\n'+brief
+    +'\n\n【使用者關鍵點偏好】\n'+pf+'\n\n【使用者補充】\n'+factsTxt
+    +'\n\n【對話紀錄（最後一則是使用者本輪提問）】\n'
+    +h.map(m=>(m.role==='user'?'使用者：':'顧問：')+cutStr(m.content, m.role==='user'?500:400)).join('\n')+'\n\n'+tail;
+  let start = 0, jdB;
+  for(;;){
+    jdB = budget - estTokens(SYS_CHAT + assemble('', hist.slice(start), res));
+    if(jdB >= CHAT_JD_MIN || start >= hist.length-1) break;
+    start++;
+  }
+  if(jdB < 0){ res = truncJd(resume, 500); jdB = budget - estTokens(SYS_CHAT + assemble('', hist.slice(start), res)); }
+  const prompt = assemble(truncJd(jdRaw, Math.max(0, jdB)), hist.slice(start), res);
+  return {sys:SYS_CHAT, prompt, est:estTokens(SYS_CHAT+prompt), dropped:start};
+}
+function cleanFact(x){
+  if(x==null || typeof x==='object') return '';
+  let s = String(x).replace(/\s+/g,' ').trim();
+  if(s.length > CHAT_FACT_LEN) s = s.slice(0, CHAT_FACT_LEN);
+  return s;
+}
+function mergeFacts(list, incoming){
+  const out = Array.isArray(list) ? list.slice() : [];
+  const seen = new Set(out.map(normTerm));
+  (Array.isArray(incoming)?incoming:[]).forEach(x=>{
+    const s = cleanFact(x), k = normTerm(s);
+    if(!s || seen.has(k) || out.length >= CHAT_FACT_MAX) return;
+    seen.add(k); out.push(s);
+  });
+  return out;
+}
+// 回傳 {reply, facts[], reeval, reason}；解析失敗或 reply 空 → reply 為空字串（呼叫端顯示錯誤）
+function parseChatReply(raw){
+  const r = {reply:'', facts:[], reeval:false, reason:''};
+  let o = null;
+  try{ o = safeParseJson(String(raw==null?'':raw)); }catch(_e){ return r; }
+  if(!o || typeof o !== 'object') return r;
+  if(typeof o.reply === 'string') r.reply = t2(o.reply.trim());
+  r.facts = (Array.isArray(o.facts) ? o.facts : []).map(x=>t2(cleanFact(x))).filter(Boolean);
+  r.reeval = o.reeval === true;
+  if(typeof o.reeval_reason === 'string') r.reason = t2(cutStr(o.reeval_reason, 100));
+  return r;
+}
+// 60 秒滑動窗口記帳：log＝[{t(ms), tok}]；回傳還需等待的毫秒數（0＝可立即送）
+const QUOTA_WINDOW_MS = 60000;
+function quotaWaitMs(log, now, need){
+  const live = (Array.isArray(log)?log:[]).filter(e=>e && now - e.t < QUOTA_WINDOW_MS).sort((a,b)=>a.t-b.t);
+  let used = live.reduce((n,e)=>n+e.tok, 0), i = 0;
+  if(used + need <= TPM_SAFE) return 0;
+  while(i < live.length && used + need > TPM_SAFE){ used -= live[i].tok; i++; }
+  return Math.max(0, live[i-1].t + QUOTA_WINDOW_MS - now) + 500;
+}
+//CHAT_FN_END
+
 // ── UI ──
 function updateBtn(){
   document.getElementById('go-btn').disabled = busy || !resumeText;
   const rb = document.getElementById('rerun-btn'); if(rb) rb.disabled = busy;
+  if(typeof updateChatBtns === 'function') updateChatBtns();
 }
 function onJdInput(){
   const v = document.getElementById('jd').value;
@@ -546,6 +640,7 @@ function renderAnalysis(a, opp){
   // b) 理由
   const c2 = mk('div','card'); c2.appendChild(mk('h2',null,'判斷理由'));
   addUl(c2, a.reasons); top.appendChild(c2);
+  top.appendChild(getChatCard()); // 聊天卡為持久節點，重繪時搬回判斷理由之後
   // c) 公司評價
   const c3 = mk('div','card'); c3.appendChild(mk('h2',null,'公司評價'));
   c3.appendChild(mk('div','sub-h','公司在業界的地位')); addUl(c3, a.industry_position);
@@ -571,6 +666,7 @@ function renderResult(a, opp){
   const out = document.getElementById('out');
   out.style.display = 'flex';
   if(!document.getElementById('res-top')){ const t = mk('div'); t.id='res-top'; t.style.cssText='display:flex;flex-direction:column;gap:14px'; out.insertBefore(t, out.firstChild); }
+  curAnalysis = a;
   renderAnalysis(a, opp);
 }
 // 翻譯結果：優先解析 sections JSON；失敗退回純文字（去行首符號、統一縮排）
@@ -604,7 +700,8 @@ function renderZh(raw){
 const SYS_ANALYZE = '你是資深求職顧問。只輸出一個合法 JSON 物件，不要任何其他文字。所有中文欄位一律使用台灣繁體中文與台灣用語。';
 function analyzePrompt(opp, jd, rawJd){
   return '請依下列履歷與職缺 JD，做 Go／No-go 初判。\n\n'
-  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者關鍵點偏好】\n'+prefPromptBlock(rawJd==null?jd:rawJd)+'\n\n【JD】\n'+jd+'\n\n'
+  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者關鍵點偏好】\n'+prefPromptBlock(rawJd==null?jd:rawJd)+(chatFacts.length ? '\n\n【使用者在討論中的補充】\n'+chatFacts.map((f,i)=>(i+1)+'. '+f).join('\n') : '')
+  +'\n\n【JD】\n'+jd+'\n\n'
   +'只回 JSON，格式：\n'
   +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
   +'"level":"junior|senior|manager","level_basis":"一句依據（例如要求 5 年以上經驗、需帶領團隊）",'
@@ -619,7 +716,8 @@ function analyzePrompt(opp, jd, rawJd){
   +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
   +'8. 全部中文欄位使用台灣繁體中文。\n'
-  +'9. level 只能三選一（junior／senior／manager），依 JD 的經驗年資要求、職稱、職責（是否管理他人或預算）判斷；level_basis 一句話說明依據，不超過 40 字。';
+  +'9. level 只能三選一（junior／senior／manager），依 JD 的經驗年資要求、職稱、職責（是否管理他人或預算）判斷；level_basis 一句話說明依據，不超過 40 字。'
+  +(chatFacts.length ? '\n10. 【使用者在討論中的補充】是使用者本人提供的事實；與 JD 或履歷衝突時以補充為準，並在 reasons 中明確指出「因使用者補充而改變的判斷」（點名是哪一條補充）。不得忽略補充，也不得擴大解釋成補充沒說的內容。' : '');
 }
 function jdBudget(opp, rawJd){
   if(opp == null) opp = ((document.getElementById('opp')||{}).value || '').trim();
@@ -628,9 +726,24 @@ function jdBudget(opp, rawJd){
   return Math.max(800, TPM_SAFE - ANALYZE_MAX - fixed);
 }
 let lastGroqAt = 0, curOpp = '', curJd = '', curJdRaw = '';
+const usageLog = [];   // 所有 Groq 呼叫（分析／翻譯／聊天）共用的 token 記帳
 async function gcall(prompt, max, sys, jsonMode){
-  try{ return await callGroq(prompt, max, sys, jsonMode); }
+  try{
+    const out = await callGroq(prompt, max, sys, jsonMode);
+    usageLog.push({t:Date.now(), tok:estTokens(prompt+sys)+max});
+    if(usageLog.length > 50) usageLog.shift();
+    return out;
+  }
   finally{ lastGroqAt = Date.now(); }
+}
+// 聊天專用：窗口內已用＋本次估算 ≤ TPM_SAFE 就立刻送，否則倒數到足夠舊紀錄滑出
+async function waitQuotaTokens(st, need){
+  for(;;){
+    const ms = quotaWaitMs(usageLog, Date.now(), need);
+    if(ms <= 0) return;
+    st.textContent = '等待額度釋放，'+Math.ceil(ms/1000)+' 秒後送出';
+    await sleep(Math.min(ms, 1000));
+  }
 }
 async function waitQuota(st){
   for(let s=Math.ceil((65000-(Date.now()-lastGroqAt))/1000); s>0; s--){
@@ -652,6 +765,7 @@ async function runAnalysis(){
   if(!opp || !jdRaw){ st.textContent = 'Opportunity name 與 JD content 都必填'; return; }
   if(!resumeText){ st.textContent = '履歷尚未讀取成功'; return; }
   if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
+  resetChat(); onJdInput();   // 換 JD 重新分析：先清空聊天與補充（analyzePrompt 會讀 chatFacts）
   const jd = truncJd(jdRaw, jdBudget(opp, jdRaw));
   busy = true; updateBtn(); st.textContent = '分析中…';
   try{
@@ -713,6 +827,124 @@ async function rerunAnalysis(){
     st.textContent = '失敗：'+e.message;
   }finally{ busy = false; updateBtn(); }
 }
+// ── 討論聊天 UI（聊天與補充不存 localStorage；換 JD 重新分析時清空）──
+let chatMsgs = [], chatFacts = [], chatSuggest = '', chatSending = false, chatCard = null, curAnalysis = null;
+function chatEl(id){ return document.getElementById(id); }
+function chatBubble(kind, text){
+  const log = chatEl('chat-log'); if(!log) return;
+  const b = mk('div', 'chat-msg chat-'+kind, (kind==='user'?'你：':kind==='ai'?'🤖 ':'')+text);
+  log.appendChild(b); log.scrollTop = log.scrollHeight;
+}
+function renderChatFacts(){
+  const box = chatEl('chat-facts'); if(!box) return;
+  box.textContent = '';
+  const sum = chatEl('chat-facts-sum'); if(sum) sum.textContent = '我的補充（'+chatFacts.length+'）';
+  if(!chatFacts.length){ box.appendChild(mk('div','note','尚無補充；對話中提到的新事實會累積在這裡')); return; }
+  chatFacts.forEach((f, i)=>{
+    const row = mk('div','kw-row'); row.appendChild(mk('span','kw-term',f));
+    const d = mk('button','btn-sm','刪除'); d.type='button';
+    d.onclick = ()=>{ chatFacts.splice(i,1); renderChatFacts(); updateChatBtns(); onJdInput(); };
+    row.appendChild(d); box.appendChild(row);
+  });
+}
+function updateChatBtns(){
+  const s = chatEl('chat-send'), r = chatEl('chat-reeval'), h = chatEl('chat-hint');
+  if(s){ s.disabled = busy; s.textContent = chatSending ? 'AI 回覆中…' : '送出'; }
+  if(r){ r.disabled = busy || !chatFacts.length; r.classList.toggle('hot', !!chatSuggest && chatFacts.length>0); }
+  if(h){ h.textContent = chatSuggest ? 'AI 建議依討論重新評估：'+chatSuggest : ''; h.style.display = chatSuggest ? 'block' : 'none'; }
+}
+function resetChat(){
+  chatMsgs = []; chatFacts = []; chatSuggest = ''; chatSending = false;
+  const log = chatEl('chat-log'); if(log) log.textContent = '';
+  const st = chatEl('chat-st'); if(st){ st.textContent = ''; st.className = 'st'; }
+  renderChatFacts(); updateChatBtns();
+}
+function getChatCard(){
+  if(chatCard) return chatCard;
+  const c = mk('div','card'); chatCard = c;
+  c.appendChild(mk('h2',null,'和 AI 討論這份職缺'));
+  c.appendChild(mk('div','note','補充你的情況或追問都可以，AI 會依履歷、JD 與目前初判回答；對話與補充不會保存，換新的 JD 分析後清空。'));
+  const log = mk('div','chat-log'); log.id = 'chat-log'; c.appendChild(log);
+  const row = mk('div','chat-row');
+  const ta = document.createElement('textarea'); ta.id = 'chat-in'; ta.className = 'chat-in'; ta.maxLength = 500;
+  ta.placeholder = '例如：我其實有 3 年 SAP 經驗（Enter 送出，Shift+Enter 換行）';
+  ta.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey && !e.isComposing && e.keyCode!==229){ e.preventDefault(); sendChat(); } });
+  row.appendChild(ta);
+  const sb = mk('button','btn','送出'); sb.type = 'button'; sb.id = 'chat-send'; sb.onclick = sendChat; row.appendChild(sb);
+  c.appendChild(row);
+  const st = mk('div','st'); st.id = 'chat-st'; st.setAttribute('role','status'); st.setAttribute('aria-live','polite'); c.appendChild(st);
+  const det = document.createElement('details'); det.style.marginTop = '10px';
+  const sum = mk('summary','chat-sum','我的補充（0）'); sum.id = 'chat-facts-sum'; det.appendChild(sum);
+  const fb = mk('div','kw-rows'); fb.id = 'chat-facts'; det.appendChild(fb); c.appendChild(det);
+  const hint = mk('div','chat-hint'); hint.id = 'chat-hint'; hint.style.display = 'none'; c.appendChild(hint);
+  const rb = mk('button','btn','依討論重新評估'); rb.type = 'button'; rb.id = 'chat-reeval'; rb.style.marginTop = '12px'; rb.onclick = reevalFromChat;
+  c.appendChild(rb);
+  renderChatFacts(); updateChatBtns();
+  return c;
+}
+async function sendChat(){
+  if(busy || !curJd || !curAnalysis) return;
+  const inp = chatEl('chat-in'), st = chatEl('chat-st');
+  const text = inp.value.trim(); if(!text) return;
+  if(!getKey()){ checkKey(); st.className = 'st err'; st.textContent = '請先設定 Groq API key'; return; }
+  chatMsgs.push({role:'user', content:text});
+  chatBubble('user', text); inp.value = '';
+  busy = true; chatSending = true; st.className = 'st'; updateBtn(); updateChatBtns();
+  let failMsg = '';
+  try{
+    const built = chatBuild(resumeText, curJdRaw, curAnalysis, prefPromptBlock(curJdRaw), chatFacts, chatMsgs);
+    await waitQuotaTokens(st, built.est + CHAT_MAX);
+    st.textContent = 'AI 回覆中…';
+    lastFinish = '';
+    const raw = await gcall(built.prompt, CHAT_MAX, built.sys, true);
+    if(lastFinish === 'length') failMsg = '回覆被截斷，請再問一次或縮短問題';
+    else{
+      const r = parseChatReply(raw);
+      if(!r.reply) failMsg = 'AI 回覆格式不正確，請再問一次';
+      else{
+        chatMsgs.push({role:'assistant', content:r.reply});
+        chatBubble('ai', r.reply);
+        chatFacts = mergeFacts(chatFacts, r.facts);
+        if(r.reeval) chatSuggest = r.reason || '新補充可能改變判斷';
+        renderChatFacts(); onJdInput();
+        st.textContent = '';
+      }
+    }
+  }catch(e){ failMsg = '失敗：'+e.message; }
+  if(failMsg){
+    chatMsgs.pop(); inp.value = text;   // 這輪不計入對話，問題放回輸入框方便重送
+    chatBubble('sys', failMsg); st.textContent = '';
+  }
+  busy = false; chatSending = false; updateBtn(); updateChatBtns();
+}
+function reevalDiff(o, a){
+  const g = x => String((x&&x.verdict)||'').trim().toLowerCase() === 'go' ? 'Go' : 'No-go';
+  const parts = [];
+  if(g(o) !== g(a)) parts.push('判定 '+g(o)+'→'+g(a));
+  const lo = normLevel(o&&o.level)||'—', ln = normLevel(a&&a.level)||'—';
+  if(lo !== ln) parts.push('職級 '+lo+'→'+ln);
+  if(lvOk(o&&o.fit_level) !== lvOk(a.fit_level)) parts.push('符合度 '+lvOk(o&&o.fit_level)+'→'+lvOk(a.fit_level));
+  if(lvOk(o&&o.growth_level) !== lvOk(a.growth_level)) parts.push('發展性 '+lvOk(o&&o.growth_level)+'→'+lvOk(a.growth_level));
+  return parts.length ? parts.join('、') : '判定未改變';
+}
+async function reevalFromChat(){
+  if(busy || !curJd || !chatFacts.length) return;
+  const st = chatEl('chat-st');
+  if(!getKey()){ checkKey(); st.className = 'st err'; st.textContent = '請先設定 Groq API key'; return; }
+  busy = true; st.className = 'st'; updateBtn(); updateChatBtns();
+  try{
+    await waitQuota(st);
+    st.textContent = '依討論重新評估中…';
+    const old = curAnalysis;
+    const a = await doAnalyze(curOpp, truncJd(curJdRaw, jdBudget(curOpp, curJdRaw)), curJdRaw);
+    renderResult(a, curOpp);   // 初判卡更新；翻譯卡、聊天卡保留
+    chatSuggest = '';
+    chatBubble('sys', '已依討論重新評估：'+reevalDiff(old, a));
+    st.textContent = '';
+  }catch(e){ st.className = 'st err'; st.textContent = '失敗：'+e.message; }
+  busy = false; updateBtn(); updateChatBtns();
+}
+
 document.getElementById('jd').addEventListener('input', onJdInput);
 document.getElementById('opp').addEventListener('input', onJdInput);
 checkKey();
