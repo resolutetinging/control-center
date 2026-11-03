@@ -310,12 +310,14 @@ function searchLinks(name){
     ['Google 評價','https://www.google.com/search?q='+encodeURIComponent(name+' 評價')]
   ];
 }
-// ── 關鍵興趣偏好（key 可能經 Gist 同步進來，視為不可信；顯示一律 textContent）──
+// ── 關鍵點偏好（key 可能經 Gist 同步進來，視為不可信；顯示一律 textContent）──
 //PREF_FN_START
 const PREF_KEY = 'cc_career_jd_prefs_v1';
-const PREF_CATS = ['軟體工具','系統平台','產業別','職能領域','其他'];
+const PREF_CATS = ['軟體工具','系統平台','產業別','職能領域','職級','其他'];
 const PREF_VS = ['like','neutral','dislike'];
-const PREF_LABEL = {like:'有興趣', neutral:'普通', dislike:'沒興趣'};
+const PREF_LABEL = {like:'加分', neutral:'普通', dislike:'扣分'};
+const LEVELS = {junior:'Junior', senior:'Senior', manager:'Manager'};
+function normLevel(x){ const k = String(x==null?'':x).trim().toLowerCase(); return Object.prototype.hasOwnProperty.call(LEVELS,k) ? LEVELS[k] : ''; }
 const PREF_SYM = {like:'V', neutral:'-', dislike:'X'};
 function normTerm(s){ return String(s==null?'':s).trim().toLowerCase().replace(/\s+/g,' '); }
 function validDate(x){
@@ -389,7 +391,7 @@ function prefPromptBlock(matchText){
   if(!all.length) return '（使用者尚未標記任何偏好）';
   const hay = normTerm(matchText);
   const man = all.filter(p=>p.src === 'manual');
-  const hit = all.filter(p=>p.src !== 'manual' && hay.indexOf(normTerm(p.term)) >= 0);
+  const hit = all.filter(p=>p.src !== 'manual' && (p.cat === '職級' || hay.indexOf(normTerm(p.term)) >= 0));
   const list = man.concat(hit).slice(0,30).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
   if(!list.length) return '（這份 JD 未出現你已標記的關鍵）';
   return list.map(p=>p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
@@ -470,14 +472,14 @@ function renderPrefPanel(){
   const list = sortedPrefs();
   const det = mk('details','card');
   if(wasOpen) det.open = true;
-  det.appendChild(mk('summary','pref-sum','我的興趣偏好（'+list.length+'）'));
+  det.appendChild(mk('summary','pref-sum','我的關鍵點偏好（'+list.length+'）'));
   det.appendChild(makeAddKwRow((term, cat)=>{
     const m = loadPrefs();
     m[normTerm(term)] = {term, cat, v:'neutral', at:localToday(), src:'manual'};
     savePrefs(m); refreshPrefUi();
   }));
   if(!list.length){
-    det.appendChild(mk('div','note','還沒有偏好。分析後在「關鍵與我的興趣」卡按 V／-／X 就會記住。'));
+    det.appendChild(mk('div','note','還沒有偏好。分析後在「關鍵點」卡按 V／-／X 就會記住。'));
   }else{
     PREF_CATS.forEach(cat=>{
       const items = list.filter(p=>p.cat===cat);
@@ -510,21 +512,25 @@ function renderAnalysis(a, opp){
   const top = document.getElementById('res-top');
   top.textContent = '';
   const go = String(a.verdict||'').trim().toLowerCase() === 'go';
+  const level = normLevel(a.level);
   // a) 結論
   const c1 = mk('div','card'); c1.appendChild(mk('h2',null,'初判結論'));
   const lv = mk('div','lv');
   lv.appendChild(mk('span','pill '+(go?'go':'nogo'), '判定：'+(go?'Go':'No-go')));
   lv.appendChild(mk('span','pill','符合度：'+lvOk(a.fit_level)));
   lv.appendChild(mk('span','pill','發展性：'+lvOk(a.growth_level)));
+  lv.appendChild(level ? mk('span','pill','職級：'+level) : mk('span','note','職級：—'));
   c1.appendChild(lv);
+  if(level && a.level_basis) c1.appendChild(mk('div','note','職級依據：'+t2(String(a.level_basis))));
   let pts = Array.isArray(a.summary_points) ? a.summary_points : [];
   if(!pts.length && a.summary) pts = [a.summary];
   addUl(c1, pts.slice(0,3));
   top.appendChild(c1);
-  // 關鍵與我的興趣
+  // 關鍵點
   curKw = sanitizeKeywords(a.keywords);
-  const ck = mk('div','card'); ck.appendChild(mk('h2',null,'關鍵與我的興趣'));
-  ck.appendChild(mk('div','note','V＝有興趣、-＝普通、X＝沒興趣（再點一次取消）；AI 之後每次判斷都會參考'));
+  if(level && !curKw.some(k=>normTerm(k.term) === normTerm(level))) curKw.push({term:level, cat:'職級'});
+  const ck = mk('div','card'); ck.appendChild(mk('h2',null,'關鍵點'));
+  ck.appendChild(mk('div','note','V＝加分、-＝普通、X＝扣分（再點一次取消）；AI 之後每次判斷都會參考'));
   const rows = mk('div','kw-rows'); rows.id = 'kw-rows'; ck.appendChild(rows);
   ck.appendChild(makeAddKwRow((term, cat)=>{
     curKw.push({term, cat, manual:true});
@@ -532,7 +538,7 @@ function renderAnalysis(a, opp){
     m[normTerm(term)] = {term, cat, v:'neutral', at:localToday(), src:'manual'};
     savePrefs(m); refreshPrefUi();
   }));
-  const rb = mk('button','btn','依我的興趣重新判斷'); rb.type='button'; rb.id='rerun-btn'; rb.style.marginTop='12px';
+  const rb = mk('button','btn','依關鍵點重新判斷'); rb.type='button'; rb.id='rerun-btn'; rb.style.marginTop='12px';
   rb.disabled = busy; rb.onclick = rerunAnalysis;
   ck.appendChild(rb);
   top.appendChild(ck);
@@ -598,20 +604,22 @@ function renderZh(raw){
 const SYS_ANALYZE = '你是資深求職顧問。只輸出一個合法 JSON 物件，不要任何其他文字。所有中文欄位一律使用台灣繁體中文與台灣用語。';
 function analyzePrompt(opp, jd, rawJd){
   return '請依下列履歷與職缺 JD，做 Go／No-go 初判。\n\n'
-  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者興趣偏好】\n'+prefPromptBlock(rawJd==null?jd:rawJd)+'\n\n【JD】\n'+jd+'\n\n'
+  +'【Opportunity name】'+opp+'\n\n【履歷摘要】\n'+resumeText+'\n\n【使用者關鍵點偏好】\n'+prefPromptBlock(rawJd==null?jd:rawJd)+'\n\n【JD】\n'+jd+'\n\n'
   +'只回 JSON，格式：\n'
   +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
+  +'"level":"junior|senior|manager","level_basis":"一句依據（例如要求 5 年以上經驗、需帶領團隊）",'
   +'"keywords":[{"term":"關鍵名稱","cat":"軟體工具|系統平台|產業別|職能領域|其他"}],'
   +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"]}\n\n'
   +'規則：\n'
-  +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者興趣偏好】。\n'
+  +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者關鍵點偏好】。\n'
   +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
   +'3. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
-  +'4. 興趣偏好：JD 的核心工作若落在使用者「沒興趣」的項目，必須在 reasons 明確指出並影響 verdict；落在「有興趣」的項目列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。\n'
+  +'4. 關鍵點偏好（加分／扣分）：JD 的核心工作若落在使用者標為「扣分」的項目，必須在 reasons 明確指出並影響 verdict；落在「加分」的項目列為加分。使用者對某職級標為扣分時，若你判定的 level 為該職級，必須在 reasons 指出並影響 verdict；標為加分時列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。\n'
   +'5. keywords 5 到 10 個，從 JD 抽出值得使用者表態的關鍵（軟體工具、ERP 等系統平台、產業別、職能領域），term 用 JD 原文或通用名稱、不超過 30 字，cat 只能是 軟體工具／系統平台／產業別／職能領域／其他；盡量歸入前四類，只有真的無法歸類才用「其他」（例如庫存準確率、流程自動化屬職能領域）。\n'
   +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
-  +'8. 全部中文欄位使用台灣繁體中文。';
+  +'8. 全部中文欄位使用台灣繁體中文。\n'
+  +'9. level 只能三選一（junior／senior／manager），依 JD 的經驗年資要求、職稱、職責（是否管理他人或預算）判斷；level_basis 一句話說明依據，不超過 40 字。';
 }
 function jdBudget(opp, rawJd){
   if(opp == null) opp = ((document.getElementById('opp')||{}).value || '').trim();
@@ -696,11 +704,11 @@ async function rerunAnalysis(){
   busy = true; updateBtn();
   try{
     await waitQuota(st);
-    st.textContent = '依你的興趣重新分析中…';
+    st.textContent = '依關鍵點重新分析中…';
     const jd2 = truncJd(curJdRaw, jdBudget(curOpp, curJdRaw));
     const a = await doAnalyze(curOpp, jd2, curJdRaw);
     renderResult(a, curOpp);
-    st.textContent = '已依最新興趣偏好重新判斷';
+    st.textContent = '已依最新關鍵點偏好重新判斷';
   }catch(e){
     st.textContent = '失敗：'+e.message;
   }finally{ busy = false; updateBtn(); }
