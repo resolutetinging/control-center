@@ -46,6 +46,8 @@ textarea{min-height:calc(1.5em * 16 + 20px);line-height:1.5;resize:vertical}
 .pill{display:inline-block;font-size:var(--fs3);font-weight:600;color:var(--ac);background:var(--ac-tint);border-radius:100px;padding:3px 11px}
 .pill.go{color:var(--ok);background:var(--ok-bg)}
 .pill.nogo{color:var(--bad);background:var(--bad-bg)}
+.pill.dis{color:var(--bad);background:var(--bad-bg);font-weight:600}
+.pill.dis.minor{background:transparent;border:1px solid var(--bad-bg)}
 ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1.6;font-size:var(--fs2)}
 .kw-rows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .kw-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--fs2)}
@@ -124,7 +126,7 @@ const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
 const RESUME_LIMIT = 4500;
 const RESUME_TOKEN_LIMIT = 2200; // 履歷估算 token 上限（全中文履歷 4500 字約 4300 token，會擠掉 JD 預算）
 const TPM_SAFE = 7300;   // Groq 免費檔每分鐘 token 安全線（額度約 8K）
-const ANALYZE_MAX = 2800; // 分析輸出 max_tokens（11-04 加工作地點欄位，2600→2800）
+const ANALYZE_MAX = 3000; // 分析輸出 max_tokens（11-04 加工作地點 2600→2800、加 pref_hits →3000）
 const JD_LIMIT = 6000; // Groq 免費檔 gpt-oss-120b 約 8K TPM：履歷約 4400 字＋JD＋輸出須壓在一分鐘額度內
 let resumeText = '';
 let resumeStat = null;
@@ -495,8 +497,10 @@ function prefPromptBlock(matchText){
   if(!all.length) return '（使用者尚未標記任何偏好）';
   const hay = normTerm(matchText);
   const man = all.filter(p=>p.src === 'manual');
-  const hit = all.filter(p=>p.src !== 'manual' && (p.cat === '職級' || hay.indexOf(normTerm(p.term)) >= 0));
-  const list = man.concat(hit).slice(0,30).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
+  // 11-04：扣分項不論 JD 是否出現原字都送，讓 AI 判斷同義詞（例如 採購／Procurement）
+  const dis = all.filter(p=>p.src !== 'manual' && p.v === 'dislike');
+  const hit = all.filter(p=>p.src !== 'manual' && p.v !== 'dislike' && (p.cat === '職級' || hay.indexOf(normTerm(p.term)) >= 0));
+  const list = man.concat(dis, hit).slice(0,40).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
   if(!list.length) return '（這份 JD 未出現你已標記的關鍵）';
   return list.map(p=>p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
 }
@@ -627,6 +631,14 @@ function renderAnalysis(a, opp){
   lv.appendChild(mk('span','pill','發展性：'+lvOk(a.growth_level)));
   lv.appendChild(level ? mk('span','pill','職級：'+level) : mk('span','note','職級：—'));
   c1.appendChild(lv);
+  const dh = Array.isArray(a.dis_hits) ? a.dis_hits : [];
+  if(dh.length){
+    const dl = mk('div','lv');
+    dh.forEach(h=>dl.appendChild(mk('span','pill dis'+(h.core?'':' minor'), '扣分：'+t2(h.term)+(h.core?'（核心）':'（次要）'))));
+    c1.appendChild(dl);
+    if(a.forced) c1.appendChild(mk('div','note','AI 原判 Go；因扣分項是這份職缺的核心工作，改判 No-go'));
+    else if(go && !dh.some(h=>h.core)) c1.appendChild(mk('div','note','扣分項只是次要內容，維持 AI 判定'));
+  }
   if(level && a.level_basis) c1.appendChild(mk('div','note','職級依據：'+t2(String(a.level_basis))));
   let pts = Array.isArray(a.summary_points) ? a.summary_points : [];
   if(!pts.length && a.summary) pts = [a.summary];
@@ -763,13 +775,14 @@ function analyzePrompt(opp, jd, rawJd){
   +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
   +'"level":"junior|senior|manager","level_basis":"一句依據（例如要求 5 年以上經驗、需帶領團隊）",'
   +'"keywords":[{"term":"關鍵名稱","cat":"軟體工具|系統平台|產業別|職能領域|其他"}],'
+  +'"pref_hits":[{"term":"偏好清單中的關鍵名稱（照原文）","weight":"core 或 minor"}],'
   +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"],'
   +'"location":{"address":"工作地點地址或地區","basis":"jd 或 known 或 none","mrt":[{"name":"捷運站名","line":"路線名"}]}}\n\n'
   +'規則：\n'
   +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者關鍵點偏好】。\n'
   +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
   +'3. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
-  +'4. 關鍵點偏好（加分／扣分）：JD 的核心工作若落在使用者標為「扣分」的項目，必須在 reasons 明確指出並影響 verdict；落在「加分」的項目列為加分。使用者對某職級標為扣分時，若你判定的 level 為該職級，必須在 reasons 指出並影響 verdict；標為加分時列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。\n'
+  +'4. 關鍵點偏好（加分／扣分）：JD 的核心工作若落在使用者標為「扣分」的項目，必須在 reasons 明確指出並影響 verdict；落在「加分」的項目列為加分。使用者對某職級標為扣分時，若你判定的 level 為該職級，必須在 reasons 指出並影響 verdict；標為加分時列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。pref_hits：逐一檢查【使用者關鍵點偏好】中標為加分或扣分的每一項（職級除外），只要這份 JD 的工作內容或要求與它相同或屬同一件事（含同義詞、中英文不同說法，例如「採購」與 Procurement、Purchasing），就列入，term 照偏好清單原文；weight="core" 表示它是這份職缺的主要職責、核心工作或必備條件，weight="minor" 表示只是次要職責、加分條件或順帶提到；JD 沒涉及的不要列。若【使用者在討論中的補充】說明了某項的實際比重，以補充為準。\n'
   +'5. keywords 5 到 10 個，從 JD 抽出值得使用者表態的關鍵（軟體工具、ERP 等系統平台、產業別、職能領域），term 用 JD 原文或通用名稱、不超過 30 字，cat 只能是 軟體工具／系統平台／產業別／職能領域／其他；盡量歸入前四類，只有真的無法歸類才用「其他」（例如庫存準確率、流程自動化屬職能領域）。\n'
   +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
@@ -814,6 +827,27 @@ async function doAnalyze(opp, jd, rawJd){
   const a = safeParseJson(raw);
   const vd = String(a.verdict||'').trim().toLowerCase();
   if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
+  return applyPrefRule(a);
+}
+// 11-04 使用者訂：扣分項是這份職缺的核心工作 → 程式直接改判 No-go；次要 → 維持 AI 判定但標出
+// dis_hits／forced／ai_verdict 一律由程式覆寫，不採信 AI 回傳的同名欄位
+function applyPrefRule(a){
+  const m = loadPrefs(), seen = Object.create(null), hits = [];
+  const find = t => { const k1 = normTerm(t), k2 = normTerm(t2(t)); return m[k1] ? [k1, m[k1]] : (m[k2] ? [k2, m[k2]] : null); };
+  (Array.isArray(a.pref_hits) ? a.pref_hits : []).slice(0,40).forEach(h=>{
+    if(!h || typeof h !== 'object' || typeof h.term !== 'string') return;
+    const f = find(h.term.slice(0,60));
+    if(!f || f[1].v !== 'dislike' || f[1].cat === '職級' || seen[f[0]]) return;
+    seen[f[0]] = 1;
+    hits.push({term: f[1].term, core: h.weight === 'core'});
+  });
+  const lv = normLevel(a.level);
+  if(lv){ const f = find(lv); if(f && f[1].v === 'dislike' && !seen[f[0]]){ seen[f[0]] = 1; hits.push({term: lv, core: true}); } }
+  hits.sort((x,y)=> (y.core?1:0) - (x.core?1:0));
+  a.dis_hits = hits;
+  a.ai_verdict = String(a.verdict||'').trim().toLowerCase();
+  a.forced = a.ai_verdict === 'go' && hits.some(h=>h.core);
+  if(a.forced) a.verdict = 'no-go';
   return a;
 }
 async function runAnalysis(){
