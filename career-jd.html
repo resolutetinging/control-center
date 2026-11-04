@@ -70,6 +70,7 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
 .add-kw input[type=text]{flex:1;min-width:140px;width:auto;padding:6px 9px}
 .add-kw select{font-size:var(--fs2);background:var(--bg2);border:1px solid var(--bstr);border-radius:8px;padding:6px 8px}
 .add-kw .btn-sm{margin-left:0}
+.loc-addr{font-size:var(--fs2);font-weight:600;margin-top:2px}
 .sub-h{font-size:var(--fs3);font-weight:700;color:var(--sub);margin:10px 0 3px}
 .note{font-size:var(--fs4);color:var(--faint);margin-top:6px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -121,7 +122,7 @@ const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
 const RESUME_LIMIT = 4500;
 const RESUME_TOKEN_LIMIT = 2200; // 履歷估算 token 上限（全中文履歷 4500 字約 4300 token，會擠掉 JD 預算）
 const TPM_SAFE = 7300;   // Groq 免費檔每分鐘 token 安全線（額度約 8K）
-const ANALYZE_MAX = 2600; // 分析輸出 max_tokens
+const ANALYZE_MAX = 2800; // 分析輸出 max_tokens（11-04 加工作地點欄位，2600→2800）
 const JD_LIMIT = 6000; // Groq 免費檔 gpt-oss-120b 約 8K TPM：履歷約 4400 字＋JD＋輸出須壓在一分鐘額度內
 let resumeText = '';
 let resumeStat = null;
@@ -661,6 +662,51 @@ function renderAnalysis(a, opp){
     const el = mk('a',null,p[0]); el.href = p[1]; el.target='_blank'; el.rel='noopener noreferrer'; links.appendChild(el);
   });
   c3.appendChild(links); top.appendChild(c3);
+  top.appendChild(renderLocation(a.location, cname));
+}
+// d) 工作地點（AI 回傳不可信：只走 textContent；連結固定 Google 網域＋encodeURIComponent）
+function cleanLoc(x){
+  const o = (x && typeof x === 'object' && !Array.isArray(x)) ? x : {};
+  const address = t2(String(o.address==null?'':o.address)).replace(/\s+/g,' ').trim().slice(0,120);
+  const basis = ['jd','known'].indexOf(o.basis) >= 0 && address ? o.basis : 'none';
+  const seen = Object.create(null), mrt = [];
+  (Array.isArray(o.mrt)?o.mrt:[]).forEach(m=>{
+    if(!m || typeof m !== 'object' || mrt.length >= 3) return;
+    let name = t2(String(m.name==null?'':m.name)).replace(/\s+/g,'').replace(/^捷運/,'').replace(/站$/,'').slice(0,20);
+    if(!name || seen[name]) return;
+    seen[name] = 1;
+    mrt.push({name, line: t2(String(m.line==null?'':m.line)).replace(/\s+/g,' ').trim().slice(0,20)});
+  });
+  return {address: basis==='none' ? '' : address, basis, mrt};
+}
+function renderLocation(raw, cname){
+  const L = cleanLoc(raw);
+  const c = mk('div','card'); c.appendChild(mk('h2',null,'工作地點'));
+  if(!L.address){
+    c.appendChild(mk('div','note','JD 沒有寫工作地點，AI 也無法確定'));
+  }else{
+    c.appendChild(mk('div','loc-addr',L.address));
+    c.appendChild(mk('div','note', L.basis==='jd' ? '地點取自 JD' : '依 AI 既有知識，可能不是這個職缺的實際上班地點'));
+  }
+  c.appendChild(mk('div','sub-h','附近捷運站'));
+  if(L.mrt.length){
+    const lv = mk('div','lv');
+    L.mrt.forEach(m=>lv.appendChild(mk('span','pill', m.name+'站'+(m.line?'（'+m.line+'）':''))));
+    c.appendChild(lv);
+    c.appendChild(mk('div','note','捷運站由 AI 推估，請用地圖確認'));
+  }else{
+    c.appendChild(mk('div','note', L.address ? '附近沒有捷運站，或 AI 無法確定' : '—'));
+  }
+  const q = L.address || (cname ? String(cname).trim() : '');
+  if(q){
+    const links = mk('div','links');
+    [['Google 地圖','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)],
+     ['附近捷運站','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+' 附近 捷運站')]].forEach(p=>{
+      const el = mk('a',null,p[0]); el.href = p[1]; el.target='_blank'; el.rel='noopener noreferrer'; links.appendChild(el);
+    });
+    c.appendChild(links);
+  }
+  return c;
 }
 function ensureZhCard(reset){
   const out = document.getElementById('out');
@@ -715,7 +761,8 @@ function analyzePrompt(opp, jd, rawJd){
   +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
   +'"level":"junior|senior|manager","level_basis":"一句依據（例如要求 5 年以上經驗、需帶領團隊）",'
   +'"keywords":[{"term":"關鍵名稱","cat":"軟體工具|系統平台|產業別|職能領域|其他"}],'
-  +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"]}\n\n'
+  +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"],'
+  +'"location":{"address":"工作地點地址或地區","basis":"jd 或 known 或 none","mrt":[{"name":"捷運站名","line":"路線名"}]}}\n\n'
   +'規則：\n'
   +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者關鍵點偏好】。\n'
   +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
@@ -725,8 +772,9 @@ function analyzePrompt(opp, jd, rawJd){
   +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
   +'8. 全部中文欄位使用台灣繁體中文。\n'
-  +'9. level 只能三選一（junior／senior／manager），依 JD 的經驗年資要求、職稱、職責（是否管理他人或預算）判斷；level_basis 一句話說明依據，不超過 40 字。'
-  +(chatFacts.length ? '\n10. 【使用者在討論中的補充】是使用者本人提供的事實；與 JD 或履歷衝突時以補充為準，並在 reasons 中明確指出「因使用者補充而改變的判斷」（點名是哪一條補充）。不得忽略補充，也不得擴大解釋成補充沒說的內容。' : '');
+  +'9. level 只能三選一（junior／senior／manager），依 JD 的經驗年資要求、職稱、職責（是否管理他人或預算）判斷；level_basis 一句話說明依據，不超過 40 字。\n'
+  +'10. location：address 優先取 JD 寫的工作地點（照原文，可只到縣市區），basis="jd"；JD 沒寫但你確知該公司台灣主要辦公室地址時才填，basis="known"；都不確定給空字串、basis="none"。mrt 列出步行可達的捷運站 0 到 3 個（台北、新北、桃園、台中、高雄捷運；含機場捷運、環狀線），由近到遠，name 只寫站名（例如「南港展覽館」），line 寫路線（例如「板南線」）；地點不在捷運範圍或無法確定時給空陣列，絕不可猜測。'
+  +(chatFacts.length ? '\n11. 【使用者在討論中的補充】是使用者本人提供的事實；與 JD 或履歷衝突時以補充為準，並在 reasons 中明確指出「因使用者補充而改變的判斷」（點名是哪一條補充）。不得忽略補充，也不得擴大解釋成補充沒說的內容。' : '');
 }
 function jdBudget(opp, rawJd){
   if(opp == null) opp = ((document.getElementById('opp')||{}).value || '').trim();
