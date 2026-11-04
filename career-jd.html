@@ -58,6 +58,13 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
 .pref-sum{cursor:pointer;font-size:var(--fs1);font-weight:700}
 #pref-panel details{margin-top:0}
 .kw-row.hl{background:var(--ac-tint2);border-radius:6px}
+.pref-grp{margin:0 0 4px 12px;padding-left:10px;border-left:2px solid var(--bstr);display:flex;flex-direction:column;gap:2px}
+.pref-grp .kw-row{padding:3px 6px;border-radius:6px}
+.pref-grp .kw-row:nth-child(even){background:var(--bg2)}
+.pref-grp .kw-row:hover{background:var(--ac-tint)}
+.pref-grp .kw-row.hl{background:var(--ac-tint2)}
+.pref-grp .kw-term{display:flex;align-items:center}
+.pref-grp .kw-term::after{content:'';flex:1;min-width:12px;margin:0 6px 0 10px;border-bottom:1px dotted var(--bstr)}
 .mtag{font-size:var(--fs4);color:var(--faint);margin-left:4px}
 .add-kw{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}
 .add-kw input[type=text]{flex:1;min-width:140px;width:auto;padding:6px 9px}
@@ -579,6 +586,7 @@ function renderPrefPanel(){
       const items = list.filter(p=>p.cat===cat);
       if(!items.length) return;
       det.appendChild(mk('div','sub-h',cat));
+      const grp = mk('div','pref-grp');
       items.forEach(p=>{
         const row = mk('div','kw-row'); row.dataset.key = normTerm(p.term);
         const tm = mk('span','kw-term',t2(p.term));
@@ -587,8 +595,9 @@ function renderPrefPanel(){
         row.appendChild(makePv(p.term, p.cat, p.v, p.src));
         const del = mk('button','btn-sm','刪除'); del.type='button'; del.onclick = ()=>delPref(p.term);
         row.appendChild(del);
-        det.appendChild(row);
+        grp.appendChild(row);
       });
+      det.appendChild(grp);
     });
   }
   host.appendChild(det);
