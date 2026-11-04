@@ -186,6 +186,8 @@
     <div id="nudge-list"></div>
     <div id="nudge-cp-sub" style="display:none;font-size:.66rem;color:var(--faint);margin:10px 0 8px;">待維護項目（找 Claude 處理）</div>
     <div id="nudge-cp-list"></div>
+    <div id="nudge-ph-sub" style="display:none;font-size:.66rem;color:var(--faint);margin:10px 0 8px;">自動更新異常（找 Claude 查）</div>
+    <div id="nudge-ph-list"></div>
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button id="nudge-later-btn" onclick="closeDataNudge('later')" style="flex:1;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">稍後提醒（2 小時）</button>
       <button id="nudge-ok-btn" onclick="closeDataNudge('today')" style="flex:1;font-size:.72rem;padding:8px 0;border-radius:12px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--ink);cursor:pointer;">今天不再提醒</button>
@@ -1155,6 +1157,36 @@ function loadCheckpoints(){
     fetch('checkpoints.json?v='+Date.now()).then(r=>r.ok?r.json():null).then(j=>{_cpItems=sanitizeCheckpoints(j);}).catch(()=>{_cpItems=[];}).then(()=>{checkDataNudge(true);});
   }catch{checkDataNudge(true);}
 }
+// 自動更新異常：由 data/pipeline_health.json 載入（每日排程產生；網路檔案視為不可信，清洗後才用）
+let _phItems=[],_phChecked=0,_phLoaded=false;
+function sanitizePipelineHealth(j){
+  const out={items:[],checked:0};
+  if(!j||typeof j!=='object')return out;
+  const t=typeof j.checked_at==='string'?Date.parse(j.checked_at):NaN;
+  out.checked=isNaN(t)?0:t;
+  const arr=Array.isArray(j.items)?j.items:[];
+  arr.slice(0,30).forEach(it=>{
+    if(!it||typeof it!=='object')return;
+    if(it.status!=='stale'&&it.status!=='failed')return;
+    if(typeof it.name!=='string'||!it.name.trim())return;
+    const h=typeof it.href==='string'&&/^https?:\/\//.test(it.href)?it.href:'';
+    out.items.push({status:it.status,name:it.name.slice(0,60),detail:typeof it.detail==='string'?it.detail.slice(0,100):'',href:h});
+  });
+  return out;
+}
+function collectPipelineIssues(){
+  if(!_phLoaded)return [];
+  const rows=_phItems.map(x=>({icon:x.status==='failed'?'⚠️':'⏳',text:x.name,tag:x.detail,href:x.href}));
+  if(!_phChecked||Date.now()-_phChecked>36*3600*1000)rows.unshift({icon:'⏳',text:'排程健康檢查本身未執行',tag:'超過 36 小時沒有新結果',href:''});
+  return rows;
+}
+function loadPipelineHealth(){
+  try{
+    fetch('data/pipeline_health.json?v='+Date.now()).then(r=>r.ok?r.json():null).then(j=>{
+      if(j){const o=sanitizePipelineHealth(j);_phItems=o.items;_phChecked=o.checked;_phLoaded=true;}
+    }).catch(()=>{_phLoaded=false;}).then(()=>{checkDataNudge(true);});
+  }catch{}
+}
 function checkDataNudge(force){
   try{
     if(localStorage.getItem(NUDGE_KEY)===TODAY)return;
@@ -1165,7 +1197,8 @@ function checkDataNudge(force){
   if(_ov&&_ov.style.display==='flex'&&force!==true)return; // 已顯示中不重繪（checkpoint 載入完成時 force 重繪）
   const gaps=collectDataGaps();
   const cps=collectCheckpoints();
-  if(!gaps.length&&!cps.length)return;
+  const phs=collectPipelineIssues();
+  if(!gaps.length&&!cps.length&&!phs.length)return;
   const list=document.getElementById('nudge-list');
   const ov=document.getElementById('nudge-overlay');
   if(!list||!ov)return;
@@ -1173,6 +1206,14 @@ function checkDataNudge(force){
   if(gsub)gsub.style.display=gaps.length?'':'none';
   const csub=document.getElementById('nudge-cp-sub');
   if(csub)csub.style.display=cps.length?'':'none';
+  const psub=document.getElementById('nudge-ph-sub');
+  if(psub)psub.style.display=phs.length?'':'none';
+  const phl=document.getElementById('nudge-ph-list');
+  if(phl)phl.innerHTML=phs.map(c=>{
+    const st='display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border-radius:10px;background:var(--bg2);border:.5px solid var(--border);font-size:.72rem;color:var(--ink);text-decoration:none;';
+    const inner='<span>'+esc(c.icon)+'</span><span style="flex:1">'+esc(c.text)+'</span><span style="color:var(--faint);font-size:.64rem;text-align:right;max-width:55%">'+esc(c.tag)+'</span>';
+    return c.href?'<a class="nudge-row" href="'+esc(c.href)+'" target="_blank" rel="noopener noreferrer" style="'+st+'">'+inner+'</a>':'<div class="nudge-row" style="'+st+'">'+inner+'</div>';
+  }).join('');
   const cpl=document.getElementById('nudge-cp-list');
   if(cpl)cpl.innerHTML=cps.map(c=>{
     const st='display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border-radius:10px;background:var(--bg2);border:.5px solid var(--border);font-size:.72rem;color:var(--ink);text-decoration:none;';
@@ -1205,6 +1246,7 @@ updateUnsetFlags();
 initLiveData();
 checkDataNudge();
 loadCheckpoints();
+loadPipelineHealth();
 updateSyncTime();
 updateBackupHealth();
 document.addEventListener('keydown',e=>{if(e.shiftKey&&(e.key==='C'||e.key==='c'))debugTrigger();});

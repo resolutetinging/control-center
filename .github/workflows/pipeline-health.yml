@@ -1,0 +1,57 @@
+name: 🩺 Pipeline Health Check
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # 每日 01:00 UTC（台北時間 09:00）；避開 16:00/02:00/04:00/07:30/10:00 UTC 的其他排程
+  workflow_dispatch:      # 手動備用
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pull latest (clean tree)
+        run: git pull --rebase origin main
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run pipeline health check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/pipeline_health.py
+
+      - name: Commit updated data
+        env:
+          COMMIT_MSG: "🩺 Pipeline health check"
+          FILES: 'data/pipeline_health.json'
+        run: |
+          # 同一 repo 可能有人工推送：push 被拒時先 rebase 到最新再推，最多 5 次
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- $FILES
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "$COMMIT_MSG"
+          for i in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "push 被拒（第 $i 次），同步最新版本後重試"
+            sleep $((i * 10))
+            git pull --rebase origin main || { git rebase --abort; exit 1; }
+          done
+          exit 1
