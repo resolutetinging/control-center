@@ -1415,7 +1415,6 @@ function renderDevDashboard(){
     .then(txt=>JSON.parse(txt))
     .then(d=>{
       const tl=d.timeline||[];
-      const hs=d.hotspots||[];
       const reasonLabels=d.reason_labels||{};
       if(subEl)subEl.textContent='開發紀錄更新至 '+(d.generated_through||'—');
 
@@ -1460,18 +1459,64 @@ function renderDevDashboard(){
         }).join('')+'</div>'
         :'<div id="dev-empty">尚無時間軸資料</div>';
 
-      // ── 組件熱點監測：橫條 + top1 修改原因徽章 ──
-      const maxCount=Math.max(1,...hs.map(h=>h.count||0));
-      const hsHtml=hs.length
-        ?'<div class="dev-hotspots">'+hs.map(h=>{
-          const pct=Math.round((h.count||0)/maxCount*100);
-          const rl=reasonLabels[h.top_reason];
-          const reasonBadge=rl?`<span class="dev-hot-reason">${esc(rl.emoji||'')} ${esc(rl.label||h.top_reason||'')}</span>`:'';
-          return `<div class="dev-hot-row">
-            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(h.project||h.file||'')}</span>${reasonBadge}<span class="dev-hot-count">${Number(h.count)||0}</span></div>
-            <div class="dev-hot-bar-track"><div class="dev-hot-bar-fill" style="width:${pct}%"></div></div>
-          </div>`;
-        }).join('')+'</div>'
+      // ── 組件熱點監測（11-06 改）：依變更原因的環形圓餅＋專案前 8 名分段橫條，兩者都從 timeline 現算 ──
+      // 舊分類對應：bug_fix→debug、feature→spec_change、clarification／update→maintain；
+      // user_request（早期無法判斷是新功能或修 bug）與缺漏值歸「舊紀錄未分類」，不硬塞進三類
+      const RS_MAP={debug:'debug',bug_fix:'debug',maintain:'maintain',clarification:'maintain',update:'maintain',spec_change:'spec_change',feature:'spec_change'};
+      const RS_ORDER=['spec_change','debug','maintain','legacy'];
+      const RS_COLOR={spec_change:'#3b6fae',debug:'#c96a34',maintain:'#279470',legacy:'#bdb7ad'};
+      const RS_NAME={legacy:'舊紀錄未分類'};
+      RS_ORDER.slice(0,3).forEach(k=>{const rl=reasonLabels[k];RS_NAME[k]=rl?((rl.emoji?rl.emoji+' ':'')+(rl.label||k)):k;});
+      const rsOf=it=>RS_MAP[it&&it.reason]||'legacy';
+      const rsTotal={spec_change:0,debug:0,maintain:0,legacy:0};
+      const byProj={};
+      tl.forEach(it=>{
+        const r=rsOf(it);rsTotal[r]++;
+        const pj=it.project||it.file||'（未命名）';
+        if(!byProj[pj])byProj[pj]={total:0,spec_change:0,debug:0,maintain:0,legacy:0};
+        byProj[pj][r]++;byProj[pj].total++;
+      });
+      const rsN=tl.length;
+      const pctOf=(n,t)=>t?Math.round(n/t*100):0;
+      function donutSvg(){
+        const R=54,W=18,C=70,gap=rsN>1?0.012:0;// 扇區之間留約 2px 底色縫
+        let a0=-Math.PI/2,out='';
+        RS_ORDER.forEach(k=>{
+          const n=rsTotal[k];if(!n)return;
+          const frac=n/rsN,a1=a0+frac*Math.PI*2;
+          const s0=a0+(frac<1?gap:0),s1=a1-(frac<1?gap:0);
+          const tip=`${RS_NAME[k]}：${n} 筆（${pctOf(n,rsN)}%）`;
+          if(frac>=0.999){
+            out+=`<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${RS_COLOR[k]}" stroke-width="${W}" data-dtip="${esc(tip)}"/>`;
+          }else{
+            const x0=C+R*Math.cos(s0),y0=C+R*Math.sin(s0),x1=C+R*Math.cos(s1),y1=C+R*Math.sin(s1);
+            const large=(s1-s0)>Math.PI?1:0;
+            out+=`<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${R} ${R} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${RS_COLOR[k]}" stroke-width="${W}" data-dtip="${esc(tip)}"/>`;
+          }
+          a0=a1;
+        });
+        return `<svg class="dev-rs-donut" viewBox="0 0 140 140" role="img" aria-label="依變更原因的開發紀錄比例">${out}
+          <text x="${C}" y="${C-2}" text-anchor="middle" class="dev-rs-total">${rsN}</text>
+          <text x="${C}" y="${C+15}" text-anchor="middle" class="dev-rs-totlbl">筆紀錄</text></svg>`;
+      }
+      const legendHtml='<div class="dev-rs-legend">'+RS_ORDER.filter(k=>rsTotal[k]).map(k=>
+        `<div class="dev-rs-li"><span class="dev-rs-sw" style="background:${RS_COLOR[k]}"></span><span class="dev-rs-name">${esc(RS_NAME[k])}</span><span class="dev-rs-val">${rsTotal[k]}・${pctOf(rsTotal[k],rsN)}%</span></div>`
+      ).join('')+'</div>';
+      const projTop=Object.keys(byProj).map(k=>({name:k,...byProj[k]})).sort((a,b)=>b.total-a.total).slice(0,8);
+      const maxProj=Math.max(1,...projTop.map(p=>p.total));
+      const projHtml=projTop.map(p=>{
+        const segs=RS_ORDER.filter(k=>p[k]).map(k=>
+          `<div class="dev-rs-seg" style="flex:${p[k]};background:${RS_COLOR[k]}" data-dtip="${esc(p.name+'｜'+RS_NAME[k]+'：'+p[k]+' 筆（'+pctOf(p[k],p.total)+'%）')}"></div>`).join('');
+        return `<div class="dev-hot-row">
+          <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(p.name)}</span><span class="dev-hot-count">${p.total}</span></div>
+          <div class="dev-rs-track"><div class="dev-rs-bar" style="width:${Math.max(2,Math.round(p.total/maxProj*100))}%">${segs}</div></div>
+        </div>`;
+      }).join('');
+      const hsHtml=rsN
+        ?`<div class="dev-rs-top">${donutSvg()}${legendHtml}</div>
+          <div class="dev-rs-subt">開發最多的專案（前 8 名，顏色＝變更原因）</div>
+          <div class="dev-hotspots">${projHtml}</div>
+          <div class="dev-rs-tip" id="dev-rs-tip"></div>`
         :'<div id="dev-empty">尚無熱點資料</div>';
 
       // ── 使用頻率：讀本機 localStorage 累積停留時間（各頁面前景累計 ms，非 fetch）──
@@ -1512,13 +1557,31 @@ function renderDevDashboard(){
         <div class="dev-grid2">
           <div class="dev-section">
             <div class="dev-col-title">Component Hotspots · Dev Activity</div>
-            ${hsHtml}
+            <div class="dev-rs-wrap" id="dev-rs-wrap">${hsHtml}</div>
           </div>
           <div class="dev-section">
             <div class="dev-col-title">使用頻率（累積停留時間）</div>
             ${useHtml}
           </div>
         </div>`;
+      // 圓餅與分段橫條的說明框：桌機 hover、手機點一下（同一套 data-dtip）
+      const rsWrap=document.getElementById('dev-rs-wrap'),rsTip=document.getElementById('dev-rs-tip');
+      if(rsWrap&&rsTip){
+        const showTip=e=>{
+          const t=e.target.closest('[data-dtip]');
+          if(!t){rsTip.style.display='none';return;}
+          rsTip.textContent=t.getAttribute('data-dtip');
+          rsTip.style.display='block';
+          const wr=rsWrap.getBoundingClientRect();
+          let x=e.clientX-wr.left+12,y=e.clientY-wr.top+14;
+          const tw=rsTip.offsetWidth;
+          if(x+tw>wr.width)x=Math.max(0,e.clientX-wr.left-tw-12);
+          rsTip.style.left=x+'px';rsTip.style.top=y+'px';
+        };
+        rsWrap.addEventListener('mousemove',showTip);
+        rsWrap.addEventListener('click',showTip);
+        rsWrap.addEventListener('mouseleave',()=>{rsTip.style.display='none';});
+      }
     })
     .catch(e=>{
       bodyEl.innerHTML='<div id="dev-empty">'+(e&&e.resetId?'':'讀取失敗：')+esc(e&&e.message)+'</div>'
