@@ -1546,7 +1546,7 @@ function renderDevDashboard(){
       const restList=useRest.length
         ?`<div class="dev-rs-subt">其他頁面</div><div class="dev-use-rest">${useRest.map(u=>`<span>${esc(u.label)} ${esc(fmtMs(u.ms))}</span>`).join('')}</div>`:'';
       const useHtml=usage.length
-        ?`<div class="dev-rs-top">${donutSvg(useSlices,useTotal,fmtMs(useTotal),'累積停留','各頁面累積停留時間比例')}${useLegend}</div>${restList}
+        ?`<div class="dev-rs-top">${donutSvg(useSlices,useTotal,useTotal>=3600000?Math.round(useTotal/3600000)+'h':fmtMs(useTotal),'累積停留','各頁面累積停留時間比例')}${useLegend}</div>${restList}
           <div class="dev-rs-tip" id="dev-use-tip"></div>`
         :'<div id="dev-empty">尚無使用紀錄，開啟各 App 停留即開始累積</div>';
 
