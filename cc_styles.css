@@ -212,7 +212,6 @@ body{position:relative;}
 .dev-hot-row{display:flex;flex-direction:column;gap:4px;}
 .dev-hot-lbl{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink);gap:6px;}
 .dev-hot-name{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dev-hot-reason{font-size:9px;color:var(--faint);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1px 7px;flex-shrink:0;white-space:nowrap;}
 .dev-hot-count{color:var(--faint);font-family:monospace;flex-shrink:0;}
 .dev-hot-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .dev-hot-bar-fill{height:100%;background:var(--deep);border-radius:3px;}
