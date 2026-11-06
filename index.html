@@ -1544,7 +1544,7 @@ function renderDevDashboard(){
         `<div class="dev-rs-li"><span class="dev-rs-sw" style="background:${sl.color}"></span><span class="dev-rs-name">${esc(sl.name)}</span><span class="dev-rs-val">${esc(fmtMs(sl.n))}・${pctOf(sl.n,useTotal)}%</span></div>`
       ).join('')+'</div>';
       const restList=useRest.length
-        ?`<div class="dev-rs-subt">其他頁面</div><div class="dev-use-rest">${useRest.map(u=>`<span>${esc(u.label)} ${esc(fmtMs(u.ms))}</span>`).join('')}</div>`:'';
+        ?`<div class="dev-rs-subt">其他頁面</div><div class="dev-hotspots">${useRest.map(u=>`<div class="dev-hot-row"><div class="dev-hot-lbl"><span class="dev-hot-name">${esc(u.label)}</span><span class="dev-hot-count">${esc(fmtMs(u.ms))}</span></div><div class="dev-hot-bar-track"><div class="dev-use-rest-fill" style="width:${Math.max(2,Math.round((u.ms||0)/(useRest[0].ms||1)*100))}%"></div></div></div>`).join('')}</div>`:'';
       const useHtml=usage.length
         ?`<div class="dev-rs-top">${donutSvg(useSlices,useTotal,useTotal>=3600000?Math.round(useTotal/3600000)+'h':fmtMs(useTotal),'累積停留','各頁面累積停留時間比例')}${useLegend}</div>${restList}
           <div class="dev-rs-tip" id="dev-use-tip"></div>`
