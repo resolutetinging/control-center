@@ -1478,27 +1478,28 @@ function renderDevDashboard(){
       });
       const rsN=tl.length;
       const pctOf=(n,t)=>t?Math.round(n/t*100):0;
-      function donutSvg(){
-        const R=54,W=18,C=70,gap=rsN>1?0.012:0;// 扇區之間留約 2px 底色縫
+      // 共用環形圓餅：slices=[{n,color,tip}]，扇區之間留約 2px 底色縫；只有一塊時畫完整一圈
+      function donutSvg(slices,total,centerTop,centerBottom,aria){
+        const R=54,W=18,C=70,gap=slices.length>1?0.012:0;
         let a0=-Math.PI/2,out='';
-        RS_ORDER.forEach(k=>{
-          const n=rsTotal[k];if(!n)return;
-          const frac=n/rsN,a1=a0+frac*Math.PI*2;
+        slices.forEach(sl=>{
+          if(!sl.n||!total)return;
+          const frac=sl.n/total,a1=a0+frac*Math.PI*2;
           const s0=a0+(frac<1?gap:0),s1=a1-(frac<1?gap:0);
-          const tip=`${RS_NAME[k]}：${n} 筆（${pctOf(n,rsN)}%）`;
           if(frac>=0.999){
-            out+=`<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${RS_COLOR[k]}" stroke-width="${W}" data-dtip="${esc(tip)}"/>`;
+            out+=`<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${sl.color}" stroke-width="${W}" data-dtip="${esc(sl.tip)}"/>`;
           }else{
             const x0=C+R*Math.cos(s0),y0=C+R*Math.sin(s0),x1=C+R*Math.cos(s1),y1=C+R*Math.sin(s1);
             const large=(s1-s0)>Math.PI?1:0;
-            out+=`<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${R} ${R} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${RS_COLOR[k]}" stroke-width="${W}" data-dtip="${esc(tip)}"/>`;
+            out+=`<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${R} ${R} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${sl.color}" stroke-width="${W}" data-dtip="${esc(sl.tip)}"/>`;
           }
           a0=a1;
         });
-        return `<svg class="dev-rs-donut" viewBox="0 0 140 140" role="img" aria-label="依變更原因的開發紀錄比例">${out}
-          <text x="${C}" y="${C-2}" text-anchor="middle" class="dev-rs-total">${rsN}</text>
-          <text x="${C}" y="${C+15}" text-anchor="middle" class="dev-rs-totlbl">筆紀錄</text></svg>`;
+        return `<svg class="dev-rs-donut" viewBox="0 0 140 140" role="img" aria-label="${esc(aria)}">${out}
+          <text x="${C}" y="${C-2}" text-anchor="middle" class="dev-rs-total">${esc(centerTop)}</text>
+          <text x="${C}" y="${C+15}" text-anchor="middle" class="dev-rs-totlbl">${esc(centerBottom)}</text></svg>`;
       }
+      const rsSlices=RS_ORDER.map(k=>({n:rsTotal[k],color:RS_COLOR[k],tip:`${RS_NAME[k]}：${rsTotal[k]} 筆（${pctOf(rsTotal[k],rsN)}%）`}));
       const legendHtml='<div class="dev-rs-legend">'+RS_ORDER.filter(k=>rsTotal[k]).map(k=>
         `<div class="dev-rs-li"><span class="dev-rs-sw" style="background:${RS_COLOR[k]}"></span><span class="dev-rs-name">${esc(RS_NAME[k])}</span><span class="dev-rs-val">${rsTotal[k]}・${pctOf(rsTotal[k],rsN)}%</span></div>`
       ).join('')+'</div>';
@@ -1513,7 +1514,7 @@ function renderDevDashboard(){
         </div>`;
       }).join('');
       const hsHtml=rsN
-        ?`<div class="dev-rs-top">${donutSvg()}${legendHtml}</div>
+        ?`<div class="dev-rs-top">${donutSvg(rsSlices,rsN,rsN,'筆紀錄','依變更原因的開發紀錄比例')}${legendHtml}</div>
           <div class="dev-rs-subt">開發最多的專案（前 8 名，顏色＝變更原因）</div>
           <div class="dev-hotspots">${projHtml}</div>
           <div class="dev-rs-tip" id="dev-rs-tip"></div>`
@@ -1531,15 +1532,22 @@ function renderDevDashboard(){
         const stats=JSON.parse(localStorage.getItem('cc_usage_stats')||'{}');
         usage=Object.keys(stats).map(k=>({label:stats[k].label||k,ms:stats[k].ms||0})).filter(u=>u.ms>0).sort((a,b)=>b.ms-a.ms);
       }catch(e){}
-      const maxUse=Math.max(1,...usage.map(u=>u.ms||0));
+      // 11-06：使用頻率改環形圓餅。依停留時間排名是「量」，用單一綠色由深到淺（第 1 名最深），
+      // 不用多色以免和左邊「變更原因」的顏色意義混淆；前 5 名各一塊，其餘合併「其他」（灰）
+      const USE_RAMP=['#24574a','#357063','#4b8a7b','#69a393','#8dbbab'],USE_OTHER='#c8c2b8';
+      const useTotal=usage.reduce((a,u)=>a+(u.ms||0),0);
+      const useTop=usage.slice(0,5),useRest=usage.slice(5);
+      const restMs=useRest.reduce((a,u)=>a+(u.ms||0),0);
+      const useSlices=useTop.map((u,i)=>({n:u.ms,color:USE_RAMP[i],name:u.label,tip:`${u.label}：${fmtMs(u.ms)}（${pctOf(u.ms,useTotal)}%）`}));
+      if(restMs>0)useSlices.push({n:restMs,color:USE_OTHER,name:`其他 ${useRest.length} 頁`,tip:`其他 ${useRest.length} 頁：${fmtMs(restMs)}（${pctOf(restMs,useTotal)}%）`});
+      const useLegend='<div class="dev-rs-legend">'+useSlices.map(sl=>
+        `<div class="dev-rs-li"><span class="dev-rs-sw" style="background:${sl.color}"></span><span class="dev-rs-name">${esc(sl.name)}</span><span class="dev-rs-val">${esc(fmtMs(sl.n))}・${pctOf(sl.n,useTotal)}%</span></div>`
+      ).join('')+'</div>';
+      const restList=useRest.length
+        ?`<div class="dev-rs-subt">其他頁面</div><div class="dev-use-rest">${useRest.map(u=>`<span>${esc(u.label)} ${esc(fmtMs(u.ms))}</span>`).join('')}</div>`:'';
       const useHtml=usage.length
-        ?'<div class="dev-hotspots">'+usage.map(u=>{
-          const pct=Math.round((u.ms||0)/maxUse*100);
-          return `<div class="dev-hot-row">
-            <div class="dev-hot-lbl"><span class="dev-hot-name">${esc(u.label)}</span><span class="dev-hot-count">${fmtMs(u.ms)}</span></div>
-            <div class="dev-hot-bar-track"><div class="dev-use-bar-fill" style="width:${pct}%"></div></div>
-          </div>`;
-        }).join('')+'</div>'
+        ?`<div class="dev-rs-top">${donutSvg(useSlices,useTotal,fmtMs(useTotal),'累積停留','各頁面累積停留時間比例')}${useLegend}</div>${restList}
+          <div class="dev-rs-tip" id="dev-use-tip"></div>`
         :'<div id="dev-empty">尚無使用紀錄，開啟各 App 停留即開始累積</div>';
 
       const reviewHtml=_isGitHistoryReviewDue()?`
@@ -1561,27 +1569,30 @@ function renderDevDashboard(){
           </div>
           <div class="dev-section">
             <div class="dev-col-title">使用頻率（累積停留時間）</div>
-            ${useHtml}
+            <div class="dev-rs-wrap" id="dev-use-wrap">${useHtml}</div>
           </div>
         </div>`;
-      // 圓餅與分段橫條的說明框：桌機 hover、手機點一下（同一套 data-dtip）
-      const rsWrap=document.getElementById('dev-rs-wrap'),rsTip=document.getElementById('dev-rs-tip');
-      if(rsWrap&&rsTip){
+      // 圓餅與分段橫條的說明框：桌機 hover、手機點一下（同一套 data-dtip，兩個區塊各自一個說明框）
+      function bindDtip(wrapId,tipId){
+        const wrap=document.getElementById(wrapId),tip=document.getElementById(tipId);
+        if(!wrap||!tip)return;
         const showTip=e=>{
           const t=e.target.closest('[data-dtip]');
-          if(!t){rsTip.style.display='none';return;}
-          rsTip.textContent=t.getAttribute('data-dtip');
-          rsTip.style.display='block';
-          const wr=rsWrap.getBoundingClientRect();
+          if(!t){tip.style.display='none';return;}
+          tip.textContent=t.getAttribute('data-dtip');
+          tip.style.display='block';
+          const wr=wrap.getBoundingClientRect();
           let x=e.clientX-wr.left+12,y=e.clientY-wr.top+14;
-          const tw=rsTip.offsetWidth;
+          const tw=tip.offsetWidth;
           if(x+tw>wr.width)x=Math.max(0,e.clientX-wr.left-tw-12);
-          rsTip.style.left=x+'px';rsTip.style.top=y+'px';
+          tip.style.left=x+'px';tip.style.top=y+'px';
         };
-        rsWrap.addEventListener('mousemove',showTip);
-        rsWrap.addEventListener('click',showTip);
-        rsWrap.addEventListener('mouseleave',()=>{rsTip.style.display='none';});
+        wrap.addEventListener('mousemove',showTip);
+        wrap.addEventListener('click',showTip);
+        wrap.addEventListener('mouseleave',()=>{tip.style.display='none';});
       }
+      bindDtip('dev-rs-wrap','dev-rs-tip');
+      bindDtip('dev-use-wrap','dev-use-tip');
     })
     .catch(e=>{
       bodyEl.innerHTML='<div id="dev-empty">'+(e&&e.resetId?'':'讀取失敗：')+esc(e&&e.message)+'</div>'

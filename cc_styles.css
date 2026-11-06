@@ -215,7 +215,6 @@ body{position:relative;}
 .dev-hot-count{color:var(--faint);font-family:monospace;flex-shrink:0;}
 .dev-hot-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
 .dev-hot-bar-fill{height:100%;background:var(--deep);border-radius:3px;}
-.dev-use-bar-fill{height:100%;background:var(--core);border-radius:3px;}
 /* 11-06：熱點改依變更原因（環形圓餅＋專案分段橫條） */
 .dev-rs-wrap{position:relative;}
 .dev-rs-top{display:flex;align-items:center;gap:18px;margin-bottom:16px;flex-wrap:wrap;}
@@ -236,6 +235,7 @@ body{position:relative;}
 .dev-rs-seg:first-child{border-radius:3px 0 0 3px;}
 .dev-rs-seg:last-child{border-radius:0 3px 3px 0;}
 .dev-rs-seg:only-child{border-radius:3px;}
+.dev-use-rest{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--sub);}
 .dev-rs-tip{display:none;position:absolute;z-index:20;pointer-events:none;background:rgba(35,32,28,.95);color:#fff;font-size:11px;line-height:1.5;padding:6px 9px;border-radius:6px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.2);}
 #dev-empty{font-size:12px;color:var(--faint);text-align:center;padding:40px 0;}
 
