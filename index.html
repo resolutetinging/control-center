@@ -1235,7 +1235,13 @@ function closeDataNudge(mode){
     else localStorage.setItem(NUDGE_SNOOZE_KEY,String(Date.now()+NUDGE_SNOOZE_MS));
   }catch{}
 }
-setInterval(checkDataNudge,5*60*1000); // 首頁開著時，稍後提醒到期也能再跳
+// 首頁開著時，稍後提醒到期也能再跳。11-09：分頁開著好幾天時，健康檢查與 checkpoint 只在開頁讀過一次，
+// 會拿舊的 checked_at 誤報「排程健康檢查本身未執行」；距上次讀取超過 1 小時就重抓（重抓完成會自行呼叫 checkDataNudge）
+let _nudgeDataAt=Date.now();
+setInterval(()=>{
+  if(Date.now()-_nudgeDataAt>3600*1000){_nudgeDataAt=Date.now();loadCheckpoints();loadPipelineHealth();}
+  else checkDataNudge();
+},5*60*1000);
 
 // ── INIT ──
 loadWP();
