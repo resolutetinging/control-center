@@ -492,17 +492,29 @@ function sortedPrefs(){
   const m = loadPrefs();
   return Object.keys(m).map(k=>m[k]).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
 }
-function prefPromptBlock(matchText){
+function prefPromptList(matchText){
   const all = sortedPrefs();
-  if(!all.length) return '（使用者尚未標記任何偏好）';
   const hay = normTerm(matchText);
   const man = all.filter(p=>p.src === 'manual');
   // 11-04：扣分項不論 JD 是否出現原字都送，讓 AI 判斷同義詞（例如 採購／Procurement）
   const dis = all.filter(p=>p.src !== 'manual' && p.v === 'dislike');
   const hit = all.filter(p=>p.src !== 'manual' && p.v !== 'dislike' && (p.cat === '職級' || hay.indexOf(normTerm(p.term)) >= 0));
-  const list = man.concat(dis, hit).slice(0,40).sort((a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0);
+  // 扣分項排最前，確保 40 筆上限不會切掉扣分項
+  const isDis = p => p.v === 'dislike' && p.cat !== '職級';
+  const byAt = (a,b)=> a.at<b.at?1 : a.at>b.at?-1 : 0;
+  const pool = man.concat(dis, hit);
+  return pool.filter(isDis).sort(byAt).concat(pool.filter(p=>!isDis(p)).sort(byAt)).slice(0,40);
+}
+// 11-10：扣分項（職級除外）編號 D1、D2…，AI 用編號逐項回 dis_check，程式依編號對應，不靠 AI 照抄名稱
+function disItems(list){
+  return list.filter(p=>p.v === 'dislike' && p.cat !== '職級').map((p,i)=>({id:'D'+(i+1), p}));
+}
+function prefPromptBlock(matchText){
+  if(!sortedPrefs().length) return '（使用者尚未標記任何偏好）';
+  const list = prefPromptList(matchText);
   if(!list.length) return '（這份 JD 未出現你已標記的關鍵）';
-  return list.map(p=>p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
+  const ids = new Map(disItems(list).map(d=>[d.p, d.id]));
+  return list.map(p=>(ids.has(p) ? ids.get(p)+'. ' : '')+p.term.replace(/\s+/g,' ')+'（'+p.cat+'）：'+PREF_LABEL[p.v]).join('\n');
 }
 function makePv(term, cat, cur, src){
   const box = mk('span','pv');
@@ -639,6 +651,8 @@ function renderAnalysis(a, opp){
     if(a.forced) c1.appendChild(mk('div','note','AI 原判 Go；因扣分項是這份職缺的核心工作，改判 No-go'));
     else if(go && !dh.some(h=>h.core)) c1.appendChild(mk('div','note','扣分項只是次要內容，維持 AI 判定'));
   }
+  const du = Array.isArray(a.dis_unchecked) ? a.dis_unchecked : [];
+  if(du.length) c1.appendChild(mk('div','note','AI 沒有回覆這幾個扣分項是否相關，請自行確認：'+du.slice(0,10).map(t=>t2(String(t))).join('、')));
   if(level && a.level_basis) c1.appendChild(mk('div','note','職級依據：'+t2(String(a.level_basis))));
   let pts = Array.isArray(a.summary_points) ? a.summary_points : [];
   if(!pts.length && a.summary) pts = [a.summary];
@@ -775,14 +789,16 @@ function analyzePrompt(opp, jd, rawJd){
   +'{"verdict":"go 或 no-go","fit_level":"高|中|低","growth_level":"高|中|低","summary_points":["結論要點"],"reasons":["條列理由"],'
   +'"level":"junior|senior|manager","level_basis":"一句依據（例如要求 5 年以上經驗、需帶領團隊）",'
   +'"keywords":[{"term":"關鍵名稱","cat":"軟體工具|系統平台|產業別|職能領域|其他"}],'
-  +'"pref_hits":[{"term":"偏好清單中的關鍵名稱（照原文）","weight":"core 或 minor"}],'
+  +'"pref_hits":[{"term":"偏好清單中的加分項名稱（照原文）","weight":"core 或 minor"}],'
+  +'"dis_check":[{"id":"D1","weight":"core 或 minor 或 none","basis":"JD 依據，不超過 20 字"}],'
   +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"],'
   +'"location":{"address":"工作地點地址或地區","basis":"jd 或 known 或 none","mrt":[{"name":"捷運站名","line":"路線名"}]}}\n\n'
   +'規則：\n'
   +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者關鍵點偏好】。\n'
   +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
   +'3. reasons 4 到 7 條，每條不超過 60 字，須點名 JD 的具體要求與履歷中的具體經歷對照，同時包含優勢與缺口；不得捏造履歷沒有的經歷。\n'
-  +'4. 關鍵點偏好（加分／扣分）：JD 的核心工作若落在使用者標為「扣分」的項目，必須在 reasons 明確指出並影響 verdict；落在「加分」的項目列為加分。使用者對某職級標為扣分時，若你判定的 level 為該職級，必須在 reasons 指出並影響 verdict；標為加分時列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。pref_hits：逐一檢查【使用者關鍵點偏好】中標為加分或扣分的每一項（職級除外），只要這份 JD 的工作內容或要求與它相同或屬同一件事（含同義詞、中英文不同說法，例如「採購」與 Procurement、Purchasing），就列入，term 照偏好清單原文；weight="core" 表示它是這份職缺的主要職責、核心工作或必備條件，weight="minor" 表示只是次要職責、加分條件或順帶提到；JD 沒涉及的不要列。若【使用者在討論中的補充】說明了某項的實際比重，以補充為準。\n'
+  +'4. 關鍵點偏好（加分／扣分）：JD 的核心工作若落在使用者標為「扣分」的項目，必須在 reasons 明確指出並影響 verdict；落在「加分」的項目列為加分。使用者對某職級標為扣分時，若你判定的 level 為該職級，必須在 reasons 指出並影響 verdict；標為加分時列為加分。reasons 提到偏好時要點名該關鍵項目。「普通」不影響判定。pref_hits：逐一檢查【使用者關鍵點偏好】中標為加分的每一項（職級除外），只要這份 JD 的工作內容或要求與它相同或屬同一件事（含同義詞、中英文不同說法，例如「採購」與 Procurement、Purchasing），就列入，term 照偏好清單原文；weight="core" 表示它是這份職缺的主要職責、核心工作或必備條件，weight="minor" 表示只是次要職責、加分條件或順帶提到；JD 沒涉及的不要列。'
+  +'dis_check：【使用者關鍵點偏好】中有 D 編號的扣分項，每一個編號都必須回一筆，不可省略，id 照編號；判斷時看工作本質，同義詞、中英文不同說法、上位或細分說法都算同一件事（例如「採購」涵蓋 Procurement、Purchasing、Sourcing、Strategic Sourcing、Commodity Management、供應商開發與議價）；weight="core" 表示職稱屬於它，或 JD 主要職責大多在做這件事；weight="minor" 表示只是部分職責或順帶提到；weight="none" 表示 JD 完全沒涉及。只要有一項為 core，verdict 必須是 no-go。若【使用者在討論中的補充】說明了某項的實際比重，以補充為準。\n'
   +'5. keywords 5 到 10 個，從 JD 抽出值得使用者表態的關鍵（軟體工具、ERP 等系統平台、產業別、職能領域），term 用 JD 原文或通用名稱、不超過 30 字，cat 只能是 軟體工具／系統平台／產業別／職能領域／其他；盡量歸入前四類，只有真的無法歸類才用「其他」（例如庫存準確率、流程自動化屬職能領域）。\n'
   +'6. company_name 從 JD 或 Opportunity name 判斷，無法判斷給空字串。\n'
   +'7. 公司評價：知名或有公開資訊的公司，industry_position（2 到 4 條：市場地位、主要產品或服務、規模層級、主要競爭對手）與 industry_view（2 到 4 條：業界與市場對它的看法、口碑、近年動向）必須寫出具體的公開資訊，company_basis="known"。確實不認識該公司時，改寫「依 JD 內容推斷」的產業與產品資訊，company_basis="jd_inferred"。無論哪種，絕不可編造財務數字、營收、員工人數、評分、星等或薪資。\n'
@@ -827,24 +843,49 @@ async function doAnalyze(opp, jd, rawJd){
   const a = safeParseJson(raw);
   const vd = String(a.verdict||'').trim().toLowerCase();
   if(vd !== 'go' && vd !== 'no-go') throw new Error('AI 回傳的判定格式不正確，請重試');
-  return applyPrefRule(a);
+  return applyPrefRule(a, opp, rawJd==null?jd:rawJd);
 }
 // 11-04 使用者訂：扣分項是這份職缺的核心工作 → 程式直接改判 No-go；次要 → 維持 AI 判定但標出
-// dis_hits／forced／ai_verdict 一律由程式覆寫，不採信 AI 回傳的同名欄位
-function applyPrefRule(a){
-  const m = loadPrefs(), seen = Object.create(null), hits = [];
-  const find = t => { const k1 = normTerm(t), k2 = normTerm(t2(t)); return m[k1] ? [k1, m[k1]] : (m[k2] ? [k2, m[k2]] : null); };
+// 11-10 改：扣分項依 D 編號逐項對 AI 的 dis_check（不靠 AI 照抄名稱）；職稱含扣分項原字 → 程式直接算核心；
+//       JD 全文含原字但 AI 說沒涉及 → 至少算次要；AI 漏回的扣分項列「未判斷」提醒
+// dis_hits／dis_unchecked／forced／ai_verdict 一律由程式覆寫，不採信 AI 回傳的同名欄位
+function applyPrefRule(a, opp, rawJd){
+  const m = loadPrefs(), seen = Object.create(null), hits = [], unchecked = [];
+  const strip = t => String(t).replace(/^\s*D\d+\s*[.．、:：]\s*/i,'').replace(/[（(][^（）()]*[）)]\s*([:：].*)?$/,'').trim();
+  const find = t => { for(const x of [t, strip(t)]){ const k1 = normTerm(x), k2 = normTerm(t2(x)); if(m[k1]) return [k1, m[k1]]; if(m[k2]) return [k2, m[k2]]; } return null; };
+  // 英數詞要整字比對（避免 AI 命中 maintain 這類字中字），中文詞用包含
+  const has1 = (hay, k) => { if(!k) return false; if(!/^[\x20-\x7e]+$/.test(k)) return hay.indexOf(k) >= 0;
+    const e = k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); return new RegExp('(^|[^a-z0-9])'+e+'($|[^a-z0-9])').test(hay); };
+  const has = (hay, term) => has1(hay, normTerm(term)) || has1(hay, normTerm(t2(term)));
+  const W = x => { const w = String(x==null?'':x).trim().toLowerCase(); return w === 'core' || w === 'minor' || w === 'none' ? w : ''; };
+  const byId = Object.create(null), byTerm = Object.create(null);
+  (Array.isArray(a.dis_check) ? a.dis_check : []).slice(0,60).forEach(h=>{
+    if(!h || typeof h !== 'object') return;
+    const w = W(h.weight); if(!w) return;
+    const id = String(h.id==null?'':h.id).trim().toUpperCase();
+    if(/^D\d{1,2}$/.test(id) && !byId[id]) byId[id] = w;
+  });
+  // 相容：AI 若仍用 pref_hits 回扣分項（照名稱），當作備援
   (Array.isArray(a.pref_hits) ? a.pref_hits : []).slice(0,40).forEach(h=>{
     if(!h || typeof h !== 'object' || typeof h.term !== 'string') return;
-    const f = find(h.term.slice(0,60));
-    if(!f || f[1].v !== 'dislike' || f[1].cat === '職級' || seen[f[0]]) return;
-    seen[f[0]] = 1;
-    hits.push({term: f[1].term, core: h.weight === 'core'});
+    const f = find(h.term.slice(0,60)); const w = W(h.weight);
+    if(f && w && !byTerm[f[0]]) byTerm[f[0]] = w;
+  });
+  const hayOpp = normTerm(opp), hayJd = normTerm(rawJd);
+  disItems(prefPromptList(rawJd)).forEach(d=>{
+    const k = normTerm(d.p.term);
+    if(seen[k]) return; seen[k] = 1;
+    let w = byId[d.id] || byTerm[k] || '';
+    if(has(hayOpp, d.p.term)) w = 'core';
+    else if((w === 'none' || !w) && has(hayJd, d.p.term)) w = 'minor';
+    if(w === 'core' || w === 'minor') hits.push({term: d.p.term, core: w === 'core'});
+    else if(!w) unchecked.push(d.p.term);
   });
   const lv = normLevel(a.level);
   if(lv){ const f = find(lv); if(f && f[1].v === 'dislike' && !seen[f[0]]){ seen[f[0]] = 1; hits.push({term: lv, core: true}); } }
   hits.sort((x,y)=> (y.core?1:0) - (x.core?1:0));
   a.dis_hits = hits;
+  a.dis_unchecked = unchecked;
   a.ai_verdict = String(a.verdict||'').trim().toLowerCase();
   a.forced = a.ai_verdict === 'go' && hits.some(h=>h.core);
   if(a.forced) a.verdict = 'no-go';
