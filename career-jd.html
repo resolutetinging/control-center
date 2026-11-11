@@ -126,7 +126,7 @@ const NEXUS_URL = 'https://nexus-portal-epq.pages.dev/';
 const RESUME_LIMIT = 4500;
 const RESUME_TOKEN_LIMIT = 2200; // 履歷估算 token 上限（全中文履歷 4500 字約 4300 token，會擠掉 JD 預算）
 const TPM_SAFE = 7300;   // Groq 免費檔每分鐘 token 安全線（額度約 8K）
-const ANALYZE_MAX = 3000; // 分析輸出 max_tokens（11-04 加工作地點 2600→2800、加 pref_hits →3000）
+const ANALYZE_MAX = 3150; // 分析輸出 max_tokens（11-04 加工作地點 2600→2800、加 pref_hits →3000；11-11 加北部辦公室 →3150）
 const JD_LIMIT = 6000; // Groq 免費檔 gpt-oss-120b 約 8K TPM：履歷約 4400 字＋JD＋輸出須壓在一分鐘額度內
 let resumeText = '';
 let resumeStat = null;
@@ -705,7 +705,19 @@ function cleanLoc(x){
     seen[name] = 1;
     mrt.push({name, line: t2(String(m.line==null?'':m.line)).replace(/\s+/g,' ').trim().slice(0,20)});
   });
-  return {address: basis==='none' ? '' : address, basis, mrt};
+  // 11-11 公司北部辦公室（AI 既有知識，與 JD 地點分開；不可信，只走 textContent）
+  const seenN = Object.create(null), north = [];
+  (Array.isArray(o.north)?o.north:[]).forEach(n=>{
+    if(!n || typeof n !== 'object' || north.length >= 3) return;
+    const nm = t2(String(n.name==null?'':n.name)).replace(/\s+/g,' ').trim().slice(0,30);
+    const ad = t2(String(n.address==null?'':n.address)).replace(/\s+/g,' ').trim().slice(0,120);
+    if(!nm && !ad) return;
+    const key = (nm+'|'+ad).toLowerCase();
+    if(seenN[key]) return;
+    seenN[key] = 1;
+    north.push({name:nm, address:ad});
+  });
+  return {address: basis==='none' ? '' : address, basis, mrt, north};
 }
 function renderLocation(raw, cname){
   const L = cleanLoc(raw);
@@ -725,11 +737,19 @@ function renderLocation(raw, cname){
   }else{
     c.appendChild(mk('div','note', L.address ? '附近沒有捷運站，或 AI 無法確定' : '—'));
   }
+  c.appendChild(mk('div','sub-h','公司北部辦公室'));
+  if(L.north.length){
+    addUl(c, L.north.map(n=> n.name && n.address ? n.name+'：'+n.address : (n.name || n.address)));
+    c.appendChild(mk('div','note','依 AI 既有知識，可能過時，請用下方「搜尋北部辦公室」確認'));
+  }else{
+    c.appendChild(mk('div','note','AI 不確定這家公司的北部辦公室'));
+  }
   const q = L.address || (cname ? String(cname).trim() : '');
   if(q){
     const links = mk('div','links');
     [['Google 地圖','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)],
-     ['附近捷運站','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+' 附近 捷運站')]].forEach(p=>{
+     ['附近捷運站','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+' 附近 捷運站')]]
+     .concat(cname && String(cname).trim() ? [['搜尋北部辦公室','https://www.google.com/search?q='+encodeURIComponent(String(cname).trim()+' 台北 新竹 辦公室 地址')]] : []).forEach(p=>{
       const el = mk('a',null,p[0]); el.href = p[1]; el.target='_blank'; el.rel='noopener noreferrer'; links.appendChild(el);
     });
     c.appendChild(links);
@@ -792,7 +812,7 @@ function analyzePrompt(opp, jd, rawJd){
   +'"pref_hits":[{"term":"偏好清單中的加分項名稱（照原文）","weight":"core 或 minor"}],'
   +'"dis_check":[{"id":"D1","weight":"core 或 minor 或 none","basis":"JD 依據，不超過 20 字"}],'
   +'"company_name":"公司名","company_basis":"known 或 jd_inferred","industry_position":["公司在業界的地位"],"industry_view":["業界對它的看法"],'
-  +'"location":{"address":"工作地點地址或地區","basis":"jd 或 known 或 none","mrt":[{"name":"捷運站名","line":"路線名"}]}}\n\n'
+  +'"location":{"address":"工作地點地址或地區","basis":"jd 或 known 或 none","mrt":[{"name":"捷運站名","line":"路線名"}],"north":[{"name":"辦公室名稱","address":"地址或縣市區"}]}}\n\n'
   +'規則：\n'
   +'1. verdict 綜合「JD 對履歷的職能符合度」與「此職位對使用者未來發展性」，並考慮【使用者關鍵點偏好】。\n'
   +'2. summary_points 2 到 3 條，每條一句話，不超過 40 字。\n'
@@ -805,6 +825,7 @@ function analyzePrompt(opp, jd, rawJd){
   +'8. 全部中文欄位使用台灣繁體中文。\n'
   +'9. level 只能三選一（junior／senior／manager），依 JD 的經驗年資要求、職稱、職責（是否管理他人或預算）判斷；level_basis 一句話說明依據，不超過 40 字。\n'
   +'10. location：address 優先取 JD 寫的工作地點（照原文，可只到縣市區），basis="jd"；JD 沒寫但你確知該公司台灣主要辦公室地址時才填，basis="known"；都不確定給空字串、basis="none"。mrt 列出步行可達的捷運站 0 到 3 個（台北、新北、桃園、台中、高雄捷運；含機場捷運、環狀線），由近到遠，name 只寫站名（例如「南港展覽館」），line 寫路線（例如「板南線」）；地點不在捷運範圍或無法確定時給空陣列，絕不可猜測。'
+  +'north：不論 JD 有沒有寫工作地點，都依公司名稱列出你確知的該公司台灣北部（台北、新北、基隆、桃園、新竹）辦公室 0 到 3 個，name 寫辦公室名稱（例如「台北總部」「新竹研發中心」），address 寫地址或至少到縣市區；不確定就給空陣列，絕不可編造地址。'
   +(chatFacts.length ? '\n11. 【使用者在討論中的補充】是使用者本人提供的事實；與 JD 或履歷衝突時以補充為準，並在 reasons 中明確指出「因使用者補充而改變的判斷」（點名是哪一條補充）。不得忽略補充，也不得擴大解釋成補充沒說的內容。' : '');
 }
 function jdBudget(opp, rawJd){
