@@ -105,7 +105,7 @@ ul.rs{margin:0 0 0 18px;display:flex;flex-direction:column;gap:7px;line-height:1
     <div class="st" id="resume-st">讀取 NexusPortal 履歷中…</div>
   </div>
   <div class="card">
-    <h2>貼上職缺</h2>
+    <h2 style="display:flex;align-items:center;justify-content:space-between;gap:8px">貼上職缺<button type="button" class="btn-sm" id="clear-jd-btn" onclick="clearJdInput()">一鍵清除</button></h2>
     <label for="opp">Opportunity name</label>
     <input type="text" id="opp" placeholder="例如：某公司 Supply Chain Manager" autocomplete="off">
     <label for="jd">JD content</label>
@@ -401,6 +401,13 @@ function onJdInput(){
   const kept = truncJd(v.trim(), jdBudget()).length;
   if(kept < n){ h.className='hint warn'; h.textContent = '僅分析前 '+kept+' 字（目前 '+n+' 字）'; }
   else { h.className='hint'; h.textContent = n ? '目前 '+n+' 字' : ''; }
+}
+// 11-17：「貼上職缺」卡右上一鍵清除，只清職缺名稱與 JD 內容（不動已產出的初判結果與偏好設定）
+function clearJdInput(){
+  document.getElementById('opp').value = '';
+  document.getElementById('jd').value = '';
+  onJdInput();
+  document.getElementById('jd').focus();
 }
 function mk(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 function lvOk(v){ return (v==='高'||v==='中'||v==='低') ? v : '—'; }
