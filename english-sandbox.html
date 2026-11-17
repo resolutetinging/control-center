@@ -180,6 +180,9 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .fb-partial .fb-block-body{color:#5a4818}
 .fb-add .fb-block-lbl{color:var(--en)}
 .fb-add .fb-block-body{color:var(--sub)}
+.ball-rule-legend{font-size:11.5px;color:var(--text2,#6b655e);margin:0 0 8px}
+.ball-rule-legend summary{cursor:pointer;width:fit-content}
+.ball-rule-legend ul{margin:6px 0 0;padding-left:18px;line-height:1.7}
 .ball-verdict{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:6px;padding:3px 9px;margin-bottom:7px;letter-spacing:.04em}
 .ball-verdict.v-caught{background:rgba(61,106,82,.13);color:var(--en)}
 .ball-verdict.v-partial{background:rgba(160,130,50,.12);color:#7a6020}
@@ -417,6 +420,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <div class="fb-block fb-issue fb-section" id="fb-content-block">
         <div class="fb-block-lbl">🎾 有沒有接住對方的球</div>
         <div id="fb-ball-verdict"></div>
+        <details class="ball-rule-legend"><summary>判定標準說明</summary><ul id="ball-rule-list"></ul></details>
         <div class="fb-block-body" id="fb-content-text"></div>
         <div class="resp-footer">
           <button class="save-btn" id="save-fb_content" onclick="savePhrase('fb_content')">⭐ 收藏</button>
@@ -1233,11 +1237,11 @@ Output ONLY valid JSON:
       $('fb-orig').textContent = inp;
       $('fb-tone-text').textContent  = results.fb_tone||'';
       $('fb-tone-block').style.display = results.fb_tone ? 'block' : 'none';
-      $('fb-content-text').textContent = results.fb_content||'';
+      $('fb-content-text').textContent = ballRuleText(results.fb_content||'');
       $('fb-content-block').style.display = results.fb_content ? 'block' : 'none';
       // verdict badge
       const verdict = (results.fb_ball_verdict||'').trim().toLowerCase();
-      setBallVerdict(verdict, false);
+      setBallVerdict(verdict, false, results.fb_ball_rule);
       $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
       ballContext = results.fb_content ? { sit: SITS[curSit]?.en||'', opener: curOpener, reply: inp, verdict, content: results.fb_content||'', tone: results.fb_tone||'', add: results.fb_add||'', history: [] } : null;
@@ -1378,8 +1382,29 @@ Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markd
 
 // 10-29：判定標籤共用（第一輪結果與追問改判）；revised=true 時標示「追問後改判」
 const BALL_VERDICT_ZH = {caught:'接住了', partial:'勉強接到', missed:'沒接到'};
-function setBallVerdict(verdict, revised){
+// 11-17：規則編號只給模型用，畫面一律顯示中文名稱（使用者看不懂 C1）
+const BALL_RULE_ZH = {
+  C1:['接住了','先回應對方，再往前推進（轉到相關話題也算）'],
+  U1:['接住了','開場本身不清楚，合理回應或反問'],
+  P1:['勉強接到','有回應，但沒有往前推進'],
+  P2:['勉強接到','沒先回應，直接轉到有關聯的問題'],
+  P3:['勉強接到','誤會了開場的意思，但回覆還說得通'],
+  M1:['沒接到','沒有回應，也和開場無關'],
+  M2:['沒接到','誤會了開場的意思，回覆接不上']
+};
+function ballRuleName(id){ const r=BALL_RULE_ZH[String(id||'').toUpperCase()]; return r?r[1]:''; }
+// 文字裡殘留的規則編號換成中文名稱（例：「依 C1 規則」→「依「先回應對方…」」）
+function ballRuleText(t){
+  return String(t||'').replace(/(?:依\s*)?\b(C1|U1|P[1-3]|M[12])\b(?:\s*規則)?/g, function(m,id){ const n=ballRuleName(id); return n?((/^依/.test(m)?'依':'')+'「'+n+'」'):m; });
+}
+function renderBallRuleLegend(){
+  const ul=$('ball-rule-list'); if(!ul||ul.childElementCount) return;
+  ul.innerHTML=Object.keys(BALL_RULE_ZH).map(k=>'<li>'+BALL_RULE_ZH[k][0]+'：'+BALL_RULE_ZH[k][1]+'</li>').join('');
+}
+function setBallVerdict(verdict, revised, rule){
   const verdictEl = $('fb-ball-verdict');
+  renderBallRuleLegend();
+  const ruleName = ballRuleName(rule);
   const verdictMap = {
     caught:  { cls:'v-caught',  text:'✅ 接住了！' },
     partial: { cls:'v-partial', text:'⚠️ 勉強接到' },
@@ -1388,7 +1413,7 @@ function setBallVerdict(verdict, revised){
   if(!verdictEl) return;
   if(verdictMap[verdict]){
     const vm = verdictMap[verdict];
-    verdictEl.innerHTML = `<span class="ball-verdict ${vm.cls}">${vm.text}${revised?' · 追問後改判':''}</span>`;
+    verdictEl.innerHTML = `<span class="ball-verdict ${vm.cls}">${vm.text}${ruleName?'｜'+ruleName:''}${revised?' · 追問後改判':''}</span>`;
     const block = $('fb-content-block');
     block.classList.remove('fb-issue','fb-caught','fb-partial');
     block.classList.add(verdict==='caught' ? 'fb-caught' : verdict==='partial' ? 'fb-partial' : 'fb-issue');
@@ -1405,7 +1430,8 @@ function _applyRevisedVerdict(ctx, ans){
   if(!v || v===ctx.verdict) return;
   ctx.verdict = v;
   if(ctx.logRef) ctx.logRef.verdict = v;
-  setBallVerdict(v, true);
+  const rm = String(ans).match(/\b(C1|U1|P[1-3]|M[12])\b/g);
+  setBallVerdict(v, true, rm ? rm[rm.length-1] : '');
 }
 async function askBallWhy(){
   if(!ballContext) return;
@@ -1442,7 +1468,7 @@ Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markd
     const ans = _sanitizePlainText(s2t((raw||'').trim()));
     if(ballContext===ctx){
       ctx.history.push({ q, a: ans });
-      appendGrChat('ai', ans, 'ball-chat-log');
+      appendGrChat('ai', ballRuleText(ans), 'ball-chat-log');
       _applyRevisedVerdict(ctx, ans);
     }
   }catch(e){
