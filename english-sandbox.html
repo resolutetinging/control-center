@@ -238,6 +238,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .gr-chat-msg{font-size:12.5px;line-height:1.6;padding:7px 11px;border-radius:9px;max-width:92%}
 .gr-chat-msg.gr-chat-user{align-self:flex-end;background:rgba(40,38,32,.06);color:var(--sub)}
 .gr-chat-msg.gr-chat-ai{align-self:flex-start;background:var(--en-tint);color:#2a4a38}
+#ball-chat-log .gr-chat-msg{white-space:pre-line}
 .gr-ask-row{display:flex;gap:7px}
 .gr-ask-row input[type=text]{flex:1;background:var(--bg2);border:1.5px solid transparent;border-radius:9px;padding:8px 11px;color:var(--ink);font-size:12.5px;font-family:inherit;outline:none;transition:border .18s,background .18s}
 .gr-ask-row input[type=text]:focus{border-color:var(--en-l);background:#fff}
@@ -421,7 +422,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
         <div class="fb-block-lbl">🎾 有沒有接住對方的球</div>
         <div id="fb-ball-verdict"></div>
         <details class="ball-rule-legend"><summary>判定標準說明</summary><ul id="ball-rule-list"></ul></details>
-        <div class="fb-block-body" id="fb-content-text"></div>
+        <div class="fb-block-body" id="fb-content-text" style="white-space:pre-line"></div>
         <div class="resp-footer">
           <button class="save-btn" id="save-fb_content" onclick="savePhrase('fb_content')">⭐ 收藏</button>
         </div>
@@ -662,13 +663,16 @@ const GRAMMAR_KEY = 'es_grammar_lib';
 // 取代原本「回覆含任何問句一律 caught」的鐵律：換話題的問句最多算 partial
 // 11-17：規則加編號 C1/U1/P1–P3/M1/M2、禁止自創標準（使用者回報先回應再問相關問題卻被以「沒延伸原話題」判勉強接到）、誤解時須點出被誤解字詞；promptA 與追問 max_tokens 1500→1800
 // 11-02：加「開場本身不清楚」規則（使用者回報走廊的貓開場指涉不明卻被判勉強接到），誤解規則限定開場清楚時；評分 promptA 與追問 askBallWhy 共用
+// 11-17（二）：判定改由程式 computeBallVerdict 依 LLM 回的事實欄位計算（使用者回報先回應情緒再提議換一家，LLM 判提議不相關且追問不改）；
+//   本常數只剩追問 askBallWhy 引用（讓 AI 解釋規則用）；加 P4（有回應、但推進內容與對方無關）
 const BALL_RUBRIC = `Core test: would the other person feel that the learner actually heard what they said?
 - "caught": the learner FIRST responds to the opener's content or feeling, THEN moves it forward — a follow-up question, a personal detail, or a proposal. The forward move may shift to a RELATED topic. Short reply + return question to a yes/no or "how's it going" opener counts as caught. Examples: (a) "how's your week?" → "pretty tough, how about you?" → caught. (b) "Looks like we're all set to start on time." → "yes, how about starting from the agenda?" → caught. (c) "Lots of meetings today?" → "same here, tough meetings. how's your plan for the rest of the day?" → caught.
 - "partial": only half done — EITHER responds but adds nothing to move forward ("Haha, yeah." / "It's fine."), OR skips responding and jumps to a new question/topic that still has some link to the opener's mood or situation. Example: opener about being so bored they're counting pretzel bags → "Do you wanna try some sleeping candy?" → partial (links to feeling sleepy, but skips the boredom they mentioned).
 - "missed": no response AND no link — a completely unrelated topic, an answer to a different question, or a reply built on misunderstanding the opener that would confuse the other person. A question alone does NOT make a reply caught.
 If the opener itself is unclear or refers to something the learner could not know (an unexplained event, person, animal, or object), the learner is not at fault: a reply that asks what the other person means, or one that responds to a reasonable interpretation of the opener and then moves forward, counts as caught.
 If the learner misunderstood a CLEAR opener, judge by how the reply would land for the other person: still fits → partial; does not fit → missed.
-Rule IDs (every judgment must name exactly one): C1 = responded first, then moved forward (a related-topic follow-up counts); U1 = opener unclear, reasonable reply → caught; P1 = responded but nothing moves it forward; P2 = skipped responding, jumped to a linked question/topic; P3 = misunderstood a clear opener but the reply still fits; M1 = no response and no link; M2 = misunderstood a clear opener and the reply does not fit.
+Rule IDs (every judgment must name exactly one): C1 = responded first, then moved forward (a related-topic follow-up counts); U1 = opener unclear, reasonable reply → caught; P1 = responded but nothing moves it forward; P2 = skipped responding, jumped to a linked question/topic; P4 = responded, but the follow-up question or proposal has no link at all to what the other person said; P3 = misunderstood a clear opener but the reply still fits; M1 = no response and no link; M2 = misunderstood a clear opener and the reply does not fit.
+A forward move counts as linked whenever it has ANY connection to the other person's topic, situation, feeling, or problem: proposing a solution or alternative to a problem they mentioned is linked (e.g. they complain about a long wait → suggesting a different place next time is linked); a follow-up on a related topic is linked. Only a completely unrelated move is not linked.
 Only these rules may justify a verdict. Never invent other criteria — for example "did not keep discussing the original topic", "the jump was too big", or "did not respond fully" are NOT reasons for partial when the reply responded to the opener first and then asked a related follow-up (that is C1).
 For P3 or M2, name the exact word or phrase in the opener that was misunderstood, what the learner apparently took it to mean, and what it means here (in Traditional Chinese, e.g. "panel 在這裡指座談（講者上台對談），不是展板").`;
 const AUTO_SPEAK_KEY = 'es_auto_speak'; // 預設不自動撥音，使用者自行勾選才開啟
@@ -1119,31 +1123,42 @@ Situation: ${sit.en}
 Native speaker's opener: "${curOpener}"
 Learner's reply: "${userResp}"
 
-Write 5 JSON fields about the learner's reply AND the opener:
+Write these JSON fields about the learner's reply AND the opener:
 
 opener_zh: 用繁體中文白話解釋：(1)對方這句話的字面意思是什麼（說清楚情境背景）；(2)對方說這句話帶著什麼情緒或感受（例如：欣喜、輕鬆、期待、久違感、自嘲式幽默、輕描淡寫的反諷）。語氣輕鬆像在跟朋友解釋。若原句本身是自嘲、反諷、或「至少還好」這種低調幽默（例如"that's a plus"這類講法），要點出這種語感，不要簡化成單純正面情緒；但不要過度延伸猜測對方在暗示某件更糟的事沒說出來。限45字。
 
 fb_tone: 用繁體中文分析這句回覆的語氣——偏正式還是偏隨便？是否符合「${sit.en}」這個場合的語氣要求？如果合適就說「語氣符合場合」並給一句具體理由；如果不合適，說清楚是哪種語氣偏差、為什麼在這個場合不好用。限40字。
 
-fb_ball_verdict: Evaluate whether the learner's reply kept the conversation going. Use EXACTLY one of these three words, and put the rule ID you applied in fb_ball_rule:
-${BALL_RUBRIC}
+CONVERSATION FACTS — answer each fact question honestly; do NOT judge whether the reply "caught the ball" (the app computes that from your facts). Every quote must be copied word-for-word from the learner's reply (keep their original spelling and mistakes), never paraphrased.
 
-fb_content: 用繁體中文說明接球狀況。第一句必須依 fb_ball_rule 的條文說明判定理由（只能用上列規則，不得自創標準）；若為 P3／M2，必須點出被誤解的字詞與它在此的正確意思。再根據 verdict 調整語氣：
-- caught → 第一句說哪裡做得好（具體指出接球動作）；第二句給一個可讓對話更自然的升級英文例句。CRITICAL: 若學習者已使用問句或行動提案，升級例句必須是比他們說的更進一步的版本，絕不能建議他們去做他們已經做了的事。
-- partial → 第一句說做到了哪一半、缺了哪一半（有回應但沒往前推，或沒先回應對方就直接轉向）；第二句給一個補足缺口的英文例句（沒先回應的，示範先接一句對方的話再問）。CRITICAL: 絕對不能建議學習者加一個他們在原句中已經加了的問句或內容。
-- missed → 第一句說什麼沒有被接住；第二句給一個完整示範的英文例句。
-不准只說大方向，一定要有具體英文例句（不得使用 prompt 中的舉例）。限80字。
+ball_unclear: true if the opener itself is unclear or refers to something the learner could not know (an unexplained event, person, animal, or object); otherwise false.
 
-fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節；若回覆沒先回應對方的話，優先建議先接一句回應）。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
+ball_responded: {"yes": true if the learner reacts to the opener's content or feeling (agreeing, sympathizing, answering its question, commenting on it — even with wrong wording, e.g. "That's sounds frustrated" still responds to the feeling), "quote": the exact words in the learner's reply that do this, or "" if none}.
+
+ball_forward: {"type": "question" if the learner asks a follow-up question, "detail" if they add a personal detail or experience, "proposal" if they suggest doing something, "none" if nothing moves the conversation forward; "quote": the exact words that move it forward, or "" if none}. If several apply, pick the main one.
+
+ball_linked: true if the forward move has ANY connection to the other person's topic, situation, feeling, or problem. Proposing a solution or alternative to a problem the other person mentioned IS linked (e.g. they complain about a long wait → "How about we try another place next time?" is linked). A follow-up question on a related topic IS linked. Only a completely unrelated move is false. If ball_forward.type is "none", put false.
+
+ball_misread: {"yes": true ONLY if the opener is clear AND the learner obviously misunderstood a specific word or phrase in it; "word": that word or phrase from the opener, "took_as": 繁體中文，學習者似乎把它理解成什麼, "means": 繁體中文，它在這裡的意思, "fits": true if the reply would still make sense to the other person despite the misunderstanding}. Using a wrong word while the intent is clear is NOT a misunderstanding — put that in fb_wording instead. If no misunderstanding: {"yes": false, "word": "", "took_as": "", "means": "", "fits": true}.
+
+fb_wording: 用繁體中文列出學習者的用字與文法建議（例如用錯的字該換成哪個字、That's sounds → That sounds、frustrated → frustrating），一律寫「原字 → 建議字」並簡短說明；沒有就空字串。限60字。
+
+fb_example: ONE more natural English version of the learner's reply. It MUST keep the learner's own moves (if they responded and then proposed/asked, the example also responds and then proposes/asks the same thing, just phrased better). Never tell them to add something they already did. Do not copy examples from this prompt.
+
+fb_add: 用繁體中文說還可以加什麼讓這句更完整（例如：補一個跟進問句、加個語氣緩衝詞、呼應對方說的某個細節；若回覆沒先回應對方的話，優先建議先接一句回應）。不得建議學習者已經做過的動作。若已很完整就說「已經很完整，或可加一個語氣詞讓口吻更自然」。限35字。
 
 Output ONLY valid JSON:
 {
   "opener_zh": "繁體中文（≤45字）",
   "fb_tone": "繁體中文語氣分析（≤40字）",
-  "fb_ball_verdict": "caught|partial|missed",
-  "fb_ball_rule": "C1|U1|P1|P2|P3|M1|M2",
-  "fb_content": "繁體中文接球分析（≤80字，必含英文例句）",
-  "fb_add": "（繁體中文，≤35字）說明還可以加什麼，例如：補一個問句、加語氣詞、呼應對方細節"
+  "ball_unclear": false,
+  "ball_responded": {"yes": true, "quote": "learner's exact words"},
+  "ball_forward": {"type": "question|detail|proposal|none", "quote": "learner's exact words"},
+  "ball_linked": true,
+  "ball_misread": {"yes": false, "word": "", "took_as": "", "means": "", "fits": true},
+  "fb_wording": "繁體中文（≤60字）或空字串",
+  "fb_example": "ENGLISH ONLY — one natural sentence",
+  "fb_add": "（繁體中文，≤35字）"
 }`;
 
     const promptB = `You are a business English conversation coach writing 3 DISTINCT model English replies that a learner could say the moment they hear a native speaker's opener.
@@ -1183,7 +1198,7 @@ Output ONLY valid JSON:
 }`;
 
     // TASK 3（文法／語句寫法審核）獨立成第三支呼叫，只審文法句構，不放接球判斷邏輯，
-    // 物理隔離避免污染 fb_ball_verdict（比照 07-17 教訓：合併 prompt 會讓文字互相洩漏）
+    // 物理隔離避免污染接球判斷（比照 07-17 教訓：合併 prompt 會讓文字互相洩漏）
     const promptC = `You are an English grammar and sentence-structure reviewer for a business English learner's practice tool.
 
 Learner's written reply: "${userResp}"
@@ -1200,15 +1215,20 @@ Output ONLY valid JSON:
   "gr_cat": "拼字|斷句|時態|結構|冠詞|單複數|介系詞|詞性 — ONLY if gr_ok is false, otherwise empty string"
 }`;
 
-    const sysA = 'You output ONLY valid JSON. All fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文). Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.';
+    const sysA = 'You output ONLY valid JSON. All text fields must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), except: every "quote" and "word" field is copied word-for-word in English from the given text, and "fb_example" is 100% English. Boolean fields must be JSON booleans (true/false), not strings. Never output Simplified Chinese characters. Never output Japanese (including Japanese kanji shinjitai forms and kana). Never mix in Vietnamese or any other language.';
     const sysB = 'You output ONLY valid JSON. The fields "safe", "pro", "ball" are English model replies and MUST be 100% English with zero Chinese characters.';
     const sysC = 'You output ONLY valid JSON. "gr_note" must be written exclusively in Traditional Chinese (Taiwan standard, 繁體中文), never Simplified Chinese. "gr_fixed" must be 100% English with zero Chinese characters. "gr_ok" must be a JSON boolean (true or false), not a string. "gr_cat" must be exactly one of the eight given Traditional Chinese labels (or empty string), never invent a new category name.';
 
     // 11-02：promptA 1200→1500（BALL_RUBRIC 加「開場不清楚」需多判斷）；promptB 不變
-    const callsArr = [callGroq(promptA, 1800, sysA, true), callGroq(promptB, 1200, sysB, true)];
+    // 11-17（二）：promptA 改回事實欄位＋原句引用（JSON 變長）1800→2000
+    const callsArr = [callGroq(promptA, 2000, sysA, true), callGroq(promptB, 1200, sysB, true)];
     if(inp) callsArr.push(callGroq(promptC, 1200, sysC, true));
     const [rawA, rawB, rawC] = await Promise.all(callsArr);
     results = s2tDeep({...safeParseJson(rawA), ...safeParseJson(rawB), ...(rawC?safeParseJson(rawC):{})});
+    // 11-17（二）：接球判定由程式依事實欄位計算；LLM 若仍回舊欄位一律忽略，fb_content 改由程式組
+    delete results.fb_ball_verdict; delete results.fb_ball_rule; delete results.fb_content;
+    const ballRes = inp ? computeBallVerdict(results) : null;
+    if(ballRes) results.fb_content = composeBallContent(results, ballRes.rule);
 
     // 三階潤飾語言保底：prompt 約束不可靠（比照 s2t 雙保險原則），
     // safe/pro/ball 若被模型寫成中文，單次重試 promptB 換取英文版；仍失敗則原樣顯示不無限重試
@@ -1237,14 +1257,14 @@ Output ONLY valid JSON:
       $('fb-orig').textContent = inp;
       $('fb-tone-text').textContent  = results.fb_tone||'';
       $('fb-tone-block').style.display = results.fb_tone ? 'block' : 'none';
-      $('fb-content-text').textContent = ballRuleText(results.fb_content||'');
-      $('fb-content-block').style.display = results.fb_content ? 'block' : 'none';
-      // verdict badge
-      const verdict = (results.fb_ball_verdict||'').trim().toLowerCase();
-      setBallVerdict(verdict, false, results.fb_ball_rule);
+      // 11-17（二）：事實欄位缺漏或格式錯 → 不猜判定，顯示判定失敗
+      $('fb-content-text').textContent = ballRes ? results.fb_content : '判定失敗，請再試一次。';
+      $('fb-content-block').style.display = 'block';
+      const verdict = ballRes ? ballRes.verdict : '';
+      setBallVerdict(verdict, false, ballRes ? ballRes.rule : '');
       $('fb-add-text').textContent = results.fb_add||'';
       $('fb-card').style.display='block';
-      ballContext = results.fb_content ? { sit: SITS[curSit]?.en||'', opener: curOpener, reply: inp, verdict, content: results.fb_content||'', tone: results.fb_tone||'', add: results.fb_add||'', history: [] } : null;
+      ballContext = ballRes ? { sit: SITS[curSit]?.en||'', opener: curOpener, reply: inp, verdict, rule: ballRes.rule, facts: _ballFacts(results), content: results.fb_content||'', tone: results.fb_tone||'', add: results.fb_add||'', history: [] } : null;
       $('ball-chat-log').innerHTML='';
       $('ball-ask-block').style.display = ballContext ? 'block' : 'none';
     } else {
@@ -1252,7 +1272,7 @@ Output ONLY valid JSON:
       ballContext = null;
     }
 
-    // 文法／語句寫法審核卡（獨立於接球判斷，不影響 fb_ball_verdict）
+    // 文法／語句寫法審核卡（獨立於接球判斷，不影響接球判定）
     if(inp && results.gr_note){
       $('gr-orig').textContent = inp;
       // 08-10：LLM有時會幻覺出不存在的錯誤（gr_ok=false但gr_fixed跟原句逐字相同，等於沒改），
@@ -1301,7 +1321,7 @@ Output ONLY valid JSON:
     if(inp){
       const logEntry = {
         sit: SITS[curSit]?.label||'', opener: curOpener, reply: inp,
-        verdict: (results.fb_ball_verdict||'').trim().toLowerCase(),
+        verdict: ballRes ? ballRes.verdict : '',
         fbTone: results.fb_tone||'', fbAdd: results.fb_add||''
       };
       sessionLog.push(logEntry);
@@ -1388,6 +1408,7 @@ const BALL_RULE_ZH = {
   U1:['接住了','開場本身不清楚，合理回應或反問'],
   P1:['勉強接到','有回應，但沒有往前推進'],
   P2:['勉強接到','沒先回應，直接轉到有關聯的問題'],
+  P4:['勉強接到','有回應，但接著的提問或提議和對方的話無關'],
   P3:['勉強接到','誤會了開場的意思，但回覆還說得通'],
   M1:['沒接到','沒有回應，也和開場無關'],
   M2:['沒接到','誤會了開場的意思，回覆接不上']
@@ -1395,7 +1416,7 @@ const BALL_RULE_ZH = {
 function ballRuleName(id){ const r=BALL_RULE_ZH[String(id||'').toUpperCase()]; return r?r[1]:''; }
 // 文字裡殘留的規則編號換成中文名稱（例：「依 C1 規則」→「依「先回應對方…」」）
 function ballRuleText(t){
-  return String(t||'').replace(/(?:依\s*)?\b(C1|U1|P[1-3]|M[12])\b(?:\s*規則)?/g, function(m,id){ const n=ballRuleName(id); return n?((/^依/.test(m)?'依':'')+'「'+n+'」'):m; });
+  return String(t||'').replace(/(?:依\s*)?\b(C1|U1|P[1-4]|M[12])\b(?:\s*規則)?/g, function(m,id){ const n=ballRuleName(id); return n?((/^依/.test(m)?'依':'')+'「'+n+'」'):m; });
 }
 function renderBallRuleLegend(){
   const ul=$('ball-rule-list'); if(!ul||ul.childElementCount) return;
@@ -1421,17 +1442,92 @@ function setBallVerdict(verdict, revised, rule){
     verdictEl.innerHTML='';
   }
 }
-// 追問回答最後一行「判定：…」與目前判定不同時，同步更新標籤、ballContext 與本輪 sessionLog（綜合分析的接住率）
-function _applyRevisedVerdict(ctx, ans){
-  const all = [...String(ans).matchAll(/判定\s*[:：]\s*(接住了|勉強接到|沒接到)/g)];
-  if(!all.length) return;
-  const zh = all[all.length-1][1];
-  const v = Object.keys(BALL_VERDICT_ZH).find(k=>BALL_VERDICT_ZH[k]===zh);
-  if(!v || v===ctx.verdict) return;
-  ctx.verdict = v;
-  if(ctx.logRef) ctx.logRef.verdict = v;
-  const rm = String(ans).match(/\b(C1|U1|P[1-3]|M[12])\b/g);
-  setBallVerdict(v, true, rm ? rm[rm.length-1] : '');
+// 11-17（二）：接球判定改由程式計算。LLM 只回事實欄位（附原句引用），規則固定在這裡，追問也走同一個函式重算。
+// 回傳 {rule, verdict}；欄位缺漏或格式錯回傳 null（畫面顯示判定失敗，不猜）
+const BALL_FWD_TYPES = ['question','detail','proposal','none'];
+const BALL_FWD_ZH = {question:'提問', detail:'補充自己的細節', proposal:'提議'};
+function _ballBool(v){
+  if(v===true||v===false) return v;
+  if(typeof v==='string'){ const t=v.trim().toLowerCase(); if(t==='true') return true; if(t==='false') return false; }
+  return null;
+}
+function _ballObj(v){ return v && typeof v==='object' && !Array.isArray(v) ? v : null; }
+function computeBallVerdict(f){
+  if(!_ballObj(f)) return null;
+  const unclear = _ballBool(f.ball_unclear), linkedRaw = _ballBool(f.ball_linked);
+  const r = _ballObj(f.ball_responded), fw = _ballObj(f.ball_forward), mr = _ballObj(f.ball_misread);
+  if(unclear===null || linkedRaw===null || !r || !fw || !mr) return null;
+  const responded = _ballBool(r.yes), misread = _ballBool(mr.yes);
+  const type = String(fw.type==null?'':fw.type).trim().toLowerCase();
+  if(responded===null || misread===null || !BALL_FWD_TYPES.includes(type)) return null;
+  const forward = type!=='none';
+  const linked = forward && linkedRaw;
+  let rule;
+  if(misread && !unclear){
+    const fits = _ballBool(mr.fits);
+    if(fits===null) return null;
+    rule = fits ? 'P3' : 'M2';
+  }
+  else if(unclear && (responded || forward)) rule = 'U1';
+  else if(responded && forward && linked) rule = 'C1';
+  else if(responded && forward) rule = 'P4';
+  else if(responded) rule = 'P1';
+  else if(forward && linked) rule = 'P2';
+  else rule = 'M1';
+  const verdict = (rule==='C1'||rule==='U1') ? 'caught' : rule[0]==='P' ? 'partial' : 'missed';
+  return { rule, verdict };
+}
+// 只保留事實欄位（追問時送回給 LLM 參考、存進 ballContext）
+function _ballFacts(f){
+  const o={}; ['ball_unclear','ball_responded','ball_forward','ball_linked','ball_misread'].forEach(k=>{ o[k]=f[k]; });
+  return o;
+}
+// 由事實欄位組白話接球說明（純文字，畫面用 textContent 顯示；收藏也存這段）
+function composeBallContent(f, rule){
+  const cut = (v,n) => String(v==null?'':v).replace(/\s+/g,' ').trim().slice(0,n||160);
+  const r = f.ball_responded||{}, fw = f.ball_forward||{}, mr = f.ball_misread||{};
+  const type = String(fw.type||'').trim().toLowerCase();
+  const lines = [];
+  if(_ballBool(f.ball_unclear)) lines.push('開場本身不太清楚（提到你不可能知道的事），不是你的問題。');
+  if(mr && _ballBool(mr.yes) && (rule==='P3'||rule==='M2')){
+    const w=cut(mr.word,60), means=cut(mr.means,80), took=cut(mr.took_as,80);
+    let t = w ? '「'+w+'」在這裡指'+(means||'（未說明）') : '你可能誤會了開場的某個字詞';
+    if(took) t += '，你可能理解成'+took;
+    t += '；'+(rule==='P3' ? '不過你的回覆還說得通。' : '所以回覆接不上對方的話。');
+    lines.push(t);
+  }
+  const parts = [];
+  const rq = cut(r.quote);
+  if(_ballBool(r.yes)) parts.push('有先回應對方'+(rq?'：「'+rq+'」':''));
+  else parts.push('沒有先回應對方說的內容或情緒');
+  const fq = cut(fw.quote);
+  if(BALL_FWD_ZH[type]){
+    parts.push('有往前推進（'+BALL_FWD_ZH[type]+'）'+(fq?'：「'+fq+'」':''));
+    parts.push(_ballBool(f.ball_linked) ? '和對方的情境有關聯' : '但推進的內容和對方的話沒有關聯');
+  } else parts.push('沒有往前推進（沒有提問、補充或提議）');
+  lines.push(parts.join('；')+'。');
+  const ex = cut(f.fb_example, 240);
+  if(ex) lines.push('更自然的說法：'+ex);
+  const wd = cut(f.fb_wording, 120);
+  if(wd) lines.push('用字建議：'+wd);
+  return lines.join('\n');
+}
+// 追問後程式重算的判定與目前不同時，同步更新標籤、接球說明、ballContext 與本輪 sessionLog（綜合分析的接住率）
+function _applyRevisedVerdict(ctx, res, facts){
+  if(!res) return;
+  ctx.facts = _ballFacts(facts);
+  if(res.verdict===ctx.verdict && res.rule===ctx.rule) return;
+  ctx.verdict = res.verdict;
+  ctx.rule = res.rule;
+  if(ctx.logRef) ctx.logRef.verdict = res.verdict;
+  setBallVerdict(res.verdict, true, res.rule);
+  if(ballContext===ctx && results){
+    const merged = {...facts, fb_example: facts.fb_example || results.fb_example, fb_wording: facts.fb_wording!=null ? facts.fb_wording : results.fb_wording};
+    results.fb_content = composeBallContent(merged, res.rule);
+    ctx.content = results.fb_content;
+    $('fb-content-text').textContent = results.fb_content;
+    const b=$('save-fb_content'); if(b){ b.textContent='⭐ 收藏'; b.classList.remove('saved'); }
+  }
 }
 async function askBallWhy(){
   if(!ballContext) return;
@@ -1446,8 +1542,7 @@ async function askBallWhy(){
   try{
     const verdictZh = BALL_VERDICT_ZH[ctx.verdict] || '未判定';
     const hist = ctx.history.slice(-4).map(h=>`Learner: ${h.q}\nYou: ${h.a}`).join('\n');
-    // 10-29：原本把先前判斷當「Your verdict」並要求「成立就解釋」，AI 會拿自己的分析去對問題、替判斷辯護；
-    // 改成以學習者實際回的那句話＋學習者說明的原意重新判斷，先前判斷只當參考
+    // 11-17（二）：追問也不讓 LLM 自己下判定——只重新回答事實欄位（納入學習者補充的意圖）＋ reply_zh，判定由 computeBallVerdict 重算
     const prompt = `You are a small-talk conversation coach. A business English learner wants to discuss whether their reply "caught the ball" — i.e. whether it actually responded to what the other person said and kept the conversation going.
 
 Situation: ${ctx.sit}
@@ -1456,23 +1551,51 @@ Learner's actual reply: "${ctx.reply}"
 ${hist ? `Earlier in this discussion:\n${hist}\n` : ''}
 Learner's question: "${q}"
 
-(For reference only — an earlier automatic judgment, which may be wrong: verdict ${verdictZh}; analysis "${ctx.content}")
+Earlier fact answers (may be wrong): ${JSON.stringify(ctx.facts||{})}
+The app computed from them: ${verdictZh}（${ballRuleName(ctx.rule)}）
 
-Re-judge from scratch by comparing the learner's actual reply with the opener, taking the learner's question seriously, using exactly this standard (接住了=caught, 勉強接到=partial, 沒接到=missed):
+The app judges with this standard (for your explanation only — you do NOT output a verdict; the app recomputes it from your facts):
 ${BALL_RUBRIC}
- Name the rule ID you apply (C1/U1/P1/P2/P3/M1/M2) and explain only with that rule's wording; if the earlier analysis used a reason that is not in the rules, say plainly that reason does not count. Do not defend the earlier judgment. Equally, do not side with the learner just because they disagree: the learner's opinion is not evidence. Change the verdict only when comparing the opener and the reply against the standard supports it. If the learner merely asserts the reply caught the ball (or did not) without giving new information such as the opener's context or how they understood it, keep the verdict and explain why. Whenever you change the verdict, quote the specific words in the opener and the reply that justify the new verdict. If the learner says the opener was unclear, or explains how they understood it, first judge honestly whether the opener was clear to someone in the learner's position: if it was not (e.g. it refers to an event, person, animal, or object the learner could not know about), say plainly that the opener itself was unclear and apply the unclear-opener rule above; if it was clear, say what the opener actually meant and how the learner's understanding differed, then apply the misunderstanding rule above. Do not reuse the standard's example sentences as your example. Answer ONLY about the conversational judgment (did the reply respond to the opener, keep the ball moving, fit the situation) — do NOT switch to grammar corrections unless the learner explicitly asks about grammar. Point to the specific words in the opener and the reply. Say whether your verdict changed from the earlier judgment, and make the LAST line exactly one of: 判定：接住了 / 判定：勉強接到 / 判定：沒接到. If useful, give one short example line the learner could have said — the example itself MUST be an English sentence (never translate it into Chinese), introduced with Chinese words like 可以這樣說："...". Do not use English labels like "Revised verdict" or "English example".
 
-Output in Traditional Chinese (繁體中文), plain text only, no JSON, no markdown, ≤150字（英文例句不計）.`;
-    const sys = 'Output in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
-    const raw = await callGroq(prompt, 1800, sys, false); // 11-17：→1800，規則加編號與禁自創標準；10-29：800→1200，prompt 含完整 BALL_RUBRIC、重新判斷推理較多；11-02：→1500，加判斷開場是否清楚
-    const ans = _sanitizePlainText(s2t((raw||'').trim()));
+Your job:
+1. Re-answer the same fact questions from scratch by comparing the learner's actual reply with the opener. You MUST take into account any intention or context the learner explains in their question (e.g. "I suggested another place BECAUSE we waited so long" means the proposal is linked to the long wait). Do not flip a fact just because the learner disagrees without giving new information; do not defend earlier answers either.
+   - ball_unclear: true if the opener itself is unclear or refers to something the learner could not know; otherwise false.
+   - ball_responded: {"yes": bool — does the reply react to the opener's content or feeling, even with wrong wording, "quote": the learner's exact words that do this, or ""}.
+   - ball_forward: {"type": "question|detail|proposal|none", "quote": the learner's exact words that move it forward, or ""}.
+   - ball_linked: true if the forward move has ANY connection to the other person's topic, situation, feeling, or problem. Proposing a solution or alternative to a problem the other person mentioned IS linked; a related follow-up IS linked; only completely unrelated is false; false if type is "none".
+   - ball_misread: {"yes": true ONLY if the opener is clear and the learner obviously misunderstood a specific word in it, "word": "", "took_as": "繁體中文", "means": "繁體中文", "fits": bool}. A wrong word with clear intent is NOT a misunderstanding.
+   Quotes are copied word-for-word from the learner's reply.
+2. reply_zh: 用繁體中文直接回答學習者的問題（≤150字，英文例句不計）。指出開場與回覆裡的具體字詞；只談接球（有沒有回應、有沒有推進、有沒有關聯），除非學習者問文法，否則不談文法。不得自己寫「判定：…」、不得寫規則編號，判定由程式顯示。若要舉例，例句必須是英文，用「可以這樣說："..."」帶出，不得照抄上面標準裡的例句。
+
+Output ONLY valid JSON:
+{
+  "ball_unclear": false,
+  "ball_responded": {"yes": true, "quote": ""},
+  "ball_forward": {"type": "question|detail|proposal|none", "quote": ""},
+  "ball_linked": true,
+  "ball_misread": {"yes": false, "word": "", "took_as": "", "means": "", "fits": true},
+  "reply_zh": "繁體中文（≤150字）"
+}`;
+    const sys = 'You output ONLY valid JSON. "reply_zh", "took_as" and "means" must be written in Traditional Chinese (Taiwan standard, 繁體中文) only, except English example sentences. Every "quote" and "word" is copied word-for-word in English. Boolean fields must be JSON booleans. Never output Simplified Chinese characters. Never output Japanese kanji shinjitai forms or kana.';
+    // 11-17（二）：改 JSON 模式、max_tokens 2000（事實欄位＋reply_zh，gpt-oss 隱藏推理需餘裕）；先前 1800 為純文字
+    const raw = await callGroq(prompt, 2000, sys, true);
+    let parsed = null;
+    try{ parsed = s2tDeep(safeParseJson(raw||'')); }catch(_pe){ parsed = null; }
     if(ballContext===ctx){
-      ctx.history.push({ q, a: ans });
-      appendGrChat('ai', ballRuleText(ans), 'ball-chat-log');
-      _applyRevisedVerdict(ctx, ans);
+      const replyZh = parsed ? _sanitizePlainText(String(parsed.reply_zh||'').trim()) : '';
+      if(!parsed || !replyZh){
+        appendGrChat('ai', '回答失敗，再問一次看看。', 'ball-chat-log');
+      } else {
+        const res = computeBallVerdict(parsed);
+        const line = res ? '判定：'+BALL_VERDICT_ZH[res.verdict]+'｜'+ballRuleName(res.rule) : '（這次沒有算出新判定，維持原判）';
+        const ans = ballRuleText(replyZh)+'\n'+line;
+        ctx.history.push({ q, a: ans });
+        appendGrChat('ai', ans, 'ball-chat-log');
+        if(res) _applyRevisedVerdict(ctx, res, parsed);
+      }
     }
   }catch(e){
-    if(ballContext===ctx) appendGrChat('ai', '抱歉，回答失敗了，再問一次看看。', 'ball-chat-log');
+    if(ballContext===ctx) appendGrChat('ai', '回答失敗，再問一次看看。', 'ball-chat-log');
   }
   btn.disabled = false; inp.disabled = false; btn.textContent = '問';
 }
