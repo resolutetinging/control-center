@@ -279,6 +279,15 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .combo-sit-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
 .combo-sit-tab{font-size:11px;padding:3px 9px;border-radius:20px;border:.5px solid var(--bstr);background:var(--bg2);color:var(--sub);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap;}
 .combo-sit-tab.active{background:var(--en);color:#fff;border-color:var(--en);}
+.cmp-vs-btn{width:30px;height:30px;border-radius:50%;border:none;background:var(--en);color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.cmp-vs-btn:hover{background:var(--en-l)}
+.cmp-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(40,38,32,.35);align-items:center;justify-content:center;padding:16px;}
+.cmp-dialog{background:var(--card);border-radius:14px;box-shadow:0 8px 30px rgba(40,38,32,.18);width:100%;max-width:440px;max-height:85vh;overflow-y:auto;padding:18px 18px 14px;}
+.cmp-dialog h3{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.cmp-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--en);color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;}
+.cmp-input{width:100%;padding:8px 10px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink);font-family:inherit;margin-bottom:6px;}
+.cmp-ul{margin:4px 0 0 18px;font-size:13px;color:var(--sub);line-height:1.6;word-break:break-word;}
+.cmp-known{font-size:11px;background:var(--en-tint2);color:var(--en);border-radius:8px;padding:1px 6px;}
 </style>
 </head>
 <body>
@@ -604,7 +613,10 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
   <div id="lib-main-view">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)">📚 我的 Idiom 字庫 <span id="lib-tab-count2"></span></div>
-      <button class="btn btn-ghost btn-sm" onclick="clearLib(this)" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="cmp-vs-btn" onclick="openCompare()" title="Idiom／單字比較" aria-label="Idiom／單字比較">VS</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearLib(this)" style="font-size:11px;padding:4px 10px;color:var(--faint)">清空</button>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:10px 12px;background:var(--bg2);border-radius:10px;">
       <span style="font-size:12px;color:var(--sub);">抽取</span>
@@ -634,6 +646,21 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div id="lib-quiz-results" style="display:none;"></div>
   </div>
 </div><!-- /page-lib -->
+
+<!-- 字庫：Idiom／單字比較小視窗 -->
+<div class="cmp-overlay" id="compare-overlay" onclick="closeCompare()">
+  <div class="cmp-dialog" onclick="event.stopPropagation()">
+    <h3><span class="cmp-badge" aria-hidden="true">VS</span>Idiom／單字比較</h3>
+    <p style="font-size:12px;color:var(--sub);margin-bottom:12px;">輸入 2–4 個 idiom、片語或單字，用逗號或換行分隔</p>
+    <input type="text" id="compare-input" class="cmp-input" placeholder="例：break the ice, get the ball rolling" onkeydown="if(event.key==='Enter')runCompare()"/>
+    <div id="compare-msg" style="font-size:12px;color:#c05050;min-height:16px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-primary btn-sm" id="compare-run-btn" onclick="runCompare()">比較</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeCompare()">關閉</button>
+    </div>
+    <div id="compare-result"></div>
+  </div>
+</div>
 
 <!-- ════════════ PAGE 4: COMBO ════════════ -->
 <div class="page" id="page-combo">
@@ -2877,6 +2904,131 @@ if(window.speechSynthesis) window.speechSynthesis.getVoices();
 // 白名單防呆：儲存值萬一是舊分頁key或損毀資料，不讓switchTab找不到DOM而整頁掛掉
 const lastTab = localStorage.getItem(ES_LAST_TAB_KEY);
 if(lastTab && ES_TABS.includes(lastTab) && lastTab!=='talk') switchTab(lastTab);
+// ══════════════ 字庫：Idiom／單字比較（11-18，移植自 WordVault 單字比較） ══════════════
+// 字庫頁標題列圓形「VS」按鈕 → 小視窗；沿用 callGroq（429／length／backup 已內建）
+// 不寫入任何 localStorage；已在字庫的 idiom 標「已收錄」
+function parseCompareInput(raw){
+  const seen = new Set(), out = [];
+  String(raw||'').split(/[,，、;；\n\r]+/).forEach(p=>{
+    const w = p.trim().replace(/\s+/g,' ');
+    if(!w) return;
+    const k = w.toLowerCase();
+    if(seen.has(k)) return;
+    seen.add(k); out.push(w);
+  });
+  return out;
+}
+function validateCompareWords(list){
+  if(list.length < 2) return '請至少輸入 2 個 idiom 或單字';
+  if(list.length > 4) return '最多只能比較 4 個，請減少數量';
+  if(list.some(w=>w.length > 60)) return '單個 idiom 或單字不可超過 60 字元';
+  return '';
+}
+function buildCompareSys(){
+  return '你是英文慣用語（idiom）、片語與單字的用法比較助理。【語言規定】所有中文輸出必須使用繁體中文（台灣用語），' +
+    '絕對禁止簡體中文，嚴禁日文（含漢字新字體與假名）。' +
+    '輸入是使用者輸入的 2 至 4 個英文 idiom、片語或單字，請比較它們的差異。' +
+    '只輸出 JSON，格式：{"words":[{"word","pos","chinese","core","nuance","example","example_zh"}],' +
+    '"differences":["..."],"tips":["..."]}。規則：' +
+    '(1) words 與輸入順序、數量一致，word 必須與輸入逐字相同，不得修正拼字或改變任何字元；' +
+    '若疑似拼字錯誤，仍照字解釋，並在 nuance 註明疑似拼字錯誤。' +
+    '(2) pos 為類別縮寫（idiom／phrase／n.／v.／adj.／adv.）；chinese 為簡短繁體中文意思。' +
+    '(3) core 為核心意思一句話；nuance 說明語氣、正式度、使用情境與搭配對象；' +
+    'example 為一句自然的英文例句；example_zh 為其繁體中文翻譯。' +
+    '(4) differences 為 2 至 4 點對照差異；tips 為 1 至 2 點怎麼選用的建議。' +
+    '(5) 語言：chinese、core、nuance、example_zh、differences、tips 一律用繁體中文撰寫，' +
+    '只有被比較的英文 idiom 或單字本身可以保留英文原文（例：「break the ice 偏指打破初次見面的尷尬」），' +
+    '不得整句寫英文；example 是唯一用英文的欄位。' +
+    '(6) 只輸出 JSON，不要其他文字。';
+}
+function parseCompareResult(content){
+  let obj = null;
+  try{ obj = safeParseJson(String(content||'')); }catch(_e){ obj = null; }
+  if(!obj || typeof obj!=='object' || !Array.isArray(obj.words) || !obj.words.length) return null;
+  const str = v => (typeof v==='string' || typeof v==='number') ? String(v) : '';
+  const arr = v => Array.isArray(v) ? v.map(str).filter(Boolean) : [];
+  return {
+    words: obj.words.filter(w=>w && typeof w==='object').map(w=>({
+      word:str(w.word), pos:str(w.pos), chinese:str(w.chinese), core:str(w.core),
+      nuance:str(w.nuance), example:str(w.example), example_zh:str(w.example_zh)
+    })).filter(w=>w.word),
+    differences: arr(obj.differences),
+    tips: arr(obj.tips)
+  };
+}
+// 某欄位（core／nuance／differences／tips）完全沒有中文字＝整句寫英文
+function compareHasEnglishOnly(res){
+  const cjk = /[㐀-鿿]/;
+  const bad = t => typeof t==='string' && t.trim() && !cjk.test(t);
+  return res.words.some(w=>bad(w.core) || bad(w.nuance)) || res.differences.some(bad) || res.tips.some(bad);
+}
+function renderCompareResult(res, lib){
+  const known = new Set((lib||[]).map(x=>String(x && x.idiom || '').trim().toLowerCase()));
+  const li = (label, v) => v ? '<li><b style="color:var(--ink);">'+label+'</b>'+esc(v)+'</li>' : '';
+  let h = '';
+  res.words.forEach(w=>{
+    const tag = known.has(w.word.trim().toLowerCase())
+      ? ' <span class="cmp-known">已收錄</span>' : '';
+    h += '<div style="margin-bottom:12px;">' +
+      '<div style="font-size:13px;word-break:break-word;"><b>'+esc(w.word)+'</b> ' +
+      esc(w.pos)+' '+esc(w.chinese)+tag+'</div>' +
+      '<ul class="cmp-ul">' +
+      li('核心：', w.core)+li('語感：', w.nuance)+li('例句：', w.example)+li('中譯：', w.example_zh) +
+      '</ul></div>';
+  });
+  const sec = (title, items) => items.length
+    ? '<div style="font-size:13px;font-weight:600;margin:6px 0 4px;">'+title+'</div>' +
+      '<ul class="cmp-ul" style="margin-bottom:10px;">'+items.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>' : '';
+  return h + sec('差異', res.differences) + sec('選用建議', res.tips);
+}
+function openCompare(){
+  document.getElementById('compare-overlay').style.display = 'flex';
+  const i = document.getElementById('compare-input');
+  if(i) i.focus();
+}
+function closeCompare(){
+  document.getElementById('compare-overlay').style.display = 'none';
+}
+let _compareBusy = false;
+async function runCompare(){
+  if(_compareBusy) return;
+  const msg = document.getElementById('compare-msg');
+  const out = document.getElementById('compare-result');
+  const btn = document.getElementById('compare-run-btn');
+  const list = parseCompareInput(document.getElementById('compare-input').value);
+  const bad = validateCompareWords(list);
+  if(bad){ msg.textContent = bad; return; }
+  if(!getKey()){ msg.textContent = '請先在頁面上方設定 Groq API Key'; checkKey(); return; }
+  _compareBusy = true;
+  btn.disabled = true; btn.textContent = '分析中…';
+  msg.textContent = ''; out.innerHTML = '';
+  try{
+    const user = list.join('\n');
+    let res = parseCompareResult(await callGroq(user, 1800, buildCompareSys(), true));
+    // LLM 偶爾把 differences／tips 整段寫英文，程式檢查後重問一次，第二次合格才換上
+    if(res && compareHasEnglishOnly(res)){
+      const sys2 = buildCompareSys() + '【重要】上一次回覆有欄位整句寫英文，違反語言規定；這次除 example 外每個欄位都必須是繁體中文句子。';
+      const res2 = parseCompareResult(await callGroq(user, 1800, sys2, true));
+      if(res2 && !compareHasEnglishOnly(res2)) res = res2;
+    }
+    if(res && typeof s2tDeep==='function') res = s2tDeep(res);
+    if(!res){ msg.textContent = '解析失敗，請再試一次'; }
+    else{
+      let lib = [];
+      try{ lib = JSON.parse(localStorage.getItem(IDIOM_LIB_KEY)||'[]'); }catch(_e){ lib = []; }
+      out.innerHTML = renderCompareResult(res, Array.isArray(lib) ? lib : []);
+    }
+  }catch(e){
+    msg.textContent = '比較失敗：' + (e && e.message ? e.message : '請稍後再試');
+  }finally{
+    _compareBusy = false;
+    btn.disabled = false; btn.textContent = '比較';
+  }
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ const o = document.getElementById('compare-overlay'); if(o && o.style.display==='flex') closeCompare(); }
+});
+
 </script>
 <script src="cc_zht.js"></script>
 <script src="cc_store.js"></script>
