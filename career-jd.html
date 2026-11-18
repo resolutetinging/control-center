@@ -957,6 +957,18 @@ async function runAnalysis(){
     st.textContent = '失敗：'+e.message;
   }finally{ busy = false; updateBtn(); }
 }
+// 翻譯結果的中文比例：中文字／（中文字＋英文字母），縮寫保留英文仍遠高於門檻；<0.3 視為沒翻
+function zhLooksTranslated(raw){
+  let txt = String(raw==null?'':raw);
+  try{
+    const o = safeParseJson(txt);
+    if(o && Array.isArray(o.sections)) txt = o.sections.map(x=> x && typeof x === 'object'
+      ? String(x.title||'')+' '+(Array.isArray(x.items)?x.items.join(' '):'') : '').join(' ');
+  }catch(_e){}
+  let c = 0, l = 0;
+  for(const ch of txt){ if(CJK_RE.test(ch)) c++; else if(/[A-Za-z]/.test(ch)) l++; }
+  return c + l > 0 && c / (c + l) >= 0.3;
+}
 // 11-18：JD 翻譯改為手動按鈕；距上次 AI 呼叫未滿 65 秒時由 waitQuota 倒數（避開 Groq 每分鐘額度）
 function showZhButton(msg){
   const el = document.getElementById('jd-zh');
@@ -984,8 +996,24 @@ async function translateJd(){
     const zhSys = '你是專業翻譯。只輸出一個合法 JSON 物件，使用台灣繁體中文與台灣用語。';
     let max = Math.min(4500, Math.max(1500, Math.round(jd.length*1.0)));
     max = Math.max(1200, Math.min(max, TPM_SAFE - estTokens(zhPrompt + zhSys)));
-    const zh = await gcall(zhPrompt, max, zhSys, true);
+    let zh = await gcall(zhPrompt, max, zhSys, true);
     if(jd !== curJd) return;
+    // 11-18：AI 偶爾原樣回英文（使用者截圖），程式檢查中文比例，不足就加強指示重問一次
+    if(!zhLooksTranslated(zh)){
+      document.getElementById('jd-zh').textContent = 'AI 回傳仍是英文，稍後自動重試一次…';
+      await waitQuota(st);
+      if(jd !== curJd) return;
+      st.textContent = '重新翻譯 JD 中…';
+      const zhSys2 = zhSys + '上一次回覆照抄英文原文、沒有翻譯，違反要求。這次每個 title 與 items 都必須是繁體中文句子；只有公司名、產品名、縮寫（如 EHS、CAPEX、SPC）可保留英文。Translate every item into Traditional Chinese; never copy the English original.';
+      const zh2 = await gcall(zhPrompt, max, zhSys2, true);
+      if(jd !== curJd) return;
+      if(!zhLooksTranslated(zh2)){
+        showZhButton('AI 這次沒有翻成中文（回傳仍是英文），可再按一次');
+        st.textContent = '翻譯未成功';
+        return;
+      }
+      zh = zh2;
+    }
     renderZh(zh);
     st.textContent = '翻譯完成';
   }catch(e){
