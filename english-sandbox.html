@@ -287,6 +287,11 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
 .cmp-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--en);color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;}
 .cmp-input{width:100%;padding:8px 10px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink);font-family:inherit;margin-bottom:6px;}
 .cmp-ul{margin:4px 0 0 18px;font-size:13px;color:var(--sub);line-height:1.6;word-break:break-word;}
+.cmp-block{padding:12px 0;border-top:1px solid var(--bstr);}
+.cmp-result>.cmp-block:first-child{border-top:none;padding-top:2px;}
+.cmp-word-head{font-size:14.5px;word-break:break-word;margin-bottom:2px;}
+.cmp-word-head b{color:var(--en);font-size:15px;}
+.cmp-sec-title{font-size:13px;font-weight:700;color:var(--en);margin-bottom:4px;}
 .cmp-known{font-size:11px;background:var(--en-tint2);color:var(--en);border-radius:8px;padding:1px 6px;}
 </style>
 </head>
@@ -658,7 +663,7 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="btn btn-primary btn-sm" id="compare-run-btn" onclick="runCompare()">比較</button>
       <button class="btn btn-ghost btn-sm" onclick="closeCompare()">關閉</button>
     </div>
-    <div id="compare-result"></div>
+    <div id="compare-result" class="cmp-result"></div>
   </div>
 </div>
 
@@ -2969,16 +2974,16 @@ function renderCompareResult(res, lib){
   res.words.forEach(w=>{
     const tag = known.has(w.word.trim().toLowerCase())
       ? ' <span class="cmp-known">已收錄</span>' : '';
-    h += '<div style="margin-bottom:12px;">' +
-      '<div style="font-size:13px;word-break:break-word;"><b>'+esc(w.word)+'</b> ' +
+    h += '<div class="cmp-block">' +
+      '<div class="cmp-word-head"><b>'+esc(w.word)+'</b> ' +
       esc(w.pos)+' '+esc(w.chinese)+tag+'</div>' +
       '<ul class="cmp-ul">' +
       li('核心：', w.core)+li('語感：', w.nuance)+li('例句：', w.example)+li('中譯：', w.example_zh) +
       '</ul></div>';
   });
   const sec = (title, items) => items.length
-    ? '<div style="font-size:13px;font-weight:600;margin:6px 0 4px;">'+title+'</div>' +
-      '<ul class="cmp-ul" style="margin-bottom:10px;">'+items.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>' : '';
+    ? '<div class="cmp-block"><div class="cmp-sec-title">'+title+'</div>' +
+      '<ul class="cmp-ul">'+items.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>' : '';
   return h + sec('差異', res.differences) + sec('選用建議', res.tips);
 }
 function openCompare(){
