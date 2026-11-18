@@ -606,7 +606,12 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       </div>
     </div>
     <div class="reveal-actions">
-      <button class="btn btn-primary btn-sm" onclick="genQuestion()">下一題 →</button>
+      <button class="btn btn-primary btn-sm" id="idiom-next-btn" onclick="genQuestion()">下一題 →</button>
+    </div>
+    <div id="idiom-round-done" style="display:none;margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--en-tint2);">
+      <div id="idiom-round-done-text" style="font-size:14px;font-weight:700;color:var(--en);margin-bottom:8px;"></div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px;">可以繼續把選項加入字庫或問 AI；要再練就開新一輪，或換一個主題。</div>
+      <button class="btn btn-primary btn-sm" onclick="restartIdiomRound()">再練一輪 →</button>
     </div>
   </div>
 
@@ -2280,6 +2285,14 @@ let usedIdioms = [];   // 追蹤已出現的 idiom，避免重複
 const IDIOM_ROUND_TARGET_KEY = 'es_idiom_round_target';
 let idiomRoundTarget = Number(localStorage.getItem(IDIOM_ROUND_TARGET_KEY)) || 0; // 0=不限
 let idiomRoundCount = 0;
+let idiomRoundCorrect = 0; // 11-18：本輪答對數，練滿題數時顯示
+// 11-18：練滿設定題數就截止（使用者回報 6/5 仍可一直出題）；調高題數或「不限」會自動解除
+function idiomRoundFull(){ return idiomRoundTarget > 0 && idiomRoundCount >= idiomRoundTarget; }
+function restartIdiomRound(){
+  idiomRoundCount = 0; idiomRoundCorrect = 0;
+  updateIdiomRoundCounter();
+  genQuestion();
+}
 function setIdiomRoundTarget(v){
   idiomRoundTarget = Number(v) || 0;
   localStorage.setItem(IDIOM_ROUND_TARGET_KEY, String(idiomRoundTarget));
@@ -2294,12 +2307,22 @@ function updateIdiomRoundCounter(){
   } else {
     el.style.display = 'none';
   }
+  const full = idiomRoundFull();
+  const nb = document.getElementById('idiom-next-btn');
+  if(nb) nb.style.display = full ? 'none' : '';
+  const done = document.getElementById('idiom-round-done');
+  if(done){
+    done.style.display = full ? 'block' : 'none';
+    const t = document.getElementById('idiom-round-done-text');
+    if(t) t.textContent = `🎉 本輪 ${idiomRoundCount} 題完成，答對 ${idiomRoundCorrect} 題`;
+  }
 }
 
 function pickTopic(key){
   curTopic = key;
   // 換主題 = 開新一輪練習，歸零題數進度
   idiomRoundCount = 0;
+  idiomRoundCorrect = 0;
   updateIdiomRoundCounter();
   document.querySelectorAll('#topic-row .sit-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('topic-'+key).classList.add('active');
@@ -2308,6 +2331,7 @@ function pickTopic(key){
 
 async function genQuestion(){
   if(!curTopic) return;
+  if(idiomRoundFull()) return; // 練滿題數：只能「再練一輪」或換主題重新開始
   addedOptIdx = new Set();
   idiomContext = null; // 換題就清掉上一題的追問context，避免answer揭曉前誤觸發追問
   $('idiom-chat-log').innerHTML='';
@@ -2521,6 +2545,7 @@ function selectOpt(idx){
 
   // 累計本輪練習題數（不論答對答錯都算一題，跟Small Talk行為一致）
   idiomRoundCount++;
+  if(isCorrect) idiomRoundCorrect++;
   updateIdiomRoundCounter();
 }
 
