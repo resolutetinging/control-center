@@ -392,6 +392,7 @@ function quotaWaitMs(log, now, need){
 function updateBtn(){
   document.getElementById('go-btn').disabled = busy || !resumeText;
   const rb = document.getElementById('rerun-btn'); if(rb) rb.disabled = busy;
+  const zb = document.getElementById('zh-btn'); if(zb) zb.disabled = busy;
   if(typeof updateChatBtns === 'function') updateChatBtns();
 }
 function onJdInput(){
@@ -949,27 +950,47 @@ async function runAnalysis(){
       st.textContent = '完成（原文已是中文，未翻譯）';
       return;
     }
-    // 與分析同一分鐘再送翻譯會疊加超過免費 TPM，比照家族慣例間隔 65 秒
-    for(let s=65; s>0; s--){
-      st.textContent = '分析完成，'+s+' 秒後開始翻譯（避開 Groq 每分鐘額度）';
-      document.getElementById('jd-zh').textContent = '等待 '+s+' 秒後開始翻譯…';
-      await sleep(1000);
-    }
+    // 11-18 使用者訂：初判後不自動翻譯（沒興趣的職缺不必等 65 秒＋翻譯），需要時按鈕再翻
+    showZhButton();
+    st.textContent = '初判完成';
+  }catch(e){
+    st.textContent = '失敗：'+e.message;
+  }finally{ busy = false; updateBtn(); }
+}
+// 11-18：JD 翻譯改為手動按鈕；距上次 AI 呼叫未滿 65 秒時由 waitQuota 倒數（避開 Groq 每分鐘額度）
+function showZhButton(msg){
+  const el = document.getElementById('jd-zh');
+  if(!el) return;
+  el.textContent = ''; el.style.whiteSpace = 'normal';
+  if(msg) el.appendChild(mk('div','note',msg));
+  const b = mk('button','btn-sm','翻譯 JD'); b.type = 'button'; b.id = 'zh-btn'; b.style.marginLeft = '0';
+  b.onclick = translateJd; b.disabled = busy;
+  el.appendChild(b);
+  el.appendChild(mk('div','note','需要細看再翻譯；若距上次 AI 呼叫未滿 65 秒，會先倒數再送出'));
+}
+async function translateJd(){
+  if(busy || !curJd) return;
+  const st = document.getElementById('run-st');
+  if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
+  const jd = curJd;
+  busy = true; updateBtn();
+  try{
+    document.getElementById('jd-zh').textContent = '等待額度…';
+    await waitQuota(st);
+    if(jd !== curJd) return;   // 等待期間換了職缺就不翻舊的
     st.textContent = '翻譯 JD 中…';
     document.getElementById('jd-zh').textContent = '翻譯中…';
     const zhPrompt = '請把下列職缺 JD 全文純翻譯成台灣繁體中文。依原 JD 的段落與條列結構切分，不加評論、不摘要。只回 JSON：{"sections":[{"title":"段落標題（翻成中文）","items":["條列內容"]}]}。沒有明確標題的段落，title 給空字串。\n\n'+jd;
     const zhSys = '你是專業翻譯。只輸出一個合法 JSON 物件，使用台灣繁體中文與台灣用語。';
     let max = Math.min(4500, Math.max(1500, Math.round(jd.length*1.0)));
     max = Math.max(1200, Math.min(max, TPM_SAFE - estTokens(zhPrompt + zhSys)));
-    try{
-      const zh = await gcall(zhPrompt, max, zhSys, true);
-      renderZh(zh);
-    }catch(e2){
-      document.getElementById('jd-zh').textContent = '翻譯失敗：'+e2.message;
-    }
-    st.textContent = '完成';
+    const zh = await gcall(zhPrompt, max, zhSys, true);
+    if(jd !== curJd) return;
+    renderZh(zh);
+    st.textContent = '翻譯完成';
   }catch(e){
-    st.textContent = '失敗：'+e.message;
+    if(jd === curJd) showZhButton('翻譯失敗：'+e.message+'，可再按一次');
+    st.textContent = '翻譯失敗：'+e.message;
   }finally{ busy = false; updateBtn(); }
 }
 // 只重跑分析（不重跑翻譯），用最新偏好
