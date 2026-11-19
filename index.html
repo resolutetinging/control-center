@@ -401,6 +401,7 @@ function applyBG(preset){
   const wp=document.getElementById('bg-wallpaper');
   bg.style.background=preset.bg;
   wp.classList.remove('active');
+  _wpDataUrl='';
   localStorage.setItem(WP_KEY,'preset:'+preset.key);
   // 切回預設色時，順手清掉舊的自訂桌布（IndexedDB 大 blob 不留孤兒資料）
   if(localStorage.getItem(WP_KEY+'__idb')==='1'){
@@ -413,6 +414,13 @@ function paintCustomWP(dataUrl){
   const wp=document.getElementById('bg-wallpaper');
   wp.style.backgroundImage='url('+dataUrl+')';
   wp.classList.add('active');
+  _wpDataUrl=dataUrl; _wpImgW=0; _wpImgH=0;
+  wpApplyPos();                       // 尺寸量到前先套模式（cover／contain／stretch）
+  wpMeasure(dataUrl, wpApplyPos);     // 量到原圖尺寸再套縮放與位置
+}
+function wpWhenMeasured(cb){
+  if(_wpImgW){ cb(); return; }
+  if(_wpDataUrl) wpMeasure(_wpDataUrl, ()=>{ wpApplyPos(); cb(); });
 }
 async function applyCustomWP(dataUrl){
   paintCustomWP(dataUrl);
@@ -425,6 +433,7 @@ async function applyCustomWP(dataUrl){
 }
 async function resetWP(){
   document.getElementById('bg-wallpaper').classList.remove('active');
+  _wpDataUrl=''; localStorage.removeItem(WP_POS_KEY);
   document.getElementById('bg-default').style.background='';
   localStorage.removeItem(WP_KEY);
   const wasIdb=localStorage.getItem(WP_KEY+'__idb')==='1';
@@ -455,6 +464,120 @@ async function loadWP(){
       if(idbV&&idbV.indexOf('custom:')===0) paintCustomWP(idbV.slice(7));
     }catch(e){ console.warn('[cc_wp] 讀取 IndexedDB 桌布失敗：',e); }
   }
+}
+
+// ── 11-19 自訂桌布顯示範圍：預覽窗口拖拉位置＋縮放；模式 cover（填滿，可拖拉縮放）／contain（完整顯示）／stretch（延展）
+// key cc_wp_pos_v1＝{mode,x,y,zoom}，與 cc_wp_v1 一樣裝置獨立、不在同步白名單
+const WP_POS_KEY='cc_wp_pos_v1';
+let _wpDataUrl='', _wpImgW=0, _wpImgH=0;
+function wpPosLoad(){
+  let p={};
+  try{ p=JSON.parse(localStorage.getItem(WP_POS_KEY)||'{}')||{}; }catch(e){ p={}; }
+  const num=(v,d,lo,hi)=>{ v=Number(v); return Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):d; };
+  return {mode:['cover','contain','stretch'].includes(p.mode)?p.mode:'cover', x:num(p.x,50,0,100), y:num(p.y,50,0,100), zoom:num(p.zoom,1,1,4)};
+}
+// 依容器尺寸算 background-size／position（cover×zoom 以像素計，position 用百分比）
+function wpCalcStyle(pos, boxW, boxH){
+  if(pos.mode==='stretch') return {size:'100% 100%', position:'center'};
+  if(pos.mode==='contain') return {size:'contain', position:'center'};
+  if(!_wpImgW||!_wpImgH||!boxW||!boxH) return {size:'cover', position:pos.x+'% '+pos.y+'%'};
+  const s=Math.max(boxW/_wpImgW, boxH/_wpImgH)*pos.zoom;
+  return {size:Math.ceil(_wpImgW*s)+'px '+Math.ceil(_wpImgH*s)+'px', position:pos.x+'% '+pos.y+'%'};
+}
+function wpApplyPos(){
+  const wp=document.getElementById('bg-wallpaper');
+  if(!wp||!_wpDataUrl) return;
+  const st=wpCalcStyle(wpPosLoad(), window.innerWidth, window.innerHeight);
+  wp.style.backgroundSize=st.size; wp.style.backgroundPosition=st.position;
+}
+function wpMeasure(dataUrl, cb){
+  const im=new Image();
+  im.onload=()=>{ if(dataUrl!==_wpDataUrl) return; _wpImgW=im.naturalWidth; _wpImgH=im.naturalHeight; cb&&cb(); };
+  im.src=dataUrl;
+}
+window.addEventListener('resize', ()=>{ if(_wpDataUrl) wpApplyPos(); });
+
+let _wpEdit=null;
+function openWPPos(){
+  if(!_wpDataUrl) return;
+  const ov=document.createElement('div');
+  ov.id='wp-pos-overlay';
+  ov.innerHTML=`<div id="wp-pos-panel" onclick="event.stopPropagation()">
+    <div class="s-title" style="margin-bottom:6px;">調整桌布顯示範圍</div>
+    <div class="wp-pos-hint">框內是目前螢幕比例；「填滿」模式可拖拉圖片選擇要呈現的區塊、用滑桿放大</div>
+    <div class="wp-pos-modes">
+      <button type="button" data-m="cover" onclick="wpPosMode('cover')">填滿（可拖拉）</button>
+      <button type="button" data-m="contain" onclick="wpPosMode('contain')">完整顯示</button>
+      <button type="button" data-m="stretch" onclick="wpPosMode('stretch')">延展</button>
+    </div>
+    <div id="wp-pos-box"></div>
+    <div class="wp-pos-zoom"><span>縮放</span><input type="range" id="wp-pos-zoom" min="1" max="4" step="0.05" oninput="wpPosZoom(this.value)"/><span id="wp-pos-zoom-v"></span></div>
+    <div class="s-row" style="margin-top:12px;margin-bottom:0;justify-content:flex-end;">
+      <button class="s-btn s-btn-g" onclick="wpPosCenter()">置中</button>
+      <button class="s-btn s-btn-g" onclick="closeWPPos()">取消</button>
+      <button class="s-btn s-btn-pr" onclick="saveWPPos()">套用</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click', closeWPPos);
+  document.body.appendChild(ov);
+  const box=document.getElementById('wp-pos-box');
+  const ratio=window.innerWidth/Math.max(1,window.innerHeight);
+  const maxW=Math.min(520, window.innerWidth-64), maxH=Math.min(360, window.innerHeight*0.5);
+  let w=maxW, h=w/ratio; if(h>maxH){ h=maxH; w=h*ratio; }
+  box.style.width=Math.round(w)+'px'; box.style.height=Math.round(h)+'px';
+  box.style.backgroundImage='url("'+_wpDataUrl.replace(/"/g,'%22')+'")';
+  _wpEdit={pos:wpPosLoad(), drag:null};
+  box.addEventListener('pointerdown', wpPosDown);
+  box.addEventListener('pointermove', wpPosMove);
+  box.addEventListener('pointerup', wpPosUp);
+  box.addEventListener('pointercancel', wpPosUp);
+  wpPosRender();
+}
+function wpPosRender(){
+  if(!_wpEdit) return;
+  const box=document.getElementById('wp-pos-box'); if(!box) return;
+  const p=_wpEdit.pos, st=wpCalcStyle(p, box.clientWidth, box.clientHeight);
+  box.style.backgroundSize=st.size; box.style.backgroundPosition=st.position;
+  box.style.cursor=p.mode==='cover'?'grab':'default';
+  document.querySelectorAll('#wp-pos-panel .wp-pos-modes button').forEach(b=>b.classList.toggle('on', b.dataset.m===p.mode));
+  const z=document.getElementById('wp-pos-zoom'), zv=document.getElementById('wp-pos-zoom-v');
+  z.value=p.zoom; z.disabled=p.mode!=='cover'; zv.textContent=p.zoom.toFixed(2)+'×';
+}
+function wpPosMode(m){ if(!_wpEdit) return; _wpEdit.pos.mode=m; wpPosRender(); }
+function wpPosZoom(v){ if(!_wpEdit) return; _wpEdit.pos.zoom=Math.min(4,Math.max(1,Number(v)||1)); wpPosRender(); }
+function wpPosCenter(){ if(!_wpEdit) return; _wpEdit.pos.x=50; _wpEdit.pos.y=50; _wpEdit.pos.zoom=1; wpPosRender(); }
+function wpPosDown(e){
+  if(!_wpEdit||_wpEdit.pos.mode!=='cover') return;
+  const box=e.currentTarget;
+  _wpEdit.drag={sx:e.clientX, sy:e.clientY, x:_wpEdit.pos.x, y:_wpEdit.pos.y};
+  try{ box.setPointerCapture(e.pointerId); }catch(_e){}
+  box.style.cursor='grabbing'; e.preventDefault();
+}
+function wpPosMove(e){
+  if(!_wpEdit||!_wpEdit.drag) return;
+  const box=e.currentTarget, d=_wpEdit.drag, p=_wpEdit.pos;
+  const st=wpCalcStyle(p, box.clientWidth, box.clientHeight).size.split(' ');
+  const ox=parseFloat(st[0])-box.clientWidth, oy=parseFloat(st[1])-box.clientHeight;
+  // 往右拖＝看到左邊＝百分比變小
+  if(ox>0) p.x=Math.min(100,Math.max(0, d.x-(e.clientX-d.sx)/ox*100));
+  if(oy>0) p.y=Math.min(100,Math.max(0, d.y-(e.clientY-d.sy)/oy*100));
+  wpPosRender();
+}
+function wpPosUp(e){
+  if(!_wpEdit) return;
+  _wpEdit.drag=null;
+  if(e&&e.currentTarget&&_wpEdit.pos.mode==='cover') e.currentTarget.style.cursor='grab';
+}
+function closeWPPos(){
+  const ov=document.getElementById('wp-pos-overlay'); if(ov) ov.remove();
+  _wpEdit=null;
+}
+function saveWPPos(){
+  if(!_wpEdit) return;
+  const p=_wpEdit.pos;
+  localStorage.setItem(WP_POS_KEY, JSON.stringify({mode:p.mode, x:Math.round(p.x*10)/10, y:Math.round(p.y*10)/10, zoom:Math.round(p.zoom*100)/100}));
+  wpApplyPos();
+  closeWPPos();
 }
 
 // ── CLOCK ──
@@ -559,6 +682,7 @@ function renderTab(tab){
         </div>
         <input type="file" id="wp-inp" accept="image/*" style="display:none;" onchange="onWPFile(this)"/>
         <div class="s-row">
+          ${_wpDataUrl?'<button class="s-btn s-btn-g" onclick="wpWhenMeasured(openWPPos)">🖼 調整顯示範圍</button>':''}
           <button class="s-btn s-btn-g" onclick="resetWP();renderTab('appearance');">重設預設</button>
         </div>
       </div>
@@ -664,7 +788,8 @@ function applyBG_ui(key){
 function onWPFile(inp){
   const f=inp.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=ev=>{applyCustomWP(ev.target.result);renderTab('appearance');};
+  // 11-19：新圖從置中填滿開始，上傳後直接開預覽讓使用者拖拉選範圍
+  r.onload=async ev=>{localStorage.removeItem(WP_POS_KEY);await applyCustomWP(ev.target.result);renderTab('appearance');wpWhenMeasured(openWPPos);};
   r.readAsDataURL(f);
 }
 function saveAllLinks(){
