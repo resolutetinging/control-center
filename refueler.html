@@ -74,6 +74,25 @@ body{
 
 /* Section titles */
 .sec-emoji{font-size:17px;margin-right:7px;}
+/* 目錄：寬螢幕固定左側（內容讓位）；窄螢幕右下角懸浮按鈕 */
+#sec-coffee,#sec-water,#sec-cal-coffee,#sec-cal-water,#sec-cost,#sec-shop,#sec-ai{scroll-margin-top:66px;}
+.toc{display:flex;flex-wrap:wrap;gap:8px;background:var(--card);border:.5px solid var(--bstr);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);}
+.toc a{font-size:12px;color:var(--sub);background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:5px 12px;text-decoration:none;white-space:nowrap;}
+.toc a:hover{background:var(--coffee);color:#fff;border-color:var(--coffee);}
+.toc a.active,#toc-panel a.active{background:var(--coffee);color:#fff;border-color:var(--coffee);}
+#toc-fab,#toc-panel{display:none;}
+@media(min-width:1100px){
+  body{padding-left:264px;}
+  .toc{position:fixed;left:24px;top:72px;bottom:20px;width:224px;flex-direction:column;flex-wrap:nowrap;gap:6px;overflow-y:auto;align-content:flex-start;z-index:20;}
+  .toc a{border-radius:8px;white-space:normal;flex:none;}
+}
+@media(max-width:1099px){
+  .toc{display:none;}
+  #toc-fab{display:block;position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:60;background:var(--coffee);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer;font-family:inherit;}
+  #toc-panel{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(max(16px,env(safe-area-inset-bottom)) + 46px);z-index:60;width:min(260px,calc(100vw - 32px));max-height:min(60vh,calc(100vh - 100px));overflow-y:auto;flex-direction:column;gap:6px;background:var(--card);border:.5px solid var(--bstr);border-radius:12px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);}
+  #toc-panel.open{display:flex;}
+  #toc-panel a{font-size:12px;color:var(--sub);background:var(--bg2);border:.5px solid var(--border);border-radius:8px;padding:7px 12px;text-decoration:none;}
+}
 .sec-title{font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:center;}
 
 /* ── Quick Add Form ── */
@@ -285,11 +304,23 @@ body{
   <span id="rf-date-warn" style="display:none;font-size:11px;color:var(--danger);"></span>
 </div>
 
+<nav class="toc" id="toc" aria-label="目錄">
+  <a href="#sec-coffee">☕ Coffee 咖啡記錄</a>
+  <a href="#sec-water">💧 Water 水分記錄</a>
+  <a href="#sec-cal-coffee">📅 咖啡日曆</a>
+  <a href="#sec-cal-water">📅 水分日曆</a>
+  <a href="#sec-cost">💰 消費分析</a>
+  <a href="#sec-shop">🏪 店家</a>
+  <a href="#sec-ai">✨ AI 攝取健康分析</a>
+</nav>
+<button type="button" id="toc-fab" aria-expanded="false" aria-controls="toc-panel">☰ 目錄</button>
+<div id="toc-panel" role="navigation" aria-label="目錄"></div>
+
 <!-- Main 2-Column Grid (4 direct children → auto-aligned rows) -->
 <div id="main">
 
   <!-- ① Coffee Add Card -->
-  <div class="card">
+  <div class="card" id="sec-coffee">
     <div class="card-header">
       <div class="sec-title"><span class="sec-emoji">☕</span>Coffee 咖啡記錄</div>
     </div>
@@ -335,7 +366,7 @@ body{
   </div>
 
   <!-- ② Water Add Card -->
-  <div class="card">
+  <div class="card" id="sec-water">
     <div class="card-header">
       <div class="sec-title"><span class="sec-emoji">💧</span>Water 水分記錄</div>
     </div>
@@ -359,7 +390,7 @@ body{
   </div>
 
   <!-- ③ Coffee Calendar -->
-  <div class="card">
+  <div class="card" id="sec-cal-coffee">
     <div class="card-body">
       <div class="cal-header">
         <div class="cal-month" id="c-cal-title"></div>
@@ -382,7 +413,7 @@ body{
   </div>
 
   <!-- ④ Water Calendar -->
-  <div class="card">
+  <div class="card" id="sec-cal-water">
     <div class="card-body">
       <div class="cal-header">
         <div class="cal-month" id="w-cal-title"></div>
@@ -405,7 +436,7 @@ body{
   </div>
 
   <!-- ⑤ Cost Analysis (full width) -->
-  <div class="card" style="grid-column:1/-1;">
+  <div class="card" id="sec-cost" style="grid-column:1/-1;">
     <div class="card-header">
       <div class="sec-title"><span class="sec-emoji">💰</span>消費分析</div>
     </div>
@@ -415,7 +446,7 @@ body{
   </div>
 
   <!-- ⑥ Shop List (full width) -->
-  <div class="card" style="grid-column:1/-1;">
+  <div class="card" id="sec-shop" style="grid-column:1/-1;">
     <div class="card-header">
       <div class="sec-title"><span class="sec-emoji">🏪</span>店家</div>
     </div>
@@ -428,7 +459,7 @@ body{
 
 <!-- AI Analysis Card -->
 <div id="ai-wrap">
-  <div class="card">
+  <div class="card" id="sec-ai">
     <div class="ai-header">
       <div>
         <div class="ai-title">✨ AI 攝取健康分析</div>
@@ -1670,6 +1701,43 @@ setRFDate(new Date()); // 預設今天
 refresh(); // 先從 localStorage 立即渲染
 loadFromGist().then(refresh); // 再從 Gist 更新最新資料
 checkWaterSchedule(); // 頁面載入時立即檢查是否在提醒時間窗內
+
+// 目錄：寬螢幕固定左側＋scrollspy；窄螢幕右下角懸浮按鈕（連結由 #toc 複製）
+function initToc(){
+  const toc=document.getElementById('toc'), fab=document.getElementById('toc-fab'), panel=document.getElementById('toc-panel');
+  if(!toc||!fab||!panel) return;
+  const links=[...toc.querySelectorAll('a[href^="#sec-"]')];
+  links.forEach(a=>panel.appendChild(a.cloneNode(true)));
+  const all=[...toc.querySelectorAll('a'),...panel.querySelectorAll('a')];
+  const setActive=id=>all.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+id));
+  const setOpen=o=>{panel.classList.toggle('open',o);fab.setAttribute('aria-expanded',o?'true':'false');};
+  let pref=null;
+  let lock=false,lockT=null,lockMax=null;
+  const unlock=()=>{lock=false;clearTimeout(lockT);clearTimeout(lockMax);};
+  all.forEach(a=>a.addEventListener('click',()=>{pref=a.getAttribute('href').slice(1);setActive(pref);lock=true;
+    clearTimeout(lockT);clearTimeout(lockMax);lockT=setTimeout(unlock,400);lockMax=setTimeout(unlock,1000);}));
+  fab.addEventListener('click',e=>{e.stopPropagation();setOpen(!panel.classList.contains('open'));});
+  panel.addEventListener('click',e=>{if(e.target.closest('a')) setOpen(false);});
+  document.addEventListener('click',e=>{if(!panel.contains(e.target)&&e.target!==fab) setOpen(false);});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape') setOpen(false);});
+  const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+  if(!secs.length) return;
+  // 雙欄時同列兩卡 top 相同：以最後點選者為準
+  let ticking=false;
+  const update=()=>{ ticking=false; if(lock) return;
+    const line=window.innerHeight*0.3; let cur=secs[0];
+    if(window.scrollY>4){ for(const el of secs){ if(el.getBoundingClientRect().top<=line) cur=el; } 
+      const pe=pref&&document.getElementById(pref);
+      if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-2){ cur=secs[secs.length-1];
+        const q=pe&&pe.getBoundingClientRect(); if(q&&q.top>=0&&q.top<window.innerHeight) cur=pe; }
+      if(pe&&Math.abs(pe.getBoundingClientRect().top-cur.getBoundingClientRect().top)<2) cur=pe; }
+    setActive(cur.id); };
+  window.addEventListener('scroll',()=>{ if(lock){clearTimeout(lockT);lockT=setTimeout(()=>{unlock();update();},150);} if(!ticking){ ticking=true; requestAnimationFrame(update); } },{passive:true});
+  window.addEventListener('resize',update);
+  if('ResizeObserver' in window) new ResizeObserver(()=>{ if(!ticking){ ticking=true; requestAnimationFrame(update); } }).observe(document.body);
+  update();
+}
+initToc();
 // Chart.js 縮放重繪（DPR 變化偵測）
 (function(){var lastDPR=window.devicePixelRatio;function redrawCharts(){if(window.Chart&&window.Chart.instances){Object.values(window.Chart.instances).forEach(function(c){try{c.resize();}catch(e){}});}}function watchDPR(){var mq=window.matchMedia('(resolution: '+lastDPR+'dppx)');mq.addEventListener('change',function(){lastDPR=window.devicePixelRatio;redrawCharts();watchDPR();},{once:true});}watchDPR();var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(redrawCharts,150);});})();
 </script>
