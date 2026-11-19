@@ -1726,6 +1726,7 @@ function initToc(){
   let ticking=false;
   const update=()=>{ ticking=false; if(lock) return;
     const line=window.innerHeight*0.3; let cur=secs[0];
+    { const pe0=pref&&document.getElementById(pref); if(pe0){ const t0=pe0.getBoundingClientRect().top; if(t0>=-5&&t0<=window.innerHeight*0.5){ setActive(pref); return; } } }
     if(window.scrollY>4){ for(const el of secs){ if(el.getBoundingClientRect().top<=line) cur=el; } 
       const pe=pref&&document.getElementById(pref);
       if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-2){ cur=secs[secs.length-1];
@@ -1733,6 +1734,7 @@ function initToc(){
       if(pe&&Math.abs(pe.getBoundingClientRect().top-cur.getBoundingClientRect().top)<2) cur=pe; }
     setActive(cur.id); };
   window.addEventListener('scroll',()=>{ if(lock){clearTimeout(lockT);lockT=setTimeout(()=>{unlock();update();},150);} if(!ticking){ ticking=true; requestAnimationFrame(update); } },{passive:true});
+  ['wheel','touchmove','keydown'].forEach(ev=>window.addEventListener(ev,()=>{pref=null;},{passive:true}));
   window.addEventListener('resize',update);
   if('ResizeObserver' in window) new ResizeObserver(()=>{ if(!ticking){ ticking=true; requestAnimationFrame(update); } }).observe(document.body);
   update();
