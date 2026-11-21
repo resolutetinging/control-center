@@ -1,8 +1,14 @@
 {
-  "checked_at": "2026-11-20T07:53:36Z",
-  "items": [],
+  "checked_at": "2026-11-21T07:52:34Z",
+  "items": [
+    {
+      "name": "AI Tracker 每日更新",
+      "status": "stale",
+      "href": "https://github.com/resolutetinging/aitracker/actions/workflows/daily-update.yml",
+      "detail": "最近成功 1 天前，預期每日"
+    }
+  ],
   "ok": [
-    "AI Tracker 每日更新",
     "AI Tracker NVIDIA 週查證",
     "AI Tracker 中美科技戰週查證",
     "AI Tracker 產業導入月查證",
