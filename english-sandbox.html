@@ -951,15 +951,17 @@ async function genOpener(){
       ? `\n\nAVOID — do NOT generate these or close variations:\n${recent.map(s=>`- "${s}"`).join('\n')}`
       : '';
     // Cycle through different opener styles to ensure variety
+    // 11-23：每個風格都綁「這個情境當下」。原「分享最近發生在自己身上的事」「自嘲」沒綁情境，
+    // 生出與情境無關的句子（幫同事慶生卻講早上咖啡差點灑到鍵盤）
     const baseStyles = [
-      'a casual observation or comment about the immediate environment',
-      'a light complaint or mild frustration about something relatable',
-      'a question that shows genuine curiosity about the other person',
-      'a quick share about something that happened to the speaker recently',
-      'a humorous or self-deprecating remark',
-      'a comment referencing shared context (weather, day of week, recent event)',
-      'a compliment or positive observation',
-      'an open-ended question to invite the other person in',
+      'a casual observation about something in this situation right now',
+      'a light, relatable complaint about something in this situation',
+      'a question about the other person that fits this situation',
+      'a quick share of the speaker\'s own reaction to what is happening in this situation',
+      'a humorous or self-deprecating remark about the speaker\'s part in this situation',
+      'a comment linking this situation to shared context (weather, day of week, time of day)',
+      'a compliment or positive observation about something in this situation',
+      'an open-ended question about this situation to invite the other person in',
     ];
     // 10-29：改隨機抽（避開上一次的風格）＋隨機說話者狀態。原本用 usedOpeners.length 輪替，
     // 重新整理後清單歸零，每次開頁第一句的 prompt 完全相同，AI 一直產出同一句
