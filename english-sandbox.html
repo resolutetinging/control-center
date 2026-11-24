@@ -347,7 +347,6 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
     <div class="sit-row" id="sit-row" style="flex-wrap:wrap;gap:6px;">
       <button class="sit-btn" id="sit-coffee"  data-cat="work" onclick="pickSit('coffee')">☕ 咖啡機旁偶遇</button>
       <button class="sit-btn" id="sit-meeting" data-cat="work" onclick="pickSit('meeting')">⏰ 會議前三分鐘</button>
-      <button class="sit-btn" id="sit-lunch"   data-cat="work" onclick="pickSit('lunch')">🍱 與客戶等外送</button>
       <button class="sit-btn" id="sit-event"   data-cat="work" onclick="pickSit('event')">🤝 業界活動場合</button>
       <button class="sit-btn" id="sit-elevator" data-cat="work" onclick="pickSit('elevator')">🛗 電梯巧遇</button>
       <button class="sit-btn" id="sit-firstday" data-cat="work" onclick="pickSit('firstday')">🆕 新人第一天</button>
@@ -364,6 +363,16 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="sit-btn" id="sit-breakroom" data-cat="work" onclick="pickSit('breakroom')">🍵 茶水間問候</button>
       <button class="sit-btn" id="sit-checkin"  data-cat="work" onclick="pickSit('checkin')">🙋 近況問候</button>
       <button class="sit-btn" id="sit-mailroom" data-cat="work" onclick="pickSit('mailroom')">📦 收發室拿包裹</button>
+      <button class="sit-btn" id="sit-clientlobby" data-cat="work" onclick="pickSit('clientlobby')">🏢 客戶大廳等候</button>
+      <button class="sit-btn" id="sit-taxi" data-cat="work" onclick="pickSit('taxi')">🚕 會後共乘計程車</button>
+      <button class="sit-btn" id="sit-oneonone" data-cat="work" onclick="pickSit('oneonone')">👔 主管一對一開場</button>
+      <button class="sit-btn" id="sit-crossdept" data-cat="work" onclick="pickSit('crossdept')">🔗 跨部門初次合作</button>
+      <button class="sit-btn" id="sit-training" data-cat="work" onclick="pickSit('training')">📚 內訓中場休息</button>
+      <button class="sit-btn" id="sit-dinner" data-cat="work" onclick="pickSit('dinner')">🍻 下班聚餐</button>
+      <button class="sit-btn" id="sit-commute" data-cat="work" onclick="pickSit('commute')">🚇 通勤巧遇</button>
+      <button class="sit-btn" id="sit-souvenir" data-cat="work" onclick="pickSit('souvenir')">🎁 同事分伴手禮</button>
+      <button class="sit-btn" id="sit-lunchline" data-cat="work" onclick="pickSit('lunchline')">🍜 午餐排隊</button>
+      <button class="sit-btn" id="sit-yearend" data-cat="work" onclick="pickSit('yearend')">🧧 尾牙年會</button>
       <button class="sit-btn" id="sit-grocery"  data-cat="life" style="display:none" onclick="pickSit('grocery')">🛒 超市排隊結帳</button>
       <button class="sit-btn" id="sit-neighbor" data-cat="life" style="display:none" onclick="pickSit('neighbor')">🏙️ 社區巧遇鄰居</button>
       <button class="sit-btn" id="sit-hobbyclass" data-cat="life" style="display:none" onclick="pickSit('hobbyclass')">🧘 興趣班前閒聊</button>
@@ -719,7 +728,6 @@ let curGrCat = 'all';
 const SITS = {
   coffee:   { label: '☕ 咖啡機旁', en: 'by the office coffee machine during a casual break' },
   meeting:  { label: '⏰ 會議前', en: 'waiting for a meeting to start, standing with colleagues' },
-  lunch:    { label: '🍱 等外送', en: 'waiting for a food delivery order with a client, keeping the chat polite and professional since the other person is a client' },
   event:    { label: '🤝 業界活動', en: 'at a professional networking event or conference' },
   elevator: { label: '🛗 電梯巧遇', en: 'sharing an elevator with a coworker or acquaintance for a brief ride' },
   firstday: { label: '🆕 新人第一天', en: 'at the office on the learner\'s very first day at a new job, where the learner is the new employee and the other person is a senior colleague who has worked there for years, welcoming them with some small talk',
@@ -767,6 +775,17 @@ const SITS = {
   breakroom: { label: '🍵 茶水間問候', en: 'running into a coworker in the break room, a quick friendly greeting during a short break' },
   checkin:  { label: '🙋 近況問候', en: 'running into a coworker you haven\'t talked to in a while, catching up briefly on how things have been going' },
   mailroom: { label: '📦 收發室拿包裹', en: 'waiting at the office mailroom to pick up a package, chatting with a coworker doing the same' },
+  // 11-24：職場情境擴充 10 個（使用者：職場題大多跑過）；刪除「與客戶等外送」（不實際）
+  clientlobby: { label: '🏢 客戶大廳等候', en: 'sitting in a client company\'s lobby before a scheduled meeting, where the learner is the visitor and the other person is a staff member of the client company keeping them company until the meeting starts, keeping it polite and professional' },
+  taxi: { label: '🚕 會後共乘計程車', en: 'sharing a taxi with a client right after a business meeting, a short ride where the chat stays polite and light rather than about the deal' },
+  oneonone: { label: '👔 主管一對一開場', en: 'the first minute of a scheduled one-on-one meeting, where the other person is the learner\'s manager making light small talk before getting into work topics' },
+  crossdept: { label: '🔗 跨部門初次合作', en: 'meeting a colleague from another department for the first time, both just sitting down before a joint project kickoff meeting begins' },
+  training: { label: '📚 內訓中場休息', en: 'during a break in an internal company training workshop, chatting with a coworker from another team sitting at the same table' },
+  dinner: { label: '🍻 下班聚餐', en: 'at a casual after-work team dinner at a restaurant, chatting with the coworker sitting next to the learner while waiting for the food' },
+  commute: { label: '🚇 通勤巧遇', en: 'running into a coworker on the morning train or bus on the way to the office' },
+  souvenir: { label: '🎁 同事分伴手禮', en: 'a coworker just came back from a trip and is handing out small souvenir snacks around the office, stopping at the learner\'s desk' },
+  lunchline: { label: '🍜 午餐排隊', en: 'standing in line with a coworker at a busy lunch spot near the office during lunch hour' },
+  yearend: { label: '🧧 尾牙年會', en: 'at the company\'s year-end party, chatting with a coworker from another department sitting at the same table' },
   grocery:  { label: '🛒 超市排隊結帳', en: 'standing in a checkout line at the grocery store, chatting with the person next in line — they are strangers, so keep it light and impersonal, with no personal questions' },
   neighbor: { label: '🏙️ 社區巧遇鄰居', en: 'sharing an elevator or building lobby with a neighbor in your apartment building, a brief friendly chat' },
   hobbyclass: { label: '🧘 興趣班前閒聊', en: 'chatting with another student before a hobby class (like yoga or a workshop) starts' },
