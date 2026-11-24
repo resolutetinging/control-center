@@ -381,6 +381,16 @@ input[type=password]:focus{border-color:rgba(176,96,50,.4);background:#fff}
       <button class="sit-btn" id="sit-restaurant" data-cat="life" style="display:none" onclick="pickSit('restaurant')">🍽️ 餐廳等位</button>
       <button class="sit-btn" id="sit-dogwalk"  data-cat="life" style="display:none" onclick="pickSit('dogwalk')">🐕 遛狗巧遇鄰居</button>
       <button class="sit-btn" id="sit-coffeeshop" data-cat="life" style="display:none" onclick="pickSit('coffeeshop')">☕ 咖啡廳排隊</button>
+      <button class="sit-btn" id="sit-gym" data-cat="life" style="display:none" onclick="pickSit('gym')">🏋️ 健身房休息</button>
+      <button class="sit-btn" id="sit-market" data-cat="life" style="display:none" onclick="pickSit('market')">🧺 假日市集攤位</button>
+      <button class="sit-btn" id="sit-salon" data-cat="life" style="display:none" onclick="pickSit('salon')">💇 理髮聊天</button>
+      <button class="sit-btn" id="sit-houseparty" data-cat="life" style="display:none" onclick="pickSit('houseparty')">🏠 朋友家聚會</button>
+      <button class="sit-btn" id="sit-wedding" data-cat="life" style="display:none" onclick="pickSit('wedding')">💒 婚宴同桌</button>
+      <button class="sit-btn" id="sit-busstop" data-cat="life" style="display:none" onclick="pickSit('busstop')">🚏 等公車</button>
+      <button class="sit-btn" id="sit-concert" data-cat="life" style="display:none" onclick="pickSit('concert')">🎵 演唱會排隊入場</button>
+      <button class="sit-btn" id="sit-hotel" data-cat="life" style="display:none" onclick="pickSit('hotel')">🏨 飯店入住櫃台</button>
+      <button class="sit-btn" id="sit-hiking" data-cat="life" style="display:none" onclick="pickSit('hiking')">⛰️ 登山步道休息</button>
+      <button class="sit-btn" id="sit-rain" data-cat="life" style="display:none" onclick="pickSit('rain')">☔ 騎樓躲雨</button>
     </div>
   </div>
 
@@ -794,6 +804,17 @@ const SITS = {
   restaurant: { label: '🍽️ 餐廳等位', en: 'waiting for a table at a busy restaurant, chatting with a stranger also waiting nearby — they are strangers, so keep it light and impersonal, with no personal questions' },
   dogwalk:  { label: '🐕 遛狗巧遇鄰居', en: 'walking your dog and running into a neighbor also walking their dog, chatting while the dogs sniff around' },
   coffeeshop: { label: '☕ 咖啡廳排隊', en: 'waiting in line at a coffee shop, making brief small talk with the stranger next in line — they are strangers, so keep it light and impersonal, with no personal questions' },
+  // 11-24：日常情境擴充 10 個（使用者要求）
+  gym: { label: '🏋️ 健身房休息', en: 'resting between sets at a gym, chatting briefly with another regular using the equipment next to the learner, friendly but not too personal' },
+  market: { label: '🧺 假日市集攤位', en: 'browsing at a weekend market, where the other person is the stall owner selling fruit or handmade goods and the learner is a customer looking at their stall' },
+  salon: { label: '💇 理髮聊天', en: 'sitting in the chair at a hair salon, where the other person is the hairstylist making small talk with the learner (the customer) during the haircut' },
+  houseparty: { label: '🏠 朋友家聚會', en: 'at a friend\'s house party, chatting near the snack table with another guest the learner is meeting for the first time' },
+  wedding: { label: '💒 婚宴同桌', en: 'at a wedding banquet, chatting with another guest seated at the same table whom the learner has just met' },
+  busstop: { label: '🚏 等公車', en: 'waiting at a bus stop, chatting with a stranger who is also waiting for the bus — they are strangers, so keep it light and impersonal, with no personal questions' },
+  concert: { label: '🎵 演唱會排隊入場', en: 'waiting in line to enter a concert venue, chatting with a fellow fan next in line — they are strangers, so keep it light and impersonal, with no personal questions' },
+  hotel: { label: '🏨 飯店入住櫃台', en: 'checking in at a hotel front desk while traveling, where the other person is the receptionist chatting with the learner (the guest) while preparing the room keys' },
+  hiking: { label: '⛰️ 登山步道休息', en: 'taking a short rest at a viewpoint on a hiking trail, chatting with another hiker resting there — they are strangers, so keep it light and impersonal, with no personal questions' },
+  rain: { label: '☔ 騎樓躲雨', en: 'taking shelter from a sudden rain shower under a shop awning, chatting with a stranger also waiting for the rain to stop — they are strangers, so keep it light and impersonal, with no personal questions' },
 };
 
 // ── State ──
