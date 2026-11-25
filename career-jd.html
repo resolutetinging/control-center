@@ -289,13 +289,19 @@ async function callGroqRaw(prompt, max, sys, jsonMode){
   return res.content;
 }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+// 11-25：翻譯進行中，倒數／狀態同步顯示在翻譯卡內（使用者在翻譯卡按鈕旁，不必回頭看初判按鈕旁的狀態列）
+let stMirror = null;
+function runStatus(){
+  const st = document.getElementById('run-st');
+  return { set textContent(v){ st.textContent = v; if(stMirror && stMirror.isConnected) stMirror.textContent = v; } };
+}
 // 429：顯示倒數 60 秒後重試一次
 async function callGroq(prompt, max, sys, jsonMode){
   try{ return await callGroqRaw(prompt, max, sys, jsonMode); }
   catch(e){
     if(e.status === 413) throw new Error('請求太大，超過 Groq 免費額度，請縮短 JD 後重試');
     if(e.status !== 429) throw e;
-    const st = document.getElementById('run-st');
+    const st = runStatus();
     for(let s=60; s>0; s--){ st.textContent = 'Groq 額度忙碌，'+s+' 秒後自動重試'; await sleep(1000); }
     st.textContent = '重試中…';
     return await callGroqRaw(prompt, max, sys, jsonMode);
@@ -787,22 +793,63 @@ function plainZh(raw){
     return m ? '  '+m[2] : l.replace(/^\s+/,'');
   }).join('\n').trim();
 }
-function renderZh(raw){
+// 11-25：回覆被截斷時 JSON.parse 整份失敗、畫面退回原始 JSON（使用者截圖）→ 逐一撿回完整的 section 物件
+function salvageSections(raw){
+  const t = String(raw||'');
+  const k = t.indexOf('"sections"'); if(k < 0) return [];
+  const a = t.indexOf('[', k); if(a < 0) return [];
+  const out = []; let depth = 0, inStr = false, esc = false, start = -1;
+  for(let i = a+1; i < t.length; i++){
+    const ch = t[i];
+    if(inStr){ if(esc) esc = false; else if(ch === '\\') esc = true; else if(ch === '"') inStr = false; continue; }
+    if(ch === '"'){ inStr = true; continue; }
+    if(ch === '{'){ if(depth === 0) start = i; depth++; }
+    else if(ch === '}'){ depth--; if(depth === 0 && start >= 0){ try{ out.push(JSON.parse(t.slice(start, i+1))); }catch(_e){} start = -1; } }
+    else if(ch === ']' && depth === 0) break;
+  }
+  return out;
+}
+// 回傳 {secs, truncated}；item 內 AI 用換行塞多條時拆成多條（去行首 - • 符號）
+function parseZh(raw){
+  let secs = null, truncated = false;
+  try{ const o = safeParseJson(raw); if(o && Array.isArray(o.sections)) secs = o.sections; }catch(_e){}
+  if(!secs){ secs = salvageSections(raw); truncated = true; }
+  secs = secs.filter(x=> x && typeof x === 'object').map(x=>{
+    const items = [];
+    (Array.isArray(x.items)?x.items:[]).forEach(it=>{
+      String(it==null?'':it).split(/\n+/).forEach(l=>{ l = l.replace(/^\s*[*\-•·]+\s*/,'').trim(); if(l) items.push(l); });
+    });
+    return {title: String(x.title||'').trim(), items};
+  }).filter(x=> x.title || x.items.length);
+  return {secs, truncated};
+}
+function zhRatioOk(s){
+  let c = 0, l = 0;
+  for(const ch of String(s)){ if(CJK_RE.test(ch)) c++; else if(/[A-Za-z]/.test(ch)) l++; }
+  return l < 15 || c / (c + l) >= 0.3;   // 短英文（縮寫、產品名）不算漏翻
+}
+// 找出仍是英文的標題／條列：[{s, i(-1＝標題), text}]
+function zhLeftovers(secs){
+  const out = [];
+  secs.forEach((x, si)=>{
+    if(x.title && !zhRatioOk(x.title)) out.push({s:si, i:-1, text:x.title});
+    x.items.forEach((it, ii)=>{ if(!zhRatioOk(it)) out.push({s:si, i:ii, text:it}); });
+  });
+  return out;
+}
+function renderZh(raw, parsed){
   const el = document.getElementById('jd-zh');
   el.textContent = '';
-  let secs = null;
-  try{
-    const o = safeParseJson(raw);
-    if(o && Array.isArray(o.sections) && o.sections.length) secs = o.sections;
-  }catch(_e){}
-  if(secs){
-    secs.forEach(s=>{
-      if(!s || typeof s !== 'object') return;
-      if(s.title && String(s.title).trim()) el.appendChild(mk('div','sub-h',t2(String(s.title))));
+  const p = parsed || parseZh(raw);
+  if(p.secs.length){
+    p.secs.forEach(s=>{
+      if(s.title) el.appendChild(mk('div','sub-h',t2(s.title)));
       addUl(el, s.items);
     });
     el.style.whiteSpace = 'normal';
-    if(el.childNodes.length) return;
+    if(p.truncated) el.appendChild(mk('div','note','AI 回覆被截斷，後段可能缺漏；需要完整內容可再翻譯一次'));
+    if(p.left) el.appendChild(mk('div','note','仍有 '+p.left+' 段 AI 沒翻成中文，保留原文'));
+    return;
   }
   el.style.whiteSpace = 'pre-wrap';
   el.textContent = t2(plainZh(raw));
@@ -982,17 +1029,17 @@ function showZhButton(msg){
 }
 async function translateJd(){
   if(busy || !curJd) return;
-  const st = document.getElementById('run-st');
+  const st = runStatus();
   if(!getKey()){ checkKey(); st.textContent = '請先設定 Groq API key'; return; }
   const jd = curJd;
   busy = true; updateBtn();
+  stMirror = document.getElementById('jd-zh');
   try{
-    document.getElementById('jd-zh').textContent = '等待額度…';
+    st.textContent = '等待額度…';
     await waitQuota(st);
     if(jd !== curJd) return;   // 等待期間換了職缺就不翻舊的
     st.textContent = '翻譯 JD 中…';
-    document.getElementById('jd-zh').textContent = '翻譯中…';
-    const zhPrompt = '請把下列職缺 JD 全文純翻譯成台灣繁體中文。依原 JD 的段落與條列結構切分，不加評論、不摘要。只回 JSON：{"sections":[{"title":"段落標題（翻成中文）","items":["條列內容"]}]}。沒有明確標題的段落，title 給空字串。\n\n'+jd;
+    const zhPrompt = '請把下列職缺 JD 全文純翻譯成台灣繁體中文。依原 JD 的段落與條列結構切分，不加評論、不摘要。每一句、每個小標題都要翻成中文（公司名、產品名、縮寫可保留英文）；一條條列放一個 item，不要在同一個 item 內用換行合併多條，小標題也單獨一個 item。只回 JSON：{"sections":[{"title":"段落標題（翻成中文）","items":["條列內容"]}]}。沒有明確標題的段落，title 給空字串。\n\n'+jd;
     const zhSys = '你是專業翻譯。只輸出一個合法 JSON 物件，使用台灣繁體中文與台灣用語。';
     let max = Math.min(4500, Math.max(1500, Math.round(jd.length*1.0)));
     max = Math.max(1200, Math.min(max, TPM_SAFE - estTokens(zhPrompt + zhSys)));
@@ -1000,7 +1047,7 @@ async function translateJd(){
     if(jd !== curJd) return;
     // 11-18：AI 偶爾原樣回英文（使用者截圖），程式檢查中文比例，不足就加強指示重問一次
     if(!zhLooksTranslated(zh)){
-      document.getElementById('jd-zh').textContent = 'AI 回傳仍是英文，稍後自動重試一次…';
+      st.textContent = 'AI 回傳仍是英文，稍後自動重試一次…';
       await waitQuota(st);
       if(jd !== curJd) return;
       st.textContent = '重新翻譯 JD 中…';
@@ -1008,18 +1055,44 @@ async function translateJd(){
       const zh2 = await gcall(zhPrompt, max, zhSys2, true);
       if(jd !== curJd) return;
       if(!zhLooksTranslated(zh2)){
+        stMirror = null;
         showZhButton('AI 這次沒有翻成中文（回傳仍是英文），可再按一次');
         st.textContent = '翻譯未成功';
         return;
       }
       zh = zh2;
     }
-    renderZh(zh);
-    st.textContent = '翻譯完成';
+    // 11-25：整體中文比例過關但個別段落仍是英文（使用者截圖：開頭整段、小標題沒翻）→ 只把那幾段編號送回補翻
+    const parsed = parseZh(zh);
+    let left = zhLeftovers(parsed.secs).slice(0, 30);
+    if(left.length){
+      st.textContent = '有 '+left.length+' 段仍是英文，稍後補翻…';
+      await waitQuota(st);
+      if(jd !== curJd) return;
+      st.textContent = '補翻 '+left.length+' 段中…';
+      try{
+        const fixPrompt = '把下列每一段翻成台灣繁體中文（公司名、產品名、縮寫可保留英文），不加評論。只回 JSON：{"t":[{"n":編號,"zh":"譯文"}]}，每個編號都要回。\n\n'
+          + left.map((x, k)=> (k+1)+'. '+x.text).join('\n');
+        const fixMax = Math.max(800, Math.min(TPM_SAFE - estTokens(fixPrompt + zhSys), Math.round(estTokens(fixPrompt)*2.5)));
+        const fo = safeParseJson(await gcall(fixPrompt, fixMax, zhSys, true));
+        if(jd !== curJd) return;
+        (Array.isArray(fo.t)?fo.t:[]).forEach(r=>{
+          const x = left[Number(r && r.n) - 1], v = String((r && r.zh) || '').trim();
+          if(!x || !v || !zhRatioOk(v)) return;
+          if(x.i < 0) parsed.secs[x.s].title = v; else parsed.secs[x.s].items[x.i] = v;
+          x.done = true;
+        });
+      }catch(_e){}   // 補翻失敗就保留原文，主翻譯照常顯示
+      parsed.left = left.filter(x=> !x.done).length;
+    }
+    stMirror = null;
+    renderZh(zh, parsed);
+    st.textContent = parsed.left ? '翻譯完成（'+parsed.left+' 段保留原文）' : '翻譯完成';
   }catch(e){
+    stMirror = null;
     if(jd === curJd) showZhButton('翻譯失敗：'+e.message+'，可再按一次');
     st.textContent = '翻譯失敗：'+e.message;
-  }finally{ busy = false; updateBtn(); }
+  }finally{ stMirror = null; busy = false; updateBtn(); }
 }
 // 只重跑分析（不重跑翻譯），用最新偏好
 async function rerunAnalysis(){
