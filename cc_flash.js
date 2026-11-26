@@ -55,8 +55,11 @@
     ents.forEach(function(en){
       if (!en.isIntersecting) return;
       var el = en.target; io.unobserve(el);
-      if (!el._ccfPend) return;
-      flash(el); setSeen(el._ccfPend.k, el._ccfPend.h); el._ccfPend = null; save();
+      var p = el._ccfPend; if (!p) return;
+      el._ccfPend = null;
+      var h2 = hash(textOf(el));          // 閃之前重算：載入中佔位文字已換成正式內容、且與上次相同就不閃
+      if (pg[p.k] === h2) return;
+      flash(el); setSeen(p.k, h2); save();
     });
   }, {threshold: 0.3}) : null;
 
@@ -73,6 +76,8 @@
       var k = keyOf(el, i), h = hash(textOf(el));
       if (el._ccfH === h && el._ccfK === k) continue;
       el._ccfH = h; el._ccfK = k;
+      // 使用者剛操作（切換分頁、範圍鈕）造成的變動：不閃也不記，保留以預設畫面為準的紀錄
+      if (Date.now() - lastAct < 2000) continue;
       if (first || pg[k] === h){
         if (pg[k] !== h){ setSeen(k, h); dirty = true; }
         el._ccfPend = null;
@@ -84,14 +89,17 @@
     if (dirty) save();
   }
 
-  var t = null;
+  var t = null, lastAct = 0;
+  ['pointerdown', 'keydown', 'change'].forEach(function(ev){
+    document.addEventListener(ev, function(){ lastAct = Date.now(); }, true);
+  });
   // first 整個工作階段維持：第一次開這頁時，非同步載入或之後才點開分頁的卡也只建紀錄、不閃
   function later(){ clearTimeout(t); t = setTimeout(scan, 500); }
   function start(){
-    later();
+    setTimeout(later, 1500);   // 等非同步資料先填進卡片
     try { new MutationObserver(later).observe(document.body, {childList: true, subtree: true, characterData: true}); } catch (e) {}
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
 
   window.ccFlash = { scan: scan, page: PAGE };
 })();
