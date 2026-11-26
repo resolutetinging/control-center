@@ -77,7 +77,11 @@
       if (el._ccfH === h && el._ccfK === k) continue;
       el._ccfH = h; el._ccfK = k;
       // 使用者剛操作（切換分頁、範圍鈕）造成的變動：不閃也不記，保留以預設畫面為準的紀錄
-      if (Date.now() - lastAct < 2000) continue;
+      // 例外：操作後才第一次出現的畫面（例如第一次切到某個面向）直接記為基準，下次開頁不閃
+      if (Date.now() - lastAct < 2000){
+        if (!first && !Object.prototype.hasOwnProperty.call(pg, k)){ setSeen(k, h); dirty = true; }
+        continue;
+      }
       if (first || pg[k] === h){
         if (pg[k] !== h){ setSeen(k, h); dirty = true; }
         el._ccfPend = null;
